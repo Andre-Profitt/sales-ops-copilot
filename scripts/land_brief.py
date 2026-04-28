@@ -28,6 +28,7 @@ from typing import Any, Optional
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
 from _directors import canonical_directors
+from excel_companion import build_director_excel
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 STATE_DIR = ROOT / "state"
@@ -321,7 +322,8 @@ def main() -> int:
             envelope = derive_highlights_risks(envelope)
             (out_dir / "trends.json").write_text(json.dumps(envelope, indent=2))
             (out_dir / "brief.md").write_text(render_director_brief(envelope))
-            print(f"  Wrote {out_dir / 'trends.json'} + brief.md")
+            build_director_excel(envelope, out_dir / "land.xlsx")
+            print(f"  Wrote {out_dir / 'trends.json'} + brief.md + land.xlsx")
         except Exception as e:
             failures.append({"director": d["name"], "error": str(e)})
             print(f"  ✗ {d['name']}: {e}", file=sys.stderr)
