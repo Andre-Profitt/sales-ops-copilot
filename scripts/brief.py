@@ -24,6 +24,9 @@ from typing import Any
 from azure.identity import AzureCliCredential
 from openai import AzureOpenAI
 
+# Make scripts/ importable for `from alerts import ...`
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+
 # --- Config -----------------------------------------------------------------
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -183,7 +186,12 @@ def pull_fabric_workspace_summary() -> list[dict[str, Any]]:
 # --- LLM synthesis ----------------------------------------------------------
 
 
-def synthesize(sf_snapshot: dict, fabric_summary: list, model: str) -> str:
+def synthesize(
+    sf_snapshot: dict,
+    fabric_summary: list,
+    alerts: list,
+    model: str,
+) -> str:
     """Send aggregated metadata to apro-openai for a Sales Ops brief."""
     cred = AzureCliCredential()
     token_provider = lambda: cred.get_token("https://cognitiveservices.azure.com/.default").token
@@ -196,30 +204,36 @@ def synthesize(sf_snapshot: dict, fabric_summary: list, model: str) -> str:
 
     system = (
         "You are a Sales Operations Copilot for SimCorp. "
-        "You receive (1) a Salesforce pipeline snapshot for the current quarter "
-        "and (2) a list of Fabric/Power BI workspaces accessible to the user. "
-        "\n\n"
+        "You receive (1) a Salesforce pipeline snapshot for the current quarter, "
+        "(2) a list of Fabric/Power BI workspaces accessible to the user, and "
+        "(3) governance + hygiene alerts detected from open pipeline.\n\n"
         "CRITICAL metric convention — never blend these:\n"
         "- Land + Expand deals are measured in ARR (annual recurring revenue) "
         "via APTS_Opportunity_ARR__c.\n"
         "- Renewal deals are measured in ACV (annual contract value) "
         "via APTS_Renewal_ACV__c.\n"
-        "- New-business pipeline ($ARR) and renewal pipeline ($ACV) are different shapes — "
-        "report them separately, do not sum them, do not call the combined number 'pipeline'.\n"
-        "- Always label every dollar figure as either 'ARR' (Land/Expand) or 'ACV' (Renewal).\n"
-        "\n"
-        "Produce a tight executive brief — 200-400 words max — with these sections:\n"
+        "- New-business pipeline ($ARR) and renewal pipeline ($ACV) are different "
+        "shapes — report them separately, never sum them.\n"
+        "- Always label every dollar figure as either 'ARR' (Land/Expand) or "
+        "'ACV' (Renewal).\n\n"
+        "SimCorp's 8-stage process: Prospecting → Discovery → Engagement → "
+        "Shortlisted → Preferred → Contracting → Opt-out → Won. Per the Commercial "
+        "Handbook, Commercial Approval is mandatory for ALL Land deals and for "
+        "Expand deals with AER >€500k.\n\n"
+        "Produce a tight executive brief — 250-450 words max — with these sections:\n"
         "1) New-business ARR state at a glance (Land + Expand)\n"
         "2) Renewal ACV state at a glance\n"
-        "3) What to focus on this week (separate calls for each motion)\n"
-        "4) Which Fabric workspaces are most relevant\n"
-        "5) Two concrete next analyses to run.\n"
-        "No fluff. No restating the data verbatim. Lead with the insight."
+        "3) **Top 3 governance/hygiene alerts to act on this week** "
+        "(rank by impact, name specific deals from the samples when relevant)\n"
+        "4) What to focus on this week per motion\n"
+        "5) Which Fabric workspaces help most\n"
+        "No fluff. Lead with the insight. Cite specific dollar amounts and deal names."
     )
 
     user = json.dumps(
         {
             "salesforce_pipeline_thisquarter": sf_snapshot,
+            "alerts": alerts,
             "fabric_workspaces_available": fabric_summary,
             "today": dt.date.today().isoformat(),
         },
@@ -245,6 +259,7 @@ def synthesize(sf_snapshot: dict, fabric_summary: list, model: str) -> str:
 def render_report(
     sf_snapshot: dict,
     fabric_summary: list,
+    alerts: list,
     synthesis: str | None,
     model: str,
 ) -> str:
@@ -258,6 +273,36 @@ def render_report(
 
     if synthesis:
         lines += ["## Synthesis", "", synthesis, ""]
+
+    # Alerts go BEFORE the data tables — these are the actionable signals
+    if alerts:
+        lines += ["## Active alerts", ""]
+        critical = [a for a in alerts if a.get("severity") == "critical"]
+        important = [a for a in alerts if a.get("severity") == "important"]
+        for bucket_name, bucket in [("Critical", critical), ("Important", important)]:
+            if not bucket:
+                continue
+            lines += [f"### {bucket_name}", ""]
+            for a in bucket:
+                arr = a.get("total_arr") or 0
+                arr_s = f"${arr:,.0f}" if arr else "—"
+                lines += [
+                    f"**{a['name']}** — {a['count']} opps, {arr_s} ARR",
+                    f"_{a.get('rule', '')}_",
+                    "",
+                ]
+                samples = a.get("samples") or []
+                if samples:
+                    lines += ["| Top deals | Stage | $ARR | Owner |", "|---|---|---:|---|"]
+                    for s in samples[:3]:
+                        amt = s.get("$arr") or 0
+                        amt_s = f"${amt:,.0f}" if amt else "—"
+                        lines.append(
+                            f"| {s.get('name', '?')} | {s.get('stage', '—')} | "
+                            f"{amt_s} | {s.get('owner', '—')} |"
+                        )
+                    lines.append("")
+        lines.append("")
 
     totals = sf_snapshot.get("totals", {})
     new_arr = totals.get("new_business_arr_open_this_quarter") or 0
@@ -351,17 +396,26 @@ def main() -> int:
     fabric = pull_fabric_workspace_summary()
     print(f"  Workspaces inspected: {len(fabric)}")
 
+    print("→ Detecting governance + hygiene alerts...")
+    # Deferred import keeps formatters from stripping it before sys.path is set.
+    from alerts import pull_all_alerts as _pull_alerts
+
+    alerts = _pull_alerts()
+    crit = sum(1 for a in alerts if a.get("severity") == "critical")
+    imp = sum(1 for a in alerts if a.get("severity") == "important")
+    print(f"  Alerts: {crit} critical, {imp} important")
+
     synthesis = None
     if not args.no_llm:
         print(f"→ Synthesizing via apro-openai/{args.model}...")
         try:
-            synthesis = synthesize(sf, fabric, args.model)
+            synthesis = synthesize(sf, fabric, alerts, args.model)
             print(f"  Synthesis: {len(synthesis)} chars")
         except Exception as e:
             print(f"  ⚠ Synthesis failed: {e}")
             synthesis = f"_Synthesis failed: {e}_"
 
-    report = render_report(sf, fabric, synthesis, args.model)
+    report = render_report(sf, fabric, alerts, synthesis, args.model)
     out_path.write_text(report, encoding="utf-8")
     print(f"\n✓ Wrote {out_path}")
     return 0
