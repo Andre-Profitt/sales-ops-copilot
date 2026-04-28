@@ -758,18 +758,6 @@ LAYOUT_SECTIONS = [
 ]
 
 
-def _dashboard_filter(name: str, dev_name: str, report_field_map: list[tuple[str, str]]) -> str:
-    """Build a dashboardFilter block. report_field_map: list of (reportDevName, fieldName)."""
-    filt = []
-    filt.append(_t("name", name, 2))
-    filt.append(_t("dashboardFilterName", dev_name, 2))
-    for report_dev, field in report_field_map:
-        col_inner = _t("column", field, 3)
-        col_inner += "\n" + _t("report", f"{FOLDER_NAME}/{report_dev}", 3)
-        filt.append(_wrap("dashboardFilterColumns", col_inner, 2))
-    return _wrap("filter", "\n".join(filt), 1)
-
-
 def generate_dashboard_xml(reports: list[dict[str, Any]]) -> str:
     report_map = {r["devName"]: r for r in reports}
     lines = [XML_HEADER, f'<Dashboard xmlns="{META_NS}">']
@@ -963,7 +951,7 @@ def _qualify_field(field: str) -> str:
     return field
 
 
-def _convert_value(field: str, op: str, value: str) -> Any:
+def _convert_value(field: str, _op: str, value: str) -> Any:
     """Coerce a metadata-API filter value into Analytics-API form."""
     if not value:
         return ""
@@ -1062,13 +1050,6 @@ def _convert_report_to_analytics_json(rpt: dict[str, Any], folder_id: str) -> di
     }
 
     return {"reportMetadata": report_metadata}
-
-
-def _component_type_analytics(rpt: dict[str, Any]) -> str:
-    if rpt.get("format") == "TABULAR":
-        return "Table"
-    # Single-grouping summary reports → bar chart
-    return "Bar"
 
 
 def _convert_dashboard_to_analytics_json(
@@ -1217,7 +1198,7 @@ def _ensure_folder(token: str, instance: str, folder_type: str) -> str:
     return fid
 
 
-def _existing_reports_in_folder(folder_id: str) -> dict[str, str]:
+def _existing_reports_in_folder(_folder_id: str) -> dict[str, str]:
     """Return {label: reportId} for reports already in the folder.
 
     Salesforce auto-derives DeveloperName from `name`, ignoring any
