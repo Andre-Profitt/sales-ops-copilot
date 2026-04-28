@@ -190,6 +190,26 @@ def pull_account_concentration(top_n: int = 15) -> list[dict[str, Any]]:
     return accounts
 
 
+def pull_radar_recommendations() -> list[dict[str, Any]]:
+    """Pull actionable recommendations from radar's claim pipeline.
+
+    Reads `~/code/apps/radar/state/radar.db` (override via `RADAR_DB`) and
+    returns must_try + should_try recs in `status='proposed'`, ordered by
+    severity then confidence. Empty list if radar isn't installed.
+
+    Each rec: {rec_id, severity, type, entity, summary, confidence,
+    evidence_strength, blast_radius, expected_benefit, do_nothing_cost,
+    citation_count}. These are tooling/ecosystem signals (version upgrades,
+    deprecations, security responses) about Andre's stack — sidebar to the
+    Sales Ops pipeline, not a substitute for it.
+    """
+    from radar_recs import pull_actionable_recs as _pull  # type: ignore[reportMissingImports]
+
+    recs = _pull()
+    TOOL_CACHE["radar_recs"] = recs
+    return recs
+
+
 # --- Agent runner -----------------------------------------------------------
 
 
@@ -216,6 +236,7 @@ async def _run_agent(model: str) -> str:
             pull_all_alerts,
             pull_owner_concentration,
             pull_account_concentration,
+            pull_radar_recommendations,
         ],
         # GPT-5.x rejects non-default temperature; do not set it. max_tokens
         # translates to max_completion_tokens in the chat-completions client.
@@ -251,6 +272,7 @@ def _build_agent(model: str) -> Any:
             pull_all_alerts,
             pull_owner_concentration,
             pull_account_concentration,
+            pull_radar_recommendations,
         ],
         default_options={"max_tokens": 1500},
     )
@@ -270,6 +292,10 @@ def _prewarm_cache() -> None:
     TOOL_CACHE["owners"] = _pull_owner_conc_raw(top_n=10)
     print("→ Account concentration...")
     TOOL_CACHE["accounts"] = _pull_account_conc_raw(top_n=15)
+    print("→ Radar recommendations...")
+    from radar_recs import pull_actionable_recs as _pull_recs  # type: ignore[reportMissingImports]
+
+    TOOL_CACHE["radar_recs"] = _pull_recs()
 
 
 def _summary_header() -> str:
@@ -317,6 +343,7 @@ def _cached_context_payload() -> str:
             "owner_concentration_top10": TOOL_CACHE["owners"],
             "account_concentration_top15": TOOL_CACHE["accounts"],
             "fabric_workspaces_available": TOOL_CACHE["fabric_summary"],
+            "radar_recommendations_actionable": TOOL_CACHE.get("radar_recs", []),
             "today": dt.date.today().isoformat(),
         },
         indent=2,
@@ -434,6 +461,11 @@ def main() -> int:
     if "accounts" not in TOOL_CACHE:
         print("  ⚠ accounts tool not called — pulling directly for render")
         TOOL_CACHE["accounts"] = _pull_account_conc_raw(top_n=15)
+    if "radar_recs" not in TOOL_CACHE:
+        print("  ⚠ radar_recs tool not called — pulling directly for render")
+        from radar_recs import pull_actionable_recs as _pull_recs  # type: ignore[reportMissingImports]
+
+        TOOL_CACHE["radar_recs"] = _pull_recs()
 
     report = render_report(
         TOOL_CACHE["sf_snapshot"],
@@ -443,6 +475,7 @@ def main() -> int:
         TOOL_CACHE["accounts"],
         synthesis,
         args.model,
+        radar_recs=TOOL_CACHE.get("radar_recs"),
     )
 
     # Tag the report so it's clearly the agent-produced variant.

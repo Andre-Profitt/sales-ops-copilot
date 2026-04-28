@@ -362,6 +362,7 @@ def render_report(
     account_concentration: list,
     synthesis: str | None,
     model: str,
+    radar_recs: list | None = None,
 ) -> str:
     today = dt.date.today().isoformat()
     lines = [
@@ -551,6 +552,43 @@ def render_report(
         lines.append(f"| {r['stage']} | {r['num_opps']} | {acv_s} | {prob * 100:.1f}% | {wacv_s} |")
     lines.append("")
 
+    # Tooling/ecosystem signals from radar — actionable recs (must_try +
+    # should_try, status=proposed). Sidebar to the SF pipeline; closes the
+    # "notice → decide" half of the radar outcome loop. nice_to_know is
+    # filtered out (clamped behind verification gate).
+    if radar_recs:
+        must = [r for r in radar_recs if r.get("severity") == "must_try"]
+        should = [r for r in radar_recs if r.get("severity") == "should_try"]
+        lines += [
+            "## Tooling/ecosystem signals (radar)",
+            "",
+            f"*{len(radar_recs)} actionable recommendation"
+            f"{'' if len(radar_recs) == 1 else 's'} from the radar capability scout — "
+            f"{len(must)} must_try, {len(should)} should_try (status=proposed). "
+            "Source: `~/code/apps/radar/state/radar.db`. "
+            "To act: `radar reevaluate-recs --rec-id <id>` after verifying claims, "
+            "or upcoming `/radar-triage` to decide accept/reject/snooze.*",
+            "",
+        ]
+        for bucket_name, bucket in [("Must try", must), ("Should try", should)]:
+            if not bucket:
+                continue
+            lines += [f"### {bucket_name}", ""]
+            for rec in bucket:
+                summary = rec.get("summary", "—")
+                lines += [
+                    f"**{summary}**",
+                    f"- Type: `{rec.get('type', '—')}` · "
+                    f"Entity: `{rec.get('entity', '—')}` · "
+                    f"Confidence: {rec.get('confidence', 0):.2f} · "
+                    f"Evidence: {rec.get('evidence_strength', '—')} · "
+                    f"Blast: {rec.get('blast_radius', '—')} · "
+                    f"{rec.get('citation_count', 0)} citation"
+                    f"{'' if rec.get('citation_count', 0) == 1 else 's'}",
+                    f"- Rec ID: `{rec.get('rec_id', '?')}`",
+                    "",
+                ]
+
     lines += ["## Fabric / Power BI workspaces inspected", ""]
     for ws in fabric_summary:
         ds = ws.get("datasets") or []
@@ -655,6 +693,17 @@ def main() -> int:
             f"#1 {top_a['account']}: ${top_a['total_arr']:,.0f} ({pct_a:.0f}%)"
         )
 
+    print("→ Pulling actionable radar recommendations...")
+    from radar_recs import pull_actionable_recs as _pull_recs  # type: ignore[reportMissingImports]
+
+    radar_recs = _pull_recs()
+    if radar_recs:
+        must = sum(1 for r in radar_recs if r.get("severity") == "must_try")
+        should = len(radar_recs) - must
+        print(f"  Actionable recs: {must} must_try, {should} should_try")
+    else:
+        print("  No actionable recs (radar.db missing or empty actionable surface)")
+
     synthesis = None
     if not args.no_llm:
         print(f"→ Synthesizing via apro-openai/{args.model}...")
@@ -665,7 +714,9 @@ def main() -> int:
             print(f"  ⚠ Synthesis failed: {e}")
             synthesis = f"_Synthesis failed: {e}_"
 
-    report = render_report(sf, fabric, alerts, owners, accounts, synthesis, args.model)
+    report = render_report(
+        sf, fabric, alerts, owners, accounts, synthesis, args.model, radar_recs=radar_recs
+    )
     out_path.write_text(report, encoding="utf-8")
     print(f"\n✓ Wrote {out_path}")
 
