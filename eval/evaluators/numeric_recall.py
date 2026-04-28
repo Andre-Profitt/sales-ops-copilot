@@ -14,21 +14,9 @@ from typing import Any
 
 # --- Number parsing ---------------------------------------------------------
 
-_DOLLAR_EXACT = re.compile(r"\$\s*([\d,]+(?:\.\d+)?)\b")
-# e.g. "27.73M ARR", "30.38M ARR", "$45.45M"
-_DOLLAR_SHORTHAND = re.compile(
-    r"\$?\s*(\d+(?:\.\d+)?)\s*([MKB])\b",
-    re.IGNORECASE,
-)
-
 
 def _to_int(s: str) -> int:
     return int(s.replace(",", "").split(".")[0])
-
-
-def _shorthand_to_dollars(num: float, suffix: str) -> int:
-    mult = {"K": 1_000, "M": 1_000_000, "B": 1_000_000_000}[suffix.upper()]
-    return int(num * mult)
 
 
 def _within_tolerance(actual: int, expected: int, pct: float) -> bool:
@@ -43,16 +31,6 @@ def _within_tolerance(actual: int, expected: int, pct: float) -> bool:
 # Each extractor returns the integer it found in the brief (or None). We pull
 # from tables first because they have full-precision numbers; fall back to
 # shorthand prose if the structured form is absent.
-
-
-def _extract_table_dollar_after_label(text: str, label_pattern: str) -> int | None:
-    """Find a `$N` figure in the same line/paragraph as the label."""
-    m = re.search(
-        label_pattern + r".{0,200}?\$\s*([\d,]+)",
-        text,
-        re.IGNORECASE | re.DOTALL,
-    )
-    return _to_int(m.group(1)) if m else None
 
 
 def _extract_quarter_row(text: str, quarter: str) -> dict[str, int] | None:
@@ -237,14 +215,6 @@ class NumericFactRecallEvaluator:
 
     def _extract_all(self, text: str) -> dict[str, Any]:
         out: dict[str, Any] = {}
-
-        # Multi-quarter weighted view rows (highest precision source).
-        for q_key, label_key in [
-            ("current_q", "current_quarter_label"),
-            ("q_plus_1", "q_plus_1_label"),
-            ("q_plus_2", "q_plus_2_label"),
-        ]:
-            pass  # placeholder to read labels below
 
         # Pull the three known quarter labels directly from the multi-quarter table
         labels = re.findall(r"\|\s*(20\d{2}-Q\d)\s*\|\s*\$", text)
