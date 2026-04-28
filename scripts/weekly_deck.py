@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# pyright: reportArgumentType=false, reportGeneralTypeIssues=false
 """
 sales-ops-copilot — Weekly PowerPoint deck builder.
 

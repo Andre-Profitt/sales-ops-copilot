@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# pyright: reportMissingImports=false
 """
 Render the daily / weekly Sales Ops brief markdown to a memo-grade PDF.
 
