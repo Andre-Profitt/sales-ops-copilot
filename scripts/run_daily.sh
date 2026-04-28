@@ -20,7 +20,9 @@ echo "Running sales-ops-copilot daily brief..."
 # (Teams chat-with-self path is CA-blocked — see memory
 # feedback_graph_cli_client_also_ca_blocked.md). Drop --open if the daily
 # browser tab gets annoying; the .html file is still written either way.
-python3 scripts/brief.py --html --open
+# --onedrive-publish atomic-writes the HTML to OneDrive-SimCorp/Sales Ops
+# Briefs/ so a Power Automate Flow can pick it up and post to Teams self-chat.
+python3 scripts/brief.py --html --open --onedrive-publish
 RC=$?
 
 if [[ $RC -eq 0 ]]; then

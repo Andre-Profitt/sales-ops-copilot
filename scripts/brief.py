@@ -591,6 +591,11 @@ def main() -> int:
         action="store_true",
         help="Open the rendered HTML in the default browser after writing (implies --html)",
     )
+    ap.add_argument(
+        "--onedrive-publish",
+        action="store_true",
+        help="Atomic-write the rendered HTML to OneDrive folder for Power Automate Flow pickup.",
+    )
     args = ap.parse_args()
 
     REPORTS_DIR.mkdir(exist_ok=True)
@@ -664,7 +669,7 @@ def main() -> int:
     out_path.write_text(report, encoding="utf-8")
     print(f"\n✓ Wrote {out_path}")
 
-    if args.html or args.auto_open:
+    if args.html or args.auto_open or args.onedrive_publish:
         from brief_html import render_file as _render_html  # type: ignore[import-not-found]
 
         html_path = _render_html(out_path)
@@ -674,6 +679,28 @@ def main() -> int:
                 subprocess.run(["open", str(html_path)], check=False)
             except Exception as e:
                 print(f"  ⚠ open failed: {e}")
+        if args.onedrive_publish:
+            # Atomic publish: copy to .tmp then os.replace — Power Automate's
+            # "When a file is created" trigger fires on partial files otherwise.
+            import os as _os
+            import shutil as _shutil
+
+            try:
+                target_dir = (
+                    pathlib.Path.home()
+                    / "Library"
+                    / "CloudStorage"
+                    / "OneDrive-SimCorp"
+                    / "Sales Ops Briefs"
+                )
+                target_dir.mkdir(parents=True, exist_ok=True)
+                target = target_dir / html_path.name
+                tmp = target.with_suffix(target.suffix + ".tmp")
+                _shutil.copyfile(html_path, tmp)
+                _os.replace(tmp, target)
+                print(f"✓ Published to OneDrive: {target}")
+            except Exception as e:
+                print(f"  ⚠ OneDrive publish failed: {e}")
     return 0
 
 
