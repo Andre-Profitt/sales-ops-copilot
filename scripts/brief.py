@@ -79,36 +79,86 @@ def az_rest_pbi(uri: str) -> dict[str, Any]:
 # --- Data pulls -------------------------------------------------------------
 
 
+def _sf_query(soql: str) -> list[dict[str, Any]]:
+    raw = run(["sf", "data", "query", "--query", soql, "--json"])
+    return json.loads(raw).get("result", {}).get("records", [])
+
+
 def pull_salesforce_snapshot() -> dict[str, Any]:
-    """Pipeline snapshot via sf CLI. Aggregates only — no client-level detail."""
-    soql = (
-        "SELECT StageName, COUNT(Id) num_opps, SUM(Amount) total_amount "
+    """
+    Pipeline snapshot via sf CLI. Aggregates only — no client-level detail.
+
+    SimCorp metric convention (do not blend):
+      - Land + Expand deals report ARR via APTS_Opportunity_ARR__c
+      - Renewal deals report ACV via APTS_Renewal_ACV__c
+      - The default `Amount` field is a blended number and not used here.
+    """
+    # By Type — the canonical ARR vs ACV split
+    by_type_q = (
+        "SELECT Type, COUNT(Id) num_opps, "
+        "SUM(APTS_Opportunity_ARR__c) total_arr, "
+        "SUM(APTS_Renewal_ACV__c) total_renewal_acv "
         "FROM Opportunity "
         "WHERE IsClosed = false AND CloseDate = THIS_QUARTER "
-        "GROUP BY StageName ORDER BY StageName"
+        "GROUP BY Type ORDER BY Type"
     )
-    raw = run(["sf", "data", "query", "--query", soql, "--json"])
-    payload = json.loads(raw)
-    records = payload.get("result", {}).get("records", [])
-    rows = []
-    for r in records:
-        rows.append(
+    by_type = []
+    for r in _sf_query(by_type_q):
+        by_type.append(
             {
-                "stage": r.get("StageName"),
-                "num_opps": r.get("num_opps"),
-                "total_amount": r.get("total_amount"),
+                "type": r.get("Type") or "(unset)",
+                "num_opps": r.get("num_opps") or 0,
+                "arr": r.get("total_arr") or 0,
+                "renewal_acv": r.get("total_renewal_acv") or 0,
             }
         )
 
-    # Total pipeline this quarter
-    soql_total = (
-        "SELECT SUM(Amount) total FROM Opportunity "
-        "WHERE IsClosed = false AND CloseDate = THIS_QUARTER"
+    # New business (Land + Expand) by stage — ARR
+    new_arr_q = (
+        "SELECT StageName, COUNT(Id) num_opps, SUM(APTS_Opportunity_ARR__c) arr "
+        "FROM Opportunity "
+        "WHERE IsClosed = false AND CloseDate = THIS_QUARTER "
+        "AND Type IN ('Land', 'Expand') "
+        "GROUP BY StageName ORDER BY StageName"
     )
-    raw = run(["sf", "data", "query", "--query", soql_total, "--json"])
-    total = json.loads(raw).get("result", {}).get("records", [{}])[0].get("total", 0)
+    new_business_by_stage = [
+        {
+            "stage": r.get("StageName"),
+            "num_opps": r.get("num_opps") or 0,
+            "arr": r.get("arr") or 0,
+        }
+        for r in _sf_query(new_arr_q)
+    ]
 
-    return {"by_stage": rows, "total_open_this_quarter": total}
+    # Renewals by stage — ACV
+    renewal_acv_q = (
+        "SELECT StageName, COUNT(Id) num_opps, SUM(APTS_Renewal_ACV__c) acv "
+        "FROM Opportunity "
+        "WHERE IsClosed = false AND CloseDate = THIS_QUARTER "
+        "AND Type = 'Renewal' "
+        "GROUP BY StageName ORDER BY StageName"
+    )
+    renewals_by_stage = [
+        {
+            "stage": r.get("StageName"),
+            "num_opps": r.get("num_opps") or 0,
+            "acv": r.get("acv") or 0,
+        }
+        for r in _sf_query(renewal_acv_q)
+    ]
+
+    total_new_arr = sum(t["arr"] for t in by_type)
+    total_renewal_acv = sum(t["renewal_acv"] for t in by_type)
+
+    return {
+        "by_type": by_type,
+        "new_business_by_stage": new_business_by_stage,
+        "renewals_by_stage": renewals_by_stage,
+        "totals": {
+            "new_business_arr_open_this_quarter": total_new_arr,
+            "renewal_acv_open_this_quarter": total_renewal_acv,
+        },
+    }
 
 
 def pull_fabric_workspace_summary() -> list[dict[str, Any]]:
@@ -117,16 +167,12 @@ def pull_fabric_workspace_summary() -> list[dict[str, Any]]:
     for name, ws_id in SALES_OPS_WORKSPACES.items():
         entry: dict[str, Any] = {"workspace": name, "id": ws_id}
         try:
-            ds = az_rest_pbi(
-                f"https://api.powerbi.com/v1.0/myorg/groups/{ws_id}/datasets"
-            )
+            ds = az_rest_pbi(f"https://api.powerbi.com/v1.0/myorg/groups/{ws_id}/datasets")
             entry["datasets"] = [d.get("name") for d in ds.get("value", [])]
         except Exception as e:
             entry["datasets_error"] = str(e)[:150]
         try:
-            rp = az_rest_pbi(
-                f"https://api.powerbi.com/v1.0/myorg/groups/{ws_id}/reports"
-            )
+            rp = az_rest_pbi(f"https://api.powerbi.com/v1.0/myorg/groups/{ws_id}/reports")
             entry["reports"] = [r.get("name") for r in rp.get("value", [])]
         except Exception as e:
             entry["reports_error"] = str(e)[:150]
@@ -140,9 +186,7 @@ def pull_fabric_workspace_summary() -> list[dict[str, Any]]:
 def synthesize(sf_snapshot: dict, fabric_summary: list, model: str) -> str:
     """Send aggregated metadata to apro-openai for a Sales Ops brief."""
     cred = AzureCliCredential()
-    token_provider = lambda: cred.get_token(
-        "https://cognitiveservices.azure.com/.default"
-    ).token
+    token_provider = lambda: cred.get_token("https://cognitiveservices.azure.com/.default").token
 
     client = AzureOpenAI(
         azure_endpoint=OPENAI_ENDPOINT,
@@ -154,11 +198,22 @@ def synthesize(sf_snapshot: dict, fabric_summary: list, model: str) -> str:
         "You are a Sales Operations Copilot for SimCorp. "
         "You receive (1) a Salesforce pipeline snapshot for the current quarter "
         "and (2) a list of Fabric/Power BI workspaces accessible to the user. "
-        "Produce a tight executive brief — 200-400 words max — with these sections: "
-        "1) Pipeline state at a glance "
-        "2) What the data suggests focusing on this week "
-        "3) Which Fabric workspaces look most relevant to today's questions "
-        "4) Two concrete next analyses to run. "
+        "\n\n"
+        "CRITICAL metric convention — never blend these:\n"
+        "- Land + Expand deals are measured in ARR (annual recurring revenue) "
+        "via APTS_Opportunity_ARR__c.\n"
+        "- Renewal deals are measured in ACV (annual contract value) "
+        "via APTS_Renewal_ACV__c.\n"
+        "- New-business pipeline ($ARR) and renewal pipeline ($ACV) are different shapes — "
+        "report them separately, do not sum them, do not call the combined number 'pipeline'.\n"
+        "- Always label every dollar figure as either 'ARR' (Land/Expand) or 'ACV' (Renewal).\n"
+        "\n"
+        "Produce a tight executive brief — 200-400 words max — with these sections:\n"
+        "1) New-business ARR state at a glance (Land + Expand)\n"
+        "2) Renewal ACV state at a glance\n"
+        "3) What to focus on this week (separate calls for each motion)\n"
+        "4) Which Fabric workspaces are most relevant\n"
+        "5) Two concrete next analyses to run.\n"
         "No fluff. No restating the data verbatim. Lead with the insight."
     )
 
@@ -204,18 +259,48 @@ def render_report(
     if synthesis:
         lines += ["## Synthesis", "", synthesis, ""]
 
+    totals = sf_snapshot.get("totals", {})
+    new_arr = totals.get("new_business_arr_open_this_quarter") or 0
+    ren_acv = totals.get("renewal_acv_open_this_quarter") or 0
+
     lines += [
-        "## Pipeline snapshot (this quarter, open opps)",
+        "## Pipeline this quarter — open, by motion",
         "",
-        "| Stage | # Opps | Amount |",
+        "*Land + Expand reported in ARR. Renewals reported in ACV. Never blended.*",
+        "",
+        f"- **New-business ARR** (Land + Expand): ${new_arr:,.0f}",
+        f"- **Renewal ACV**: ${ren_acv:,.0f}",
+        "",
+        "### By Type (canonical split)",
+        "",
+        "| Type | # Opps | ARR | Renewal ACV |",
+        "|---|---:|---:|---:|",
+    ]
+    for t in sf_snapshot.get("by_type", []):
+        arr = t.get("arr") or 0
+        acv = t.get("renewal_acv") or 0
+        arr_s = f"${arr:,.0f}" if arr else "—"
+        acv_s = f"${acv:,.0f}" if acv else "—"
+        lines.append(f"| {t['type']} | {t['num_opps']} | {arr_s} | {acv_s} |")
+
+    lines += [
+        "",
+        "### New-business ARR by stage (Land + Expand)",
+        "",
+        "| Stage | # Opps | ARR |",
         "|---|---:|---:|",
     ]
-    for r in sf_snapshot["by_stage"]:
-        amt = r["total_amount"]
-        amt_s = f"${amt:,.0f}" if amt else "—"
-        lines.append(f"| {r['stage']} | {r['num_opps']} | {amt_s} |")
-    total = sf_snapshot.get("total_open_this_quarter") or 0
-    lines += ["", f"**Total open this quarter:** ${total:,.0f}", ""]
+    for r in sf_snapshot.get("new_business_by_stage", []):
+        arr = r.get("arr") or 0
+        arr_s = f"${arr:,.0f}" if arr else "—"
+        lines.append(f"| {r['stage']} | {r['num_opps']} | {arr_s} |")
+
+    lines += ["", "### Renewal ACV by stage", "", "| Stage | # Opps | ACV |", "|---|---:|---:|"]
+    for r in sf_snapshot.get("renewals_by_stage", []):
+        acv = r.get("acv") or 0
+        acv_s = f"${acv:,.0f}" if acv else "—"
+        lines.append(f"| {r['stage']} | {r['num_opps']} | {acv_s} |")
+    lines.append("")
 
     lines += ["## Fabric / Power BI workspaces inspected", ""]
     for ws in fabric_summary:
@@ -244,23 +329,22 @@ def main() -> int:
         default=DEFAULT_MODEL,
         help="Azure OpenAI deployment name (default: gpt53chat)",
     )
-    ap.add_argument(
-        "--no-llm", action="store_true", help="Skip LLM synthesis (data-only run)"
-    )
+    ap.add_argument("--no-llm", action="store_true", help="Skip LLM synthesis (data-only run)")
     ap.add_argument("--out", help="Output path; defaults to reports/YYYY-MM-DD.md")
     args = ap.parse_args()
 
     REPORTS_DIR.mkdir(exist_ok=True)
     out_path = (
-        pathlib.Path(args.out)
-        if args.out
-        else REPORTS_DIR / f"{dt.date.today().isoformat()}.md"
+        pathlib.Path(args.out) if args.out else REPORTS_DIR / f"{dt.date.today().isoformat()}.md"
     )
 
     print("→ Pulling Salesforce snapshot...")
     sf = pull_salesforce_snapshot()
+    t = sf.get("totals", {})
     print(
-        f"  Stages: {len(sf['by_stage'])}, total open this quarter: ${sf['total_open_this_quarter'] or 0:,.0f}"
+        f"  New-business ARR (Land+Expand): ${t.get('new_business_arr_open_this_quarter', 0):,.0f} | "
+        f"Renewal ACV: ${t.get('renewal_acv_open_this_quarter', 0):,.0f} | "
+        f"Types: {len(sf.get('by_type', []))}"
     )
 
     print("→ Pulling Fabric workspace summary...")
