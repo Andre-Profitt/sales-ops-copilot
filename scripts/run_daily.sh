@@ -35,4 +35,15 @@ else
   echo "[$(date)] agent.py failed with rc=$RC"
 fi
 
+# Memo-grade PDF for forwarding to directors. Lives in reports/ alongside the
+# .md/.html (NOT published to OneDrive — Power Automate Flow watches .html).
+TODAY="$(date +%Y-%m-%d)"
+AGENT_MD="reports/agent-${TODAY}.md"
+PDF_OUT="reports/${TODAY}.pdf"
+if [[ -f "$AGENT_MD" ]]; then
+  python3 scripts/brief_pdf.py "$AGENT_MD" "$PDF_OUT" --pdf \
+    && echo "[$(date)] PDF: $PDF_OUT" \
+    || echo "[$(date)] PDF render failed (non-fatal)"
+fi
+
 exit $RC

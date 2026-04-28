@@ -4,6 +4,9 @@ requests>=2.31.0
 openpyxl>=3.1.5
 pydantic>=2.10.0
 markdown>=3.10.0
+# WeasyPrint for memo-grade PDF rendering (scripts/brief_pdf.py).
+# Requires Homebrew system libs: brew install pango cairo glib
+weasyprint>=68.0
 # Microsoft Agent Framework — used by scripts/agent.py to wrap brief.py as a
 # tool-using ChatAgent against apro-openai. Pin 1.2.1 (verified 2026-04-28).
 agent-framework==1.2.1

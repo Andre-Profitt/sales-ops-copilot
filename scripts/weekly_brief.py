@@ -317,6 +317,11 @@ def main() -> int:
     ap.add_argument("--no-llm", action="store_true")
     ap.add_argument("--out", help="Output markdown path; defaults to reports/weekly-<today>.md")
     ap.add_argument("--onedrive-publish", action="store_true")
+    ap.add_argument(
+        "--pdf",
+        action="store_true",
+        help="Also render a memo-grade PDF alongside the .md (via WeasyPrint).",
+    )
     ap.add_argument("--model", default=DEFAULT_MODEL)
     args = ap.parse_args()
 
@@ -339,6 +344,14 @@ def main() -> int:
         )
         out_path.write_text(msg, encoding="utf-8")
         print(f"✓ Wrote {out_path} (insufficient-history stub)")
+        if args.pdf:
+            try:
+                from brief_pdf import render_file as _render_pdf  # type: ignore[import-not-found]
+
+                pdf_path = _render_pdf(out_path)
+                print(f"✓ Wrote {pdf_path}")
+            except Exception as e:
+                print(f"  ⚠ PDF render failed: {e}")
         return 0
 
     body = render_markdown(today, window, synthesis=None, model=args.model)
@@ -372,6 +385,15 @@ def main() -> int:
             print(f"✓ Published to OneDrive: {target}")
         except Exception as e:
             print(f"  ⚠ OneDrive publish failed: {e}")
+
+    if args.pdf:
+        try:
+            from brief_pdf import render_file as _render_pdf  # type: ignore[import-not-found]
+
+            pdf_path = _render_pdf(out_path)
+            print(f"✓ Wrote {pdf_path}")
+        except Exception as e:
+            print(f"  ⚠ PDF render failed: {e}")
 
     return 0
 
