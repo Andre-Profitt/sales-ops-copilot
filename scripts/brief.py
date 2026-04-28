@@ -580,6 +580,17 @@ def main() -> int:
     )
     ap.add_argument("--no-llm", action="store_true", help="Skip LLM synthesis (data-only run)")
     ap.add_argument("--out", help="Output path; defaults to reports/YYYY-MM-DD.md")
+    ap.add_argument(
+        "--html",
+        action="store_true",
+        help="Also render a standalone HTML version alongside the .md",
+    )
+    ap.add_argument(
+        "--open",
+        dest="auto_open",
+        action="store_true",
+        help="Open the rendered HTML in the default browser after writing (implies --html)",
+    )
     args = ap.parse_args()
 
     REPORTS_DIR.mkdir(exist_ok=True)
@@ -652,6 +663,17 @@ def main() -> int:
     report = render_report(sf, fabric, alerts, owners, accounts, synthesis, args.model)
     out_path.write_text(report, encoding="utf-8")
     print(f"\n✓ Wrote {out_path}")
+
+    if args.html or args.auto_open:
+        from brief_html import render_file as _render_html  # type: ignore[import-not-found]
+
+        html_path = _render_html(out_path)
+        print(f"✓ Wrote {html_path}")
+        if args.auto_open:
+            try:
+                subprocess.run(["open", str(html_path)], check=False)
+            except Exception as e:
+                print(f"  ⚠ open failed: {e}")
     return 0
 
 

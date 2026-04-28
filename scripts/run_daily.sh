@@ -15,8 +15,12 @@ source .venv/bin/activate || { echo "[$(date)] venv activation failed"; exit 1; 
 echo "==================== $(date) ===================="
 echo "Running sales-ops-copilot daily brief..."
 
-# Run the brief; captures both stdout and stderr to the launchd log
-python3 scripts/brief.py
+# Run the brief; captures both stdout and stderr to the launchd log.
+# --open auto-launches the rendered HTML in the default browser at 7am
+# (Teams chat-with-self path is CA-blocked — see memory
+# feedback_graph_cli_client_also_ca_blocked.md). Drop --open if the daily
+# browser tab gets annoying; the .html file is still written either way.
+python3 scripts/brief.py --html --open
 RC=$?
 
 if [[ $RC -eq 0 ]]; then
