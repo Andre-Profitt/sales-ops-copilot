@@ -232,6 +232,139 @@ async def _run_agent(model: str) -> str:
     return str(response).strip()
 
 
+def _build_agent(model: str) -> Any:
+    """Construct the chat agent (shared by one-shot and interactive paths)."""
+    cred = AzureCliCredential()
+    client = OpenAIChatCompletionClient(
+        azure_endpoint=OPENAI_ENDPOINT,
+        credential=cred,
+        api_version=OPENAI_API_VERSION,
+        model=model,
+    )
+    return client.as_agent(
+        name="sales-ops-copilot",
+        description="Daily Sales Ops brief for SimCorp Global Senior Sales Operations Consultant.",
+        instructions=SYSTEM_PROMPT,
+        tools=[
+            pull_salesforce_snapshot,
+            pull_fabric_workspace_summary,
+            pull_all_alerts,
+            pull_owner_concentration,
+            pull_account_concentration,
+        ],
+        default_options={"max_tokens": 1500},
+    )
+
+
+# --- Interactive REPL -------------------------------------------------------
+
+
+def _prewarm_cache() -> None:
+    print("→ Pulling Salesforce snapshot...")
+    TOOL_CACHE["sf_snapshot"] = _pull_sf_snapshot_raw()
+    print("→ Pulling Fabric workspace summary...")
+    TOOL_CACHE["fabric_summary"] = _pull_fabric_summary_raw()
+    print("→ Detecting alerts...")
+    TOOL_CACHE["alerts"] = _pull_alerts_raw()
+    print("→ Owner concentration...")
+    TOOL_CACHE["owners"] = _pull_owner_conc_raw(top_n=10)
+    print("→ Account concentration...")
+    TOOL_CACHE["accounts"] = _pull_account_conc_raw(top_n=15)
+
+
+def _summary_header() -> str:
+    sf = TOOL_CACHE["sf_snapshot"]
+    t = sf.get("totals", {})
+    alerts = TOOL_CACHE["alerts"]
+    crit = sum(1 for a in alerts if a.get("severity") == "critical")
+    imp = sum(1 for a in alerts if a.get("severity") == "important")
+    owners = TOOL_CACHE["owners"]
+    accounts = TOOL_CACHE["accounts"]
+    top_owner = owners[0] if owners else None
+    top_acct = accounts[0] if accounts else None
+    bar = "=" * 60
+    lines = [
+        "",
+        bar,
+        f"Sales Ops Copilot — Interactive ({dt.date.today().isoformat()})",
+        bar,
+        f"Open new-business ARR (Q): ${t.get('new_business_arr_open_this_quarter', 0):,.0f} "
+        f"(weighted ${t.get('weighted_new_business_arr', 0):,.0f})",
+        f"Open Renewal ACV (Q): ${t.get('renewal_acv_open_this_quarter', 0):,.0f} "
+        f"(weighted ${t.get('weighted_renewal_acv', 0):,.0f})",
+        f"Alerts: {crit} critical, {imp} important",
+    ]
+    if top_owner:
+        lines.append(f"Top owner (alert ARR): {top_owner['owner']} ${top_owner['total_arr']:,.0f}")
+    if top_acct:
+        lines.append(
+            f"Top account (alert ARR): {top_acct['account']} ${top_acct['total_arr']:,.0f}"
+        )
+    lines += [
+        "",
+        "Type a question. `exit`, `quit`, Ctrl-C, or Ctrl-D to leave.",
+        bar,
+        "",
+    ]
+    return "\n".join(lines)
+
+
+def _cached_context_payload() -> str:
+    return json.dumps(
+        {
+            "salesforce_pipeline_thisquarter": TOOL_CACHE["sf_snapshot"],
+            "alerts": TOOL_CACHE["alerts"],
+            "owner_concentration_top10": TOOL_CACHE["owners"],
+            "account_concentration_top15": TOOL_CACHE["accounts"],
+            "fabric_workspaces_available": TOOL_CACHE["fabric_summary"],
+            "today": dt.date.today().isoformat(),
+        },
+        indent=2,
+        default=str,
+    )
+
+
+async def _interactive_loop(model: str) -> int:
+    agent = _build_agent(model)
+    session = agent.create_session()
+
+    primer = (
+        "You have a pre-warmed snapshot of today's Sales Ops data below. "
+        "Use it as default context; only re-call tools if the user explicitly "
+        "asks for a refresh or for data not present here. Keep answers tight "
+        "(under 200 words unless asked for more). Maintain ARR/ACV separation.\n\n"
+        f"CACHED_SNAPSHOT:\n{_cached_context_payload()}"
+    )
+    await agent.run(primer, session=session)
+
+    while True:
+        try:
+            line = input("> ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\nbye.")
+            return 0
+        if not line:
+            continue
+        if line.lower() in {"exit", "quit", ":q"}:
+            print("bye.")
+            return 0
+        try:
+            response = await agent.run(line, session=session)
+            print(f"\n{str(response).strip()}\n")
+        except Exception as e:
+            print(f"  ⚠ agent error: {e}\n")
+
+
+def _run_interactive(model: str) -> int:
+    _prewarm_cache()
+    print(_summary_header())
+    try:
+        return asyncio.run(_interactive_loop(model))
+    except KeyboardInterrupt:
+        print("\nbye.")
+        return 0
+
+
 # --- Main -------------------------------------------------------------------
 
 
@@ -259,7 +392,15 @@ def main() -> int:
         action="store_true",
         help="Atomic-write the rendered HTML to OneDrive folder for Power Automate Flow pickup.",
     )
+    ap.add_argument(
+        "--interactive",
+        action="store_true",
+        help="Drop into a multi-turn REPL after pre-warming the data cache.",
+    )
     args = ap.parse_args()
+
+    if args.interactive:
+        return _run_interactive(args.model)
 
     REPORTS_DIR.mkdir(exist_ok=True)
     out_path = (
