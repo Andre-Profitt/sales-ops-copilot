@@ -1,0 +1,101 @@
+/* Sales Ops Cockpit — terminal UI styling */
+
+Screen {
+    background: $surface;
+}
+
+#topbar {
+    dock: top;
+    height: 1;
+    background: $primary 30%;
+    color: $text;
+    padding: 0 1;
+}
+
+#topbar .title { text-style: bold; }
+#topbar .headline { color: $text-muted; }
+
+#bottombar {
+    dock: bottom;
+    height: 1;
+    background: $primary 20%;
+    color: $text-muted;
+    padding: 0 1;
+}
+
+#panes {
+    height: 1fr;
+}
+
+#alerts-pane, #deals-pane, #drill-pane {
+    height: 100%;
+    border: solid $primary 30%;
+    padding: 0 1;
+}
+
+#alerts-pane { width: 30%; }
+#deals-pane  { width: 30%; }
+#drill-pane  { width: 1fr; }
+
+#alerts-pane.focused, #deals-pane.focused, #drill-pane.focused {
+    border: heavy $accent;
+}
+
+DataTable {
+    height: 1fr;
+}
+
+DataTable > .datatable--cursor {
+    background: $accent 60%;
+    color: $text;
+    text-style: bold;
+}
+
+DataTable > .datatable--header {
+    background: $primary 50%;
+    color: $text;
+    text-style: bold;
+}
+
+.crit { color: $error; text-style: bold; }
+.imp  { color: $warning; }
+.info { color: $accent; }
+.acked { color: $text-muted; text-style: strike; }
+
+#search-bar {
+    dock: bottom;
+    height: 3;
+    background: $boost;
+    padding: 0 1;
+    display: none;
+}
+#search-bar.visible { display: block; }
+
+#help {
+    align: center middle;
+    background: $surface 80%;
+}
+
+#help-box {
+    width: 70;
+    height: auto;
+    background: $panel;
+    border: heavy $accent;
+    padding: 1 2;
+}
+
+#splash {
+    align: center middle;
+    height: 1fr;
+}
+
+#toast {
+    dock: bottom;
+    height: 1;
+    background: $success 50%;
+    color: $text;
+    padding: 0 1;
+    display: none;
+}
+#toast.visible { display: block; }
+#toast.error { background: $error 50%; }
