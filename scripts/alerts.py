@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+from functools import lru_cache
 from typing import Any
 
 LATE_STAGE_LIKE = (
@@ -38,6 +39,18 @@ EXCLUDE_TEST_ARTIFACTS = (
     "AND (NOT Name LIKE 'QTC_Test%') AND (NOT Name LIKE 'ASH Dummy%') "
     "AND (NOT Name LIKE 'SBL Opp%') AND (NOT Name = 'Back Office'))"
 )
+
+
+@lru_cache(maxsize=1)
+def _ack_exclusion() -> str:
+    """Acked opp IDs to exclude from alert queries. Cached per-process; call
+    `_ack_exclusion.cache_clear()` after mutating state/acknowledged.json."""
+    try:
+        from ack import soql_exclusion  # type: ignore[import-not-found]
+
+        return soql_exclusion()
+    except Exception:
+        return ""
 
 
 def _sf(soql: str) -> list[dict[str, Any]]:
@@ -71,7 +84,7 @@ def commercial_approval_gap_land() -> dict[str, Any]:
     """
     where = (
         f"IsClosed = false AND Type = 'Land' AND {LATE_STAGE_LIKE} "
-        f"AND Stage_20_Approval__c = false {EXCLUDE_TEST_ARTIFACTS}"
+        f"AND Stage_20_Approval__c = false {EXCLUDE_TEST_ARTIFACTS}{_ack_exclusion()}"
     )
     agg = _agg(
         "SELECT COUNT(Id) num, SUM(APTS_Opportunity_ARR__c) total_arr "
@@ -96,7 +109,7 @@ def commercial_approval_gap_big() -> dict[str, Any]:
     where = (
         f"IsClosed = false AND Type IN ('Land','Expand') AND {LATE_STAGE_LIKE} "
         f"AND APTS_Opportunity_ARR__c >= 500000 AND Stage_20_Approval__c = false "
-        f"{EXCLUDE_TEST_ARTIFACTS}"
+        f"{EXCLUDE_TEST_ARTIFACTS}{_ack_exclusion()}"
     )
     agg = _agg(
         "SELECT COUNT(Id) num, SUM(APTS_Opportunity_ARR__c) total_arr "
@@ -118,7 +131,7 @@ def commercial_approval_gap_big() -> dict[str, Any]:
 
 def close_date_in_past() -> dict[str, Any]:
     """Open opps with close date in the past — distorts every pipeline view."""
-    where = f"IsClosed = false AND CloseDate < TODAY {EXCLUDE_TEST_ARTIFACTS}"
+    where = f"IsClosed = false AND CloseDate < TODAY {EXCLUDE_TEST_ARTIFACTS}{_ack_exclusion()}"
     agg = _agg(
         "SELECT COUNT(Id) num, SUM(APTS_Opportunity_ARR__c) total_arr "
         f"FROM Opportunity WHERE {where}"
@@ -142,7 +155,7 @@ def dec_31_placeholder_dates() -> dict[str, Any]:
     where = (
         f"IsClosed = false AND {LATE_STAGE_LIKE} "
         f"AND CALENDAR_MONTH(CloseDate) = 12 AND DAY_IN_MONTH(CloseDate) = 31 "
-        f"{EXCLUDE_TEST_ARTIFACTS}"
+        f"{EXCLUDE_TEST_ARTIFACTS}{_ack_exclusion()}"
     )
     agg = _agg(
         "SELECT COUNT(Id) num, SUM(APTS_Opportunity_ARR__c) total_arr "
@@ -166,7 +179,7 @@ def stale_activity() -> dict[str, Any]:
     """Stage 3+ open opps with no activity in 60+ days."""
     where = (
         f"IsClosed = false AND {LATE_STAGE_LIKE} AND LastActivityDate < LAST_N_DAYS:60 "
-        f"{EXCLUDE_TEST_ARTIFACTS}"
+        f"{EXCLUDE_TEST_ARTIFACTS}{_ack_exclusion()}"
     )
     agg = _agg(
         "SELECT COUNT(Id) num, SUM(APTS_Opportunity_ARR__c) total_arr "
@@ -190,7 +203,7 @@ def no_activity_ever() -> dict[str, Any]:
     """Stage 3+ open opps that have NEVER had a logged activity."""
     where = (
         f"IsClosed = false AND {LATE_STAGE_LIKE} AND LastActivityDate = null "
-        f"{EXCLUDE_TEST_ARTIFACTS}"
+        f"{EXCLUDE_TEST_ARTIFACTS}{_ack_exclusion()}"
     )
     agg = _agg(
         "SELECT COUNT(Id) num, SUM(APTS_Opportunity_ARR__c) total_arr "
@@ -212,7 +225,9 @@ def no_activity_ever() -> dict[str, Any]:
 
 def inactive_owner() -> dict[str, Any]:
     """Open opps owned by an inactive Salesforce user — alerts go nowhere."""
-    where = f"IsClosed = false AND Owner.IsActive = false {EXCLUDE_TEST_ARTIFACTS}"
+    where = (
+        f"IsClosed = false AND Owner.IsActive = false {EXCLUDE_TEST_ARTIFACTS}{_ack_exclusion()}"
+    )
     agg = _agg(
         "SELECT COUNT(Id) num, SUM(APTS_Opportunity_ARR__c) total_arr "
         f"FROM Opportunity WHERE {where}"
@@ -299,7 +314,7 @@ def pull_owner_concentration(top_n: int = 10) -> list[dict[str, Any]]:
         # Inactive owner
         "  OR (Owner.IsActive = false) "
         ") "
-        f"{EXCLUDE_TEST_ARTIFACTS}"
+        f"{EXCLUDE_TEST_ARTIFACTS}{_ack_exclusion()}"
     )
     soql = (
         "SELECT Owner.Name owner_name, COUNT(Id) num_deals, "
