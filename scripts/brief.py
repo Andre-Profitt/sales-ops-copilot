@@ -307,13 +307,18 @@ def render_report(
                 ]
                 samples = a.get("samples") or []
                 if samples:
-                    lines += ["| Top deals | Stage | $ARR | Owner |", "|---|---|---:|---|"]
+                    lines += [
+                        "| Top deals | Stage | $ARR | Owner | Also flagged in |",
+                        "|---|---|---:|---|---|",
+                    ]
                     for s in samples[:3]:
                         amt = s.get("$arr") or 0
                         amt_s = f"${amt:,.0f}" if amt else "—"
+                        also = s.get("also_flagged_in") or []
+                        also_s = f"+{len(also)}" if also else "—"
                         lines.append(
                             f"| {s.get('name', '?')} | {s.get('stage', '—')} | "
-                            f"{amt_s} | {s.get('owner', '—')} |"
+                            f"{amt_s} | {s.get('owner', '—')} | {also_s} |"
                         )
                     lines.append("")
         lines.append("")
@@ -412,7 +417,7 @@ def main() -> int:
 
     print("→ Detecting governance + hygiene alerts...")
     # Deferred import keeps formatters from stripping it before sys.path is set.
-    from alerts import pull_all_alerts as _pull_alerts
+    from alerts import pull_all_alerts as _pull_alerts  # type: ignore[reportMissingImports]
 
     alerts = _pull_alerts()
     crit = sum(1 for a in alerts if a.get("severity") == "critical")

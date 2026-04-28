@@ -265,9 +265,56 @@ ALERT_FUNCTIONS = [
 ]
 
 
+SEVERITY_ORDER = {"critical": 0, "important": 1, "info": 2, "error": 99}
+
+
+def deduplicate_samples(alerts: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """
+    Each opp can be flagged by multiple alerts (e.g., a deal that's both
+    Stage 3+ ≥$500k no-approval AND has Dec 31 placeholder close date).
+    This dedupes the samples lists so each opp appears in only ONE alert's
+    samples — the highest-severity / first-listed one — with an
+    'also_flagged_in' tag pointing to the other alerts that match it.
+
+    Counts and total_arr per alert are NOT modified — those are still the
+    full set; only the displayed samples are deduped.
+    """
+    # Build the full opp_id → set-of-alert-names map first (across all samples).
+    opp_to_alerts: dict[str, list[str]] = {}
+    for a in alerts:
+        for s in a.get("samples") or []:
+            opp_id = s.get("id")
+            if not opp_id:
+                continue
+            opp_to_alerts.setdefault(opp_id, []).append(a["name"])
+
+    # Process alerts in severity order so critical wins primary placement.
+    sorted_alerts = sorted(
+        range(len(alerts)),
+        key=lambda i: (SEVERITY_ORDER.get(alerts[i].get("severity", ""), 99), i),
+    )
+
+    seen: set[str] = set()
+    for idx in sorted_alerts:
+        a = alerts[idx]
+        kept: list[dict[str, Any]] = []
+        for s in a.get("samples") or []:
+            opp_id = s.get("id")
+            if not opp_id or opp_id in seen:
+                continue
+            seen.add(opp_id)
+            also_in = [n for n in opp_to_alerts.get(opp_id, []) if n != a["name"]]
+            if also_in:
+                s["also_flagged_in"] = also_in
+            kept.append(s)
+        a["samples"] = kept
+
+    return alerts
+
+
 def pull_all_alerts() -> list[dict[str, Any]]:
     """Run every alert and return only the ones with count > 0."""
-    results = []
+    results: list[dict[str, Any]] = []
     for fn in ALERT_FUNCTIONS:
         try:
             r = fn()
@@ -284,7 +331,7 @@ def pull_all_alerts() -> list[dict[str, Any]]:
                     "samples": [],
                 }
             )
-    return results
+    return deduplicate_samples(results)
 
 
 if __name__ == "__main__":
