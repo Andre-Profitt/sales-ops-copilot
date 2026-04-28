@@ -695,6 +695,11 @@ def main() -> int:
         action="store_true",
         help="Atomic-write the rendered HTML to OneDrive folder for Power Automate Flow pickup.",
     )
+    ap.add_argument(
+        "--pdf",
+        action="store_true",
+        help="Also render a memo-grade PDF version alongside the .md (via WeasyPrint).",
+    )
     args = ap.parse_args()
 
     REPORTS_DIR.mkdir(exist_ok=True)
@@ -813,6 +818,15 @@ def main() -> int:
                 print(f"✓ Published to OneDrive: {target}")
             except Exception as e:
                 print(f"  ⚠ OneDrive publish failed: {e}")
+
+    if args.pdf:
+        try:
+            from brief_pdf import render_file as _render_pdf  # type: ignore[import-not-found]
+
+            pdf_path = _render_pdf(out_path)
+            print(f"✓ Wrote {pdf_path}")
+        except Exception as e:
+            print(f"  ⚠ PDF render failed: {e}")
     return 0
 
 
