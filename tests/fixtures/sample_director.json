@@ -1,0 +1,19 @@
+{
+  "by_type": [
+    { "type": "Land", "num_opps": 12, "arr": 18500000, "renewal_acv": 0 },
+    { "type": "Expand", "num_opps": 25, "arr": 9200000, "renewal_acv": 0 },
+    { "type": "Renewal", "num_opps": 4, "arr": 0, "renewal_acv": 2400000 }
+  ],
+  "new_business_by_stage": [
+    { "stage": "3 Engagement", "num_opps": 18, "arr": 12000000 },
+    { "stage": "4 Shortlisted", "num_opps": 12, "arr": 9500000 },
+    { "stage": "5 Preferred", "num_opps": 7, "arr": 6200000 }
+  ],
+  "renewals_by_stage": [
+    { "stage": "5 Preferred", "num_opps": 4, "acv": 2400000 }
+  ],
+  "totals": {
+    "new_business_arr_open_this_quarter": 27700000,
+    "renewal_acv_open_this_quarter": 2400000
+  }
+}
