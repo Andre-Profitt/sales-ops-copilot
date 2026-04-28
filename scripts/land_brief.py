@@ -46,8 +46,17 @@ def _sf_query(soql: str) -> list[dict[str, Any]]:
 
 
 def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
-    """SF snapshot scoped to one director's territory."""
-    book_codes = "(" + ",".join(f"'{b}'" for b in director["book_codes"]) + ")"
+    """SF snapshot scoped to one director's territory.
+
+    Filter mechanism is the per-director `where_clause` (Account.Region__c +
+    BillingCountry + Industry per the canonical MD-1 scope map). Falls back to
+    Account.Sales_Director_Book__c IN (book_codes) for legacy callers if no
+    where_clause is set.
+    """
+    where_clause = director.get("where_clause")
+    if not where_clause:
+        book_codes = "(" + ",".join(f"'{b}'" for b in director["book_codes"]) + ")"
+        where_clause = f"Account.Sales_Director_Book__c IN {book_codes}"
     period_clause = "CloseDate = THIS_QUARTER"  # TODO: parameterize by `period`
 
     by_type_q = (
@@ -56,7 +65,7 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
         "SUM(APTS_Renewal_ACV__c) total_renewal_acv "
         "FROM Opportunity "
         f"WHERE IsClosed = false AND {period_clause} "
-        f"AND Account.Sales_Director_Book__c IN {book_codes} "
+        f"AND {where_clause} "
         "GROUP BY Type ORDER BY Type"
     )
     by_type = []
@@ -75,7 +84,7 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
         "FROM Opportunity "
         f"WHERE IsClosed = false AND {period_clause} "
         "AND Type IN ('Land','Expand') "
-        f"AND Account.Sales_Director_Book__c IN {book_codes} "
+        f"AND {where_clause} "
         "GROUP BY StageName ORDER BY StageName"
     )
     new_business_by_stage = [
@@ -88,7 +97,7 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
         "FROM Opportunity "
         f"WHERE IsClosed = false AND {period_clause} "
         "AND Type = 'Renewal' "
-        f"AND Account.Sales_Director_Book__c IN {book_codes} "
+        f"AND {where_clause} "
         "GROUP BY StageName ORDER BY StageName"
     )
     renewals_by_stage = [
