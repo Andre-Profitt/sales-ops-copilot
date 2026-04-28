@@ -46,4 +46,13 @@ if [[ -f "$AGENT_MD" ]]; then
     || echo "[$(date)] PDF render failed (non-fatal)"
 fi
 
+# Board-pack PowerPoint deck. Nice-to-have only — never fails the daemon.
+# Runs only when the brief succeeded; OneDrive publish lets Power Automate
+# pick up the .pptx for distribution.
+if [[ $RC -eq 0 ]]; then
+  python3 scripts/deck.py --onedrive-publish \
+    && echo "[$(date)] deck: reports/deck-${TODAY}.pptx" \
+    || echo "[$(date)] deck render failed (non-fatal)"
+fi
+
 exit $RC

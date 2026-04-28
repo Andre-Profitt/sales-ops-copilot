@@ -10,3 +10,6 @@ weasyprint>=68.0
 # Microsoft Agent Framework — used by scripts/agent.py to wrap brief.py as a
 # tool-using ChatAgent against apro-openai. Pin 1.2.1 (verified 2026-04-28).
 agent-framework==1.2.1
+# python-pptx — used by scripts/deck.py + scripts/weekly_deck.py to render
+# board-pack PowerPoint decks against the SimCorp template.
+python-pptx>=1.0.0

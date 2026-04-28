@@ -23,4 +23,12 @@ else
   echo "[$(date)] weekly_brief.py failed with rc=$RC"
 fi
 
+# Board-pack PowerPoint weekly rollup. Nice-to-have only — never fails the
+# daemon. Runs only when the weekly brief succeeded.
+if [[ $RC -eq 0 ]]; then
+  python3 scripts/weekly_deck.py --onedrive-publish \
+    && echo "[$(date)] weekly deck: reports/weekly-deck-$(date +%Y-%m-%d).pptx" \
+    || echo "[$(date)] weekly_deck.py failed (non-fatal)"
+fi
+
 exit $RC
