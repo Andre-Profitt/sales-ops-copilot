@@ -51,7 +51,7 @@ from alerts import (  # type: ignore[import-not-found]  # noqa: E402
 )
 
 # Agent Framework
-from agent_framework.openai import OpenAIChatCompletionClient  # noqa: E402
+from agent_framework.openai import OpenAIChatCompletionClient  # noqa: E402  # type: ignore[attr-defined]
 
 
 # --- System prompt: lifted verbatim from brief.synthesize() ----------------
