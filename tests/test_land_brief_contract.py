@@ -10,7 +10,6 @@ import json
 from pathlib import Path
 
 
-
 FIXTURES = Path(__file__).parent / "fixtures"
 
 
@@ -65,3 +64,45 @@ def test_envelope_excludes_client_level_data():
     env = build_trends_envelope(sf_snapshot, director, "2026-Q2")
 
     assert "Account" not in env, "envelope must not include Account-level data"
+
+
+def test_highlights_derived_from_late_stage_concentration():
+    """When >70% of new-business ARR is in Stage 5+, highlight that."""
+    from scripts.land_brief import derive_highlights_risks
+
+    envelope = {
+        "kpis": [
+            {
+                "name": "total_pipeline_arr",
+                "value": 10_000_000,
+                "unit": "EUR",
+                "narrative_priority": "high",
+            },
+            {
+                "name": "pipeline_arr_stage_3",
+                "value": 1_000_000,
+                "unit": "EUR",
+                "stage_label": "3 Engagement",
+                "narrative_priority": "medium",
+            },
+            {
+                "name": "pipeline_arr_stage_5",
+                "value": 6_000_000,
+                "unit": "EUR",
+                "stage_label": "5 Preferred",
+                "narrative_priority": "medium",
+            },
+            {
+                "name": "pipeline_arr_stage_6",
+                "value": 2_500_000,
+                "unit": "EUR",
+                "stage_label": "6 Contracting",
+                "narrative_priority": "medium",
+            },
+        ],
+        "highlights": [],
+        "risks": [],
+    }
+    out = derive_highlights_risks(envelope)
+    assert len(out["highlights"]) >= 1
+    assert any("late-stage" in (h.get("rule") or "") for h in out["highlights"])
