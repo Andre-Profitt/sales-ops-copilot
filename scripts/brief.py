@@ -351,6 +351,61 @@ def synthesize(
     return resp.choices[0].message.content or ""
 
 
+# --- Alert trend persistence (7-day trailing) -------------------------------
+
+
+def _alert_snap_path(date: dt.date) -> pathlib.Path:
+    return ROOT / "state" / "snapshots" / f"{date.isoformat()}_alerts.json"
+
+
+def _persist_alert_counts_today(alerts: list[dict[str, Any]]) -> None:
+    today = dt.date.today()
+    path = _alert_snap_path(today)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload: dict[str, Any] = {
+        "date": today.isoformat(),
+        "counts": {a.get("name", ""): int(a.get("count") or 0) for a in alerts},
+        "total_arr": {a.get("name", ""): float(a.get("total_arr") or 0) for a in alerts},
+    }
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(payload, indent=2))
+    tmp.replace(path)
+
+
+def _load_trailing_alert_counts(days: int = 7, exclude_today: bool = True) -> dict[str, list[int]]:
+    today = dt.date.today()
+    out: dict[str, list[int]] = {}
+    for offset in range(1 if exclude_today else 0, days + 1):
+        d = today - dt.timedelta(days=offset)
+        p = _alert_snap_path(d)
+        if not p.exists():
+            continue
+        try:
+            data = json.loads(p.read_text())
+        except Exception:
+            continue
+        for name, count in (data.get("counts") or {}).items():
+            out.setdefault(name, []).append(int(count))
+    return out
+
+
+def _trend_callout(name: str, today_count: int, trailing: dict[str, list[int]]) -> str:
+    history = trailing.get(name) or []
+    if len(history) < 3:
+        return ""
+    avg = sum(history) / len(history)
+    if avg <= 0:
+        return f"7-day avg: {avg:.1f} ◆"
+    delta_ratio = (today_count - avg) / avg
+    if abs(delta_ratio) <= 0.05:
+        glyph = "◆"
+    elif delta_ratio > 0:
+        glyph = "▲"
+    else:
+        glyph = "▼"
+    return f"7-day avg: {avg:.1f} {glyph}"
+
+
 # --- Render -----------------------------------------------------------------
 
 
@@ -432,6 +487,8 @@ def render_report(
 
     # Alerts go BEFORE the data tables — these are the actionable signals
     if alerts:
+        _persist_alert_counts_today(alerts)
+        trailing = _load_trailing_alert_counts(days=7, exclude_today=True)
         lines += ["## Active alerts", ""]
         critical = [a for a in alerts if a.get("severity") == "critical"]
         important = [a for a in alerts if a.get("severity") == "important"]
@@ -442,8 +499,12 @@ def render_report(
             for a in bucket:
                 arr = a.get("total_arr") or 0
                 arr_s = f"${arr:,.0f}" if arr else "—"
+                trend_s = _trend_callout(a.get("name", ""), int(a.get("count") or 0), trailing)
+                head = f"**{a['name']}** — {a['count']} opps, {arr_s} ARR"
+                if trend_s:
+                    head = f"{head} ({trend_s})"
                 lines += [
-                    f"**{a['name']}** — {a['count']} opps, {arr_s} ARR",
+                    head,
                     f"_{a.get('rule', '')}_",
                     "",
                 ]
