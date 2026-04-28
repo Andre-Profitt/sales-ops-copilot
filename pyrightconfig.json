@@ -1,5 +1,6 @@
 {
-  "include": ["scripts", "eval"],
+  "include": ["scripts", "eval", "sf_dashboard"],
   "extraPaths": ["scripts", "eval"],
-  "reportMissingImports": "warning"
+  "reportMissingImports": "warning",
+  "reportUnusedVariable": "none"
 }
