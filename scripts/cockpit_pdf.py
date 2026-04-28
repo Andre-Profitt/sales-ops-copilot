@@ -88,12 +88,6 @@ def _money(v: float | int | None, *, large: bool = False) -> str:
     return f"${v:,.0f}"
 
 
-def _pct(v: float | None) -> str:
-    if v is None:
-        return "—"
-    return f"{v * 100:.1f}%"
-
-
 def _sf(soql: str) -> list[dict[str, Any]]:
     p = subprocess.run(
         ["sf", "data", "query", "--query", soql, "--json"],
@@ -516,7 +510,7 @@ def build_html(
         kpi1_delta = "vs last wk: —"
 
     # KPI 4 — discount: gap unless probe found populated values
-    _disc_field, disc_avg, disc_n = discount
+    _, disc_avg, disc_n = discount
     if disc_avg is not None:
         kpi4_value = f"{disc_avg:.1f}%"
         kpi4_foot = f"avg over n={disc_n}"
