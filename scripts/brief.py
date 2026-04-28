@@ -87,6 +87,87 @@ def _sf_query(soql: str) -> list[dict[str, Any]]:
     return json.loads(raw).get("result", {}).get("records", [])
 
 
+def _quarter_bounds(today: dt.date, offset: int) -> tuple[dt.date, dt.date, str]:
+    """Return (start_date, end_date, label) for the calendar quarter `offset`
+    quarters from today's quarter (0 = current, 1 = next, etc.). Calendar
+    quarters: Q1 Jan-Mar, Q2 Apr-Jun, Q3 Jul-Sep, Q4 Oct-Dec."""
+    q_idx = (today.month - 1) // 3  # 0..3 zero-based
+    total = q_idx + offset
+    new_year = today.year + total // 4
+    new_q = total % 4  # 0..3
+    start_month = new_q * 3 + 1
+    end_month = start_month + 2
+    start = dt.date(new_year, start_month, 1)
+    if end_month == 12:
+        end = dt.date(new_year, 12, 31)
+    else:
+        end = dt.date(new_year, end_month + 1, 1) - dt.timedelta(days=1)
+    label = f"{new_year}-Q{new_q + 1}"
+    return start, end, label
+
+
+def _pull_quarter_rollup(
+    start: dt.date, end: dt.date, label: str, stage_probs: dict[str, float]
+) -> dict[str, Any]:
+    """Pull new-business + renewal stage rollup for a single quarter window."""
+    from stage_probs import weighted  # type: ignore[import-not-found]
+
+    where_window = (
+        f"IsClosed = false AND CloseDate >= {start.isoformat()} AND CloseDate <= {end.isoformat()}"
+    )
+
+    new_arr_q = (
+        "SELECT StageName, COUNT(Id) num_opps, SUM(APTS_Opportunity_ARR__c) arr "
+        "FROM Opportunity "
+        f"WHERE {where_window} AND Type IN ('Land', 'Expand') "
+        "GROUP BY StageName ORDER BY StageName"
+    )
+    new_business_by_stage = [
+        {
+            "stage": r.get("StageName"),
+            "num_opps": r.get("num_opps") or 0,
+            "arr": r.get("arr") or 0,
+        }
+        for r in _sf_query(new_arr_q)
+    ]
+
+    renewal_acv_q = (
+        "SELECT StageName, COUNT(Id) num_opps, SUM(APTS_Renewal_ACV__c) acv "
+        "FROM Opportunity "
+        f"WHERE {where_window} AND Type = 'Renewal' "
+        "GROUP BY StageName ORDER BY StageName"
+    )
+    renewals_by_stage = [
+        {
+            "stage": r.get("StageName"),
+            "num_opps": r.get("num_opps") or 0,
+            "acv": r.get("acv") or 0,
+        }
+        for r in _sf_query(renewal_acv_q)
+    ]
+
+    for row in new_business_by_stage:
+        p = stage_probs.get(row.get("stage", ""), 0.0)
+        row["stage_probability"] = p
+        row["weighted_arr"] = (row.get("arr") or 0) * p
+    for row in renewals_by_stage:
+        p = stage_probs.get(row.get("stage", ""), 0.0)
+        row["stage_probability"] = p
+        row["weighted_acv"] = (row.get("acv") or 0) * p
+
+    return {
+        "label": label,
+        "start": start.isoformat(),
+        "end": end.isoformat(),
+        "new_business_by_stage": new_business_by_stage,
+        "renewals_by_stage": renewals_by_stage,
+        "open_new_business_arr": sum(r.get("arr") or 0 for r in new_business_by_stage),
+        "weighted_new_business_arr": weighted(new_business_by_stage, "arr"),
+        "open_renewal_acv": sum(r.get("acv") or 0 for r in renewals_by_stage),
+        "weighted_renewal_acv": weighted(renewals_by_stage, "acv"),
+    }
+
+
 def pull_salesforce_snapshot() -> dict[str, Any]:
     """
     Pipeline snapshot via sf CLI. Aggregates only — no client-level detail.
@@ -95,8 +176,17 @@ def pull_salesforce_snapshot() -> dict[str, Any]:
       - Land + Expand deals report ARR via APTS_Opportunity_ARR__c
       - Renewal deals report ACV via APTS_Renewal_ACV__c
       - The default `Amount` field is a blended number and not used here.
+
+    Pulls THIS_QUARTER (full Type breakdown + stage rollup) plus weighted
+    multi-quarter view for Q+1 and Q+2 — same empirical stage probabilities.
     """
-    # By Type — the canonical ARR vs ACV split
+    today = dt.date.today()
+
+    from stage_probs import get_stage_probabilities  # type: ignore[import-not-found]
+
+    stage_probs, prob_source = get_stage_probabilities()
+
+    # By Type — current quarter only (the canonical ARR vs ACV split)
     by_type_q = (
         "SELECT Type, COUNT(Id) num_opps, "
         "SUM(APTS_Opportunity_ARR__c) total_arr, "
@@ -116,72 +206,34 @@ def pull_salesforce_snapshot() -> dict[str, Any]:
             }
         )
 
-    # New business (Land + Expand) by stage — ARR
-    new_arr_q = (
-        "SELECT StageName, COUNT(Id) num_opps, SUM(APTS_Opportunity_ARR__c) arr "
-        "FROM Opportunity "
-        "WHERE IsClosed = false AND CloseDate = THIS_QUARTER "
-        "AND Type IN ('Land', 'Expand') "
-        "GROUP BY StageName ORDER BY StageName"
-    )
-    new_business_by_stage = [
-        {
-            "stage": r.get("StageName"),
-            "num_opps": r.get("num_opps") or 0,
-            "arr": r.get("arr") or 0,
-        }
-        for r in _sf_query(new_arr_q)
-    ]
+    # Multi-quarter rollup: current + next 2 (Q, Q+1, Q+2)
+    quarters: list[dict[str, Any]] = []
+    for offset in (0, 1, 2):
+        start, end, label = _quarter_bounds(today, offset)
+        quarters.append(_pull_quarter_rollup(start, end, label, stage_probs))
 
-    # Renewals by stage — ACV
-    renewal_acv_q = (
-        "SELECT StageName, COUNT(Id) num_opps, SUM(APTS_Renewal_ACV__c) acv "
-        "FROM Opportunity "
-        "WHERE IsClosed = false AND CloseDate = THIS_QUARTER "
-        "AND Type = 'Renewal' "
-        "GROUP BY StageName ORDER BY StageName"
-    )
-    renewals_by_stage = [
-        {
-            "stage": r.get("StageName"),
-            "num_opps": r.get("num_opps") or 0,
-            "acv": r.get("acv") or 0,
-        }
-        for r in _sf_query(renewal_acv_q)
-    ]
-
-    total_new_arr = sum(t["arr"] for t in by_type)
-    total_renewal_acv = sum(t["renewal_acv"] for t in by_type)
-
-    # Empirical weighted forecast — stage probabilities computed from the
-    # last 4 quarters of OpportunityFieldHistory. Falls back to naive priors
-    # if no history available.
-    from stage_probs import get_stage_probabilities, weighted  # type: ignore[import-not-found]
-
-    stage_probs, prob_source = get_stage_probabilities()
-    weighted_new_arr = weighted(new_business_by_stage, "arr")
-    weighted_renewal_acv = weighted(renewals_by_stage, "acv")
-
-    # Annotate each by_stage row with its probability so the LLM can cite it.
-    for row in new_business_by_stage:
-        p = stage_probs.get(row.get("stage", ""), 0.0)
-        row["stage_probability"] = p
-        row["weighted_arr"] = (row.get("arr") or 0) * p
-    for row in renewals_by_stage:
-        p = stage_probs.get(row.get("stage", ""), 0.0)
-        row["stage_probability"] = p
-        row["weighted_acv"] = (row.get("acv") or 0) * p
+    current = quarters[0]
+    next_q = quarters[1]
+    q_plus_2 = quarters[2]
 
     return {
         "by_type": by_type,
-        "new_business_by_stage": new_business_by_stage,
-        "renewals_by_stage": renewals_by_stage,
+        # Backward-compatible top-level fields = current quarter
+        "new_business_by_stage": current["new_business_by_stage"],
+        "renewals_by_stage": current["renewals_by_stage"],
+        # Multi-quarter forecast
+        "quarters": quarters,
         "totals": {
-            "new_business_arr_open_this_quarter": total_new_arr,
-            "renewal_acv_open_this_quarter": total_renewal_acv,
-            "weighted_new_business_arr": weighted_new_arr,
-            "weighted_renewal_acv": weighted_renewal_acv,
+            "new_business_arr_open_this_quarter": current["open_new_business_arr"],
+            "renewal_acv_open_this_quarter": current["open_renewal_acv"],
+            "weighted_new_business_arr": current["weighted_new_business_arr"],
+            "weighted_renewal_acv": current["weighted_renewal_acv"],
             "stage_probability_source": prob_source,
+            # Forward-quarter weighted forecasts
+            "weighted_new_business_arr_q_plus_1": next_q["weighted_new_business_arr"],
+            "weighted_renewal_acv_q_plus_1": next_q["weighted_renewal_acv"],
+            "weighted_new_business_arr_q_plus_2": q_plus_2["weighted_new_business_arr"],
+            "weighted_renewal_acv_q_plus_2": q_plus_2["weighted_renewal_acv"],
         },
     }
 
@@ -253,9 +305,15 @@ def synthesize(
         "transitions (source labelled in `totals.stage_probability_source`). "
         "Use these as the realistic forecast number, NOT the raw open-pipeline "
         "total. Always show both: open ARR vs weighted ARR (= empirical likely close).\n\n"
-        "Produce a tight executive brief — 250-450 words max — with these sections:\n"
-        "1) New-business ARR state — open vs empirically-weighted forecast (Land + Expand)\n"
-        "2) Renewal ACV state — open vs empirically-weighted forecast\n"
+        "MULTI-QUARTER VIEW: `quarters` is a 3-element list — current quarter, "
+        "Q+1, Q+2 — each with open and weighted ARR/ACV. Use this to show the "
+        "forward shape of the book. Flag if a forward quarter is suspiciously "
+        "front-loaded (e.g., Q4 renewal ACV inflated by Dec 31 placeholder dates). "
+        "Always cite the quarter label (e.g., 2026-Q3) when comparing.\n\n"
+        "Produce a tight executive brief — 300-500 words max — with these sections:\n"
+        "1) Current-quarter state — open vs weighted ARR (Land+Expand) and ACV (Renewal)\n"
+        "2) **Forward forecast (Q+1, Q+2) — weighted ARR and ACV per quarter, "
+        "with one sentence on the shape (front-loaded? back-loaded? Dec-31 inflated?)**\n"
         "3) **Top 3 governance/hygiene alerts to act on this week** "
         "(rank by impact, name specific deals from the samples when relevant)\n"
         "4) What to focus on this week per motion\n"
@@ -420,7 +478,23 @@ def render_report(
         f"| New-business (Land+Expand) ARR | ${open_arr:,.0f} | ${weighted_arr:,.0f} |",
         f"| Renewal ACV | ${open_acv:,.0f} | ${weighted_acv:,.0f} |",
         "",
-        "### New-business ARR by stage (Land + Expand)",
+        "### Multi-quarter weighted view (Q, Q+1, Q+2)",
+        "",
+        "| Quarter | Open ARR | Weighted ARR | Open Renewal ACV | Weighted ACV |",
+        "|---|---:|---:|---:|---:|",
+    ]
+    for q in sf_snapshot.get("quarters", []):
+        lines.append(
+            f"| {q.get('label', '—')} "
+            f"| ${(q.get('open_new_business_arr') or 0):,.0f} "
+            f"| ${(q.get('weighted_new_business_arr') or 0):,.0f} "
+            f"| ${(q.get('open_renewal_acv') or 0):,.0f} "
+            f"| ${(q.get('weighted_renewal_acv') or 0):,.0f} |"
+        )
+
+    lines += [
+        "",
+        "### New-business ARR by stage (Land + Expand) — current quarter",
         "",
         "| Stage | # Opps | ARR | Stage Prob | Weighted ARR |",
         "|---|---:|---:|---:|---:|",
@@ -489,10 +563,14 @@ def main() -> int:
     sf = pull_salesforce_snapshot()
     t = sf.get("totals", {})
     print(
-        f"  New-business ARR (Land+Expand): ${t.get('new_business_arr_open_this_quarter', 0):,.0f} "
+        f"  Current Q new-business ARR: ${t.get('new_business_arr_open_this_quarter', 0):,.0f} "
         f"(weighted ${t.get('weighted_new_business_arr', 0):,.0f}) | "
         f"Renewal ACV: ${t.get('renewal_acv_open_this_quarter', 0):,.0f} "
-        f"(weighted ${t.get('weighted_renewal_acv', 0):,.0f}) | "
+        f"(weighted ${t.get('weighted_renewal_acv', 0):,.0f})"
+    )
+    print(
+        f"  Forward weighted ARR — Q+1: ${t.get('weighted_new_business_arr_q_plus_1', 0):,.0f} | "
+        f"Q+2: ${t.get('weighted_new_business_arr_q_plus_2', 0):,.0f} | "
         f"prob source: {t.get('stage_probability_source', '—')}"
     )
 
