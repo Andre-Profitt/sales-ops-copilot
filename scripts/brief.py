@@ -153,6 +153,25 @@ def pull_salesforce_snapshot() -> dict[str, Any]:
     total_new_arr = sum(t["arr"] for t in by_type)
     total_renewal_acv = sum(t["renewal_acv"] for t in by_type)
 
+    # Empirical weighted forecast — stage probabilities computed from the
+    # last 4 quarters of OpportunityFieldHistory. Falls back to naive priors
+    # if no history available.
+    from stage_probs import get_stage_probabilities, weighted  # type: ignore[import-not-found]
+
+    stage_probs, prob_source = get_stage_probabilities()
+    weighted_new_arr = weighted(new_business_by_stage, "arr")
+    weighted_renewal_acv = weighted(renewals_by_stage, "acv")
+
+    # Annotate each by_stage row with its probability so the LLM can cite it.
+    for row in new_business_by_stage:
+        p = stage_probs.get(row.get("stage", ""), 0.0)
+        row["stage_probability"] = p
+        row["weighted_arr"] = (row.get("arr") or 0) * p
+    for row in renewals_by_stage:
+        p = stage_probs.get(row.get("stage", ""), 0.0)
+        row["stage_probability"] = p
+        row["weighted_acv"] = (row.get("acv") or 0) * p
+
     return {
         "by_type": by_type,
         "new_business_by_stage": new_business_by_stage,
@@ -160,6 +179,9 @@ def pull_salesforce_snapshot() -> dict[str, Any]:
         "totals": {
             "new_business_arr_open_this_quarter": total_new_arr,
             "renewal_acv_open_this_quarter": total_renewal_acv,
+            "weighted_new_business_arr": weighted_new_arr,
+            "weighted_renewal_acv": weighted_renewal_acv,
+            "stage_probability_source": prob_source,
         },
     }
 
@@ -225,9 +247,15 @@ def synthesize(
         "Shortlisted → Preferred → Contracting → Opt-out → Won. Per the Commercial "
         "Handbook, Commercial Approval is mandatory for ALL Land deals and for "
         "Expand deals with AER >€500k.\n\n"
+        "WEIGHTED FORECAST: `totals.weighted_new_business_arr` and "
+        "`totals.weighted_renewal_acv` are computed using empirical stage→Won "
+        "probabilities derived from the last 4 quarters of OpportunityFieldHistory "
+        "transitions (source labelled in `totals.stage_probability_source`). "
+        "Use these as the realistic forecast number, NOT the raw open-pipeline "
+        "total. Always show both: open ARR vs weighted ARR (= empirical likely close).\n\n"
         "Produce a tight executive brief — 250-450 words max — with these sections:\n"
-        "1) New-business ARR state at a glance (Land + Expand)\n"
-        "2) Renewal ACV state at a glance\n"
+        "1) New-business ARR state — open vs empirically-weighted forecast (Land + Expand)\n"
+        "2) Renewal ACV state — open vs empirically-weighted forecast\n"
         "3) **Top 3 governance/hygiene alerts to act on this week** "
         "(rank by impact, name specific deals from the samples when relevant)\n"
         "4) What to focus on this week per motion\n"
@@ -374,23 +402,51 @@ def render_report(
         acv_s = f"${acv:,.0f}" if acv else "—"
         lines.append(f"| {t['type']} | {t['num_opps']} | {arr_s} | {acv_s} |")
 
+    totals = sf_snapshot.get("totals", {})
+    open_arr = totals.get("new_business_arr_open_this_quarter", 0) or 0
+    weighted_arr = totals.get("weighted_new_business_arr", 0) or 0
+    open_acv = totals.get("renewal_acv_open_this_quarter", 0) or 0
+    weighted_acv = totals.get("weighted_renewal_acv", 0) or 0
+    prob_source = totals.get("stage_probability_source", "—")
+
     lines += [
+        "",
+        "### Weighted forecast (empirical)",
+        "",
+        f"Stage probabilities: *{prob_source}*",
+        "",
+        "| Motion | Open | Weighted (= empirical likely close) |",
+        "|---|---:|---:|",
+        f"| New-business (Land+Expand) ARR | ${open_arr:,.0f} | ${weighted_arr:,.0f} |",
+        f"| Renewal ACV | ${open_acv:,.0f} | ${weighted_acv:,.0f} |",
         "",
         "### New-business ARR by stage (Land + Expand)",
         "",
-        "| Stage | # Opps | ARR |",
-        "|---|---:|---:|",
+        "| Stage | # Opps | ARR | Stage Prob | Weighted ARR |",
+        "|---|---:|---:|---:|---:|",
     ]
     for r in sf_snapshot.get("new_business_by_stage", []):
         arr = r.get("arr") or 0
         arr_s = f"${arr:,.0f}" if arr else "—"
-        lines.append(f"| {r['stage']} | {r['num_opps']} | {arr_s} |")
+        prob = r.get("stage_probability", 0) or 0
+        warr = r.get("weighted_arr", 0) or 0
+        warr_s = f"${warr:,.0f}" if warr else "—"
+        lines.append(f"| {r['stage']} | {r['num_opps']} | {arr_s} | {prob * 100:.1f}% | {warr_s} |")
 
-    lines += ["", "### Renewal ACV by stage", "", "| Stage | # Opps | ACV |", "|---|---:|---:|"]
+    lines += [
+        "",
+        "### Renewal ACV by stage",
+        "",
+        "| Stage | # Opps | ACV | Stage Prob | Weighted ACV |",
+        "|---|---:|---:|---:|---:|",
+    ]
     for r in sf_snapshot.get("renewals_by_stage", []):
         acv = r.get("acv") or 0
         acv_s = f"${acv:,.0f}" if acv else "—"
-        lines.append(f"| {r['stage']} | {r['num_opps']} | {acv_s} |")
+        prob = r.get("stage_probability", 0) or 0
+        wacv = r.get("weighted_acv", 0) or 0
+        wacv_s = f"${wacv:,.0f}" if wacv else "—"
+        lines.append(f"| {r['stage']} | {r['num_opps']} | {acv_s} | {prob * 100:.1f}% | {wacv_s} |")
     lines.append("")
 
     lines += ["## Fabric / Power BI workspaces inspected", ""]
@@ -433,9 +489,11 @@ def main() -> int:
     sf = pull_salesforce_snapshot()
     t = sf.get("totals", {})
     print(
-        f"  New-business ARR (Land+Expand): ${t.get('new_business_arr_open_this_quarter', 0):,.0f} | "
-        f"Renewal ACV: ${t.get('renewal_acv_open_this_quarter', 0):,.0f} | "
-        f"Types: {len(sf.get('by_type', []))}"
+        f"  New-business ARR (Land+Expand): ${t.get('new_business_arr_open_this_quarter', 0):,.0f} "
+        f"(weighted ${t.get('weighted_new_business_arr', 0):,.0f}) | "
+        f"Renewal ACV: ${t.get('renewal_acv_open_this_quarter', 0):,.0f} "
+        f"(weighted ${t.get('weighted_renewal_acv', 0):,.0f}) | "
+        f"prob source: {t.get('stage_probability_source', '—')}"
     )
 
     print("→ Pulling Fabric workspace summary...")
