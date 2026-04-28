@@ -22,13 +22,17 @@ echo "Running sales-ops-copilot daily brief..."
 # browser tab gets annoying; the .html file is still written either way.
 # --onedrive-publish atomic-writes the HTML to OneDrive-SimCorp/Sales Ops
 # Briefs/ so a Power Automate Flow can pick it up and post to Teams self-chat.
-python3 scripts/brief.py --html --open --onedrive-publish
+#
+# As of 2026-04-28 agent.py is the default — Microsoft Agent Framework wrapper
+# around the same data-pull functions, output-equivalent to brief.py.
+# brief.py remains the fallback (drop-in: swap `agent.py` → `brief.py`).
+python3 scripts/agent.py --html --open --onedrive-publish
 RC=$?
 
 if [[ $RC -eq 0 ]]; then
-  echo "[$(date)] brief.py succeeded"
+  echo "[$(date)] agent.py succeeded"
 else
-  echo "[$(date)] brief.py failed with rc=$RC"
+  echo "[$(date)] agent.py failed with rc=$RC"
 fi
 
 exit $RC

@@ -24,7 +24,10 @@ import argparse
 import asyncio
 import datetime as dt
 import json
+import os
 import pathlib
+import shutil
+import subprocess
 import sys
 from typing import Any
 
@@ -240,6 +243,22 @@ def main() -> int:
         help="Azure OpenAI deployment name (default: gpt53chat)",
     )
     ap.add_argument("--out", help="Output path; defaults to reports/agent-YYYY-MM-DD.md")
+    ap.add_argument(
+        "--html",
+        action="store_true",
+        help="Also render a standalone HTML version alongside the .md",
+    )
+    ap.add_argument(
+        "--open",
+        dest="auto_open",
+        action="store_true",
+        help="Open the rendered HTML in the default browser after writing (implies --html)",
+    )
+    ap.add_argument(
+        "--onedrive-publish",
+        action="store_true",
+        help="Atomic-write the rendered HTML to OneDrive folder for Power Automate Flow pickup.",
+    )
     args = ap.parse_args()
 
     REPORTS_DIR.mkdir(exist_ok=True)
@@ -298,6 +317,39 @@ def main() -> int:
     # Stash a tool-call summary so we can verify the agent actually called tools.
     tool_calls = {k: (len(v) if isinstance(v, (list, dict)) else 1) for k, v in TOOL_CACHE.items()}
     print(f"  Tool cache: {json.dumps(tool_calls)}")
+
+    if args.html or args.auto_open or args.onedrive_publish:
+        from brief_html import render_file as _render_html  # type: ignore[import-not-found]
+
+        html_path = _render_html(out_path)
+        print(f"✓ Wrote {html_path}")
+        if args.auto_open:
+            try:
+                subprocess.run(["open", str(html_path)], check=False)
+            except Exception as e:
+                print(f"  ⚠ open failed: {e}")
+        if args.onedrive_publish:
+            try:
+                target_dir = (
+                    pathlib.Path.home()
+                    / "Library"
+                    / "CloudStorage"
+                    / "OneDrive-SimCorp"
+                    / "Sales Ops Briefs"
+                )
+                target_dir.mkdir(parents=True, exist_ok=True)
+                # Power Automate Flow watches for `<YYYY-MM-DD>.html` — strip the
+                # `agent-` prefix that this script's local report uses.
+                published_name = html_path.name
+                if published_name.startswith("agent-"):
+                    published_name = published_name[len("agent-") :]
+                target = target_dir / published_name
+                tmp = target.with_suffix(target.suffix + ".tmp")
+                shutil.copyfile(html_path, tmp)
+                os.replace(tmp, target)
+                print(f"✓ Published to OneDrive: {target}")
+            except Exception as e:
+                print(f"  ⚠ OneDrive publish failed: {e}")
 
     return 0
 
