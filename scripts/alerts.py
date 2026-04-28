@@ -214,6 +214,95 @@ def no_activity_ever() -> dict[str, Any]:
     }
 
 
+def kyc_gap_late_stage() -> dict[str, Any]:
+    """Land/Expand at Stage 5+ (Preferred or Contracting) without KYC clearance.
+    Per the SimCorp Commercial Handbook, KYC clearance is a closing-stage gate;
+    a deal can't actually close without it. Stage 5+ scopes this to deals
+    that should have KYC done by now.
+    """
+    where = (
+        "IsClosed = false AND Type IN ('Land','Expand') "
+        "AND (StageName LIKE '5%' OR StageName LIKE '6%') "
+        "AND KYC_Approval_Message__c = false "
+        f"{EXCLUDE_TEST_ARTIFACTS}{_ack_exclusion()}"
+    )
+    agg = _agg(
+        "SELECT COUNT(Id) num, SUM(APTS_Opportunity_ARR__c) total_arr "
+        f"FROM Opportunity WHERE {where}"
+    )
+    samples = _sample(
+        "SELECT Id, Name, StageName, APTS_Opportunity_ARR__c, Owner.Name "
+        f"FROM Opportunity WHERE {where} ORDER BY APTS_Opportunity_ARR__c DESC NULLS LAST"
+    )
+    return {
+        "name": "Stage 5+ Land/Expand without KYC clearance",
+        "severity": "critical",
+        "rule": "KYC clearance is a closing-stage gate. Deals at Preferred/Contracting without KYC cannot actually close.",
+        "count": agg.get("num", 0) or 0,
+        "total_arr": agg.get("total_arr") or 0,
+        "samples": _format_samples(samples, "ARR"),
+    }
+
+
+def approval_submitted_pending() -> dict[str, Any]:
+    """Stage 3+ deals where Commercial Approval has been SUBMITTED but not yet
+    granted. Distinct from 'no approval' (which catches never-submitted).
+    Useful as an in-queue signal — these need follow-through, not new submission.
+    """
+    where = (
+        f"IsClosed = false AND {LATE_STAGE_LIKE} "
+        "AND Submit_for_Stage_20_Review__c = true "
+        "AND Stage_20_Approval__c = false "
+        f"{EXCLUDE_TEST_ARTIFACTS}{_ack_exclusion()}"
+    )
+    agg = _agg(
+        "SELECT COUNT(Id) num, SUM(APTS_Opportunity_ARR__c) total_arr "
+        f"FROM Opportunity WHERE {where}"
+    )
+    samples = _sample(
+        "SELECT Id, Name, StageName, APTS_Opportunity_ARR__c, Owner.Name, "
+        "Submit_for_Stage_20_Review_Date__c "
+        f"FROM Opportunity WHERE {where} ORDER BY Submit_for_Stage_20_Review_Date__c ASC NULLS LAST"
+    )
+    return {
+        "name": "Commercial Approval submitted but not yet granted",
+        "severity": "info",
+        "rule": "Distinct from 'no approval' — these are in the review queue and need follow-through, not a new submission.",
+        "count": agg.get("num", 0) or 0,
+        "total_arr": agg.get("total_arr") or 0,
+        "samples": _format_samples(samples, "ARR", extra="Submit_for_Stage_20_Review_Date__c"),
+    }
+
+
+def deal_shaping_gap() -> dict[str, Any]:
+    """Land/Expand at Stage 5+ without Deal Shaping approval. Per the SimCorp
+    Commercial Handbook, Deal Services Design (Deal Shaping) is mandatory before
+    Final Review.
+    """
+    where = (
+        "IsClosed = false AND Type IN ('Land','Expand') "
+        "AND (StageName LIKE '5%' OR StageName LIKE '6%') "
+        "AND Deal_Shaping_Approved__c = false "
+        f"{EXCLUDE_TEST_ARTIFACTS}{_ack_exclusion()}"
+    )
+    agg = _agg(
+        "SELECT COUNT(Id) num, SUM(APTS_Opportunity_ARR__c) total_arr "
+        f"FROM Opportunity WHERE {where}"
+    )
+    samples = _sample(
+        "SELECT Id, Name, StageName, APTS_Opportunity_ARR__c, Owner.Name "
+        f"FROM Opportunity WHERE {where} ORDER BY APTS_Opportunity_ARR__c DESC NULLS LAST"
+    )
+    return {
+        "name": "Stage 5+ Land/Expand without Deal Shaping approval",
+        "severity": "important",
+        "rule": "Deal Services Design (Deal Shaping) is mandatory before Final Review per the Commercial Handbook.",
+        "count": agg.get("num", 0) or 0,
+        "total_arr": agg.get("total_arr") or 0,
+        "samples": _format_samples(samples, "ARR"),
+    }
+
+
 def inactive_owner() -> dict[str, Any]:
     """Open opps owned by an inactive Salesforce user — alerts go nowhere."""
     where = (
@@ -263,10 +352,13 @@ def _format_samples(records: list[dict], metric: str, extra: str | None = None) 
 ALERT_FUNCTIONS = [
     commercial_approval_gap_land,
     commercial_approval_gap_big,
+    kyc_gap_late_stage,
     close_date_in_past,
     dec_31_placeholder_dates,
+    deal_shaping_gap,
     stale_activity,
     no_activity_ever,
+    approval_submitted_pending,
     inactive_owner,
 ]
 
@@ -293,6 +385,14 @@ def pull_owner_concentration(top_n: int = 10) -> list[dict[str, Any]]:
         "    AND Stage_20_Approval__c = false) "
         # Land deals at Stage 3+ with no approval
         f"  OR (Type = 'Land' AND {LATE_STAGE_LIKE} AND Stage_20_Approval__c = false) "
+        # KYC missing at Stage 5+
+        "  OR (Type IN ('Land','Expand') "
+        "       AND (StageName LIKE '5%' OR StageName LIKE '6%') "
+        "       AND KYC_Approval_Message__c = false) "
+        # Deal Shaping missing at Stage 5+
+        "  OR (Type IN ('Land','Expand') "
+        "       AND (StageName LIKE '5%' OR StageName LIKE '6%') "
+        "       AND Deal_Shaping_Approved__c = false) "
         # Past close date
         "  OR (CloseDate < TODAY) "
         # Dec 31 placeholder at Stage 3+
