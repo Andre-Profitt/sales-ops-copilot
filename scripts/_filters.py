@@ -40,6 +40,11 @@ EXCLUDED_OPP_NAME_PATTERNS: tuple[str, ...] = (
     "ASH Dummy%",
     "SBL Opp%",  # "SBL Opp £1", "SBL Opp £3 Trial..."
     "Back Office",  # the 760-day-stale $1.9M test
+    # Template / placeholder / explicit-delete patterns (verified 2026-04-28
+    # via top-50 + low-tail audit — only specific signals, no broad %test%).
+    "Generic qoute%",  # "Generic qoute Opp" at Kåpan Pensioner — template never renamed
+    "Generic Quote%",  # defensive: same template if the typo gets fixed
+    "% To Be Deleted",  # "BNPUS - To Be Deleted" — explicitly marked for removal
 )
 
 
