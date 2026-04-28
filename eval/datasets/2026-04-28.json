@@ -1,0 +1,32 @@
+{
+  "snapshot_date": "2026-04-28",
+  "captured_from": "scripts/agent.py output (reports/agent-2026-04-28.md)",
+  "verified_by": "Andre + multi-agent end-to-end run",
+  "facts": {
+    "current_quarter_label": "2026-Q2",
+    "current_q_open_new_business_arr": 27730401,
+    "current_q_weighted_new_business_arr": 9244548,
+    "current_q_open_renewal_acv": 2407485,
+    "current_q_weighted_renewal_acv": 399095,
+    "q_plus_1_label": "2026-Q3",
+    "q_plus_1_weighted_new_business_arr": 22359697,
+    "q_plus_2_label": "2026-Q4",
+    "q_plus_2_weighted_new_business_arr": 43981457,
+    "top_owner_name": "Adam Hatcliff",
+    "top_owner_arr": 45451122,
+    "top_owner_pct_of_top10": 30,
+    "top_account_name": "UBS Global Asset Management (UK) Ltd",
+    "top_account_arr": 24032948,
+    "top_account_deals": 13,
+    "alert_count_critical": 4,
+    "alert_count_important": 5,
+    "alert_count_info": 0,
+    "stage_5_kyc_gap_count": 70,
+    "stage_5_kyc_gap_arr": 30377592
+  },
+  "tolerance_pct": 5.0,
+  "notes": [
+    "Brief has 4 Critical and 5 Important alerts; no Info tier in this output. Spec template suggested info=1 but dataset reflects actual brief.",
+    "top_owner_pct_of_top10 = 30 matches the table column '% of top-10'; the synthesis prose's '17-18%' is % of full flagged population (different denominator) and is NOT what we evaluate."
+  ]
+}
