@@ -87,6 +87,9 @@ POLLUTION_FILTER = _filter("FULL_NAME", "notContain", "Sabiniewicz")
 # Map report-id → list of patches to apply (each is a partial reportMetadata).
 # Patches are applied in declaration order.
 FIXES: list[dict[str, Any]] = [
+    # ════════════════════════════════════════════════════════════════════
+    # SALES DIRECTOR MONTHLY (01ZTb00000FSP7hMAH)
+    # ════════════════════════════════════════════════════════════════════
     # ── Hero widget: Pipeline by Stage ────────────────────────────────
     {
         "id": "00OTb000008fBfdMAE",
@@ -136,6 +139,80 @@ FIXES: list[dict[str, Any]] = [
         "id": "00OTb000008gUt7MAE",  # SD Days in Stage
         "label": "SD Days in Stage — strengthen pollution filter",
         "patch_fn": "patch_pollution_only",
+    },
+    # ════════════════════════════════════════════════════════════════════
+    # SALES OPS QUARTERLY KPI (01ZTb00000FSP9JMAX) — 11 reports
+    # All audit/hygiene-themed; mostly Type-agnostic. Apply pollution filter
+    # everywhere; for the 4 ARR-summing ones, also add Type IN (Land,Expand)
+    # to keep ARR aggregates honest.
+    # ════════════════════════════════════════════════════════════════════
+    {
+        "id": "00OTb000008RfKDMA0",  # Low Probability In Quarter
+        "label": "Low Probability In Quarter — pollution",
+        "patch_fn": "patch_pollution_only",
+    },
+    {
+        "id": "00OTb000008TZgvMAG",  # Stale Opportunities - CFQ
+        "label": "Stale Opps CFQ — pollution + Type filter (sums ARR)",
+        "patch_fn": "patch_add_type_landexpand_and_pollution",
+    },
+    {
+        "id": "00OTb000008TaEnMAK",  # No Activity 30+ Days - Open Opps
+        "label": "No Activity 30+ Days — pollution",
+        "patch_fn": "patch_pollution_only",
+    },
+    {
+        "id": "00OTb000008fAmnMAE",  # Active Opps: No Activity (used 2x: By Period + CFY by Owner)
+        "label": "Active Opps: No Activity — pollution",
+        "patch_fn": "patch_pollution_only",
+    },
+    {
+        "id": "00OTb000008Ti97MAC",  # High Value Stale Deals (TABULAR; uses Forecast_ARR threshold)
+        "label": "High Value Stale Deals — pollution + Type filter",
+        "patch_fn": "patch_add_type_landexpand_and_pollution",
+    },
+    {
+        "id": "00OQA000004OLk92AG",  # Accounts without KYC Approval (Account-typed; no Type col)
+        "label": "Accounts without KYC Approval — pollution-on-account",
+        "patch_fn": "patch_pollution_only_account_type",
+    },
+    {
+        "id": "00OTb000008ekynMAA",  # Missing Quote Type
+        "label": "Missing Quote Type — pollution",
+        "patch_fn": "patch_pollution_only",
+    },
+    {
+        "id": "00OTb000008Ti7VMAS",  # Aging Pipeline 365+ Days
+        "label": "Aging Pipeline 365+ Days — pollution",
+        "patch_fn": "patch_pollution_only",
+    },
+    # 00OTb000008SrmLMAS Overdue Opportunities — already has pollution + Type filter
+    {
+        "id": "00OTb000008fAlBMAU",  # Land: No Approval Flow (already Type=Land scoped)
+        "label": "Land: No Approval Flow — pollution",
+        "patch_fn": "patch_pollution_only",
+    },
+    {
+        "id": "00OTb000008TZqcMAG",  # Missing Amount (TABULAR; APTS_Opportunity_ARR=0 filter)
+        "label": "Missing Amount — pollution",
+        "patch_fn": "patch_pollution_only",
+    },
+    {
+        "id": "00OTb000008fAjZMAU",  # Mid-Stage: No NextStep
+        "label": "Mid-Stage: No NextStep — pollution",
+        "patch_fn": "patch_pollution_only",
+    },
+    # ════════════════════════════════════════════════════════════════════
+    # OPERATIONAL WORK (01ZTb00000FvDSvMAN + 01ZTb00000FvBZCMA3)
+    # Activity-tracking dashboards — Maria Sabiniewicz appears in CREATED-By
+    # filter as person being tracked, not as test pollution. Keep as-is.
+    # Only fix: KYC Approval Status report missing pollution filter on the
+    # account-name pattern.
+    # ════════════════════════════════════════════════════════════════════
+    {
+        "id": "00OTb000008KnSzMAK",  # KYC Approval Status CFY
+        "label": "KYC Approval Status CFY — pollution-on-account",
+        "patch_fn": "patch_pollution_only_account_type",
     },
 ]
 
@@ -211,12 +288,50 @@ def patch_pollution_only(current: dict[str, Any]) -> dict[str, Any]:
     return {"reportFilters": filters}
 
 
+def patch_add_type_landexpand_and_pollution(current: dict[str, Any]) -> dict[str, Any]:
+    """For ARR-summing reports: add Type IN (Land,Expand) + pollution if missing."""
+    filters = list(current.get("reportFilters") or [])
+    if not any(f.get("column") == "TYPE" for f in filters):
+        filters.append(_filter("TYPE", "equals", "Land,Expand"))
+    if not any(
+        f.get("column") == "FULL_NAME" and "Sabiniewicz" in str(f.get("value", "")) for f in filters
+    ):
+        filters.append(POLLUTION_FILTER)
+    return {"reportFilters": filters}
+
+
+def patch_pollution_only_account_type(current: dict[str, Any]) -> dict[str, Any]:
+    """For Account-typed reports — add Account.Name notContain test/simcorp pattern
+    if not already present."""
+    filters = list(current.get("reportFilters") or [])
+    has_pollution = any(
+        f.get("column") in ("Account.Name", "ACCOUNT_NAME")
+        and any(s in str(f.get("value", "")).lower() for s in ("test", "simcorp"))
+        and f.get("operator") == "notContain"
+        for f in filters
+    )
+    if has_pollution:
+        return {}  # already partially clean, no-op
+    filters.append(
+        {
+            "column": "Account.Name",
+            "operator": "notContain",
+            "value": "test,simcorp,delete",
+            "filterType": "fieldValue",
+            "isRunPageEditable": False,
+        }
+    )
+    return {"reportFilters": filters}
+
+
 PATCH_FUNCTIONS = {
     "patch_pipeline_global": patch_pipeline_global,
     "patch_renewal_pipeline_q": patch_renewal_pipeline_q,
     "patch_win_rate_stage": patch_win_rate_stage,
     "patch_renewals_by_stage": patch_renewals_by_stage,
     "patch_pollution_only": patch_pollution_only,
+    "patch_add_type_landexpand_and_pollution": patch_add_type_landexpand_and_pollution,
+    "patch_pollution_only_account_type": patch_pollution_only_account_type,
 }
 
 
