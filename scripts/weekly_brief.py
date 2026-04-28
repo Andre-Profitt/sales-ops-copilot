@@ -1,0 +1,380 @@
+#!/usr/bin/env python3
+"""
+Weekly Sales Ops rollup — diffs the last 7 days of state/snapshots/*.json
+plus the per-day alert sidecars, renders a markdown brief with optional LLM
+synthesis, and (optionally) publishes HTML to OneDrive.
+
+Usage:
+    python3 scripts/weekly_brief.py [--days 7] [--no-llm] [--out PATH]
+                                    [--onedrive-publish] [--model gpt53chat]
+
+Schedule: Sundays at 07:00 via launchd (com.simcorp.sales-ops-copilot.weekly).
+"""
+
+from __future__ import annotations
+
+import argparse
+import datetime as dt
+import json
+import os
+import pathlib
+import shutil
+import sys
+from typing import Any
+
+from azure.identity import AzureCliCredential
+from openai import AzureOpenAI
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+SNAP_DIR = ROOT / "state" / "snapshots"
+REPORTS_DIR = ROOT / "reports"
+
+OPENAI_ENDPOINT = "https://apro-openai.openai.azure.com/"
+OPENAI_API_VERSION = "2025-04-01-preview"
+DEFAULT_MODEL = "gpt53chat"
+
+
+# --- Snapshot loading -------------------------------------------------------
+
+
+def _snap_path(date: dt.date) -> pathlib.Path:
+    return SNAP_DIR / f"{date.isoformat()}.json"
+
+
+def _alert_path(date: dt.date) -> pathlib.Path:
+    return SNAP_DIR / f"{date.isoformat()}_alerts.json"
+
+
+def _load_json(path: pathlib.Path) -> dict[str, Any] | None:
+    if not path.exists():
+        return None
+    try:
+        return json.loads(path.read_text())
+    except Exception:
+        return None
+
+
+def collect_window(today: dt.date, days: int) -> list[dict[str, Any]]:
+    """Load up to `days+1` consecutive snapshots ending today (inclusive)."""
+    rows: list[dict[str, Any]] = []
+    for offset in range(days, -1, -1):
+        d = today - dt.timedelta(days=offset)
+        snap = _load_json(_snap_path(d))
+        if snap is None:
+            continue
+        rows.append(
+            {
+                "date": d.isoformat(),
+                "snapshot": snap,
+                "alerts": _load_json(_alert_path(d)),
+            }
+        )
+    return rows
+
+
+# --- Diff computation -------------------------------------------------------
+
+
+def _totals(snap: dict[str, Any]) -> dict[str, float]:
+    t = (snap or {}).get("totals", {}) or {}
+    return {
+        "new_business_arr_open": float(t.get("new_business_arr_open_this_quarter") or 0),
+        "weighted_new_business_arr": float(t.get("weighted_new_business_arr") or 0),
+        "renewal_acv_open": float(t.get("renewal_acv_open_this_quarter") or 0),
+        "weighted_renewal_acv": float(t.get("weighted_renewal_acv") or 0),
+    }
+
+
+def headline_diff(window: list[dict[str, Any]]) -> dict[str, Any]:
+    first = _totals(window[0]["snapshot"])
+    last = _totals(window[-1]["snapshot"])
+    out: dict[str, Any] = {}
+    for key in first:
+        out[key] = {
+            "first": first[key],
+            "last": last[key],
+            "delta": last[key] - first[key],
+            "first_date": window[0]["date"],
+            "last_date": window[-1]["date"],
+        }
+    return out
+
+
+def alert_diff(window: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Diff alert counts/ARR between first and last day that have alert sidecars."""
+    have = [w for w in window if w.get("alerts")]
+    if len(have) < 2:
+        return []
+    first_a = have[0]["alerts"]
+    last_a = have[-1]["alerts"]
+    first_counts = first_a.get("counts") or {}
+    last_counts = last_a.get("counts") or {}
+    first_arr = first_a.get("total_arr") or {}
+    last_arr = last_a.get("total_arr") or {}
+    names = sorted(set(first_counts) | set(last_counts))
+    rows: list[dict[str, Any]] = []
+    for n in names:
+        fc = int(first_counts.get(n) or 0)
+        lc = int(last_counts.get(n) or 0)
+        fa = float(first_arr.get(n) or 0)
+        la = float(last_arr.get(n) or 0)
+        rows.append(
+            {
+                "name": n,
+                "first_count": fc,
+                "last_count": lc,
+                "count_delta": lc - fc,
+                "first_arr": fa,
+                "last_arr": la,
+                "arr_delta": la - fa,
+            }
+        )
+    rows.sort(key=lambda r: abs(r["arr_delta"]), reverse=True)
+    return rows
+
+
+# --- Render -----------------------------------------------------------------
+
+
+def _fmt_money(v: float) -> str:
+    return f"${v:,.0f}"
+
+
+def _fmt_signed(v: float) -> str:
+    sign = "+" if v >= 0 else ""
+    return f"{sign}${v:,.0f}"
+
+
+def render_markdown(
+    today: dt.date,
+    window: list[dict[str, Any]],
+    synthesis: str | None,
+    model: str,
+) -> str:
+    lines: list[str] = [
+        f"# Sales Ops Weekly Rollup — {today.isoformat()}",
+        "",
+        f"*Window: {window[0]['date']} → {window[-1]['date']} "
+        f"({len(window)} snapshot{'s' if len(window) != 1 else ''}). "
+        f"Generated by sales-ops-copilot/weekly_brief. Model: `{model}`.*",
+        "",
+    ]
+
+    if synthesis:
+        lines += ["## Synthesis", "", synthesis, ""]
+
+    head = headline_diff(window)
+    lines += [
+        "## Headline — what moved this week",
+        "",
+        f"*{window[0]['date']} → {window[-1]['date']}*",
+        "",
+        "| Metric | Start | End | Δ |",
+        "|---|---:|---:|---:|",
+        f"| Open new-business ARR (Land+Expand) | {_fmt_money(head['new_business_arr_open']['first'])} "
+        f"| {_fmt_money(head['new_business_arr_open']['last'])} "
+        f"| **{_fmt_signed(head['new_business_arr_open']['delta'])}** |",
+        f"| Weighted new-business ARR | {_fmt_money(head['weighted_new_business_arr']['first'])} "
+        f"| {_fmt_money(head['weighted_new_business_arr']['last'])} "
+        f"| **{_fmt_signed(head['weighted_new_business_arr']['delta'])}** |",
+        f"| Open renewal ACV | {_fmt_money(head['renewal_acv_open']['first'])} "
+        f"| {_fmt_money(head['renewal_acv_open']['last'])} "
+        f"| **{_fmt_signed(head['renewal_acv_open']['delta'])}** |",
+        f"| Weighted renewal ACV | {_fmt_money(head['weighted_renewal_acv']['first'])} "
+        f"| {_fmt_money(head['weighted_renewal_acv']['last'])} "
+        f"| **{_fmt_signed(head['weighted_renewal_acv']['delta'])}** |",
+        "",
+        "*Land+Expand reported in ARR. Renewals reported in ACV. Never blended.*",
+        "",
+    ]
+
+    if len(window) > 2:
+        lines += [
+            "### Trajectory",
+            "",
+            "| Date | Open ARR | Weighted ARR | Open ACV | Weighted ACV |",
+            "|---|---:|---:|---:|---:|",
+        ]
+        for w in window:
+            t = _totals(w["snapshot"])
+            lines.append(
+                f"| {w['date']} | {_fmt_money(t['new_business_arr_open'])} "
+                f"| {_fmt_money(t['weighted_new_business_arr'])} "
+                f"| {_fmt_money(t['renewal_acv_open'])} "
+                f"| {_fmt_money(t['weighted_renewal_acv'])} |"
+            )
+        lines.append("")
+
+    a_rows = alert_diff(window)
+    if a_rows:
+        lines += [
+            "## Alert resolution",
+            "",
+            "*Negative count/ARR Δ = alert population shrinking (improving). "
+            "Sorted by absolute ARR movement.*",
+            "",
+            "| Alert | Count Start → End (Δ) | ARR Start → End (Δ) |",
+            "|---|---|---|",
+        ]
+        for r in a_rows:
+            count_cell = f"{r['first_count']} → {r['last_count']} ({r['count_delta']:+d})"
+            arr_cell = (
+                f"{_fmt_money(r['first_arr'])} → {_fmt_money(r['last_arr'])} "
+                f"({_fmt_signed(r['arr_delta'])})"
+            )
+            lines.append(f"| {r['name']} | {count_cell} | {arr_cell} |")
+        lines.append("")
+    else:
+        lines += [
+            "## Alert resolution",
+            "",
+            "_Insufficient alert sidecar history (need ≥2 days of `<date>_alerts.json`). "
+            "Will populate as the daily brief runs over the coming week._",
+            "",
+        ]
+
+    lines += [
+        "## New entries / Resolved entries",
+        "",
+        "_Snapshots persist aggregate counts only — opp IDs are not captured per day, so "
+        "this rollup cannot diff individual opps in/out of the flagged set. Use "
+        "`/owner-drill` or `/account-drill` against today's brief for the live flagged book. "
+        "(Adding opp-ID-level snapshot persistence is a separate work item; out of scope here.)_",
+        "",
+    ]
+
+    lines += [
+        "## Owner concentration movement",
+        "",
+        "_Owner concentration is computed daily from live SF and not persisted in snapshots. "
+        "Use today's daily brief (`reports/<today>.md`) for the current top-10 owners table; "
+        "weekly delta on owners requires owner-level persistence — out of scope here._",
+        "",
+    ]
+
+    return "\n".join(lines)
+
+
+# --- LLM synthesis ----------------------------------------------------------
+
+
+def synthesize(markdown_body: str, model: str) -> str:
+    cred = AzureCliCredential()
+
+    def _token() -> str:
+        return cred.get_token("https://cognitiveservices.azure.com/.default").token
+
+    client = AzureOpenAI(
+        azure_endpoint=OPENAI_ENDPOINT,
+        azure_ad_token_provider=_token,
+        api_version=OPENAI_API_VERSION,
+    )
+    system = (
+        "You are a Sales Operations Copilot for SimCorp. You are reading a "
+        "weekly Sales Ops rollup containing 7-day deltas on open and weighted "
+        "ARR/ACV plus per-alert count/ARR deltas. "
+        "Land+Expand → ARR; Renewal → ACV; never blend. "
+        "Produce a 200-word maximum executive summary titled 'What changed and "
+        "what to act on this week'. Lead with the largest Δ, name the alert "
+        "categories that improved or worsened most, call out one concrete action "
+        "for the director. No fluff, no preamble. Cite specific dollar amounts "
+        "from the rollup."
+    )
+    resp = client.chat.completions.create(
+        model=model,
+        messages=[
+            {"role": "system", "content": system},
+            {"role": "user", "content": markdown_body},
+        ],
+        max_completion_tokens=500,
+    )
+    return resp.choices[0].message.content or ""
+
+
+# --- OneDrive publish -------------------------------------------------------
+
+
+def publish_onedrive(html_path: pathlib.Path) -> pathlib.Path:
+    target_dir = (
+        pathlib.Path.home() / "Library" / "CloudStorage" / "OneDrive-SimCorp" / "Sales Ops Briefs"
+    )
+    target_dir.mkdir(parents=True, exist_ok=True)
+    target = target_dir / html_path.name
+    tmp = target.with_suffix(target.suffix + ".tmp")
+    shutil.copyfile(html_path, tmp)
+    os.replace(tmp, target)
+    return target
+
+
+# --- Main -------------------------------------------------------------------
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--days", type=int, default=7)
+    ap.add_argument("--no-llm", action="store_true")
+    ap.add_argument("--out", help="Output markdown path; defaults to reports/weekly-<today>.md")
+    ap.add_argument("--onedrive-publish", action="store_true")
+    ap.add_argument("--model", default=DEFAULT_MODEL)
+    args = ap.parse_args()
+
+    today = dt.date.today()
+    REPORTS_DIR.mkdir(exist_ok=True)
+    out_path = (
+        pathlib.Path(args.out) if args.out else REPORTS_DIR / f"weekly-{today.isoformat()}.md"
+    )
+
+    print(f"→ Loading snapshots over last {args.days} days...")
+    window = collect_window(today, args.days)
+    print(f"  Found {len(window)} snapshot(s): {[w['date'] for w in window]}")
+
+    if len(window) < 2:
+        msg = (
+            f"# Sales Ops Weekly Rollup — {today.isoformat()}\n\n"
+            f"_Insufficient history: need ≥2 snapshots in `state/snapshots/`, "
+            f"found {len(window)}. The daemon keeps running; the next weekly "
+            f"rollup will produce a real diff once snapshots accumulate._\n"
+        )
+        out_path.write_text(msg, encoding="utf-8")
+        print(f"✓ Wrote {out_path} (insufficient-history stub)")
+        return 0
+
+    body = render_markdown(today, window, synthesis=None, model=args.model)
+
+    synthesis: str | None = None
+    if not args.no_llm:
+        print(f"→ Synthesizing via apro-openai/{args.model}...")
+        try:
+            synthesis = synthesize(body, args.model)
+            print(f"  Synthesis: {len(synthesis)} chars")
+        except Exception as e:
+            print(f"  ⚠ Synthesis failed: {e}")
+            synthesis = f"_Synthesis failed: {e}_"
+
+    final = render_markdown(today, window, synthesis=synthesis, model=args.model)
+    out_path.write_text(final, encoding="utf-8")
+    print(f"✓ Wrote {out_path}")
+
+    try:
+        from brief_html import render_file as _render_html  # type: ignore[import-not-found]
+
+        html_path = _render_html(out_path)
+        print(f"✓ Wrote {html_path}")
+    except Exception as e:
+        print(f"  ⚠ HTML render failed: {e}")
+        html_path = None
+
+    if args.onedrive_publish and html_path is not None:
+        try:
+            target = publish_onedrive(html_path)
+            print(f"✓ Published to OneDrive: {target}")
+        except Exception as e:
+            print(f"  ⚠ OneDrive publish failed: {e}")
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
