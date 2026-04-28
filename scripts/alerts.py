@@ -19,26 +19,17 @@ LATE_STAGE_LIKE = (
     "(StageName LIKE '3%' OR StageName LIKE '4%' OR StageName LIKE '5%' OR StageName LIKE '6%')"
 )
 
-# SOQL fragment that excludes known test-bot artifacts from open-pipeline
-# alert queries. Inlined here (rather than imported from _filters.py) so a
-# code formatter can't strip the cross-file import.
+# Test-pollution exclusion clause is canonical in scripts/_filters.py.
+# Same module is mirrored in account-drilldown/scripts/_filters.py — the two
+# files MUST stay byte-identical (verify via scripts/check_filters_sync.py).
 #
-# Verified 2026-04-28 — Maria Sabiniewicz owns 43 open opps totaling $16.7M
-# ARR of QtC SOL test fixtures; CLM_SimCorp QtC* and QtC * are internal test
-# orgs; Test/TEST*/ASH Dummy/SBL Opp%/Back Office are obvious test names.
-#
-# SOQL gotcha: `AND NOT field LIKE 'X'` is rejected. Each NOT must be wrapped
-# in its own parens: `(NOT field LIKE 'X')`. To negate an OR-of-LIKEs, use
-# De Morgan's law: NOT (A OR B) ≡ (NOT A) AND (NOT B).
-EXCLUDE_TEST_ARTIFACTS = (
-    "AND (NOT Owner.Name LIKE 'Maria Sabiniewicz%') "
-    "AND ((NOT Account.Name LIKE 'CLM_SimCorp QtC%') "
-    "AND (NOT Account.Name LIKE 'QtC %')) "
-    "AND ((NOT Name = 'Test') AND (NOT Name LIKE 'TEST %') "
-    "AND (NOT Name LIKE 'test_%') AND (NOT Name LIKE 'TEST_%') "
-    "AND (NOT Name LIKE 'QTC_Test%') AND (NOT Name LIKE 'ASH Dummy%') "
-    "AND (NOT Name LIKE 'SBL Opp%') AND (NOT Name = 'Back Office'))"
-)
+# sys.path is augmented in brief.py before this module is imported, so the
+# import works whether alerts.py is run as a script or imported as a module.
+import sys as _sys
+from pathlib import Path as _Path
+
+_sys.path.insert(0, str(_Path(__file__).resolve().parent))
+from _filters import EXCLUDE_TEST_ARTIFACTS  # type: ignore[import-not-found,import-untyped]  # noqa: E402
 
 
 @lru_cache(maxsize=1)

@@ -49,9 +49,7 @@ def main() -> int:
                 # Connected orgs can show up under nonScratchOrgs, other, sandboxes, devHubs
                 pools = ("nonScratchOrgs", "other", "sandboxes", "devHubs")
                 all_orgs = [o for k in pools for o in result.get(k, [])]
-                connected = [
-                    o for o in all_orgs if o.get("connectedStatus") == "Connected"
-                ]
+                connected = [o for o in all_orgs if o.get("connectedStatus") == "Connected"]
                 if connected:
                     user = connected[0].get("username", "?")
                     check("sf CLI org connected", True, user)
@@ -134,6 +132,18 @@ def main() -> int:
         check("apro-openai deployments", True, ", ".join(deployments))
     else:
         check("apro-openai deployments", False, "no deployments returned")
+        failures += 1
+
+    # _filters.py drift check vs sibling repo (account-drilldown)
+    rc, _ = run([sys.executable, "scripts/check_filters_sync.py"])
+    if rc == 0:
+        check("_filters.py in sync with account-drilldown", True)
+    else:
+        check(
+            "_filters.py in sync with account-drilldown",
+            False,
+            "run: python3 scripts/check_filters_sync.py",
+        )
         failures += 1
 
     print()
