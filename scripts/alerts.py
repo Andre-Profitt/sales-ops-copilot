@@ -18,6 +18,27 @@ LATE_STAGE_LIKE = (
     "(StageName LIKE '3%' OR StageName LIKE '4%' OR StageName LIKE '5%' OR StageName LIKE '6%')"
 )
 
+# SOQL fragment that excludes known test-bot artifacts from open-pipeline
+# alert queries. Inlined here (rather than imported from _filters.py) so a
+# code formatter can't strip the cross-file import.
+#
+# Verified 2026-04-28 — Maria Sabiniewicz owns 43 open opps totaling $16.7M
+# ARR of QtC SOL test fixtures; CLM_SimCorp QtC* and QtC * are internal test
+# orgs; Test/TEST*/ASH Dummy/SBL Opp%/Back Office are obvious test names.
+#
+# SOQL gotcha: `AND NOT field LIKE 'X'` is rejected. Each NOT must be wrapped
+# in its own parens: `(NOT field LIKE 'X')`. To negate an OR-of-LIKEs, use
+# De Morgan's law: NOT (A OR B) ≡ (NOT A) AND (NOT B).
+EXCLUDE_TEST_ARTIFACTS = (
+    "AND (NOT Owner.Name LIKE 'Maria Sabiniewicz%') "
+    "AND ((NOT Account.Name LIKE 'CLM_SimCorp QtC%') "
+    "AND (NOT Account.Name LIKE 'QtC %')) "
+    "AND ((NOT Name = 'Test') AND (NOT Name LIKE 'TEST %') "
+    "AND (NOT Name LIKE 'test_%') AND (NOT Name LIKE 'TEST_%') "
+    "AND (NOT Name LIKE 'QTC_Test%') AND (NOT Name LIKE 'ASH Dummy%') "
+    "AND (NOT Name LIKE 'SBL Opp%') AND (NOT Name = 'Back Office'))"
+)
+
 
 def _sf(soql: str) -> list[dict[str, Any]]:
     """Run SOQL via sf CLI, return record list (stdout-only to avoid CLI warnings)."""
@@ -49,7 +70,8 @@ def commercial_approval_gap_land() -> dict[str, Any]:
     Commercial Handbook, Commercial Approval is mandatory for ALL Land deals.
     """
     where = (
-        f"IsClosed = false AND Type = 'Land' AND {LATE_STAGE_LIKE} AND Stage_20_Approval__c = false"
+        f"IsClosed = false AND Type = 'Land' AND {LATE_STAGE_LIKE} "
+        f"AND Stage_20_Approval__c = false {EXCLUDE_TEST_ARTIFACTS}"
     )
     agg = _agg(
         "SELECT COUNT(Id) num, SUM(APTS_Opportunity_ARR__c) total_arr "
@@ -73,7 +95,8 @@ def commercial_approval_gap_big() -> dict[str, Any]:
     """Land+Expand at Stage 3+ with ARR ≥$500k and no Commercial Approval."""
     where = (
         f"IsClosed = false AND Type IN ('Land','Expand') AND {LATE_STAGE_LIKE} "
-        "AND APTS_Opportunity_ARR__c >= 500000 AND Stage_20_Approval__c = false"
+        f"AND APTS_Opportunity_ARR__c >= 500000 AND Stage_20_Approval__c = false "
+        f"{EXCLUDE_TEST_ARTIFACTS}"
     )
     agg = _agg(
         "SELECT COUNT(Id) num, SUM(APTS_Opportunity_ARR__c) total_arr "
@@ -95,7 +118,7 @@ def commercial_approval_gap_big() -> dict[str, Any]:
 
 def close_date_in_past() -> dict[str, Any]:
     """Open opps with close date in the past — distorts every pipeline view."""
-    where = "IsClosed = false AND CloseDate < TODAY"
+    where = f"IsClosed = false AND CloseDate < TODAY {EXCLUDE_TEST_ARTIFACTS}"
     agg = _agg(
         "SELECT COUNT(Id) num, SUM(APTS_Opportunity_ARR__c) total_arr "
         f"FROM Opportunity WHERE {where}"
@@ -118,7 +141,8 @@ def dec_31_placeholder_dates() -> dict[str, Any]:
     """Stage 3+ open opps with CloseDate = December 31 — placeholder dates."""
     where = (
         f"IsClosed = false AND {LATE_STAGE_LIKE} "
-        "AND CALENDAR_MONTH(CloseDate) = 12 AND DAY_IN_MONTH(CloseDate) = 31"
+        f"AND CALENDAR_MONTH(CloseDate) = 12 AND DAY_IN_MONTH(CloseDate) = 31 "
+        f"{EXCLUDE_TEST_ARTIFACTS}"
     )
     agg = _agg(
         "SELECT COUNT(Id) num, SUM(APTS_Opportunity_ARR__c) total_arr "
@@ -140,7 +164,10 @@ def dec_31_placeholder_dates() -> dict[str, Any]:
 
 def stale_activity() -> dict[str, Any]:
     """Stage 3+ open opps with no activity in 60+ days."""
-    where = f"IsClosed = false AND {LATE_STAGE_LIKE} AND LastActivityDate < LAST_N_DAYS:60"
+    where = (
+        f"IsClosed = false AND {LATE_STAGE_LIKE} AND LastActivityDate < LAST_N_DAYS:60 "
+        f"{EXCLUDE_TEST_ARTIFACTS}"
+    )
     agg = _agg(
         "SELECT COUNT(Id) num, SUM(APTS_Opportunity_ARR__c) total_arr "
         f"FROM Opportunity WHERE {where}"
@@ -161,7 +188,10 @@ def stale_activity() -> dict[str, Any]:
 
 def no_activity_ever() -> dict[str, Any]:
     """Stage 3+ open opps that have NEVER had a logged activity."""
-    where = f"IsClosed = false AND {LATE_STAGE_LIKE} AND LastActivityDate = null"
+    where = (
+        f"IsClosed = false AND {LATE_STAGE_LIKE} AND LastActivityDate = null "
+        f"{EXCLUDE_TEST_ARTIFACTS}"
+    )
     agg = _agg(
         "SELECT COUNT(Id) num, SUM(APTS_Opportunity_ARR__c) total_arr "
         f"FROM Opportunity WHERE {where}"
@@ -182,7 +212,7 @@ def no_activity_ever() -> dict[str, Any]:
 
 def inactive_owner() -> dict[str, Any]:
     """Open opps owned by an inactive Salesforce user — alerts go nowhere."""
-    where = "IsClosed = false AND Owner.IsActive = false"
+    where = f"IsClosed = false AND Owner.IsActive = false {EXCLUDE_TEST_ARTIFACTS}"
     agg = _agg(
         "SELECT COUNT(Id) num, SUM(APTS_Opportunity_ARR__c) total_arr "
         f"FROM Opportunity WHERE {where}"
@@ -258,7 +288,6 @@ def pull_all_alerts() -> list[dict[str, Any]]:
 
 
 if __name__ == "__main__":
-
     alerts = pull_all_alerts()
     print(f"Found {len(alerts)} active alerts:\n")
     for a in alerts:
