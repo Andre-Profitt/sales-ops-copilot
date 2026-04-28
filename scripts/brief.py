@@ -274,6 +274,20 @@ def render_report(
     if synthesis:
         lines += ["## Synthesis", "", synthesis, ""]
 
+    # Δ since last run (if snapshot_diff has produced one)
+    diff_path = ROOT / "state" / "snapshots" / f"{dt.date.today().isoformat()}_diff.json"
+    if diff_path.exists():
+        diff_data = json.loads(diff_path.read_text())["diff"]
+        lines += [
+            "## Δ since last run",
+            "",
+            f"- New-business ARR: **{diff_data['new_business_arr']['delta']:+,.0f}** "
+            f"(today {diff_data['new_business_arr']['today']:,.0f}, prior {diff_data['new_business_arr']['prior']:,.0f})",
+            f"- Renewal ACV: **{diff_data['renewal_acv']['delta']:+,.0f}** "
+            f"(today {diff_data['renewal_acv']['today']:,.0f}, prior {diff_data['renewal_acv']['prior']:,.0f})",
+            "",
+        ]
+
     # Alerts go BEFORE the data tables — these are the actionable signals
     if alerts:
         lines += ["## Active alerts", ""]
