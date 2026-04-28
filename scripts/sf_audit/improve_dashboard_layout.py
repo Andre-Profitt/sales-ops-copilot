@@ -54,8 +54,11 @@ def widget_size(viz_type: str, report_format: str) -> tuple[int, int]:
     # tables and otherwise truncate column text).
     if v in ("flextable", "table") or rf == "tabular":
         return (12, 10)
-    # Compact widgets — donuts, pies, single-metric KPIs
-    if v in ("pie", "donut", "gauge", "metric"):
+    # KPI tiles — 4-across at 3 cols each
+    if v == "metric":
+        return (3, 4)
+    # Compact widgets — donuts, pies
+    if v in ("pie", "donut", "gauge"):
         return (4, 8)
     # Mid-size charts pair at half-width
     if v in ("funnel", "bar", "column", "line", "scatter"):
