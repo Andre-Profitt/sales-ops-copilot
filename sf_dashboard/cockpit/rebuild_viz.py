@@ -193,7 +193,7 @@ def transform_components(components: list[dict[str, Any]]) -> list[dict[str, Any
     """Mutate componentType + properties per WIDGET_SPEC. Returns a new list."""
     out: list[dict[str, Any]] = []
     for comp in components:
-        rid = comp.get("reportId")
+        rid = comp.get("reportId") or ""
         spec = WIDGET_SPEC.get(rid)
         new_comp = json.loads(json.dumps(comp))  # deep copy
         new_comp["header"] = _strip_label_prefix(new_comp.get("header") or "")
@@ -235,7 +235,7 @@ def transform_layout(
     new_layout["rowHeight"] = layout.get("rowHeight", 36)
     positions: list[dict[str, int]] = []
     for comp in components:
-        rid = comp.get("reportId")
+        rid = comp.get("reportId") or ""
         pos = LAYOUT_BY_REPORT_ID.get(rid)
         if pos is None:
             # Fallback: tiny tile bottom-right corner
