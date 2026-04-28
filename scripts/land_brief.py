@@ -268,6 +268,19 @@ def render_director_brief(envelope: dict) -> str:
             lines += [f"- **{r['claim']}** _(rule: {r['rule']})_"]
         lines.append("")
 
+    backtest_kpis = [k for k in envelope["kpis"] if k["name"].startswith("backtest_")]
+    if backtest_kpis:
+        lines += [
+            "## Forecast backtest (last 4 quarters)",
+            "",
+            "| Stage transition | Forward rate |",
+            "|---|---:|",
+        ]
+        for k in backtest_kpis:
+            stage_num = k["name"].replace("backtest_stage_", "").replace("_forward_rate", "")
+            lines.append(f"| Stage {stage_num} → next | {k['value']:.1f}% |")
+        lines.append("")
+
     lines += ["## KPIs", "", "| KPI | Value | Unit | Priority |", "|---|---:|---|---|"]
     for k in envelope["kpis"]:
         lines.append(
