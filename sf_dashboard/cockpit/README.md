@@ -47,12 +47,34 @@ Auth comes from `sf org display --target-org apro@simcorp.com`.
   FlexTable widgets fail dashboard "viewing as" validation when a filter
   references User.Name in this org. Maria Sabiniewicz's test-bot opps are
   caught by the Account-name patterns (`CLM_SimCorp QtC%`, `QtC %`).
-- All chart widgets use horizontal Bar viz (`visualizationType: Bar`).
-  No FlexTable — that viz type is blocked in this org for reports backed
-  by these custom-field heavy queries.
+- Widget viz mix is now mixed-rhythm executive cockpit:
+  `Metric: 10` (4 KPI tiles + 6 alert tiles) + `Funnel: 1` (Pipeline by
+  Stage) + `Column: 1` (Renewal by Fiscal Quarter) + `Donut: 1` (Open ARR
+  by Type) + `Bar: 3` (Top Accounts, Owner Concentration, Account
+  Concentration top-N rankings). Re-run `python3 rebuild_viz.py` to
+  re-apply if the viz mix drifts. No FlexTable — blocked in this org.
+- Severity color hints (red for critical alerts, amber for important) are
+  pushed via `visualizationProperties.metricFontColor` /
+  `referenceLineColors`; the Analytics REST API silently drops these in
+  preprod, so Metric tiles render in default text color. Alert tiles are
+  still distinguishable by row position (rows 16-21) and by header text.
 - Boolean filter values use lower-case `true`/`false` (Analytics API
   convention; the metadata-XML capital-case `True`/`False` rule applies
   to the Metadata API path, which is unavailable here).
+
+## Re-applying viz types (post-deploy)
+
+If the dashboard viz selection drifts (or someone edits in the UI and
+saves all-bar again), re-run:
+
+```bash
+python3 rebuild_viz.py --diff      # preview viz-type counts
+python3 rebuild_viz.py --dry-run   # write PATCH body to /tmp, no API call
+python3 rebuild_viz.py             # PATCH the live dashboard in place
+```
+
+Idempotent. Only `componentType` and `layout.components` change — same
+report IDs, same dashboard ID (`01ZTb00000FxX2YMAV`), same bookmark.
 
 ## Widget layout (16 widgets, 12-col grid, 4 widgets per row)
 
