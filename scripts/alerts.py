@@ -366,18 +366,11 @@ ALERT_FUNCTIONS = [
 SEVERITY_ORDER = {"critical": 0, "important": 1, "info": 2, "error": 99}
 
 
-def pull_owner_concentration(top_n: int = 10) -> list[dict[str, Any]]:
-    """
-    Roll up open-pipeline ARR by Owner across the deals that fall under
-    *any* of the alert categories. Returns the top N owners by total ARR.
-
-    Uses a single GROUP BY query that mirrors the union of the alert
-    WHERE clauses (any deal that's: missing approval at Stage 3+, OR has
-    a past close date, OR has Dec 31 placeholder, OR is stale 60d, OR
-    has no activity ever, OR has inactive owner). This gives a complete
-    view, not just the top-5 samples per alert.
-    """
-    union_where = (
+def _flagged_union_where() -> str:
+    """SOQL union WHERE that matches any open opp falling under at least one
+    alert category. Shared by owner-concentration and account-concentration
+    rollups so they always use the same predicate as `pull_all_alerts`."""
+    return (
         "IsClosed = false AND ("
         # Missing Commercial Approval on big deals
         f"  (Type IN ('Land','Expand') AND {LATE_STAGE_LIKE} "
@@ -407,26 +400,54 @@ def pull_owner_concentration(top_n: int = 10) -> list[dict[str, Any]]:
         ") "
         f"{EXCLUDE_TEST_ARTIFACTS}{_ack_exclusion()}"
     )
+
+
+def pull_owner_concentration(top_n: int = 10) -> list[dict[str, Any]]:
+    """Roll up flagged-opp ARR by Owner. Returns top N owners by total ARR."""
     soql = (
         "SELECT Owner.Name owner_name, COUNT(Id) num_deals, "
         "SUM(APTS_Opportunity_ARR__c) total_arr "
-        f"FROM Opportunity WHERE {union_where} "
+        f"FROM Opportunity WHERE {_flagged_union_where()} "
         "GROUP BY Owner.Name "
         "ORDER BY SUM(APTS_Opportunity_ARR__c) DESC NULLS LAST "
         f"LIMIT {top_n}"
     )
     rows = _sf(soql)
-    out: list[dict[str, Any]] = []
-    for r in rows:
-        owner = r.get("owner_name") or "—"
-        out.append(
-            {
-                "owner": owner,
-                "deal_count": r.get("num_deals", 0) or 0,
-                "total_arr": r.get("total_arr") or 0,
-            }
-        )
-    return out
+    return [
+        {
+            "owner": r.get("owner_name") or "—",
+            "deal_count": r.get("num_deals", 0) or 0,
+            "total_arr": r.get("total_arr") or 0,
+        }
+        for r in rows
+    ]
+
+
+def pull_account_concentration(top_n: int = 15) -> list[dict[str, Any]]:
+    """Roll up flagged-opp ARR by Account. Returns top N accounts by total ARR.
+
+    Same union predicate as `pull_owner_concentration` — pivots the same set
+    of flagged opps from the rep dimension to the account dimension. Useful
+    for "where is the governance debt actually concentrated?" — directors
+    typically think in accounts, not reps.
+    """
+    soql = (
+        "SELECT Account.Name account_name, COUNT(Id) num_deals, "
+        "SUM(APTS_Opportunity_ARR__c) total_arr "
+        f"FROM Opportunity WHERE {_flagged_union_where()} "
+        "GROUP BY Account.Name "
+        "ORDER BY SUM(APTS_Opportunity_ARR__c) DESC NULLS LAST "
+        f"LIMIT {top_n}"
+    )
+    rows = _sf(soql)
+    return [
+        {
+            "account": r.get("account_name") or "—",
+            "deal_count": r.get("num_deals", 0) or 0,
+            "total_arr": r.get("total_arr") or 0,
+        }
+        for r in rows
+    ]
 
 
 def deduplicate_samples(alerts: list[dict[str, Any]]) -> list[dict[str, Any]]:

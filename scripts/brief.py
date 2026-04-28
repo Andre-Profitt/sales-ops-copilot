@@ -265,6 +265,7 @@ def synthesize(
     fabric_summary: list,
     alerts: list,
     owner_concentration: list,
+    account_concentration: list,
     model: str,
 ) -> str:
     """Send aggregated metadata to apro-openai for a Sales Ops brief."""
@@ -281,11 +282,15 @@ def synthesize(
         "You are a Sales Operations Copilot for SimCorp. "
         "You receive (1) a Salesforce pipeline snapshot for the current quarter, "
         "(2) a list of Fabric/Power BI workspaces accessible to the user, "
-        "(3) governance + hygiene alerts detected from open pipeline, and "
+        "(3) governance + hygiene alerts detected from open pipeline, "
         "(4) owner_concentration_top10 — top 10 sales reps ranked by total "
         "ARR they own that hits ANY alert category. Use this to flag "
         "concentration risk: name the top 1-2 owners by ARR and what % of "
-        "the alert population they hold.\n\n"
+        "the alert population they hold, and "
+        "(5) account_concentration_top15 — same flagged-opp population pivoted "
+        "to Account. Use this to call out the 1-2 accounts where governance "
+        "debt is most concentrated (e.g. 'UBS holds X% of flagged ARR across "
+        "Y deals'). Account view is what directors think in.\n\n"
         "CRITICAL metric convention — never blend these:\n"
         "- Land + Expand deals are measured in ARR (annual recurring revenue) "
         "via APTS_Opportunity_ARR__c.\n"
@@ -326,6 +331,7 @@ def synthesize(
             "salesforce_pipeline_thisquarter": sf_snapshot,
             "alerts": alerts,
             "owner_concentration_top10": owner_concentration,
+            "account_concentration_top15": account_concentration,
             "fabric_workspaces_available": fabric_summary,
             "today": dt.date.today().isoformat(),
         },
@@ -353,6 +359,7 @@ def render_report(
     fabric_summary: list,
     alerts: list,
     owner_concentration: list,
+    account_concentration: list,
     synthesis: str | None,
     model: str,
 ) -> str:
@@ -397,6 +404,27 @@ def render_report(
             pct = (arr / total_top * 100) if total_top else 0
             lines.append(
                 f"| {i} | {o.get('owner', '—')} | {o.get('deal_count', 0)} | "
+                f"${arr:,.0f} | {pct:.0f}% |"
+            )
+        lines.append("")
+
+    # Account concentration — pivots the same flagged-opp population to the
+    # account dimension. Directors think in accounts, not reps.
+    if account_concentration:
+        lines += [
+            "## Account concentration on alert population",
+            "",
+            "*Same flagged-opp set as above, rolled up by account. Drill in via `/account-drill <name>`.*",
+            "",
+            "| # | Account | # Deals | $ARR | % of top-15 |",
+            "|---|---|---:|---:|---:|",
+        ]
+        total_top = sum(a["total_arr"] for a in account_concentration) or 1
+        for i, a in enumerate(account_concentration, 1):
+            arr = a.get("total_arr") or 0
+            pct = (arr / total_top * 100) if total_top else 0
+            lines.append(
+                f"| {i} | {a.get('account', '—')} | {a.get('deal_count', 0)} | "
                 f"${arr:,.0f} | {pct:.0f}% |"
             )
         lines.append("")
@@ -580,6 +608,7 @@ def main() -> int:
 
     print("→ Detecting governance + hygiene alerts...")
     # Deferred import keeps formatters from stripping it before sys.path is set.
+    from alerts import pull_account_concentration as _pull_accounts  # type: ignore[reportMissingImports]
     from alerts import pull_all_alerts as _pull_alerts  # type: ignore[reportMissingImports]
     from alerts import pull_owner_concentration as _pull_owners  # type: ignore[reportMissingImports]
 
@@ -599,17 +628,28 @@ def main() -> int:
             f"#1 {top['owner']}: ${top['total_arr']:,.0f} ({pct:.0f}%)"
         )
 
+    print("→ Computing account concentration on alert population...")
+    accounts = _pull_accounts(top_n=15)
+    if accounts:
+        top_a = accounts[0]
+        total_a = sum(a["total_arr"] for a in accounts)
+        pct_a = (top_a["total_arr"] / total_a * 100) if total_a else 0
+        print(
+            f"  Top 15 accounts total: ${total_a:,.0f} ARR · "
+            f"#1 {top_a['account']}: ${top_a['total_arr']:,.0f} ({pct_a:.0f}%)"
+        )
+
     synthesis = None
     if not args.no_llm:
         print(f"→ Synthesizing via apro-openai/{args.model}...")
         try:
-            synthesis = synthesize(sf, fabric, alerts, owners, args.model)
+            synthesis = synthesize(sf, fabric, alerts, owners, accounts, args.model)
             print(f"  Synthesis: {len(synthesis)} chars")
         except Exception as e:
             print(f"  ⚠ Synthesis failed: {e}")
             synthesis = f"_Synthesis failed: {e}_"
 
-    report = render_report(sf, fabric, alerts, owners, synthesis, args.model)
+    report = render_report(sf, fabric, alerts, owners, accounts, synthesis, args.model)
     out_path.write_text(report, encoding="utf-8")
     print(f"\n✓ Wrote {out_path}")
     return 0
