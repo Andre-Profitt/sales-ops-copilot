@@ -268,6 +268,61 @@ ALERT_FUNCTIONS = [
 SEVERITY_ORDER = {"critical": 0, "important": 1, "info": 2, "error": 99}
 
 
+def pull_owner_concentration(top_n: int = 10) -> list[dict[str, Any]]:
+    """
+    Roll up open-pipeline ARR by Owner across the deals that fall under
+    *any* of the alert categories. Returns the top N owners by total ARR.
+
+    Uses a single GROUP BY query that mirrors the union of the alert
+    WHERE clauses (any deal that's: missing approval at Stage 3+, OR has
+    a past close date, OR has Dec 31 placeholder, OR is stale 60d, OR
+    has no activity ever, OR has inactive owner). This gives a complete
+    view, not just the top-5 samples per alert.
+    """
+    union_where = (
+        "IsClosed = false AND ("
+        # Missing Commercial Approval on big deals
+        f"  (Type IN ('Land','Expand') AND {LATE_STAGE_LIKE} "
+        "    AND APTS_Opportunity_ARR__c >= 500000 "
+        "    AND Stage_20_Approval__c = false) "
+        # Land deals at Stage 3+ with no approval
+        f"  OR (Type = 'Land' AND {LATE_STAGE_LIKE} AND Stage_20_Approval__c = false) "
+        # Past close date
+        "  OR (CloseDate < TODAY) "
+        # Dec 31 placeholder at Stage 3+
+        f"  OR ({LATE_STAGE_LIKE} AND CALENDAR_MONTH(CloseDate) = 12 "
+        "       AND DAY_IN_MONTH(CloseDate) = 31) "
+        # Stale 60d at Stage 3+
+        f"  OR ({LATE_STAGE_LIKE} AND LastActivityDate < LAST_N_DAYS:60) "
+        # No activity ever at Stage 3+
+        f"  OR ({LATE_STAGE_LIKE} AND LastActivityDate = null) "
+        # Inactive owner
+        "  OR (Owner.IsActive = false) "
+        ") "
+        f"{EXCLUDE_TEST_ARTIFACTS}"
+    )
+    soql = (
+        "SELECT Owner.Name owner_name, COUNT(Id) num_deals, "
+        "SUM(APTS_Opportunity_ARR__c) total_arr "
+        f"FROM Opportunity WHERE {union_where} "
+        "GROUP BY Owner.Name "
+        "ORDER BY SUM(APTS_Opportunity_ARR__c) DESC NULLS LAST "
+        f"LIMIT {top_n}"
+    )
+    rows = _sf(soql)
+    out: list[dict[str, Any]] = []
+    for r in rows:
+        owner = r.get("owner_name") or "—"
+        out.append(
+            {
+                "owner": owner,
+                "deal_count": r.get("num_deals", 0) or 0,
+                "total_arr": r.get("total_arr") or 0,
+            }
+        )
+    return out
+
+
 def deduplicate_samples(alerts: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """
     Each opp can be flagged by multiple alerts (e.g., a deal that's both
