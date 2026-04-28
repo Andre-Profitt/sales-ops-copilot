@@ -106,3 +106,15 @@ def test_highlights_derived_from_late_stage_concentration():
     out = derive_highlights_risks(envelope)
     assert len(out["highlights"]) >= 1
     assert any("late-stage" in (h.get("rule") or "") for h in out["highlights"])
+
+
+def test_envelope_validates_against_pydantic():
+    from scripts.schema import TrendsEnvelope
+    from scripts.land_brief import build_trends_envelope, derive_highlights_risks
+
+    sf_snapshot = json.loads((FIXTURES / "sample_director.json").read_text())
+    director = {"name": "Adam Steinhouse", "book_codes": ["P&I"], "scope": "us_only"}
+    env = derive_highlights_risks(build_trends_envelope(sf_snapshot, director, "2026-Q2"))
+
+    parsed = TrendsEnvelope.model_validate(env)
+    assert parsed.schema_version == "1.0"
