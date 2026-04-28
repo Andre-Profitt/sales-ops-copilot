@@ -91,12 +91,17 @@ def _ratio(num: float, denom: float) -> float | None:
 
 KPI_TEMPLATES: dict[str, Template] = {
     "Pipeline Value / Pipeline Coverage": {
+        # Per ARR/ACV separation memory: pipeline = NEW-BUSINESS only, in
+        # the current-quarter window (matches brief.py pull_salesforce_snapshot
+        # convention). Renewal ACV reported separately by another KPI.
         "soql": (
             "SELECT SUM(APTS_Opportunity_ARR__c) totalARR "
-            "FROM Opportunity WHERE IsClosed = false AND APTS_Opportunity_ARR__c > 0"
+            "FROM Opportunity "
+            "WHERE IsClosed = false AND Type IN ('Land','Expand') "
+            "AND CloseDate = THIS_QUARTER"
         ),
         "extract": lambda recs: (recs[0].get("totalARR") if recs else 0) or 0,
-        "format": lambda v: f"${v:,.0f}" if v else "$0",
+        "format": lambda v: f"${v:,.0f} (this-quarter L+E)" if v else "$0",
     },
     "Opportunity Win Rate (Close Rate)": {
         "soql_won": "SELECT COUNT(Id) FROM Opportunity WHERE IsWon = true AND IsClosed = true",
@@ -131,22 +136,26 @@ KPI_TEMPLATES: dict[str, Template] = {
     "Closed won Average Deal Size by month": {
         "soql": (
             "SELECT AVG(APTS_Opportunity_ARR__c) avgARR "
-            "FROM Opportunity WHERE IsWon = true AND CloseDate = LAST_N_MONTHS:12"
+            "FROM Opportunity WHERE IsWon = true AND Type IN ('Land','Expand') "
+            "AND CloseDate = LAST_N_MONTHS:12"
         ),
         "extract": lambda recs: (recs[0].get("avgARR") if recs else 0) or 0,
         "format": lambda v: f"${v:,.0f}" if v else "$0",
     },
     "Forecast & Closed Won": {
+        # New-business only — sum Won (already-booked) + Open (forecast) for Q.
         "soql_won": (
             "SELECT SUM(APTS_Opportunity_ARR__c) v "
-            "FROM Opportunity WHERE IsWon = true AND CloseDate = THIS_QUARTER"
+            "FROM Opportunity WHERE IsWon = true AND Type IN ('Land','Expand') "
+            "AND CloseDate = THIS_QUARTER"
         ),
         "soql_open": (
             "SELECT SUM(APTS_Opportunity_ARR__c) v "
-            "FROM Opportunity WHERE IsClosed = false AND CloseDate = THIS_QUARTER"
+            "FROM Opportunity WHERE IsClosed = false AND Type IN ('Land','Expand') "
+            "AND CloseDate = THIS_QUARTER"
         ),
         "extract": lambda data: data["won"] + data["open"],
-        "format": lambda v: f"${v:,.0f}" if v else "$0",
+        "format": lambda v: f"${v:,.0f} (L+E only)" if v else "$0",
         "kind": "compound_sum",
     },
     "Stage 3 approvals by month": {
@@ -169,10 +178,12 @@ KPI_TEMPLATES: dict[str, Template] = {
     "Lost ARR By Quarter - with reason codes": {
         "soql": (
             "SELECT SUM(APTS_Opportunity_ARR__c) lost "
-            "FROM Opportunity WHERE IsWon = false AND IsClosed = true AND CloseDate = THIS_QUARTER"
+            "FROM Opportunity "
+            "WHERE IsWon = false AND IsClosed = true "
+            "AND Type IN ('Land','Expand') AND CloseDate = THIS_QUARTER"
         ),
         "extract": lambda recs: (recs[0].get("lost") if recs else 0) or 0,
-        "format": lambda v: f"${v:,.0f}" if v else "$0",
+        "format": lambda v: f"${v:,.0f} (L+E only)" if v else "$0",
     },
     "Lead to Opportunity Time": {
         # Lead.ConvertedDate − Lead.CreatedDate, sample last 12 months
