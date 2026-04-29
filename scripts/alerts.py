@@ -216,14 +216,22 @@ def no_activity_ever() -> dict[str, Any]:
 
 def kyc_gap_late_stage() -> dict[str, Any]:
     """Land/Expand at Stage 5+ (Preferred or Contracting) without KYC clearance.
-    Per the SimCorp Commercial Handbook, KYC clearance is a closing-stage gate;
-    a deal can't actually close without it. Stage 5+ scopes this to deals
-    that should have KYC done by now.
+
+    KYC source-of-truth is `Account.KYC_Approval_Status__c` (picklist:
+    Approved / Approval Requested / Not Started / On Hold). NOT
+    `Opportunity.KYC_Approval_Message__c` — that boolean is some unrelated
+    message-display flag and was emitting massive false positives (e.g.,
+    UBS / Fidelity / Generali, all KYC-Approved at the Account level).
+    Verified 2026-04-28.
+
+    Per the SimCorp Commercial Handbook, KYC clearance is a closing-stage
+    gate; a deal can't actually close without it. Stage 5+ scopes this to
+    deals that should have KYC done by now.
     """
     where = (
         "IsClosed = false AND Type IN ('Land','Expand') "
         "AND (StageName LIKE '5%' OR StageName LIKE '6%') "
-        "AND KYC_Approval_Message__c = false "
+        "AND Account.KYC_Approval_Status__c != 'Approved' "
         f"{EXCLUDE_TEST_ARTIFACTS}{_ack_exclusion()}"
     )
     agg = _agg(
@@ -381,7 +389,7 @@ def _flagged_union_where() -> str:
         # KYC missing at Stage 5+
         "  OR (Type IN ('Land','Expand') "
         "       AND (StageName LIKE '5%' OR StageName LIKE '6%') "
-        "       AND KYC_Approval_Message__c = false) "
+        "       AND Account.KYC_Approval_Status__c != 'Approved') "
         # Deal Shaping missing at Stage 5+
         "  OR (Type IN ('Land','Expand') "
         "       AND (StageName LIKE '5%' OR StageName LIKE '6%') "
