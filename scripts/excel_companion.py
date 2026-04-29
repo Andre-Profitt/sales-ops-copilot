@@ -23,6 +23,7 @@ SHEET_NAMES = [
     "Cover",
     "Pipeline_Total",
     "Pipeline_By_Stage",
+    "Action_Items",
     "Top_Deals_Land",
     "Top_Deals_Expand",
     "Wins_Losses_QTD",
@@ -86,7 +87,41 @@ def build_director_excel(envelope: dict, out_path: Path) -> None:
             ws.cell(row=row, column=3, value=k.get("num_opps", 0))
             row += 1
 
-    # Sheets 4-12: scaffolded but populated only when forecast_backtest /
+    # Action_Items — populated from envelope.action_items (schema_version=2).
+    # This is the canonical location for the director's monthly action queue
+    # in Excel form. Pre-positioned for think-cell datalinks: a deck template
+    # can link a chart/table directly to the named range "Action_Items" or to
+    # specific cells (B2:F<N>) in this sheet.
+    ws = wb["Action_Items"]
+    headers = ["#", "Priority", "Rule", "Claim", "Suggested action", "Due date", "Owner"]
+    for col_idx, header in enumerate(headers, start=1):
+        cell = ws.cell(row=1, column=col_idx, value=header)
+        cell.font = Font(bold=True)
+    actions = envelope.get("action_items") or []
+    if actions:
+        for i, a in enumerate(actions, start=1):
+            ws.cell(row=i + 1, column=1, value=i)
+            ws.cell(row=i + 1, column=2, value=(a.get("priority") or "").upper())
+            ws.cell(row=i + 1, column=3, value=a.get("rule_id"))
+            ws.cell(row=i + 1, column=4, value=a.get("claim"))
+            ws.cell(row=i + 1, column=5, value=a.get("suggested_action"))
+            ws.cell(row=i + 1, column=6, value=a.get("due_date"))
+            ws.cell(row=i + 1, column=7, value=a.get("owner"))
+        # Reasonable column widths for readability when the deck reviewer
+        # pops the xlsx open
+        ws.column_dimensions["A"].width = 4
+        ws.column_dimensions["B"].width = 10
+        ws.column_dimensions["C"].width = 22
+        ws.column_dimensions["D"].width = 80
+        ws.column_dimensions["E"].width = 80
+        ws.column_dimensions["F"].width = 12
+        ws.column_dimensions["G"].width = 22
+    else:
+        ws.cell(row=2, column=1, value="(no actions tripped this period)").font = Font(
+            italic=True, color="999999"
+        )
+
+    # Sheets 5-12: scaffolded but populated only when forecast_backtest /
     # snapshot_diff data is wired in (Phase 1.5.A.4 + .5).
     placeholder_sheets = {
         "Top_Deals_Land": "Top 10 Land deals - populate when sample-deal join is added",
