@@ -275,6 +275,280 @@ def derive_highlights_risks(envelope: dict) -> dict:
     return envelope
 
 
+# ──────────────────────────────────────────────────────────────────────────────
+# Action-item rule set (schema_version=2)
+#
+# Six rules, each scoped to one director's territory via their where_clause.
+# Each rule emits 0..1 action_items per director when the threshold trips. The
+# action_items list is what the deck's "Action Items" slide consumes, and what
+# the regional memo aggregates for region-level rollup.
+# ──────────────────────────────────────────────────────────────────────────────
+
+
+def _pull_zombie_for_director(where_clause: str) -> dict[str, Any]:
+    """Open Land+Expand opps >730d old with no Task/Event activity in 60d.
+
+    SOQL `Id NOT IN (subquery)` pattern; FX-correct via per-record
+    convertCurrency.
+    """
+    q = (
+        "SELECT Id, Owner.Name, "
+        "convertCurrency(APTS_Opportunity_ARR__c) arr_fx "
+        "FROM Opportunity "
+        f"WHERE IsClosed = false AND {where_clause} "
+        "AND Type IN ('Land','Expand') "
+        "AND CreatedDate <= LAST_N_DAYS:730 "
+        "AND Id NOT IN (SELECT WhatId FROM Task WHERE ActivityDate >= LAST_N_DAYS:60) "
+        "AND Id NOT IN (SELECT WhatId FROM Event WHERE ActivityDate >= LAST_N_DAYS:60)"
+    )
+    rows = _sf_query(q)
+    return {
+        "count": len(rows),
+        "total_arr_eur": round(sum(float(r.get("arr_fx") or 0) for r in rows), 2),
+        "top_owner": max(rows, key=lambda r: (r.get("arr_fx") or 0))["Owner"]["Name"]
+        if rows
+        else None,
+    }
+
+
+def _pull_coverage_gap_for_director(where_clause: str) -> dict[str, Any]:
+    """Tier-1 accounts in director scope with no open opp in 90d.
+
+    Translates the Opportunity-side where_clause to an Account-side scope
+    via the same Region__c / BillingCountry / Industry filters.
+    """
+    # Strip the "Account." prefix so we can use the same conditions on Account
+    # directly.
+    acct_where = where_clause.replace("Account.", "")
+    q = (
+        "SELECT Id, Name FROM Account "
+        f"WHERE Tier_Calculation__c = 'Tier 1' AND ({acct_where}) "
+        "AND Id NOT IN ("
+        "SELECT AccountId FROM Opportunity "
+        "WHERE IsClosed = false AND CreatedDate >= LAST_N_DAYS:90"
+        ")"
+    )
+    try:
+        rows = _sf_query(q)
+        return {"count": len(rows), "sample_accounts": [r.get("Name") for r in rows[:3]]}
+    except Exception:
+        # Some director scope clauses may not translate cleanly to Account.* fields
+        return {"count": 0, "sample_accounts": [], "_skipped": True}
+
+
+def _pull_approval_gap_for_director(where_clause: str) -> dict[str, Any]:
+    """Stage 3+ Land+Expand opps >= EUR 500k without Commercial Approval
+    (Stage_20_Approval__c = false).
+    """
+    q = (
+        "SELECT Id, Name, Owner.Name, "
+        "convertCurrency(APTS_Opportunity_ARR__c) arr_fx "
+        "FROM Opportunity "
+        f"WHERE IsClosed = false AND {where_clause} "
+        "AND Type IN ('Land','Expand') "
+        "AND APTS_Opportunity_ARR__c >= 500000 "
+        "AND StageName IN ('3 - Engagement','4 - Shortlisted','5 - Preferred','6 - Contracting') "
+        "AND (Stage_20_Approval__c = false OR Stage_20_Approval__c = null)"
+    )
+    rows = _sf_query(q)
+    return {
+        "count": len(rows),
+        "total_arr_eur": round(sum(float(r.get("arr_fx") or 0) for r in rows), 2),
+        "sample": [r.get("Name") for r in rows[:3]],
+    }
+
+
+def _pull_activity_drought_for_director(where_clause: str) -> dict[str, Any]:
+    """This-Q open opps with no Task/Event activity in last 30d."""
+    q = (
+        "SELECT Id, "
+        "convertCurrency(APTS_Opportunity_ARR__c) arr_fx "
+        "FROM Opportunity "
+        f"WHERE IsClosed = false AND {where_clause} "
+        "AND CloseDate = THIS_QUARTER "
+        "AND Id NOT IN (SELECT WhatId FROM Task WHERE ActivityDate >= LAST_N_DAYS:30) "
+        "AND Id NOT IN (SELECT WhatId FROM Event WHERE ActivityDate >= LAST_N_DAYS:30)"
+    )
+    rows = _sf_query(q)
+    return {
+        "count": len(rows),
+        "total_arr_eur": round(sum(float(r.get("arr_fx") or 0) for r in rows), 2),
+    }
+
+
+def pull_director_action_data(director: dict) -> dict[str, Any]:
+    """Runs the four director-scoped action queries. Each rule wrapped so a
+    single failure doesn't break the rest."""
+    where = director.get("where_clause")
+    if not where:
+        book_codes = "(" + ",".join(f"'{b}'" for b in director["book_codes"]) + ")"
+        where = f"Account.Sales_Director_Book__c IN {book_codes}"
+
+    out: dict[str, Any] = {}
+    for key, fn in [
+        ("zombie", _pull_zombie_for_director),
+        ("coverage_gap", _pull_coverage_gap_for_director),
+        ("approval_gap", _pull_approval_gap_for_director),
+        ("activity_drought", _pull_activity_drought_for_director),
+    ]:
+        try:
+            out[key] = fn(where)
+        except Exception as e:
+            print(f"  [WARN] action-data {key} failed: {e}", file=sys.stderr)
+            out[key] = {"_error": str(e)}
+    return out
+
+
+def _next_month_end_iso() -> str:
+    """Default action-item due date — last day of next month."""
+    today = dt.date.today()
+    if today.month == 12:
+        nxt = dt.date(today.year + 1, 1, 1)
+    else:
+        nxt = dt.date(today.year, today.month + 1, 1)
+    if nxt.month == 12:
+        eom = dt.date(nxt.year + 1, 1, 1) - dt.timedelta(days=1)
+    else:
+        eom = dt.date(nxt.year, nxt.month + 1, 1) - dt.timedelta(days=1)
+    return eom.isoformat()
+
+
+def derive_action_items(envelope: dict, action_data: dict) -> dict:
+    """Generate prioritized action items from rule evaluations + envelope.
+
+    Each action_item has:
+      - rule_id           stable key for de-dup / tracking
+      - priority          high / medium / low
+      - claim             one-line numeric statement
+      - suggested_action  what to do next
+      - evidence          list of supporting datapoints
+      - owner             defaults to the director's name
+      - due_date          last day of next month
+    """
+    director = envelope["director"]
+    owner = director["name"]
+    due = _next_month_end_iso()
+    items: list[dict[str, Any]] = []
+
+    # Rule 1: Zombie ARR exposure
+    z = action_data.get("zombie") or {}
+    if z.get("count", 0) > 0 and (z.get("total_arr_eur") or 0) >= 1_000_000:
+        items.append(
+            {
+                "rule_id": "zombie_arr",
+                "priority": "high" if (z.get("total_arr_eur") or 0) >= 5_000_000 else "medium",
+                "claim": f"{z['count']} open Land+Expand opps >730 days old with no activity in 60d "
+                f"— EUR {z.get('total_arr_eur', 0):,.0f} stale ARR",
+                "suggested_action": "Review zombie deals 1:1 with each rep; decide close/disqualify "
+                "by EOM. Top owner: " + (z.get("top_owner") or "n/a"),
+                "evidence": [f"count={z['count']}", f"arr_eur={z.get('total_arr_eur', 0)}"],
+                "owner": owner,
+                "due_date": due,
+            }
+        )
+
+    # Rule 2: Coverage Gap on Tier-1 accounts
+    cg = action_data.get("coverage_gap") or {}
+    if cg.get("count", 0) >= 5:
+        items.append(
+            {
+                "rule_id": "coverage_gap",
+                "priority": "medium",
+                "claim": f"{cg['count']} Tier-1 accounts in your territory with no open opp in 90d",
+                "suggested_action": "Run an account-coverage review with reps; assign opener "
+                "responsibility for each starved Tier-1.",
+                "evidence": [
+                    f"count={cg['count']}",
+                    "sample=" + ",".join(cg.get("sample_accounts") or []),
+                ],
+                "owner": owner,
+                "due_date": due,
+            }
+        )
+
+    # Rule 3: Approval Gap (Commercial Approval missing)
+    ag = action_data.get("approval_gap") or {}
+    if ag.get("count", 0) > 0:
+        items.append(
+            {
+                "rule_id": "approval_gap",
+                "priority": "high",
+                "claim": f"{ag['count']} Stage 3+ Land/Expand opps ≥ EUR 500k missing Commercial "
+                f"Approval — EUR {ag.get('total_arr_eur', 0):,.0f} ARR exposure",
+                "suggested_action": "Submit each opp for Commercial Approval before EOM. "
+                "Commercial Approval is mandatory for ALL Land deals per the 8-stage process.",
+                "evidence": [f"count={ag['count']}", f"arr_eur={ag.get('total_arr_eur', 0)}"],
+                "owner": owner,
+                "due_date": due,
+            }
+        )
+
+    # Rule 4: Late-stage concentration < 30% — already computed in highlights_risks
+    kpis = envelope["kpis"]
+    total = next((k for k in kpis if k["name"] == "total_pipeline_arr"), None)
+    stages = [k for k in kpis if k["name"].startswith("pipeline_arr_stage_")]
+    late_stage = sum(
+        k["value"] for k in stages if k.get("stage_label", "").split(" ")[0] in ("5", "6")
+    )
+    if total and (total["value"] or 0) > 0:
+        late_pct = 100.0 * late_stage / total["value"]
+        if late_pct < 30:
+            items.append(
+                {
+                    "rule_id": "late_stage_concentration",
+                    "priority": "medium",
+                    "claim": f"only {late_pct:.0f}% of pipeline ARR in Stage 5+ — quarter "
+                    "coverage at risk",
+                    "suggested_action": "Schedule Stage 3 → 4 progression workshops with each rep; "
+                    "identify the 3-5 deals most likely to advance.",
+                    "evidence": [f"late_pct={late_pct:.1f}", f"late_arr={late_stage}"],
+                    "owner": owner,
+                    "due_date": due,
+                }
+            )
+
+    # Rule 5: Activity drought
+    ad = action_data.get("activity_drought") or {}
+    if ad.get("count", 0) >= 5:
+        items.append(
+            {
+                "rule_id": "activity_drought",
+                "priority": "medium",
+                "claim": f"{ad['count']} this-quarter open opps with no activity in 30d "
+                f"(EUR {ad.get('total_arr_eur', 0):,.0f} ARR)",
+                "suggested_action": "Reset 14-day activity SLA with reps; require one logged "
+                "Task/Event per opp every 14 days to maintain forecast credibility.",
+                "evidence": [f"count={ad['count']}", f"arr_eur={ad.get('total_arr_eur', 0)}"],
+                "owner": owner,
+                "due_date": due,
+            }
+        )
+
+    # Rule 6: Renewal pipeline thin — already in risks; reframe as action
+    renewal = next((k for k in kpis if k["name"] == "total_renewal_acv"), None)
+    if renewal and (renewal["value"] or 0) < 100_000:
+        items.append(
+            {
+                "rule_id": "renewal_thin",
+                "priority": "low",
+                "claim": f"renewal ACV in pipeline is EUR {renewal['value']:,.0f} — below the "
+                "EUR 100k threshold for healthy retention coverage",
+                "suggested_action": "Verify renewal-eligible accounts are surfaced. CSM team "
+                "to validate cohort coverage with the data team.",
+                "evidence": [f"renewal_acv_eur={renewal['value']}"],
+                "owner": owner,
+                "due_date": due,
+            }
+        )
+
+    # Sort high → medium → low; cap at 8 (avoid memo bloat)
+    priority_order = {"high": 0, "medium": 1, "low": 2}
+    items.sort(key=lambda x: priority_order.get(x["priority"], 9))
+    envelope["action_items"] = items[:8]
+    envelope["schema_version"] = 2  # introduces action_items field
+    return envelope
+
+
 def render_director_brief(envelope: dict) -> str:
     d = envelope["director"]
     lines = [
@@ -288,6 +562,22 @@ def render_director_brief(envelope: dict) -> str:
         lines += ["## Highlights", ""]
         for h in envelope["highlights"]:
             lines += [f"- **{h['claim']}** _(rule: {h['rule']})_"]
+        lines.append("")
+
+    if envelope.get("action_items"):
+        lines += [
+            "## Action items",
+            "",
+            f"*{len(envelope['action_items'])} ranked actions for {envelope['director']['name']} this month. "
+            f"Due: {envelope['action_items'][0]['due_date']}.*",
+            "",
+            "| # | Priority | Claim | Suggested action |",
+            "|---|---|---|---|",
+        ]
+        for i, a in enumerate(envelope["action_items"], 1):
+            lines.append(
+                f"| {i} | {a['priority'].upper()} | {a['claim']} | {a['suggested_action']} |"
+            )
         lines.append("")
 
     if envelope["risks"]:
@@ -361,10 +651,15 @@ def main() -> int:
             sf = pull_director_snapshot(d, args.period)
             envelope = build_trends_envelope(sf, d, args.period, backtest_path=backtest_path)
             envelope = derive_highlights_risks(envelope)
+            action_data = pull_director_action_data(d)
+            envelope = derive_action_items(envelope, action_data)
             (out_dir / "trends.json").write_text(json.dumps(envelope, indent=2))
             (out_dir / "brief.md").write_text(render_director_brief(envelope))
             build_director_excel(envelope, out_dir / "land.xlsx")
-            print(f"  Wrote {out_dir / 'trends.json'} + brief.md + land.xlsx")
+            print(
+                f"  Wrote {out_dir / 'trends.json'} + brief.md + land.xlsx "
+                f"({len(envelope.get('action_items') or [])} action items)"
+            )
         except Exception as e:
             failures.append({"director": d["name"], "error": str(e)})
             print(f"  ✗ {d['name']}: {e}", file=sys.stderr)
