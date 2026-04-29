@@ -120,6 +120,10 @@ def _sf_analytics_get(path: str) -> dict[str, Any]:
 PIPELINE_AGE_REPORT_ID = "00OTb000008ndGjMAI"  # Scorecard · Pipeline Age Distribution
 PIPELINE_AGE_BY_REP_REPORT_ID = "00OTb000008nfTdMAI"  # Scorecard · Pipeline Age by Rep
 CYCLE_LENGTH_REPORT_ID = "00OTb000008ngUXMAY"  # Scorecard · Sales Cycle Length 8Q
+# Forecast Accuracy reports (shipped by parallel sf-audit track 2026-04-29):
+FORECAST_ACCURACY_REPORT_ID = "00OTb000008ngO5MAI"  # FA · Forecast Accuracy 8Q
+COMMIT_AT_RISK_REPORT_ID = "00OTb000008ngPhMAI"  # FA · Commit Deals at Risk
+SLIPPAGE_PUSH_REPORT_ID = "00OTb000008ngRJMAY"  # FA · Slippage by Push Count
 
 
 def _quarter_bounds(today: dt.date, offset: int) -> tuple[dt.date, dt.date, str]:
@@ -265,6 +269,18 @@ def pull_salesforce_snapshot() -> dict[str, Any]:
         zombie_owners = []
         cycle_length = {}
 
+    # Forecast Accuracy reports (shipped by parallel sf-audit track).
+    # Reuse pattern: pull from existing FX-correct SF reports.
+    try:
+        forecast_accuracy = pull_forecast_accuracy()
+        commit_at_risk = pull_commit_at_risk()
+        slippage = pull_slippage_distribution()
+    except Exception as e:
+        print(f"  [WARN] forecast-accuracy pull failed: {e}", file=sys.stderr)
+        forecast_accuracy = {}
+        commit_at_risk = {}
+        slippage = {}
+
     # Pipeline Velocity composite — the canonical RevOps single-number
     # health metric. Caveat: built on the same count-based win rate as
     # the Win Rate Trend widget, so it inherits the gameable-win-rate
@@ -291,6 +307,9 @@ def pull_salesforce_snapshot() -> dict[str, Any]:
         "zombie_owners": zombie_owners,
         "sales_cycle_length": cycle_length,
         "pipeline_velocity": velocity,
+        "forecast_accuracy": forecast_accuracy,
+        "commit_at_risk": commit_at_risk,
+        "slippage_push_count": slippage,
         # Backward-compatible top-level fields = current quarter
         "new_business_by_stage": current["new_business_by_stage"],
         "renewals_by_stage": current["renewals_by_stage"],
@@ -473,6 +492,109 @@ def pull_win_rate_l4q() -> float:
     return (won / total * 100) if total else 0
 
 
+def pull_forecast_accuracy() -> dict[str, Any]:
+    """Forecast Accuracy 8Q — actual vs forecasted ARR per fiscal quarter.
+
+    Sourced from the sf-audit track's `FA · Forecast Accuracy 8Q`
+    report (shipped 2026-04-29). FX-correct via `.CONVERT` aggregates.
+
+    Returns:
+      {
+        "by_quarter": [{quarter, actual_arr, forecast_arr, accuracy_pct, won_count}, ...],
+        "rolling_8q_accuracy_pct": ...,
+        "rolling_8q_won_count": ...,
+      }
+
+    Caveat: this is `Won-deal ARR vs Forecast-ARR`, NOT the v2-doc ideal
+    "ForecastCategory at start-of-Q vs IsWon at end-of-Q" — that would
+    need OpportunityFieldHistory snapshots. The current shape still
+    gives a directional accuracy signal.
+    """
+    r = _sf_analytics_get(f"/analytics/reports/{FORECAST_ACCURACY_REPORT_ID}?includeDetails=false")
+    fact = r.get("factMap", {})
+    gd = r.get("groupingsDown", {}).get("groupings", [])
+    by_quarter = []
+    for g in gd:
+        key = g.get("key")
+        fq = g.get("label", "?")
+        cell = fact.get(f"{key}!T", {}).get("aggregates", [])
+        # Aggregates ordering: [actual, forecast, accuracy_formula, count]
+        actual = cell[0].get("value", 0) if len(cell) > 0 else 0
+        forecast = cell[1].get("value", 0) if len(cell) > 1 else 0
+        accuracy = cell[2].get("value", 0) if len(cell) > 2 else 0
+        cnt = cell[3].get("value", 0) if len(cell) > 3 else 0
+        by_quarter.append(
+            {
+                "quarter": fq,
+                "actual_arr": actual,
+                "forecast_arr": forecast,
+                "accuracy_pct": accuracy,
+                "won_count": cnt,
+            }
+        )
+    grand = fact.get("T!T", {}).get("aggregates", [])
+    rolling = grand[2].get("value", 0) if len(grand) > 2 else 0
+    rolling_cnt = grand[3].get("value", 0) if len(grand) > 3 else 0
+    return {
+        "by_quarter": by_quarter,
+        "rolling_8q_accuracy_pct": rolling,
+        "rolling_8q_won_count": int(rolling_cnt),
+    }
+
+
+def pull_commit_at_risk() -> dict[str, Any]:
+    """Commit Deals at Risk — open commits flagged for slip risk.
+
+    Sourced from `FA · Commit Deals at Risk` report. Per-region rollup
+    plus grand totals.
+    """
+    r = _sf_analytics_get(f"/analytics/reports/{COMMIT_AT_RISK_REPORT_ID}?includeDetails=false")
+    fact = r.get("factMap", {})
+    gd = r.get("groupingsDown", {}).get("groupings", [])
+    by_region = []
+    for g in gd:
+        key = g.get("key")
+        region = g.get("label", "?")
+        cell = fact.get(f"{key}!T", {}).get("aggregates", [])
+        arr = cell[0].get("value", 0) if len(cell) > 0 else 0
+        cnt = cell[1].get("value", 0) if len(cell) > 1 else 0
+        by_region.append({"region": region, "arr": arr, "count": cnt})
+    by_region.sort(key=lambda x: x["arr"], reverse=True)
+    grand = fact.get("T!T", {}).get("aggregates", [])
+    return {
+        "by_region": by_region,
+        "total_arr": grand[0].get("value", 0) if len(grand) > 0 else 0,
+        "total_count": int(grand[1].get("value", 0)) if len(grand) > 1 else 0,
+    }
+
+
+def pull_slippage_distribution() -> dict[str, Any]:
+    """Slippage by Push Count — how many times has each open opp had its
+    CloseDate pushed forward? Distribution of push counts.
+
+    Sourced from `FA · Slippage by Push Count` report. The right-tail
+    (4+ pushes) is the gaming signature: deals that have been pushed
+    multiple times are very likely losses-in-disguise.
+    """
+    r = _sf_analytics_get(f"/analytics/reports/{SLIPPAGE_PUSH_REPORT_ID}?includeDetails=false")
+    fact = r.get("factMap", {})
+    gd = r.get("groupingsDown", {}).get("groupings", [])
+    by_push = []
+    for g in gd:
+        key = g.get("key")
+        push = g.get("label", "?")
+        cell = fact.get(f"{key}!T", {}).get("aggregates", [])
+        arr = cell[0].get("value", 0) if len(cell) > 0 else 0
+        cnt = cell[1].get("value", 0) if len(cell) > 1 else 0
+        by_push.append({"push_count": push, "arr": arr, "count": cnt})
+    grand = fact.get("T!T", {}).get("aggregates", [])
+    return {
+        "by_push_count": by_push,
+        "total_arr": grand[0].get("value", 0) if len(grand) > 0 else 0,
+        "total_count": int(grand[1].get("value", 0)) if len(grand) > 1 else 0,
+    }
+
+
 def pull_zombie_owners(top_n: int = 5) -> list[dict[str, Any]]:
     """Top N reps by absolute >2yr open Land+Expand ARR.
 
@@ -613,6 +735,17 @@ def synthesize(
         "trend; if cycle length is collapsing while win rate falls + zombie ARR "
         "rises, that's the survivor-bias signature (easy deals winning fast, "
         "hard deals rotting in pipeline).\n\n"
+        "FORECAST ACCURACY & SLIPPAGE: three datasets from the sf-audit FA "
+        "dashboard (shipped 2026-04-29). `forecast_accuracy.rolling_8q_accuracy_pct` "
+        "= rolling 8Q actual-vs-forecast ARR ratio (target ≥ 80%). "
+        "`commit_at_risk.total_count`/`total_arr` = open commits flagged for "
+        "slip risk right now (top regions in `by_region`). "
+        "`slippage_push_count.by_push_count` = distribution of how many times "
+        "open opps' CloseDate has been pushed; the right-tail (4+ pushes) is "
+        "the gaming signature — those are losses-in-disguise. Call out the "
+        "rolling accuracy %, the commit-at-risk total, and the push-count "
+        "right-tail ARR. Frame as: 'forecast trustworthy = X%, EUR Y at slip "
+        "risk this Q, EUR Z in 4+-push deals (likely already lost).'\n\n"
         "Produce a tight executive brief — 300-500 words max — with these sections:\n"
         "1) Current-quarter state — open vs weighted ARR (Land+Expand) and ACV (Renewal); "
         "include a one-line sub-callout on where the ARR sits by product line (top 1-2 families)\n"
@@ -960,6 +1093,67 @@ def render_report(
             zpct = z.get("zombie_pct") or 0
             lines.append(
                 f"| {i} | {z.get('owner', '—')} | EUR {tot:,.0f} | EUR {zar:,.0f} | {zpct:.0f}% |"
+            )
+
+    # Forecast Accuracy & Slippage — sourced from sf-audit track's FA
+    # dashboard. Three sub-blocks: 8Q accuracy trend, commit-at-risk
+    # snapshot, push-count distribution.
+    fa = sf_snapshot.get("forecast_accuracy") or {}
+    car = sf_snapshot.get("commit_at_risk") or {}
+    slip = sf_snapshot.get("slippage_push_count") or {}
+    if fa or car or slip:
+        lines += ["", "### Forecast Accuracy & Slippage"]
+    if fa and fa.get("by_quarter"):
+        rolling = fa.get("rolling_8q_accuracy_pct", 0) or 0
+        lines += [
+            "",
+            f"**Rolling 8Q forecast accuracy: {rolling:.1f}%** "
+            f"(n={fa.get('rolling_8q_won_count', 0)} won deals)",
+            "",
+            "| Fiscal Q | Won | Actual ARR | Forecast ARR | Accuracy |",
+            "|---|---:|---:|---:|---:|",
+        ]
+        for q in fa.get("by_quarter", []):
+            actual = q.get("actual_arr", 0) or 0
+            fcast = q.get("forecast_arr", 0) or 0
+            acc = q.get("accuracy_pct", 0) or 0
+            cnt = q.get("won_count", 0) or 0
+            lines.append(
+                f"| {q.get('quarter', '—')} | {cnt} | "
+                f"EUR {actual:,.0f} | EUR {fcast:,.0f} | {acc:.1f}% |"
+            )
+    if car and car.get("total_count"):
+        lines += [
+            "",
+            f"**Commits at risk right now: {car.get('total_count', 0)} deals "
+            f"(EUR {car.get('total_arr', 0):,.0f}).**",
+            "",
+        ]
+        if car.get("by_region"):
+            lines += ["| Region | # Deals | ARR |", "|---|---:|---:|"]
+            for row in car.get("by_region", [])[:7]:
+                lines.append(
+                    f"| {row.get('region', '—')} | {row.get('count', 0)} | "
+                    f"EUR {row.get('arr', 0):,.0f} |"
+                )
+    if slip and slip.get("by_push_count"):
+        total = slip.get("total_arr", 0) or 0
+        lines += [
+            "",
+            f"**Slippage by CloseDate push count — {slip.get('total_count', 0)} "
+            f"opps, EUR {total:,.0f} ARR.** "
+            f"_Right tail (4+ pushes) = strongest push-gaming signal: those "
+            f"deals are very likely losses being hidden in pipeline._",
+            "",
+            "| Push count | # Opps | ARR | % of total |",
+            "|---|---:|---:|---:|",
+        ]
+        for row in slip.get("by_push_count", []):
+            arr = row.get("arr", 0) or 0
+            pct = (arr / total * 100) if total else 0
+            lines.append(
+                f"| {row.get('push_count', '—')} | {row.get('count', 0)} | "
+                f"EUR {arr:,.0f} | {pct:.1f}% |"
             )
 
     lines += [
