@@ -35,7 +35,86 @@ SHEET_NAMES = [
     "Territory_Performance",
     "Trend_MoM",
     "Trend_QoQ",
+    "Process_Standards",
     "Methodology",
+]
+
+
+# 8-stage SimCorp sales process — verbatim from the Commercial Handbook
+# (~/.claude/intel/simcorp-sales-process-2026-04.md). Frozen here so each
+# director's xlsx ships with policy context attached, and so the agent
+# narrative in the deck can reference these by stage number consistently.
+STAGES_8 = [
+    ("1", "Prospecting", "Passive stage; BDRs work highest-engagement leads"),
+    (
+        "2",
+        "Discovery",
+        "Prospect active; BDR/Sales meetings; price guidance given while scoping",
+    ),
+    (
+        "3",
+        "Engagement",
+        "Sales Manager driving; due-diligence continues; PAIC assessment, decision-makers identified, competitive position established",
+    ),
+    (
+        "4",
+        "Shortlisted",
+        "Close plan validated with prospect; scope finalized for commercial negotiation; still in competition",
+    ),
+    (
+        "5",
+        "Preferred",
+        "Named preferred; no longer in competition; exit when full set of red-lining received",
+    ),
+    ("6", "Contracting", "Finalize legal review + price; agree terms + implementation"),
+    ("7", "Opt-out", "Won but with opt-out clause active; held in stage until clause expires"),
+    ("8", "Won", "Contract signed; INSfile generated; handover; transition to delivery"),
+]
+
+# Governance gates from slide 7 of the Commercial Handbook
+GOVERNANCE_GATES = [
+    (
+        "Commercial Approval",
+        "LAND = ALL deals; AER >€500k for others",
+        "Stage 3-4",
+        "Go/No-Go on whether SimCorp engages; cost/resource assessment",
+    ),
+    (
+        "Margin Review",
+        "Each iteration of scope, discount, payment schedule",
+        "Stage 4-6",
+        "Before any price proposal to customer",
+    ),
+    (
+        "Deal Services Design",
+        "Early stage",
+        "Stage 3-4",
+        "Implementation costs, risks, timelines",
+    ),
+    ("Deal Review", "Final", "Stage 5-6", "Final review before final contracting"),
+    ("Due Diligence", "All services + contractual", "Throughout", "Continuous"),
+]
+
+# Motion differences (Land vs Expand vs Renewal) — for the Process_Standards sheet
+MOTIONS = [
+    (
+        "LAND",
+        "New business",
+        "Full 8-stage process applies; Commercial Approval mandatory",
+        "APTS_Opportunity_ARR__c",
+    ),
+    (
+        "EXPAND",
+        "Existing customer growth",
+        'Same 8 stages but steps "may vary"; Commercial Approval triggers at AER >€500k',
+        "APTS_Opportunity_ARR__c",
+    ),
+    (
+        "RENEWAL",
+        "Re-up of existing contract",
+        "Different motion entirely; simpler workflow; field reported as ACV not ARR",
+        "APTS_Renewal_ACV__c",
+    ),
 ]
 
 
@@ -246,7 +325,78 @@ def build_director_excel(
             ws.cell(row=row, column=3, value="-")
             row += 1
 
-    # Methodology
+    # ── Process_Standards ──
+    # Verbatim references from the SimCorp Commercial Handbook so the
+    # director's xlsx ships with the policy context attached. Pulled
+    # 2026-04-28 from `Commercial-Handbook-for-Simlink---Copy.pptx` per
+    # `~/.claude/intel/simcorp-sales-process-2026-04.md`.
+    ws = wb["Process_Standards"]
+    ws["A1"] = "SimCorp 8-Stage Sales Process — verbatim from the Commercial Handbook"
+    ws["A1"].font = Font(bold=True, size=14)
+    ws["A2"] = "(Source: Commercial-Handbook-for-Simlink — pulled 2026-04-28)"
+    ws["A2"].font = Font(italic=True, color="666666")
+
+    ws["A4"] = "## The 8 stages"
+    ws["A4"].font = Font(bold=True, size=12)
+    ws["A5"] = "#"
+    ws["B5"] = "Stage"
+    ws["C5"] = "What happens"
+    for col in ("A5", "B5", "C5"):
+        ws[col].font = Font(bold=True)
+    for i, (num, name, desc) in enumerate(STAGES_8, start=6):
+        ws.cell(row=i, column=1, value=num)
+        ws.cell(row=i, column=2, value=name)
+        ws.cell(row=i, column=3, value=desc)
+    next_row = 6 + len(STAGES_8) + 2
+
+    ws.cell(row=next_row, column=1, value="## Governance gates (deal reviews)").font = Font(
+        bold=True, size=12
+    )
+    next_row += 1
+    headers_g = ("Gate", "Trigger", "When", "Purpose")
+    for j, h in enumerate(headers_g, start=1):
+        cell = ws.cell(row=next_row, column=j, value=h)
+        cell.font = Font(bold=True)
+    next_row += 1
+    for gate, trigger, when, purpose in GOVERNANCE_GATES:
+        ws.cell(row=next_row, column=1, value=gate)
+        ws.cell(row=next_row, column=2, value=trigger)
+        ws.cell(row=next_row, column=3, value=when)
+        ws.cell(row=next_row, column=4, value=purpose)
+        next_row += 1
+    next_row += 1
+
+    ws.cell(row=next_row, column=1, value="## Deal motions").font = Font(bold=True, size=12)
+    next_row += 1
+    headers_m = ("Motion", "What it is", "Process notes", "Reported field")
+    for j, h in enumerate(headers_m, start=1):
+        cell = ws.cell(row=next_row, column=j, value=h)
+        cell.font = Font(bold=True)
+    next_row += 1
+    for motion, what, notes, field in MOTIONS:
+        ws.cell(row=next_row, column=1, value=motion)
+        ws.cell(row=next_row, column=2, value=what)
+        ws.cell(row=next_row, column=3, value=notes)
+        ws.cell(row=next_row, column=4, value=field)
+        next_row += 1
+    next_row += 1
+
+    ws.cell(
+        row=next_row,
+        column=1,
+        value=(
+            "Stalled deal flag: a deal in Stage 5 (Preferred) for >2 weeks with no "
+            "movement may have stalled red-lining."
+        ),
+    ).font = Font(italic=True)
+
+    # Column widths for readability
+    ws.column_dimensions["A"].width = 22
+    ws.column_dimensions["B"].width = 28
+    ws.column_dimensions["C"].width = 80
+    ws.column_dimensions["D"].width = 45
+
+    # ── Methodology ──
     ws = wb["Methodology"]
     ws["A1"] = "Field reference"
     ws["A1"].font = Font(bold=True, size=14)
