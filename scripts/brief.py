@@ -281,6 +281,16 @@ def pull_salesforce_snapshot() -> dict[str, Any]:
         commit_at_risk = {}
         slippage = {}
 
+    # Renewal retention (GRR) + NRR proxy. SOQL aggregates — raw multi-
+    # currency, but the RATIO is roughly FX-invariant if the won and
+    # lost cohorts have similar currency mix. Document the caveat in
+    # the render section.
+    try:
+        renewal_retention = pull_renewal_retention()
+    except Exception as e:
+        print(f"  [WARN] renewal-retention pull failed: {e}", file=sys.stderr)
+        renewal_retention = {}
+
     # Pipeline Velocity composite — the canonical RevOps single-number
     # health metric. Caveat: built on the same count-based win rate as
     # the Win Rate Trend widget, so it inherits the gameable-win-rate
@@ -310,6 +320,7 @@ def pull_salesforce_snapshot() -> dict[str, Any]:
         "forecast_accuracy": forecast_accuracy,
         "commit_at_risk": commit_at_risk,
         "slippage_push_count": slippage,
+        "renewal_retention": renewal_retention,
         # Empirical win-rate-conditional-on-stage (from stage_probs cache).
         # NOT N→N+1 progression rate — it's "P(Won | currently at stage N)"
         # learned from OpportunityFieldHistory transitions over the last
@@ -600,6 +611,71 @@ def pull_slippage_distribution() -> dict[str, Any]:
     }
 
 
+def pull_renewal_retention(window_days: int = 365) -> dict[str, Any]:
+    """Renewal retention rate + NRR proxy over a window.
+
+    GRR = won_renewal_ACV / (won + lost)_renewal_ACV — the % of
+    at-risk ACV that successfully renewed.
+
+    NRR ≈ (won_renewal_ACV + won_expand_ARR) / (won + lost)_renewal_ACV —
+    the same denominator with expansion in the numerator. >100% means
+    expansion outpaces churn (the SaaS retention ideal). NOT true cohort
+    NRR — that would require start-of-cohort ACV snapshots which we
+    don't have. This is a directional proxy.
+
+    Per AGENTS.md SimCorp rules: ARR side uses APTS_Opportunity_ARR__c,
+    ACV side uses APTS_Renewal_ACV__c, never blended.
+    """
+    # Renewal closed ACV split by IsWon
+    soql_renew = (
+        "SELECT IsWon, COUNT(Id) ct, SUM(APTS_Renewal_ACV__c) acv "
+        "FROM Opportunity "
+        f"WHERE IsClosed=true AND Type='Renewal' AND CloseDate >= LAST_N_DAYS:{window_days} "
+        "GROUP BY IsWon"
+    )
+    rows = _sf_query(soql_renew)
+    won_acv = 0.0
+    lost_acv = 0.0
+    won_ct = 0
+    lost_ct = 0
+    for r in rows:
+        acv = r.get("acv") or 0
+        ct = r.get("ct") or 0
+        if r.get("IsWon"):
+            won_acv = acv
+            won_ct = ct
+        else:
+            lost_acv = acv
+            lost_ct = ct
+    at_risk_acv = won_acv + lost_acv
+
+    # Expansion ARR (won only) over the same window
+    soql_expand = (
+        "SELECT COUNT(Id) ct, SUM(APTS_Opportunity_ARR__c) arr "
+        "FROM Opportunity "
+        f"WHERE IsClosed=true AND IsWon=true AND Type='Expand' AND CloseDate >= LAST_N_DAYS:{window_days}"
+    )
+    rows = _sf_query(soql_expand)
+    won_expand_arr = (rows[0].get("arr") if rows else 0) or 0
+    won_expand_ct = (rows[0].get("ct") if rows else 0) or 0
+
+    grr_pct = (won_acv / at_risk_acv * 100) if at_risk_acv else 0
+    nrr_pct = ((won_acv + won_expand_arr) / at_risk_acv * 100) if at_risk_acv else 0
+
+    return {
+        "window_days": window_days,
+        "won_renewal_count": won_ct,
+        "won_renewal_acv": won_acv,
+        "lost_renewal_count": lost_ct,
+        "lost_renewal_acv": lost_acv,
+        "at_risk_acv": at_risk_acv,
+        "won_expand_count": won_expand_ct,
+        "won_expand_arr": won_expand_arr,
+        "grr_pct": grr_pct,
+        "nrr_pct": nrr_pct,
+    }
+
+
 def pull_zombie_owners(top_n: int = 5) -> list[dict[str, Any]]:
     """Top N reps by absolute >2yr open Land+Expand ARR.
 
@@ -740,6 +816,11 @@ def synthesize(
         "trend; if cycle length is collapsing while win rate falls + zombie ARR "
         "rises, that's the survivor-bias signature (easy deals winning fast, "
         "hard deals rotting in pipeline).\n\n"
+        "RENEWAL RETENTION + NRR: `renewal_retention` has GRR (gross renewal "
+        "retention = won-ACV/at-risk-ACV) and NRR proxy (won-ACV + won-expand-ARR "
+        "/ at-risk-ACV). NRR > 100% means expansion outpaces churn (SaaS retention "
+        "ideal). Quote `grr_pct` and `nrr_pct` and call out which is the bigger "
+        "concern. Caveat: this is directional, not true cohort NRR.\n\n"
         "FORECAST ACCURACY & SLIPPAGE: three datasets from the sf-audit FA "
         "dashboard (shipped 2026-04-29). `forecast_accuracy.rolling_8q_accuracy_pct` "
         "= post-close actual-vs-forecast ARR ratio (target ≥ 80%). **CAVEAT: "
@@ -1171,6 +1252,41 @@ def render_report(
                 f"| {row.get('push_count', '—')} | {row.get('count', 0)} | "
                 f"EUR {arr:,.0f} | {pct:.1f}% |"
             )
+
+    # Renewal retention (GRR) + NRR proxy. ACV-side metric — uses
+    # APTS_Renewal_ACV__c per AGENTS.md SimCorp rules.
+    rr = sf_snapshot.get("renewal_retention") or {}
+    if rr and rr.get("at_risk_acv"):
+        grr = rr.get("grr_pct", 0) or 0
+        nrr = rr.get("nrr_pct", 0) or 0
+        wd = rr.get("window_days", 365) or 365
+        won_r = rr.get("won_renewal_acv", 0) or 0
+        lost_r = rr.get("lost_renewal_acv", 0) or 0
+        won_e = rr.get("won_expand_arr", 0) or 0
+        lines += [
+            "",
+            "### Renewal retention + NRR proxy",
+            "",
+            f"**GRR (gross renewal retention) L4Q: {grr:.0f}%** "
+            f"= won-renewal-ACV / (won + lost)-renewal-ACV.",
+            f"**NRR proxy L4Q: {nrr:.0f}%** "
+            f"= (won-renewal-ACV + won-expand-ARR) / at-risk-ACV. "
+            f"NRR > 100% means expansion outpaces churn.",
+            "",
+            "_Caveat: this is a directional NRR proxy, not true cohort NRR. "
+            "Real NRR requires start-of-cohort ACV snapshots (parked, ~half-day "
+            "build alongside the OpportunityFieldHistory snapshot infra). "
+            "Caveat #2: SOQL aggregates are raw multi-currency; the RATIO is "
+            "roughly FX-invariant if win and loss cohorts have similar "
+            "currency mix._",
+            "",
+            "| Metric | Count | EUR (raw multi-currency sum) |",
+            "|---|---:|---:|",
+            f"| Won renewals (last {wd}d) | {rr.get('won_renewal_count', 0)} | {won_r:,.0f} |",
+            f"| Lost renewals (last {wd}d) | {rr.get('lost_renewal_count', 0)} | {lost_r:,.0f} |",
+            f"| At-risk ACV (won + lost) | — | {rr.get('at_risk_acv', 0):,.0f} |",
+            f"| Won expansions (last {wd}d) | {rr.get('won_expand_count', 0)} | {won_e:,.0f} |",
+        ]
 
     # Win-rate-conditional-on-stage — empirical funnel learned from
     # OpportunityFieldHistory. Same data the weighted forecast uses;
