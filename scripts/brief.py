@@ -124,6 +124,9 @@ CYCLE_LENGTH_REPORT_ID = "00OTb000008ngUXMAY"  # Scorecard · Sales Cycle Length
 FORECAST_ACCURACY_REPORT_ID = "00OTb000008ngO5MAI"  # FA · Forecast Accuracy 8Q
 COMMIT_AT_RISK_REPORT_ID = "00OTb000008ngPhMAI"  # FA · Commit Deals at Risk
 SLIPPAGE_PUSH_REPORT_ID = "00OTb000008ngRJMAY"  # FA · Slippage by Push Count
+ZOMBIE_XF_REPORT_ID = "00OTb000008nijFMAQ"  # Cockpit_Zombie_v1 (cross-filter, FX-correct)
+COVERAGE_GAP_REPORT_ID = "00OTb000008nirJMAQ"  # Cockpit_CoverageGap_v1 (Tier-1 starved)
+SC1_PIPELINE_REPORT_ID = "00OTb000008njfKMAQ"  # SC1 · Standard Platform by Stage
 
 
 def _quarter_bounds(today: dt.date, offset: int) -> tuple[dt.date, dt.date, str]:
@@ -302,6 +305,26 @@ def pull_salesforce_snapshot() -> dict[str, Any]:
         print(f"  [WARN] snapshot-history pull failed: {e}", file=sys.stderr)
         snapshot_history = {"by_date": [], "days": 0, "first_date": None, "last_date": None}
 
+    # Cross-filter hygiene reports + SimCorp One pipeline. All shipped
+    # 2026-04-29 — Cockpit_Zombie / Cockpit_CoverageGap / SC1 reports.
+    # FX-correct via SF report aggregation. Each gracefully degrades
+    # to {} on failure so the brief never bombs on missing reports.
+    try:
+        zombie_book = pull_zombie_book()
+    except Exception as e:
+        print(f"  [WARN] zombie-book pull failed: {e}", file=sys.stderr)
+        zombie_book = {}
+    try:
+        coverage_gap = pull_coverage_gap()
+    except Exception as e:
+        print(f"  [WARN] coverage-gap pull failed: {e}", file=sys.stderr)
+        coverage_gap = {}
+    try:
+        simcorp_one = pull_simcorp_one_pipeline()
+    except Exception as e:
+        print(f"  [WARN] simcorp-one pull failed: {e}", file=sys.stderr)
+        simcorp_one = {}
+
     # Pipeline Velocity composite — the canonical RevOps single-number
     # health metric. Caveat: built on the same count-based win rate as
     # the Win Rate Trend widget, so it inherits the gameable-win-rate
@@ -333,6 +356,9 @@ def pull_salesforce_snapshot() -> dict[str, Any]:
         "slippage_push_count": slippage,
         "renewal_retention": renewal_retention,
         "snapshot_history": snapshot_history,
+        "zombie_book": zombie_book,
+        "coverage_gap": coverage_gap,
+        "simcorp_one_pipeline": simcorp_one,
         # Empirical win-rate-conditional-on-stage (from stage_probs cache).
         # NOT N→N+1 progression rate — it's "P(Won | currently at stage N)"
         # learned from OpportunityFieldHistory transitions over the last
@@ -721,6 +747,64 @@ def pull_zombie_owners(top_n: int = 5) -> list[dict[str, Any]]:
         )
     rows.sort(key=lambda x: x["zombie_arr"], reverse=True)
     return rows[:top_n]
+
+
+def pull_zombie_book() -> dict[str, Any]:
+    """Cross-filter Zombie report: open Land+Expand opps >730d old AND
+    no Activity in last 60d. FX-correct via SF report aggregation.
+    Returns total ARR + opp count + top 3 owners by exposure."""
+    r = _sf_analytics_get(f"/analytics/reports/{ZOMBIE_XF_REPORT_ID}?includeDetails=false")
+    fact = r.get("factMap") or {}
+    grand = (fact.get("T!T") or {}).get("aggregates") or []
+    total_arr = grand[0].get("value", 0) if len(grand) >= 1 else 0
+    opp_count = grand[1].get("value", 0) if len(grand) >= 2 else 0
+    gd = (r.get("groupingsDown") or {}).get("groupings") or []
+    owners = []
+    for g in gd:
+        key = g.get("key")
+        cell = (fact.get(f"{key}!T") or {}).get("aggregates") or []
+        if not cell:
+            continue
+        owners.append({"owner": g.get("label", "?"), "arr": cell[0].get("value", 0)})
+    owners.sort(key=lambda x: x["arr"], reverse=True)
+    return {"total_arr": total_arr, "opp_count": opp_count, "top_owners": owners[:3]}
+
+
+def pull_coverage_gap() -> dict[str, Any]:
+    """Cross-filter Coverage Gap report: Tier-1 accounts WITHOUT any open
+    opportunity in the last 90 days. Sharing rules collapse the visible
+    set for non-admin users — caveat in the render section.
+    Returns count of starved accounts + a region rollup if available."""
+    r = _sf_analytics_get(f"/analytics/reports/{COVERAGE_GAP_REPORT_ID}?includeDetails=false")
+    fact = r.get("factMap") or {}
+    grand = (fact.get("T!T") or {}).get("aggregates") or []
+    count = grand[0].get("value", 0) if grand else 0
+    by_region = []
+    for g in (r.get("groupingsDown") or {}).get("groupings") or []:
+        key = g.get("key")
+        cell = (fact.get(f"{key}!T") or {}).get("aggregates") or []
+        if cell:
+            by_region.append({"region": g.get("label", "?"), "count": cell[0].get("value", 0)})
+    return {"count": count, "by_region": by_region}
+
+
+def pull_simcorp_one_pipeline() -> dict[str, Any]:
+    """SimCorp One core platform pipeline: opps with a `Standard Platform`
+    line item attached, by stage. FX-correct via OpportunityProduct-typed
+    report. Returns total SP ARR + by-stage breakdown."""
+    r = _sf_analytics_get(f"/analytics/reports/{SC1_PIPELINE_REPORT_ID}?includeDetails=false")
+    fact = r.get("factMap") or {}
+    grand = (fact.get("T!T") or {}).get("aggregates") or []
+    total_arr = grand[0].get("value", 0) if len(grand) >= 1 else 0
+    opp_count = grand[1].get("value", 0) if len(grand) >= 2 else 0
+    by_stage = []
+    for g in (r.get("groupingsDown") or {}).get("groupings") or []:
+        key = g.get("key")
+        cell = (fact.get(f"{key}!T") or {}).get("aggregates") or []
+        if not cell:
+            continue
+        by_stage.append({"stage": g.get("label", "?"), "arr": cell[0].get("value", 0)})
+    return {"total_arr": total_arr, "opp_count": opp_count, "by_stage": by_stage}
 
 
 def pull_snapshot_history(days: int = 30) -> list[dict[str, Any]]:
@@ -1157,6 +1241,57 @@ def render_report(
                 f"| {row.get('date', '—')} | EUR {arr:,.0f} | EUR {acv:,.0f} | "
                 f"EUR {warr:,.0f} | {cnt} |"
             )
+        lines.append("")
+
+    # Hygiene + SimCorp One snapshot. Three SF-report-backed numbers:
+    #   - Zombie book (cross-filter Cockpit_Zombie_v1)
+    #   - Coverage gap (cross-filter Cockpit_CoverageGap_v1)
+    #   - SimCorp One pipeline (SC1_Standard_Platform_Pipeline_v1)
+    zombie = sf_snapshot.get("zombie_book") or {}
+    cov_gap = sf_snapshot.get("coverage_gap") or {}
+    sc1 = sf_snapshot.get("simcorp_one_pipeline") or {}
+    if zombie or cov_gap or sc1:
+        lines += ["## Hygiene + SimCorp One pipeline", ""]
+        if zombie.get("opp_count"):
+            top = zombie.get("top_owners") or []
+            top_s = (
+                "; ".join(
+                    f"{o.get('owner', '?')} EUR {(o.get('arr') or 0) / 1_000_000:.1f}M" for o in top
+                )
+                if top
+                else "n/a"
+            )
+            lines.append(
+                f"- **Zombie book** — {zombie.get('opp_count')} open L+E opps "
+                f">730d old AND no activity 60d. **EUR "
+                f"{(zombie.get('total_arr') or 0) / 1_000_000:.1f}M** of stale ARR. "
+                f"Top exposure: {top_s}."
+            )
+        if cov_gap.get("count"):
+            lines.append(
+                f"- **Coverage gap** — {cov_gap.get('count')} Tier-1 accounts "
+                f"with no open opp in last 90d. _(Sharing rules collapse the "
+                f"visible set for non-admin users; raw org count likely much "
+                f"higher.)_"
+            )
+        if sc1.get("total_arr") or sc1.get("opp_count"):
+            stages = sc1.get("by_stage") or []
+            head = (
+                f"- **SimCorp One pipeline** — {sc1.get('opp_count') or 0} open opps "
+                f"with the Standard Platform line item attached. **EUR "
+                f"{(sc1.get('total_arr') or 0) / 1_000_000:.1f}M** total ARR."
+            )
+            if stages:
+                top3 = sorted(stages, key=lambda s: s.get("arr") or 0, reverse=True)[:3]
+                head += (
+                    " Top stages: "
+                    + ", ".join(
+                        f"{s.get('stage', '?')} EUR {(s.get('arr') or 0) / 1_000_000:.1f}M"
+                        for s in top3
+                    )
+                    + "."
+                )
+            lines.append(head)
         lines.append("")
 
     # Owner concentration — single highest-leverage view of who owns the risk
