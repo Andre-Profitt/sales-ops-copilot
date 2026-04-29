@@ -37,6 +37,162 @@ SHEET_NAMES = [
     "Trend_QoQ",
     "Process_Standards",
     "Methodology",
+    "Notes",
+]
+
+
+# Notes — methodology appendix for derived/proxy metrics. Every non-obvious
+# computed metric in this workbook is documented here with WHAT it captures,
+# WHAT it does not, and HOW to read it. Goal: prevent stakeholder confusion
+# when a director cites e.g. "GRR proxy 28%" without realizing it isn't
+# the org's true GRR.
+NOTES_BLOCKS = [
+    (
+        "GRR proxy",
+        "Retention sheet",
+        "won ACV / (won + lost ACV) of CLOSED Renewal opps, last 12 months",
+        "The 'at-risk renewal save rate' — when a renewal becomes a tracked opp, what fraction is won.",
+        "Auto-renewals that never get a Renewal opp record (likely the majority of true renewal volume); "
+        "expansion uplift on existing accounts (which would push toward NRR).",
+        "Directional indicator of how well at-risk renewals are saved, NOT the org's overall retention rate. "
+        "Typical enterprise SaaS GRR is 90%+; this proxy appears lower because the denominator is biased.",
+    ),
+    (
+        "NRR",
+        "Retention sheet (currently '—')",
+        "not computed today",
+        "Nothing — placeholder for future cohort-based retention math.",
+        "Requires cohort math against historical snapshots: pick a customer cohort at T-12mo, compare their "
+        "total ACV at T-12mo to today (incl. expansion + churn).",
+        "Will be derivable once Pipeline_Snapshot__c (Reporting Snapshot) accumulates 12+ months of history. "
+        "Currently admin-pending deploy.",
+    ),
+    (
+        "Forecast backtest forward rates",
+        "Forecast_Backtest sheet",
+        "P(advanced) per stage, computed by scripts/forecast_backtest.py from OpportunityFieldHistory over the last 4 fiscal quarters",
+        "Population-level conversion rates — org-wide, not your territory.",
+        "Director-specific rates (would need much more OFH data to be statistically meaningful per territory).",
+        "Sanity check on your own territory's stage progression vs the population. If you're materially below, "
+        "investigate; if materially above, don't extrapolate without sample-size context.",
+    ),
+    (
+        "Late-stage concentration",
+        "Action items + brief.md risks",
+        "% of total open Land+Expand pipeline ARR sitting in Stage 5 (Preferred) + Stage 6 (Contracting)",
+        "How much of your open pipe is in 'closeable' stages this quarter.",
+        "Quality of those late-stage opps — a deal stuck in Stage 5 for 3 months has the same weight as one freshly arrived.",
+        "< 30% trips a MEDIUM action. Threshold is empirical — below this it's hard to close enough this Q from existing pipe.",
+    ),
+    (
+        "Coverage Gap",
+        "Action items rule (coverage_gap)",
+        "Tier-1 accounts (Account.Tier_Calculation__c='Tier 1') in your scope with no open Land/Expand opp created in last 90d",
+        "Accounts where new-business pipeline-creation activity has stalled.",
+        "Renewals in flight do NOT count as coverage — the rule specifically looks for new-business motion. An account "
+        "renewing fine but with no Land/Expand pipe still shows as a gap.",
+        ">= 5 starved Tier-1 accounts trips MEDIUM. UKI typically has 100+ — that's a real territory pattern, not a quirk.",
+    ),
+    (
+        "Approval Gap",
+        "Action items rule (approval_gap)",
+        "Stage 3+ Land/Expand opps >= EUR 500k where Stage_20_Approval__c is false or null",
+        "Policy violations under the SimCorp Commercial Approval gate (Commercial Handbook 2026-04, slide 7).",
+        "Whether the deal is actually fine to proceed (the missing flag may be data-entry lag, not a real violation).",
+        "Per the handbook: Commercial Approval is mandatory for ALL Land deals + AER >€500k Expand. Any matching opp "
+        "without the flag should be reviewed; submit for approval before EOM if real.",
+    ),
+    (
+        "Zombie ARR",
+        "Action items rule (zombie_arr)",
+        "Open Land+Expand opps created >730 days ago AND no Task/Event activity in last 60 days",
+        "Stale pipeline that's neither closing nor being worked.",
+        "Whether the opp is genuinely dead vs. paused intentionally (e.g., customer in M&A integration). Some legitimately old.",
+        "ARR is FX-converted via per-record convertCurrency to EUR. > EUR 1M trips MEDIUM, > EUR 5M trips HIGH. "
+        "Top owner is named in the action's suggested_action so the director knows where to start.",
+    ),
+    (
+        "SimCorp One attach rate",
+        "Action items rule (simcorp_one_attach_low)",
+        "% of open Land/Expand opps with a 'Standard Platform' line item (the SimCorp One core product)",
+        "How often the platform anchor is in the deal vs. modules-only opps.",
+        "Whether the modules-only opps are intentional (e.g., a Standard Platform customer adding modules) "
+        "vs. a missed opportunity to lead with the platform.",
+        "< 30% AND total >= 5 opps trips MEDIUM. Strategic signal — most of EMEA + NA AM trips this rule today.",
+    ),
+    (
+        "Activity Drought",
+        "Action items rule (activity_drought)",
+        "Count of this-quarter-closing open Land+Expand opps with no Task or Event in last 30 days",
+        "Forecast-credibility signal — an opp without 30 days of activity rarely closes on time.",
+        "Renewal opps (the field zeros for Renewals; would need a separate Renewal-side rule).",
+        ">= 5 opps trips MEDIUM. The 30-day window is shorter than the Zombie 60-day to surface near-term forecast risk.",
+    ),
+    (
+        "Trend MoM / QoQ",
+        "Trend_MoM, Trend_QoQ sheets",
+        "Closed-Won Land+Expand by CloseDate calendar month / calendar quarter, last 6 months / 4 quarters",
+        "Director-scoped booked ARR rhythm.",
+        "Forecast for forward periods. Small monthly samples are noisy — one large deal closing in a low month "
+        "produces +1000% MoM swings that aren't predictive.",
+        "Read with the # Won column as denominator context. QoQ uses CALENDAR quarters, not SimCorp fiscal "
+        "quarters — adjust mentally if the org's fiscal calendar matters.",
+    ),
+    (
+        "ARR Roll",
+        "ARR_Roll sheet",
+        "Same source as Trend_MoM (closed-Won L+E by CloseDate, last 6 months)",
+        "Six-month booked-ARR rhythm.",
+        "True 'roll' (new + expand + churn snapshot deltas) which requires snapshot history.",
+        "Approximation until Pipeline_Snapshot__c accumulates 12+ months of data.",
+    ),
+    (
+        "Top Deals Land / Expand",
+        "Top_Deals_Land, Top_Deals_Expand sheets",
+        "Top 10 open opps in director scope by FX-converted ARR",
+        "Where most of your open pipe value sits.",
+        "Account names — anonymized to (stage, ARR) per AI Code of Conduct §8 to keep client-level data out "
+        "of any LLM-mediated pipeline. Owner.Name (employees) is fine.",
+        "Use to prioritize 1:1 reviews with the owners of the top 5 deals; don't share externally.",
+    ),
+    (
+        "Territory Performance",
+        "Territory_Performance sheet",
+        "Open Land+Expand pipeline broken out by Account.BillingCountry within your scope",
+        "Sub-regional concentration within your overall scope.",
+        "Region-level rollup beyond your scope (use the regional memo for that — see "
+        "state/<period>/__regional__/<region>.md).",
+        "Single-country directors (Megan / Adam) show one row; multi-country (Sarah / Christian / Mourad) "
+        "show the dominant countries.",
+    ),
+    (
+        "Competitive Pressure",
+        "Competitive_Pressure sheet",
+        "Closed-LOST Land+Expand opps in current fiscal quarter, by Lost_to_Competitor__r.Name",
+        "Where you're losing deals — actionable competitive feedback.",
+        "Closed-WON deals against competitors (different SF field, not currently tracked here).",
+        "Lost_to_Competitor__c is sparsely populated org-wide. If most rows show '(no competitor recorded)', "
+        "treat as a DATA-QUALITY finding (push reps to log it), not a commercial finding.",
+    ),
+    (
+        "Action item priorities",
+        "Action_Items sheet, brief.md, regional memo",
+        "Set by rule (high/medium/low), not by relative importance to the director",
+        "Within-rule severity (e.g., HIGH zombie = > EUR 5M; MEDIUM = > EUR 1M).",
+        "Cross-rule comparability — two HIGH actions from different rules aren't directly comparable.",
+        "HIGH = governance violation or material exposure (approval_gap; large zombie pile). "
+        "MEDIUM = operational concern (coverage gap; late-stage; SC1 attach; activity). LOW = data hygiene.",
+    ),
+    (
+        "FX conversion",
+        "All EUR figures",
+        "Per-record SOQL convertCurrency() returning the value in apro@simcorp.com's display currency (EUR)",
+        "Each opp's ARR/ACV converted from its CurrencyIsoCode to EUR at SF's stored exchange rate.",
+        "SOQL SUM(convertCurrency(field)) silently does NOT apply at aggregate level — we sum per-record values "
+        "in Python. SF Reports REST `s!field.CONVERT` aggregates also FX-correct (used by the daily brief).",
+        "All EUR amounts in this workbook are FX-converted. Raw multi-currency sums via SOQL are forbidden by "
+        "the SimCorp cardinal rule (feedback_sf_multi_currency_aggregation memory).",
+    ),
 ]
 
 
@@ -406,7 +562,10 @@ def build_director_excel(
         ws["C3"] = f"{ret.get('lost_count', 0)} renewals lost"
         ws["A4"] = "GRR proxy"
         ws["B4"] = f"{ret.get('grr_proxy_pct', 0):.1f}%"
-        ws["C4"] = "Won ACV / (Won + Lost ACV) — Renewals only, last 12 months"
+        ws["C4"] = (
+            "Won ACV / (Won + Lost ACV) — Renewals only, last 12 months. "
+            "*** PROXY — see Notes sheet for full caveats. NOT the org's true GRR. ***"
+        )
         ws["A6"] = "NRR"
         ws["B6"] = "—"
         ws["C6"] = (
@@ -607,6 +766,49 @@ def build_director_excel(
     for i, row in enumerate(method_rows, start=4):
         for j, val in enumerate(row, start=1):
             ws.cell(row=i, column=j, value=val)
+
+    # ── Notes ── methodology appendix for derived/proxy metrics
+    ws = wb["Notes"]
+    ws["A1"] = "Notes & Methodology — derived and proxy metrics"
+    ws["A1"].font = Font(bold=True, size=14)
+    ws["A2"] = (
+        "How each non-obvious computed metric in this workbook is built, "
+        "what it does NOT capture, and how to read it. Read this BEFORE "
+        "citing any of the percentages or proxy figures externally."
+    )
+    ws["A2"].font = Font(italic=True, color="666666")
+    ws.column_dimensions["A"].width = 30
+    ws.column_dimensions["B"].width = 80
+
+    row = 4
+    for metric, where_used, formula, captures, does_not_capture, how_to_read in NOTES_BLOCKS:
+        ws.cell(row=row, column=1, value=metric).font = Font(bold=True, size=12)
+        row += 1
+        for label, val in (
+            ("Where used", where_used),
+            ("Formula", formula),
+            ("What it captures", captures),
+            ("What it does NOT capture", does_not_capture),
+            ("How to read it", how_to_read),
+        ):
+            ws.cell(row=row, column=1, value=label).font = Font(bold=True)
+            cell_b = ws.cell(row=row, column=2, value=val)
+            cell_b.alignment = cell_b.alignment.copy(wrap_text=True)
+            ws.row_dimensions[row].height = max(15, 15 * (1 + len(val) // 80))
+            row += 1
+        row += 1  # blank spacer between metrics
+
+    # Footer
+    ws.cell(
+        row=row + 1,
+        column=1,
+        value=(
+            "All figures FX-converted to EUR via SF convertCurrency() at the per-opp level. "
+            "Raw multi-currency SOQL SUM is forbidden per the SimCorp cardinal rule. "
+            "If you spot a number that doesn't tie to a SF report, file a bug — the report "
+            "(via s!field.CONVERT aggregate) is the FX-correct source of truth."
+        ),
+    ).font = Font(italic=True, color="666666")
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     wb.save(out_path)
