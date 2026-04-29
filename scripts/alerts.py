@@ -72,10 +72,21 @@ def _sample(soql: str, limit: int = 5) -> list[dict[str, Any]]:
 def commercial_approval_gap_land() -> dict[str, Any]:
     """Land deals at Stage 3+ without Commercial Approval. Per the SimCorp
     Commercial Handbook, Commercial Approval is mandatory for ALL Land deals.
+
+    Truth field is `Opportunity.Approval_Status__c` (picklist: No Approval
+    Necessary / Needs Approval / Awaiting Approval / Approved / Rejected).
+    The boolean `Stage_20_Approval__c` is a derived flag that fires false on
+    34,618 opps where no approval is required — same lying-boolean shape as
+    the KYC bug. Verified 2026-04-28: all 26 opps the boolean-only predicate
+    flagged today had Approval_Status__c='No Approval Necessary' (Union AM,
+    OPF, BBVA AM, ERS Texas, etc.). Corrected predicate co-conditions on the
+    picklist so we only fire on opps actually in the approval queue.
     """
     where = (
         f"IsClosed = false AND Type = 'Land' AND {LATE_STAGE_LIKE} "
-        f"AND Stage_20_Approval__c = false {EXCLUDE_TEST_ARTIFACTS}{_ack_exclusion()}"
+        "AND Stage_20_Approval__c = false "
+        "AND Approval_Status__c IN ('Needs Approval','Awaiting Approval','Rejected') "
+        f"{EXCLUDE_TEST_ARTIFACTS}{_ack_exclusion()}"
     )
     agg = _agg(
         "SELECT COUNT(Id) num, SUM(APTS_Opportunity_ARR__c) total_arr "
@@ -96,10 +107,17 @@ def commercial_approval_gap_land() -> dict[str, Any]:
 
 
 def commercial_approval_gap_big() -> dict[str, Any]:
-    """Land+Expand at Stage 3+ with ARR ≥$500k and no Commercial Approval."""
+    """Land+Expand at Stage 3+ with ARR ≥$500k and no Commercial Approval.
+
+    Same truth-field correction as `commercial_approval_gap_land` — gate on
+    `Approval_Status__c` picklist, not on the standalone boolean. Boolean-only
+    predicate was flagging 104 opps / $141.8M ARR all with
+    Approval_Status__c='No Approval Necessary' (verified 2026-04-28).
+    """
     where = (
         f"IsClosed = false AND Type IN ('Land','Expand') AND {LATE_STAGE_LIKE} "
-        f"AND APTS_Opportunity_ARR__c >= 500000 AND Stage_20_Approval__c = false "
+        "AND APTS_Opportunity_ARR__c >= 500000 AND Stage_20_Approval__c = false "
+        "AND Approval_Status__c IN ('Needs Approval','Awaiting Approval','Rejected') "
         f"{EXCLUDE_TEST_ARTIFACTS}{_ack_exclusion()}"
     )
     agg = _agg(
@@ -256,11 +274,19 @@ def approval_submitted_pending() -> dict[str, Any]:
     """Stage 3+ deals where Commercial Approval has been SUBMITTED but not yet
     granted. Distinct from 'no approval' (which catches never-submitted).
     Useful as an in-queue signal — these need follow-through, not new submission.
+
+    The submit boolean fires even on opps that don't require approval, so
+    co-condition on `Approval_Status__c` to ensure the deal is actually
+    in-queue. Verified 2026-04-28: all 6 opps the boolean-only predicate
+    flagged today had Approval_Status__c='No Approval Necessary' — same
+    lying-boolean shape as Stage_20_Approval__c. 'Rejected' excluded from
+    the canonical filter because that's a terminal state, not "still pending".
     """
     where = (
         f"IsClosed = false AND {LATE_STAGE_LIKE} "
         "AND Submit_for_Stage_20_Review__c = true "
         "AND Stage_20_Approval__c = false "
+        "AND Approval_Status__c IN ('Needs Approval','Awaiting Approval') "
         f"{EXCLUDE_TEST_ARTIFACTS}{_ack_exclusion()}"
     )
     agg = _agg(
@@ -286,11 +312,22 @@ def deal_shaping_gap() -> dict[str, Any]:
     """Land/Expand at Stage 5+ without Deal Shaping approval. Per the SimCorp
     Commercial Handbook, Deal Services Design (Deal Shaping) is mandatory before
     Final Review.
+
+    Same lying-boolean pathology as the Commercial Approval fields:
+    `Deal_Shaping_Approved__c=false` on 764 of 795 closed-won Land/Expand
+    deals in the last 365d (96%) — the field is functionally abandoned.
+    Boolean-only predicate flagged 67 opps / $29.9M ARR today, all with
+    Approval_Status__c='No Approval Necessary' (verified 2026-04-28).
+    Corrected predicate co-conditions on the picklist; this currently
+    yields zero flags, which is the right behaviour until the canonical
+    Deal Shaping signal is identified (likely a separate object or CPQ
+    flag — TODO follow-up).
     """
     where = (
         "IsClosed = false AND Type IN ('Land','Expand') "
         "AND (StageName LIKE '5%' OR StageName LIKE '6%') "
         "AND Deal_Shaping_Approved__c = false "
+        "AND Approval_Status__c IN ('Needs Approval','Awaiting Approval','Rejected') "
         f"{EXCLUDE_TEST_ARTIFACTS}{_ack_exclusion()}"
     )
     agg = _agg(
@@ -380,20 +417,23 @@ def _flagged_union_where() -> str:
     rollups so they always use the same predicate as `pull_all_alerts`."""
     return (
         "IsClosed = false AND ("
-        # Missing Commercial Approval on big deals
+        # Missing Commercial Approval on big deals (gated by picklist)
         f"  (Type IN ('Land','Expand') AND {LATE_STAGE_LIKE} "
         "    AND APTS_Opportunity_ARR__c >= 500000 "
-        "    AND Stage_20_Approval__c = false) "
-        # Land deals at Stage 3+ with no approval
-        f"  OR (Type = 'Land' AND {LATE_STAGE_LIKE} AND Stage_20_Approval__c = false) "
+        "    AND Stage_20_Approval__c = false "
+        "    AND Approval_Status__c IN ('Needs Approval','Awaiting Approval','Rejected')) "
+        # Land deals at Stage 3+ with no approval (gated by picklist)
+        f"  OR (Type = 'Land' AND {LATE_STAGE_LIKE} AND Stage_20_Approval__c = false "
+        "       AND Approval_Status__c IN ('Needs Approval','Awaiting Approval','Rejected')) "
         # KYC missing at Stage 5+
         "  OR (Type IN ('Land','Expand') "
         "       AND (StageName LIKE '5%' OR StageName LIKE '6%') "
         "       AND Account.KYC_Approval_Status__c != 'Approved') "
-        # Deal Shaping missing at Stage 5+
+        # Deal Shaping missing at Stage 5+ (gated by picklist)
         "  OR (Type IN ('Land','Expand') "
         "       AND (StageName LIKE '5%' OR StageName LIKE '6%') "
-        "       AND Deal_Shaping_Approved__c = false) "
+        "       AND Deal_Shaping_Approved__c = false "
+        "       AND Approval_Status__c IN ('Needs Approval','Awaiting Approval','Rejected')) "
         # Past close date
         "  OR (CloseDate < TODAY) "
         # Dec 31 placeholder at Stage 3+
