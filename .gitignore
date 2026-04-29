@@ -6,3 +6,9 @@ state/
 .env
 eval/runs/*.json
 !eval/runs/.gitkeep
+
+# track:workforce — Phase 1 raw + DuckDB store are local-only.
+# Per AGENTS.md compliance: workforce data stays on the device, never
+# uploaded, never in git.
+workforce/raw/
+workforce/state/
