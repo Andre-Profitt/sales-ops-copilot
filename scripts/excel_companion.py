@@ -295,18 +295,109 @@ def build_director_excel(
             italic=True, color="999999"
         )
 
-    # Sheets still scaffolded — populated once historical-snapshot infra exists
-    placeholder_sheets = {
-        "ARR_Roll": "New + Expand + Churn ARR - populate from Pipeline_Snapshot__c (deferred until snapshot infra deployed)",
-        "Retention": "NRR + GRR - populate from cohort math against historical snapshots (deferred)",
-        "At_Risk_Renewals": "At-risk renewal accounts - populate when health-score join is added",
-        "Competitive_Pressure": "Lost-to-competitor breakdown - populate from Lost_to_Competitor__c",
-        "Territory_Performance": "Per-territory pipeline + wins - populate from Account.Region__c roll-up",
-    }
-    for sheet_name, msg in placeholder_sheets.items():
-        ws = wb[sheet_name]
-        ws["A1"] = msg
-        ws["A1"].font = Font(italic=True, color="999999")
+    # ── Territory_Performance ── open Land+Expand pipeline by sub-region
+    ws = wb["Territory_Performance"]
+    ws["A1"] = "Country / sub-region"
+    ws["B1"] = "Open ARR"
+    ws["C1"] = "# Opps"
+    for col in ("A1", "B1", "C1"):
+        ws[col].font = Font(bold=True)
+    territory = (snapshot or {}).get("territory_performance") or []
+    if territory:
+        for i, t in enumerate(territory, start=1):
+            ws.cell(row=i + 1, column=1, value=t.get("country") or "(unset)")
+            ws.cell(row=i + 1, column=2, value=_fmt_meur(t.get("arr_eur") or 0))
+            ws.cell(row=i + 1, column=3, value=t.get("num_opps") or 0)
+        ws.column_dimensions["A"].width = 32
+        ws.column_dimensions["B"].width = 14
+        ws.column_dimensions["C"].width = 8
+    else:
+        ws.cell(row=2, column=1, value="(no territory breakdown for this director)").font = Font(
+            italic=True, color="999999"
+        )
+
+    # ── At_Risk_Renewals ── open Renewal opps where Account carries High/Very High termination risk
+    ws = wb["At_Risk_Renewals"]
+    ws["A1"] = "#"
+    ws["B1"] = "Account"
+    ws["C1"] = "Stage"
+    ws["D1"] = "ACV"
+    ws["E1"] = "Risk"
+    for col in ("A1", "B1", "C1", "D1", "E1"):
+        ws[col].font = Font(bold=True)
+    at_risk = (snapshot or {}).get("at_risk_renewals") or []
+    if at_risk:
+        for i, r in enumerate(at_risk, start=1):
+            ws.cell(row=i + 1, column=1, value=i)
+            ws.cell(row=i + 1, column=2, value=r.get("account") or "")
+            ws.cell(row=i + 1, column=3, value=r.get("stage") or "")
+            ws.cell(row=i + 1, column=4, value=_fmt_meur(r.get("acv_eur") or 0))
+            ws.cell(row=i + 1, column=5, value=r.get("risk_level") or "")
+        ws.column_dimensions["A"].width = 4
+        ws.column_dimensions["B"].width = 36
+        ws.column_dimensions["C"].width = 18
+        ws.column_dimensions["D"].width = 12
+        ws.column_dimensions["E"].width = 14
+    else:
+        ws.cell(
+            row=2,
+            column=1,
+            value="(no Renewal opps with High/Very-High termination risk in scope)",
+        ).font = Font(italic=True, color="999999")
+
+    # ── Competitive_Pressure ── closed-lost Land+Expand opps this quarter, by competitor
+    ws = wb["Competitive_Pressure"]
+    ws["A1"] = "Competitor"
+    ws["B1"] = "# Lost (CFQ)"
+    ws["C1"] = "ARR Lost"
+    for col in ("A1", "B1", "C1"):
+        ws[col].font = Font(bold=True)
+    comp = (snapshot or {}).get("competitive_pressure") or []
+    if comp:
+        for i, c in enumerate(comp, start=1):
+            ws.cell(row=i + 1, column=1, value=c.get("competitor") or "(unknown)")
+            ws.cell(row=i + 1, column=2, value=c.get("num_opps") or 0)
+            ws.cell(row=i + 1, column=3, value=_fmt_meur(c.get("arr_eur") or 0))
+        ws.column_dimensions["A"].width = 30
+        ws.column_dimensions["B"].width = 14
+        ws.column_dimensions["C"].width = 14
+    else:
+        ws.cell(
+            row=2,
+            column=1,
+            value="(no closed-lost Land/Expand opps with competitor recorded this quarter)",
+        ).font = Font(italic=True, color="999999")
+
+    # ── ARR_Roll ── closed-won booked ARR by month, last 6 months
+    ws = wb["ARR_Roll"]
+    ws["A1"] = "Month"
+    ws["B1"] = "# Won"
+    ws["C1"] = "Booked ARR"
+    for col in ("A1", "B1", "C1"):
+        ws[col].font = Font(bold=True)
+    roll = (snapshot or {}).get("arr_roll") or []
+    if roll:
+        for i, r in enumerate(roll, start=1):
+            ws.cell(row=i + 1, column=1, value=r.get("month") or "")
+            ws.cell(row=i + 1, column=2, value=r.get("num_opps") or 0)
+            ws.cell(row=i + 1, column=3, value=_fmt_meur(r.get("arr_eur") or 0))
+        ws.column_dimensions["A"].width = 12
+        ws.column_dimensions["B"].width = 8
+        ws.column_dimensions["C"].width = 14
+    else:
+        ws.cell(
+            row=2, column=1, value="(no Land/Expand wins in last 6 months for this director)"
+        ).font = Font(italic=True, color="999999")
+
+    # Retention sheet stays placeholder until the cohort math is wired against
+    # Pipeline_Snapshot__c historical data (needs admin metadata deploy first).
+    ws = wb["Retention"]
+    ws["A1"] = (
+        "GRR + NRR — populate from Pipeline_Snapshot__c cohort math once the "
+        "Reporting Snapshot has accumulated 12+ months of history. See "
+        "docs/REPORTING_SNAPSHOTS.md for setup status."
+    )
+    ws["A1"].font = Font(italic=True, color="999999")
 
     # Trend_MoM, Trend_QoQ - empty for now (filled by snapshot_diff wiring in Phase 1.5.A.5)
     for trend_sheet in ("Trend_MoM", "Trend_QoQ"):

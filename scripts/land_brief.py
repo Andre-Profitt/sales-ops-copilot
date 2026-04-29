@@ -77,8 +77,12 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
     # Pull per-record FX-converted values, aggregate in Python.
     # SOQL SUM(convertCurrency(...)) does NOT work — silently returns raw sum.
     # SOQL SELECT convertCurrency(...) DOES work — returns per-record FX value.
+    # Also pull Account.BillingCountry + Risk for downstream sheets
+    # (Territory_Performance + At_Risk_Renewals).
     detail_q = (
         "SELECT Id, Type, StageName, "
+        "Account.Name, Account.BillingCountry, "
+        "Account.Risk_of_Potential_Termination__c, "
         "convertCurrency(APTS_Opportunity_ARR__c) arr_fx, "
         "convertCurrency(APTS_Renewal_ACV__c) acv_fx "
         "FROM Opportunity "
@@ -203,6 +207,106 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
         "lost_acv_eur": lost_acv,
     }
 
+    # Territory_Performance: open Land+Expand pipeline by sub-region
+    # (Account.BillingCountry within director scope). The director's
+    # `where_clause` already constrains to their territory; this slices
+    # one level deeper.
+    territory_acc: dict[str, dict[str, float]] = {}
+    for r in rows:
+        if r.get("Type") not in ("Land", "Expand"):
+            continue
+        country = (r.get("Account") or {}).get("BillingCountry") or "(unset)"
+        bucket = territory_acc.setdefault(country, {"num_opps": 0, "arr_eur": 0.0})
+        bucket["num_opps"] += 1
+        bucket["arr_eur"] += float(r.get("arr_fx") or 0)
+    territory_performance = sorted(
+        [
+            {"country": k, "num_opps": int(v["num_opps"]), "arr_eur": round(v["arr_eur"], 2)}
+            for k, v in territory_acc.items()
+        ],
+        key=lambda x: x["arr_eur"],
+        reverse=True,
+    )
+
+    # At_Risk_Renewals: open Renewal opps where the Account carries an
+    # explicit termination-risk flag (High / Very High).
+    at_risk_renewals: list[dict[str, Any]] = []
+    for r in rows:
+        if r.get("Type") != "Renewal":
+            continue
+        acct = r.get("Account") or {}
+        risk = (acct.get("Risk_of_Potential_Termination__c") or "").lower()
+        if "high" not in risk:  # catches "High" + "Very High"
+            continue
+        at_risk_renewals.append(
+            {
+                "stage": r.get("StageName") or "",
+                "account": acct.get("Name") or "(unknown)",
+                "acv_eur": round(float(r.get("acv_fx") or 0), 2),
+                "risk_level": acct.get("Risk_of_Potential_Termination__c") or "",
+            }
+        )
+    at_risk_renewals.sort(key=lambda x: x["acv_eur"], reverse=True)
+    at_risk_renewals = at_risk_renewals[:15]
+
+    # Competitive_Pressure: closed-lost Land+Expand opps in CFQ, by competitor
+    comp_q = (
+        "SELECT Id, Lost_to_Competitor__r.Name, "
+        "convertCurrency(APTS_Opportunity_ARR__c) arr_fx, "
+        "Reason_Won_Lost__c "
+        "FROM Opportunity "
+        "WHERE IsClosed = true AND IsWon = false "
+        "AND CloseDate = THIS_QUARTER "
+        "AND Type IN ('Land','Expand') "
+        f"AND {where_clause}"
+    )
+    try:
+        comp_rows = _sf_query(comp_q)
+    except Exception:
+        comp_rows = []
+    comp_acc: dict[str, dict[str, float]] = {}
+    for r in comp_rows:
+        c = ((r.get("Lost_to_Competitor__r") or {}).get("Name")) or "(no competitor recorded)"
+        bucket = comp_acc.setdefault(c, {"num_opps": 0, "arr_eur": 0.0})
+        bucket["num_opps"] += 1
+        bucket["arr_eur"] += float(r.get("arr_fx") or 0)
+    competitive_pressure = sorted(
+        [
+            {"competitor": k, "num_opps": int(v["num_opps"]), "arr_eur": round(v["arr_eur"], 2)}
+            for k, v in comp_acc.items()
+        ],
+        key=lambda x: x["arr_eur"],
+        reverse=True,
+    )
+
+    # ARR_Roll: closed-won Land+Expand booked ARR by month, last 6 months.
+    # Approximation of the booked-ARR roll-up that would otherwise come from
+    # historical snapshots. FX-correct via per-record convertCurrency.
+    roll_q = (
+        "SELECT Id, CloseDate, "
+        "convertCurrency(APTS_Opportunity_ARR__c) arr_fx "
+        "FROM Opportunity "
+        "WHERE IsClosed = true AND IsWon = true "
+        "AND CloseDate >= LAST_N_DAYS:180 "
+        "AND Type IN ('Land','Expand') "
+        f"AND {where_clause}"
+    )
+    try:
+        roll_rows = _sf_query(roll_q)
+    except Exception:
+        roll_rows = []
+    roll_acc: dict[str, dict[str, float]] = {}
+    for r in roll_rows:
+        cd = r.get("CloseDate") or ""
+        ym = cd[:7] if len(cd) >= 7 else "(unknown)"
+        bucket = roll_acc.setdefault(ym, {"num_opps": 0, "arr_eur": 0.0})
+        bucket["num_opps"] += 1
+        bucket["arr_eur"] += float(r.get("arr_fx") or 0)
+    arr_roll = [
+        {"month": k, "num_opps": int(v["num_opps"]), "arr_eur": round(v["arr_eur"], 2)}
+        for k, v in sorted(roll_acc.items())
+    ]
+
     return {
         "by_type": by_type,
         "new_business_by_stage": new_business_by_stage,
@@ -210,6 +314,10 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
         "top_deals_land": top_deals_land,
         "top_deals_expand": top_deals_expand,
         "wins_losses_qtd": wins_losses_qtd,
+        "territory_performance": territory_performance,
+        "at_risk_renewals": at_risk_renewals,
+        "competitive_pressure": competitive_pressure,
+        "arr_roll": arr_roll,
         "totals": {
             "new_business_arr_open_this_quarter": round(
                 sum(t["arr"] for t in by_type if t["type"] in ("Land", "Expand")), 2
