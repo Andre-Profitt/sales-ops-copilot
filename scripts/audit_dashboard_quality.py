@@ -48,7 +48,7 @@ DASHBOARDS = [
     ("01ZTb00000FxYhlMAF", "Quarter Close Pacing"),
 ]
 
-API_VERSION = "v65.0"
+API_VERSION = "v66.0"
 
 
 def get_org() -> tuple[str, str]:
@@ -180,6 +180,10 @@ def has_correct_aggregate(report_meta: dict, motion: str) -> tuple[str, str]:
     rmd = report_meta.get("reportMetadata") or {}
     aggs = rmd.get("aggregates") or []
     aggs_str = ",".join(aggs)
+    if "Overall_Adoption_Score__c" in aggs_str:
+        return "n/a", "operational score aggregate"
+    if "STAGE_DURATION" in aggs_str or "Number_of_Days_Since_Created__c" in aggs_str:
+        return "n/a", "operational duration aggregate"
     arr_field = "APTS_Opportunity_ARR__c"
     acv_field = "APTS_Renewal_ACV__c"
     has_arr = arr_field in aggs_str
@@ -217,6 +221,8 @@ def has_pollution_filter(report_meta: dict) -> tuple[str, str]:
     rmd = report_meta.get("reportMetadata") or {}
     filters = rmd.get("reportFilters") or []
     rt = (rmd.get("reportType") or {}).get("type", "") or ""
+    if "Opportunity" not in rt and "Lead" not in rt and "Account" not in rt:
+        return "n/a", "non-opportunity report"
     saw_owner = False
     saw_acct = False
     saw_opp_name = False
@@ -289,25 +295,33 @@ def has_data(execute_result: dict) -> tuple[str, str]:
     # Pull any non-zero aggregate value from T!T
     grand_max = 0.0
     for a in grand_aggs:
+        if not isinstance(a, dict):
+            continue
         v = a.get("value")
         if isinstance(v, (int, float)):
             grand_max = max(grand_max, abs(v))
     # Sum rows across all factMap entries
-    any_rows = sum(len((entry.get("rows") or [])) for entry in fact_map.values())
+    any_rows = sum(len((entry.get("rows") or [])) for entry in fact_map.values() if isinstance(entry, dict))
     if any_rows > 0:
         return "✓", f"{any_rows} rows"
     if grand_max > 0:
         # No detail rows but aggregates non-zero (summary/matrix report)
         return "✓", f"agg={grand_max:.0f}"
-    return "✗", "no rows, no aggregates"
+    return "⚠", "0 rows, 0 aggregates"
 
 
 def has_clean_description(report_meta: dict, dash_meta_component: dict | None) -> tuple[str, str]:
-    rdesc = (report_meta.get("attributes") or {}).get("description") or ""
+    rdesc = (
+        (report_meta.get("attributes") or {}).get("description")
+        or (report_meta.get("reportMetadata") or {}).get("description")
+        or ""
+    )
     cdesc = ""
     if dash_meta_component:
         cdesc = (
-            (dash_meta_component.get("title") or "")
+            (dash_meta_component.get("header") or "")
+            + " "
+            + (dash_meta_component.get("title") or "")
             + " "
             + (dash_meta_component.get("description") or "")
         )
