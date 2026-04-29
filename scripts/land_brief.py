@@ -208,6 +208,7 @@ def build_trends_envelope(
             "name": director["name"],
             "book_codes": director.get("book_codes", []),
             "scope": director.get("scope"),
+            "scope_label": director.get("scope_label", ""),
         },
         "period": period,
         "period_end": dt.date.today().isoformat(),
