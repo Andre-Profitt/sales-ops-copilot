@@ -44,8 +44,10 @@ from brief import (  # type: ignore[import-not-found]  # noqa: E402
     OPENAI_ENDPOINT,
     REPORTS_DIR,
     pull_fabric_workspace_summary as _pull_fabric_summary_raw,
+    pull_pipeline_age as _pull_pipeline_age_raw,
     pull_product_family_breakdown as _pull_product_family_raw,
     pull_salesforce_snapshot as _pull_sf_snapshot_raw,
+    pull_zombie_owners as _pull_zombie_owners_raw,
     render_report,
 )
 from alerts import (  # type: ignore[import-not-found]  # noqa: E402
@@ -103,20 +105,32 @@ SYSTEM_PROMPT = (
     "multipicklist — opps with multiple families are counted toward each, so "
     "the sum across families OVERSTATES total open ARR. Call out the top 1-2 "
     "families by ARR and any concentration concerns.\n\n"
+    "PIPELINE AGE / ZOMBIES: `pull_pipeline_age` returns the FX-correct age "
+    "distribution of open Land+Expand pipeline (sourced from the live SF "
+    "report — not raw SOQL — so multi-currency-converted to org currency). "
+    "Key fields: `zombie_arr` and `zombie_pct` are the >2yr slice (deals that "
+    "should have closed long ago — likely indefinitely-pushed losses). Win "
+    "rate is GAMEABLE (deals indefinitely pushed never enter the denominator) "
+    "so the zombie ratio is the antidote metric. If `zombie_pct` >25%, call "
+    "it a forecast-hygiene crisis. `pull_zombie_owners` lists the top 5 reps "
+    "by absolute >2yr ARR exposure with `zombie_pct` per rep — coaching 1:1 "
+    "priorities. Call out worst-by-pct AND worst-by-absolute (often different).\n\n"
     "TOOL USE: Call `pull_salesforce_snapshot`, `pull_fabric_workspace_summary`, "
     "`pull_all_alerts`, `pull_owner_concentration`, `pull_account_concentration`, "
-    "and `pull_product_family_breakdown` "
-    "ONCE EACH at the start of the conversation to gather the data, then write "
-    "the brief. Do not call any tool more than once.\n\n"
+    "`pull_product_family_breakdown`, `pull_pipeline_age`, and "
+    "`pull_zombie_owners` ONCE EACH at the start of the conversation to "
+    "gather the data, then write the brief. Do not call any tool more than once.\n\n"
     "Produce a tight executive brief — 300-500 words max — with these sections:\n"
     "1) Current-quarter state — open vs weighted ARR (Land+Expand) and ACV (Renewal); "
     "include a one-line sub-callout on where the ARR sits by product line (top 1-2 families)\n"
     "2) **Forward forecast (Q+1, Q+2) — weighted ARR and ACV per quarter, "
     "with one sentence on the shape (front-loaded? back-loaded? Dec-31 inflated?)**\n"
-    "3) **Top 3 governance/hygiene alerts to act on this week** "
+    "3) **Pipeline health — zombie %, top zombie owner, what % of book is >1yr.** "
+    "The pipeline-quality counterweight to win-rate (which is gameable).\n"
+    "4) **Top 3 governance/hygiene alerts to act on this week** "
     "(rank by impact, name specific deals from the samples when relevant)\n"
-    "4) What to focus on this week per motion\n"
-    "5) Which Fabric workspaces help most\n"
+    "5) What to focus on this week per motion\n"
+    "6) Which Fabric workspaces help most\n"
     "No fluff. Lead with the insight. Cite specific dollar amounts and deal names."
 )
 
@@ -211,6 +225,35 @@ def pull_product_family_breakdown() -> list[dict[str, Any]]:
     return rows
 
 
+def pull_pipeline_age() -> dict[str, Any]:
+    """FX-correct pipeline age distribution. The antidote to win-rate gaming.
+
+    Pulls from the live SF Report (Scorecard · Pipeline Age Distribution)
+    so figures are FX-converted to org currency, not raw multi-currency
+    SOQL sums. Returns:
+      {
+        buckets: [{label, count, arr}, ...],
+        total_arr, total_count,
+        zombie_arr, zombie_pct,        # >2yr slice
+        stale_1yr_plus_arr, stale_1yr_plus_pct,
+      }
+    """
+    age = _pull_pipeline_age_raw()
+    TOOL_CACHE["pipeline_age"] = age
+    return age
+
+
+def pull_zombie_owners() -> list[dict[str, Any]]:
+    """Top 5 reps by absolute >2yr ARR exposure — coaching 1:1 priority.
+
+    Sourced from the live SF Report (Scorecard · Pipeline Age by Rep).
+    Each row: {owner, total_arr, zombie_arr, zombie_pct}.
+    """
+    owners = _pull_zombie_owners_raw(top_n=5)
+    TOOL_CACHE["zombie_owners"] = owners
+    return owners
+
+
 def pull_radar_recommendations() -> list[dict[str, Any]]:
     """Pull actionable recommendations from radar's claim pipeline.
 
@@ -258,6 +301,8 @@ async def _run_agent(model: str) -> str:
             pull_owner_concentration,
             pull_account_concentration,
             pull_product_family_breakdown,
+            pull_pipeline_age,
+            pull_zombie_owners,
             pull_radar_recommendations,
         ],
         # GPT-5.x rejects non-default temperature; do not set it. max_tokens
@@ -295,6 +340,8 @@ def _build_agent(model: str) -> Any:
             pull_owner_concentration,
             pull_account_concentration,
             pull_product_family_breakdown,
+            pull_pipeline_age,
+            pull_zombie_owners,
             pull_radar_recommendations,
         ],
         default_options={"max_tokens": 1500},

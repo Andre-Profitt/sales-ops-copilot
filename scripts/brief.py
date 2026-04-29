@@ -87,6 +87,40 @@ def _sf_query(soql: str) -> list[dict[str, Any]]:
     return json.loads(raw).get("result", {}).get("records", [])
 
 
+def _sf_access_token_and_instance() -> tuple[str, str]:
+    """Get a Salesforce access token + instance URL via the sf CLI."""
+    raw = run(["sf", "org", "display", "--target-org", "preprod", "--json"])
+    d = json.loads(raw).get("result", {})
+    return d.get("accessToken", ""), d.get("instanceUrl", "")
+
+
+def _sf_analytics_get(path: str) -> dict[str, Any]:
+    """GET an SF Analytics REST endpoint (e.g. /analytics/reports/<id>).
+
+    Used to fetch FX-correct grand totals + per-cell ARR from existing
+    SF reports. Per AGENTS.md SimCorp rules, prefer report-side
+    aggregation over raw SOQL SUM (multi-currency unconverted).
+    """
+    import urllib.error
+    import urllib.request
+
+    token, instance = _sf_access_token_and_instance()
+    url = f"{instance}/services/data/v66.0{path}"
+    req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            return json.loads(resp.read().decode())
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(
+            f"SF Analytics GET {path} failed: HTTP {e.code} {e.read().decode()[:300]}"
+        ) from e
+
+
+# Live SF report IDs for FX-correct pulls used in the brief.
+PIPELINE_AGE_REPORT_ID = "00OTb000008ndGjMAI"  # Scorecard · Pipeline Age Distribution
+PIPELINE_AGE_BY_REP_REPORT_ID = "00OTb000008nfTdMAI"  # Scorecard · Pipeline Age by Rep
+
+
 def _quarter_bounds(today: dt.date, offset: int) -> tuple[dt.date, dt.date, str]:
     """Return (start_date, end_date, label) for the calendar quarter `offset`
     quarters from today's quarter (0 = current, 1 = next, etc.). Calendar
@@ -217,10 +251,22 @@ def pull_salesforce_snapshot() -> dict[str, Any]:
     q_plus_2 = quarters[2]
 
     product_family_breakdown = pull_product_family_breakdown()
+    # FX-correct via SF report aggregation (per AGENTS.md SimCorp rules:
+    # never raw SOQL SUM on currency fields; trust report-side `s!field`).
+    try:
+        pipeline_age = pull_pipeline_age()
+        zombie_owners = pull_zombie_owners(top_n=5)
+    except Exception as e:
+        # Don't fail the whole brief if these reports can't be reached.
+        print(f"  [WARN] pipeline-age pull failed: {e}", file=sys.stderr)
+        pipeline_age = {}
+        zombie_owners = []
 
     return {
         "by_type": by_type,
         "product_family_breakdown": product_family_breakdown,
+        "pipeline_age": pipeline_age,
+        "zombie_owners": zombie_owners,
         # Backward-compatible top-level fields = current quarter
         "new_business_by_stage": current["new_business_by_stage"],
         "renewals_by_stage": current["renewals_by_stage"],
@@ -275,6 +321,85 @@ def pull_product_family_breakdown(top_n: int = 12) -> list[dict[str, Any]]:
         for fam, v in agg.items()
     ]
     rows.sort(key=lambda x: x["arr_open"], reverse=True)
+    return rows[:top_n]
+
+
+def pull_pipeline_age() -> dict[str, Any]:
+    """Pull org-level open Land+Expand pipeline by deal-age bucket.
+
+    FX-correct via SF report aggregation (`s!APTS_Opportunity_ARR__c`
+    is converted to org currency by the report engine). Returns:
+
+        {
+          "buckets": [{"label": "0-90d", "count": ..., "arr": ...}, ...],
+          "total_arr": ...,
+          "total_count": ...,
+          "zombie_arr": ...,   # >2yr bucket
+          "zombie_pct": ...,
+          "stale_1yr_plus_arr": ...,  # 1-2yr + 2yr+
+          "stale_1yr_plus_pct": ...,
+        }
+    """
+    r = _sf_analytics_get(f"/analytics/reports/{PIPELINE_AGE_REPORT_ID}?includeDetails=false")
+    fact = r.get("factMap", {})
+    gd = r.get("groupingsDown", {}).get("groupings", [])
+    buckets = []
+    for g in gd:
+        key = g.get("key")
+        label = g.get("label", "?")
+        cell = fact.get(f"{key}!T", {}).get("aggregates", [])
+        arr = cell[0].get("value", 0) if len(cell) > 0 else 0
+        cnt = cell[1].get("value", 0) if len(cell) > 1 else 0
+        buckets.append({"label": label, "count": cnt, "arr": arr})
+    total = fact.get("T!T", {}).get("aggregates", [])
+    total_arr = total[0].get("value", 0) if len(total) > 0 else 0
+    total_cnt = total[1].get("value", 0) if len(total) > 1 else 0
+    by_label = {b["label"]: b for b in buckets}
+    zombie_arr = (by_label.get("2yr+") or {}).get("arr", 0)
+    one_yr_plus = zombie_arr + (by_label.get("1-2yr") or {}).get("arr", 0)
+    return {
+        "buckets": buckets,
+        "total_arr": total_arr,
+        "total_count": int(total_cnt),
+        "zombie_arr": zombie_arr,
+        "zombie_pct": (zombie_arr / total_arr * 100) if total_arr else 0,
+        "stale_1yr_plus_arr": one_yr_plus,
+        "stale_1yr_plus_pct": (one_yr_plus / total_arr * 100) if total_arr else 0,
+    }
+
+
+def pull_zombie_owners(top_n: int = 5) -> list[dict[str, Any]]:
+    """Top N reps by absolute >2yr open Land+Expand ARR.
+
+    FX-correct via SF report aggregation. Each row shows the rep's
+    total open ARR + their >2yr (zombie) cut + the ratio.
+    """
+    r = _sf_analytics_get(
+        f"/analytics/reports/{PIPELINE_AGE_BY_REP_REPORT_ID}?includeDetails=false"
+    )
+    fact = r.get("factMap", {})
+    gd = r.get("groupingsDown", {}).get("groupings", [])
+    ga = r.get("groupingsAcross", {}).get("groupings", [])
+    zombie_key = next((ag.get("key") for ag in ga if ag.get("label") == "2yr+"), None)
+    if not zombie_key:
+        return []
+    rows = []
+    for g in gd:
+        key = g.get("key")
+        owner = g.get("label", "?")
+        total_cell = fact.get(f"{key}!T", {}).get("aggregates", [])
+        total_arr = total_cell[0].get("value", 0) if total_cell else 0
+        zombie_cell = fact.get(f"{key}!{zombie_key}", {}).get("aggregates", [])
+        zombie_arr = zombie_cell[0].get("value", 0) if zombie_cell else 0
+        rows.append(
+            {
+                "owner": owner,
+                "total_arr": total_arr,
+                "zombie_arr": zombie_arr,
+                "zombie_pct": (zombie_arr / total_arr * 100) if total_arr else 0,
+            }
+        )
+    rows.sort(key=lambda x: x["zombie_arr"], reverse=True)
     return rows[:top_n]
 
 
@@ -361,15 +486,31 @@ def synthesize(
         "so the sum across families OVERSTATES total open ARR. Call out the top "
         "1-2 families by ARR and any concentration concerns (e.g., a single "
         "family carrying the bulk of pipeline).\n\n"
+        "PIPELINE AGE / ZOMBIES: `pipeline_age` is the FX-correct age "
+        "distribution of open Land+Expand pipeline (sourced from the SF report, "
+        "not raw SOQL — multi-currency-converted). Key fields: `zombie_arr` and "
+        "`zombie_pct` are the >2yr-old slice (deals that should have closed long "
+        "ago — likely indefinitely-pushed losses hidden in pipeline). "
+        "`stale_1yr_plus_pct` is the >1yr cumulative. Win rate is GAMEABLE — "
+        "deals indefinitely pushed never enter the denominator — so the zombie "
+        "ratio is the antidote metric. If `zombie_pct` is >25%, call it a "
+        "forecast-hygiene crisis and recommend a force-reconciliation review.\n\n"
+        "ZOMBIE OWNERS: `zombie_owners` lists the top 5 reps by absolute >2yr "
+        "ARR exposure, with `total_arr`, `zombie_arr`, `zombie_pct` per rep. "
+        "These are the highest-leverage 1:1 coaching priorities. Call out the "
+        "single worst by `zombie_pct` (gaming ratio) AND the worst by "
+        "`zombie_arr` (absolute exposure) — usually different reps.\n\n"
         "Produce a tight executive brief — 300-500 words max — with these sections:\n"
         "1) Current-quarter state — open vs weighted ARR (Land+Expand) and ACV (Renewal); "
         "include a one-line sub-callout on where the ARR sits by product line (top 1-2 families)\n"
         "2) **Forward forecast (Q+1, Q+2) — weighted ARR and ACV per quarter, "
         "with one sentence on the shape (front-loaded? back-loaded? Dec-31 inflated?)**\n"
-        "3) **Top 3 governance/hygiene alerts to act on this week** "
+        "3) **Pipeline health — zombie %, top zombie owner, what % of book is >1yr.** "
+        "Frame this as the pipeline-quality counterweight to win-rate (which is gameable).\n"
+        "4) **Top 3 governance/hygiene alerts to act on this week** "
         "(rank by impact, name specific deals from the samples when relevant)\n"
-        "4) What to focus on this week per motion\n"
-        "5) Which Fabric workspaces help most\n"
+        "5) What to focus on this week per motion\n"
+        "6) Which Fabric workspaces help most\n"
         "No fluff. Lead with the insight. Cite specific dollar amounts and deal names."
     )
 
@@ -620,6 +761,55 @@ def render_report(
         for i, p in enumerate(pfb, 1):
             arr = p.get("arr_open") or 0
             lines.append(f"| {i} | {p.get('family', '—')} | {p.get('num_opps', 0)} | ${arr:,.0f} |")
+
+    # Pipeline health — FX-correct via SF report aggregation.
+    # The antidote to gameable win-rate metrics: deals indefinitely
+    # pushed never enter the won/lost denominator; the >2yr zombie
+    # cohort surfaces them.
+    pipeline_age = sf_snapshot.get("pipeline_age") or {}
+    zombie_owners = sf_snapshot.get("zombie_owners") or []
+    if pipeline_age:
+        total_arr = pipeline_age.get("total_arr", 0) or 0
+        zombie_arr = pipeline_age.get("zombie_arr", 0) or 0
+        zombie_pct = pipeline_age.get("zombie_pct", 0) or 0
+        stale_pct = pipeline_age.get("stale_1yr_plus_pct", 0) or 0
+        lines += [
+            "",
+            "### Pipeline health — zombie detection (FX-correct)",
+            "",
+            f"**EUR {total_arr:,.0f} open Land+Expand pipeline · "
+            f"{zombie_pct:.0f}% (EUR {zombie_arr:,.0f}) is >2 years old.**",
+            "",
+            f"_{stale_pct:.0f}% of the open book is >1 year old. "
+            f"Indefinitely-pushed deals never enter the win/loss denominator — "
+            f"the zombie ratio is the antidote to gameable win-rate metrics._",
+            "",
+            "| Age band | # Opps | ARR | % of total |",
+            "|---|---:|---:|---:|",
+        ]
+        for b in pipeline_age.get("buckets", []):
+            arr = b.get("arr") or 0
+            cnt = b.get("count") or 0
+            pct = (arr / total_arr * 100) if total_arr else 0
+            lines.append(f"| {b.get('label', '—')} | {cnt} | EUR {arr:,.0f} | {pct:.1f}% |")
+    if zombie_owners:
+        lines += [
+            "",
+            "### Top zombie owners — coaching 1:1 priority",
+            "",
+            "*Reps ranked by absolute >2yr ARR exposure. `Zombie %` shows "
+            "how much of their book is over 2 years old — the gaming ratio.*",
+            "",
+            "| # | Owner | Total open ARR | >2yr ARR | Zombie % |",
+            "|---|---|---:|---:|---:|",
+        ]
+        for i, z in enumerate(zombie_owners, 1):
+            tot = z.get("total_arr") or 0
+            zar = z.get("zombie_arr") or 0
+            zpct = z.get("zombie_pct") or 0
+            lines.append(
+                f"| {i} | {z.get('owner', '—')} | EUR {tot:,.0f} | EUR {zar:,.0f} | {zpct:.0f}% |"
+            )
 
     lines += [
         "",
