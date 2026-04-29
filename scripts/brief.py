@@ -310,6 +310,11 @@ def pull_salesforce_snapshot() -> dict[str, Any]:
         "forecast_accuracy": forecast_accuracy,
         "commit_at_risk": commit_at_risk,
         "slippage_push_count": slippage,
+        # Empirical win-rate-conditional-on-stage (from stage_probs cache).
+        # NOT N→N+1 progression rate — it's "P(Won | currently at stage N)"
+        # learned from OpportunityFieldHistory transitions over the last
+        # 4 quarters.
+        "stage_win_probabilities": stage_probs,
         # Backward-compatible top-level fields = current quarter
         "new_business_by_stage": current["new_business_by_stage"],
         "renewals_by_stage": current["renewals_by_stage"],
@@ -737,7 +742,15 @@ def synthesize(
         "hard deals rotting in pipeline).\n\n"
         "FORECAST ACCURACY & SLIPPAGE: three datasets from the sf-audit FA "
         "dashboard (shipped 2026-04-29). `forecast_accuracy.rolling_8q_accuracy_pct` "
-        "= rolling 8Q actual-vs-forecast ARR ratio (target ≥ 80%). "
+        "= post-close actual-vs-forecast ARR ratio (target ≥ 80%). **CAVEAT: "
+        "the headline number is near-100% because it compares the forecast "
+        "field to actual ARR on the SAME closed deal — ARR is set contractually "
+        "at signing, so the forecast field is updated to match before close. "
+        "This is NOT real forecast accuracy (commit-called-at-start-of-Q vs "
+        "won-at-end-of-Q), which requires OpportunityFieldHistory snapshots "
+        "we haven't built. See `docs/FORECAST_ACCURACY_CAVEAT.md`. The "
+        "gameing-resistant metrics are the zombie ratio + push-count tail, "
+        "not the headline accuracy %.** "
         "`commit_at_risk.total_count`/`total_arr` = open commits flagged for "
         "slip risk right now (top regions in `by_region`). "
         "`slippage_push_count.by_push_count` = distribution of how many times "
@@ -1107,8 +1120,11 @@ def render_report(
         rolling = fa.get("rolling_8q_accuracy_pct", 0) or 0
         lines += [
             "",
-            f"**Rolling 8Q forecast accuracy: {rolling:.1f}%** "
-            f"(n={fa.get('rolling_8q_won_count', 0)} won deals)",
+            f"**Rolling 8Q post-close forecast accuracy: {rolling:.1f}%** "
+            f"(n={fa.get('rolling_8q_won_count', 0)} won deals) — "
+            f"**caveat: measures ARR-field vs actual ARR on closed deals, "
+            f"not commit-called-at-start vs won-at-end. Near-100% by "
+            f"construction. See docs/FORECAST_ACCURACY_CAVEAT.md.**",
             "",
             "| Fiscal Q | Won | Actual ARR | Forecast ARR | Accuracy |",
             "|---|---:|---:|---:|---:|",
@@ -1155,6 +1171,25 @@ def render_report(
                 f"| {row.get('push_count', '—')} | {row.get('count', 0)} | "
                 f"EUR {arr:,.0f} | {pct:.1f}% |"
             )
+
+    # Win-rate-conditional-on-stage — empirical funnel learned from
+    # OpportunityFieldHistory. Same data the weighted forecast uses;
+    # surfaced explicitly so directors see the per-stage close odds.
+    stage_probs_dict = sf_snapshot.get("stage_win_probabilities") or {}
+    if stage_probs_dict:
+        lines += [
+            "",
+            "### Stage win-rate funnel (empirical)",
+            "",
+            "*P(Won | currently at stage N), learned from `OpportunityFieldHistory` transitions L4Q. "
+            "NOT a N→N+1 progression rate — it's the conditional probability of eventually winning "
+            "given the deal's current stage. Used as the weighting factor in the empirical forecast.*",
+            "",
+            "| Stage | Win probability |",
+            "|---|---:|",
+        ]
+        for stage, prob in stage_probs_dict.items():
+            lines.append(f"| {stage} | {prob * 100:.1f}% |")
 
     lines += [
         "",

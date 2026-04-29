@@ -483,11 +483,68 @@ def _format_samples(records: list[dict], metric: str, extra: str | None = None) 
 
 # --- driver -----------------------------------------------------------------
 
+
+def zombie_book_concentration() -> dict[str, Any]:
+    """Per-rep zombie concentration — reps holding >EUR 5M of >2yr-old open
+    Land+Expand pipeline.
+
+    The pipeline_aging_365_plus alert is org-level (total zombie ARR);
+    this one names the OWNERS so directors get a per-rep coaching list.
+    The 2-year cutoff is stricter than the 1-year cutoff — only deals
+    that should DEFINITELY have closed long ago. Matches the
+    `Pipeline Age Distribution` widget's `2yr+` bucket on the
+    scorecard dashboard.
+
+    Triggers Critical at >EUR 5M absolute. Combined with the
+    Top Zombie Owners section in the brief, gives directors both the
+    threshold-flagged list (this alert) and the ranked-by-exposure list
+    (the brief section).
+    """
+    soql = (
+        "SELECT Owner.Name owner, COUNT(Id) num, SUM(APTS_Opportunity_ARR__c) zarr "
+        "FROM Opportunity "
+        "WHERE IsClosed = false AND Type IN ('Land','Expand') "
+        "AND CreatedDate < LAST_N_DAYS:730 "
+        f"{EXCLUDE_TEST_ARTIFACTS}{_ack_exclusion()} "
+        "GROUP BY Owner.Name "
+        "HAVING SUM(APTS_Opportunity_ARR__c) > 5000000 "
+        "ORDER BY SUM(APTS_Opportunity_ARR__c) DESC NULLS LAST"
+    )
+    rows = _sf(soql)
+    samples = [
+        {
+            "name": r.get("owner") or "?",
+            "stage": f"{r.get('num', 0)} opps · zombie",
+            "$arr": r.get("zarr") or 0,
+            "owner": r.get("owner") or "?",
+            "id": "—",
+        }
+        for r in rows[:5]
+    ]
+    total_arr = sum((r.get("zarr") or 0) for r in rows)
+    return {
+        "name": "Reps holding >EUR 5M zombie pipeline (>2yr open)",
+        "severity": "critical",
+        "rule": (
+            "Reps with > EUR 5M of open Land+Expand pipeline that's been open "
+            ">2 years. These are likely losses-in-pipeline hiding from the "
+            "win-rate denominator — direct gaming-detection. Per-rep coaching "
+            "priority. Caveat: raw multi-currency sum (Owner-grouped SOQL); "
+            "exact FX-correct figures live on the Sales Rep Scorecard "
+            "dashboard's Pipeline Age by Rep widget."
+        ),
+        "count": len(rows),
+        "total_arr": total_arr,
+        "samples": samples,
+    }
+
+
 ALERT_FUNCTIONS = [
     commercial_approval_gap_land,
     commercial_approval_gap_big,
     kyc_gap_late_stage,
     pipeline_aging_365_plus,
+    zombie_book_concentration,
     close_date_in_past,
     dec_31_placeholder_dates,
     deal_shaping_gap,
