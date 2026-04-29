@@ -39,8 +39,24 @@ SHEET_NAMES = [
 ]
 
 
-def build_director_excel(envelope: dict, out_path: Path) -> None:
-    """Build a 15-sheet xlsx for the director described in envelope."""
+def build_director_excel(
+    envelope: dict,
+    out_path: Path,
+    *,
+    snapshot: dict | None = None,
+    backtest: dict | None = None,
+) -> None:
+    """Build a 16-sheet xlsx for the director described in envelope.
+
+    Args:
+        envelope: trends.json envelope (locked, schema_version=2)
+        out_path: where to write the xlsx
+        snapshot: optional raw director snapshot from pull_director_snapshot
+                  — used to populate Top_Deals_Land / Top_Deals_Expand /
+                  Wins_Losses_QTD sheets that aren't part of the envelope
+        backtest: optional dict from state/forecast_backtest_q4.json
+                  — populates Forecast_Backtest sheet
+    """
     wb = Workbook()
     default = wb.active
     wb.remove(default)
@@ -121,15 +137,89 @@ def build_director_excel(envelope: dict, out_path: Path) -> None:
             italic=True, color="999999"
         )
 
-    # Sheets 5-12: scaffolded but populated only when forecast_backtest /
-    # snapshot_diff data is wired in (Phase 1.5.A.4 + .5).
+    # ── Top_Deals_Land + Top_Deals_Expand ──
+    # Two-column ranked list: stage + ARR. From the per-director SOQL
+    # snapshot (FX-correct via convertCurrency).
+    for sheet_name, source_key in [
+        ("Top_Deals_Land", "top_deals_land"),
+        ("Top_Deals_Expand", "top_deals_expand"),
+    ]:
+        ws = wb[sheet_name]
+        ws["A1"] = "#"
+        ws["B1"] = "Stage"
+        ws["C1"] = "ARR (EUR)"
+        for col in ("A1", "B1", "C1"):
+            ws[col].font = Font(bold=True)
+        deals = (snapshot or {}).get(source_key) or []
+        if deals:
+            for i, d_row in enumerate(deals, start=1):
+                ws.cell(row=i + 1, column=1, value=i)
+                ws.cell(row=i + 1, column=2, value=d_row.get("stage") or "")
+                ws.cell(row=i + 1, column=3, value=_fmt_meur(d_row.get("arr_eur") or 0))
+            ws.column_dimensions["A"].width = 4
+            ws.column_dimensions["B"].width = 24
+            ws.column_dimensions["C"].width = 14
+        else:
+            ws.cell(row=2, column=1, value="(no deals in scope this period)").font = Font(
+                italic=True, color="999999"
+            )
+
+    # ── Wins_Losses_QTD ──
+    ws = wb["Wins_Losses_QTD"]
+    ws["A1"] = "Outcome"
+    ws["B1"] = "Count"
+    ws["C1"] = "ARR (Land+Expand)"
+    ws["D1"] = "ACV (Renewal)"
+    for col in ("A1", "B1", "C1", "D1"):
+        ws[col].font = Font(bold=True)
+    wl = (snapshot or {}).get("wins_losses_qtd") or {}
+    if wl:
+        ws["A2"] = "Won"
+        ws["B2"] = wl.get("won_count", 0)
+        ws["C2"] = _fmt_meur(wl.get("won_arr_eur") or 0)
+        ws["D2"] = _fmt_meur(wl.get("won_acv_eur") or 0)
+        ws["A3"] = "Lost"
+        ws["B3"] = wl.get("lost_count", 0)
+        ws["C3"] = _fmt_meur(wl.get("lost_arr_eur") or 0)
+        ws["D3"] = _fmt_meur(wl.get("lost_acv_eur") or 0)
+        ws.column_dimensions["A"].width = 10
+        ws.column_dimensions["B"].width = 8
+        ws.column_dimensions["C"].width = 18
+        ws.column_dimensions["D"].width = 18
+    else:
+        ws.cell(row=2, column=1, value="(no closed deals this quarter)").font = Font(
+            italic=True, color="999999"
+        )
+
+    # ── Forecast_Backtest ──
+    # Forward-rate per stage, derived from 4 quarters of OpportunityFieldHistory
+    # by scripts/forecast_backtest.py. Backtest data is org-wide (not director-
+    # scoped) — these are population-level conversion rates.
+    ws = wb["Forecast_Backtest"]
+    ws["A1"] = "Stage transition"
+    ws["B1"] = "Forward rate"
+    ws["C1"] = "Note"
+    for col in ("A1", "B1", "C1"):
+        ws[col].font = Font(bold=True)
+    rates = (backtest or {}).get("forward_rates") or {}
+    if rates:
+        for i, (key, val) in enumerate(sorted(rates.items()), start=2):
+            stage_num = key.replace("stage_", "").replace("_forward_rate", "")
+            ws.cell(row=i, column=1, value=f"Stage {stage_num} -> next")
+            ws.cell(row=i, column=2, value=f"{val * 100:.1f}%")
+            ws.cell(row=i, column=3, value="org-wide rate, last 4 fiscal quarters")
+        ws.column_dimensions["A"].width = 22
+        ws.column_dimensions["B"].width = 14
+        ws.column_dimensions["C"].width = 40
+    else:
+        ws.cell(row=2, column=1, value="run scripts/forecast_backtest.py first").font = Font(
+            italic=True, color="999999"
+        )
+
+    # Sheets still scaffolded — populated once historical-snapshot infra exists
     placeholder_sheets = {
-        "Top_Deals_Land": "Top 10 Land deals - populate when sample-deal join is added",
-        "Top_Deals_Expand": "Top 10 Expand deals - same",
-        "Wins_Losses_QTD": "QTD wins + losses - populate from CloseDate window",
-        "ARR_Roll": "New + Expand + Churn ARR - populate from snapshot_diff",
-        "Retention": "NRR + GRR - populate from Wave Revenue_Retention_Health (when wired)",
-        "Forecast_Backtest": "4Q backtest - populate from forecast_backtest.py output",
+        "ARR_Roll": "New + Expand + Churn ARR - populate from Pipeline_Snapshot__c (deferred until snapshot infra deployed)",
+        "Retention": "NRR + GRR - populate from cohort math against historical snapshots (deferred)",
         "At_Risk_Renewals": "At-risk renewal accounts - populate when health-score join is added",
         "Competitive_Pressure": "Lost-to-competitor breakdown - populate from Lost_to_Competitor__c",
         "Territory_Performance": "Per-territory pipeline + wins - populate from Account.Region__c roll-up",

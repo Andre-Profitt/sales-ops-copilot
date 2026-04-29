@@ -128,10 +128,88 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
         for s, v in sorted(ren_acc.items())
     ]
 
+    # Top-10 deals per motion (Land, Expand) — for the Excel companion's
+    # Top_Deals_Land / Top_Deals_Expand sheets and slide 6 of the deck.
+    # Per AI Code of Conduct §8: per-deal data is OK for the director's
+    # own scope (descriptive); the deck/xlsx never leaves their hands.
+    top_deals_land: list[dict[str, Any]] = []
+    top_deals_expand: list[dict[str, Any]] = []
+    for r in sorted(
+        [r for r in rows if r.get("Type") in ("Land", "Expand")],
+        key=lambda r: float(r.get("arr_fx") or 0),
+        reverse=True,
+    ):
+        target = top_deals_land if r.get("Type") == "Land" else top_deals_expand
+        if len(target) < 10:
+            target.append(
+                {
+                    "stage": r.get("StageName") or "",
+                    "arr_eur": round(float(r.get("arr_fx") or 0), 2),
+                    "id": r.get("Id"),
+                }
+            )
+
+    # Wins / Losses QTD — closed-this-Q opps, FX-correct
+    wl_q = (
+        "SELECT Id, IsWon, Type, StageName, "
+        "convertCurrency(APTS_Opportunity_ARR__c) arr_fx, "
+        "convertCurrency(APTS_Renewal_ACV__c) acv_fx "
+        "FROM Opportunity "
+        f"WHERE IsClosed = true AND CloseDate = THIS_QUARTER "
+        f"AND {where_clause}"
+    )
+    try:
+        wl_rows = _sf_query(wl_q)
+    except Exception:
+        wl_rows = []
+    won_arr = round(
+        sum(
+            float(r.get("arr_fx") or 0)
+            for r in wl_rows
+            if r.get("IsWon") and r.get("Type") in ("Land", "Expand")
+        ),
+        2,
+    )
+    won_acv = round(
+        sum(
+            float(r.get("acv_fx") or 0)
+            for r in wl_rows
+            if r.get("IsWon") and r.get("Type") == "Renewal"
+        ),
+        2,
+    )
+    lost_arr = round(
+        sum(
+            float(r.get("arr_fx") or 0)
+            for r in wl_rows
+            if not r.get("IsWon") and r.get("Type") in ("Land", "Expand")
+        ),
+        2,
+    )
+    lost_acv = round(
+        sum(
+            float(r.get("acv_fx") or 0)
+            for r in wl_rows
+            if not r.get("IsWon") and r.get("Type") == "Renewal"
+        ),
+        2,
+    )
+    wins_losses_qtd = {
+        "won_count": sum(1 for r in wl_rows if r.get("IsWon")),
+        "lost_count": sum(1 for r in wl_rows if not r.get("IsWon")),
+        "won_arr_eur": won_arr,
+        "won_acv_eur": won_acv,
+        "lost_arr_eur": lost_arr,
+        "lost_acv_eur": lost_acv,
+    }
+
     return {
         "by_type": by_type,
         "new_business_by_stage": new_business_by_stage,
         "renewals_by_stage": renewals_by_stage,
+        "top_deals_land": top_deals_land,
+        "top_deals_expand": top_deals_expand,
+        "wins_losses_qtd": wins_losses_qtd,
         "totals": {
             "new_business_arr_open_this_quarter": round(
                 sum(t["arr"] for t in by_type if t["type"] in ("Land", "Expand")), 2
@@ -734,7 +812,15 @@ def main() -> int:
             envelope = derive_action_items(envelope, action_data)
             (out_dir / "trends.json").write_text(json.dumps(envelope, indent=2))
             (out_dir / "brief.md").write_text(render_director_brief(envelope))
-            build_director_excel(envelope, out_dir / "land.xlsx")
+            backtest_data = (
+                json.loads(backtest_path.read_text()) if backtest_path.exists() else None
+            )
+            build_director_excel(
+                envelope,
+                out_dir / "land.xlsx",
+                snapshot=sf,
+                backtest=backtest_data,
+            )
             print(
                 f"  Wrote {out_dir / 'trends.json'} + brief.md + land.xlsx "
                 f"({len(envelope.get('action_items') or [])} action items)"
