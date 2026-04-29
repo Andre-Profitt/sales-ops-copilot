@@ -119,6 +119,7 @@ def _sf_analytics_get(path: str) -> dict[str, Any]:
 # Live SF report IDs for FX-correct pulls used in the brief.
 PIPELINE_AGE_REPORT_ID = "00OTb000008ndGjMAI"  # Scorecard · Pipeline Age Distribution
 PIPELINE_AGE_BY_REP_REPORT_ID = "00OTb000008nfTdMAI"  # Scorecard · Pipeline Age by Rep
+CYCLE_LENGTH_REPORT_ID = "00OTb000008ngUXMAY"  # Scorecard · Sales Cycle Length 8Q
 
 
 def _quarter_bounds(today: dt.date, offset: int) -> tuple[dt.date, dt.date, str]:
@@ -256,17 +257,40 @@ def pull_salesforce_snapshot() -> dict[str, Any]:
     try:
         pipeline_age = pull_pipeline_age()
         zombie_owners = pull_zombie_owners(top_n=5)
+        cycle_length = pull_sales_cycle_length()
     except Exception as e:
         # Don't fail the whole brief if these reports can't be reached.
-        print(f"  [WARN] pipeline-age pull failed: {e}", file=sys.stderr)
+        print(f"  [WARN] pipeline-age/cycle pull failed: {e}", file=sys.stderr)
         pipeline_age = {}
         zombie_owners = []
+        cycle_length = {}
+
+    # Pipeline Velocity composite — the canonical RevOps single-number
+    # health metric. Caveat: built on the same count-based win rate as
+    # the Win Rate Trend widget, so it inherits the gameable-win-rate
+    # caveat. The zombie metric above is the antidote — read both.
+    try:
+        win_rate = pull_win_rate_l4q()
+        # Use TOTAL open L+E from the FX-correct pipeline_age dataset,
+        # not the current-quarter slice from `by_type`. Standard Pipeline
+        # Velocity measures throughput on the whole open book.
+        open_count = pipeline_age.get("total_count", 0) or 0
+        open_arr = pipeline_age.get("total_arr", 0) or 0
+        cycle_days = (
+            cycle_length.get("current_cycle_days", 0) or cycle_length.get("grand_avg_days", 0) or 0
+        )
+        velocity = compute_pipeline_velocity(open_count, open_arr, win_rate, cycle_days)
+    except Exception as e:
+        print(f"  [WARN] velocity compute failed: {e}", file=sys.stderr)
+        velocity = {}
 
     return {
         "by_type": by_type,
         "product_family_breakdown": product_family_breakdown,
         "pipeline_age": pipeline_age,
         "zombie_owners": zombie_owners,
+        "sales_cycle_length": cycle_length,
+        "pipeline_velocity": velocity,
         # Backward-compatible top-level fields = current quarter
         "new_business_by_stage": current["new_business_by_stage"],
         "renewals_by_stage": current["renewals_by_stage"],
@@ -366,6 +390,87 @@ def pull_pipeline_age() -> dict[str, Any]:
         "stale_1yr_plus_arr": one_yr_plus,
         "stale_1yr_plus_pct": (one_yr_plus / total_arr * 100) if total_arr else 0,
     }
+
+
+def pull_sales_cycle_length() -> dict[str, Any]:
+    """Pull won-deals avg cycle length (creation→close) from the SF report.
+
+    Returns the per-FQ trend over the last 8 fiscal quarters + the
+    grand-total org avg. Used for Pipeline Velocity composite and as a
+    survivor-bias signal (cycle length collapsing while win rate falls
+    + zombie ARR rises = easy deals winning fast, hard deals rotting).
+    """
+    r = _sf_analytics_get(f"/analytics/reports/{CYCLE_LENGTH_REPORT_ID}?includeDetails=false")
+    fact = r.get("factMap", {})
+    gd = r.get("groupingsDown", {}).get("groupings", [])
+    by_quarter = []
+    for g in gd:
+        key = g.get("key")
+        fq = g.get("label", "?")
+        cell = fact.get(f"{key}!T", {}).get("aggregates", [])
+        avg_days = cell[0].get("value", 0) if len(cell) > 0 else 0
+        won_count = cell[1].get("value", 0) if len(cell) > 1 else 0
+        by_quarter.append({"quarter": fq, "avg_days": avg_days, "won_count": won_count})
+    grand = fact.get("T!T", {}).get("aggregates", [])
+    grand_avg = grand[0].get("value", 0) if len(grand) > 0 else 0
+    grand_cnt = grand[1].get("value", 0) if len(grand) > 1 else 0
+    # Most-recent quarter with non-trivial volume = current cycle length;
+    # use the latest non-current-quarter (Q-1) to avoid in-progress noise.
+    current_cycle = (
+        by_quarter[-2]["avg_days"]
+        if len(by_quarter) >= 2 and by_quarter[-2]["won_count"] > 50
+        else (by_quarter[-1]["avg_days"] if by_quarter else 0)
+    )
+    return {
+        "by_quarter": by_quarter,
+        "grand_avg_days": grand_avg,
+        "grand_won_count": int(grand_cnt),
+        "current_cycle_days": current_cycle,
+    }
+
+
+def compute_pipeline_velocity(
+    open_count: int, open_arr: float, win_rate_pct: float, cycle_days: float
+) -> dict[str, float]:
+    """Pipeline Velocity = (# open opps × avg deal × win rate) / cycle length.
+
+    The composite RevOps metric — multiplies all four levers. When it
+    drops, drill into which input changed.
+
+    Returns the velocity (units: ARR per day) plus the four input
+    components for diagnosis.
+    """
+    avg_deal = open_arr / open_count if open_count else 0
+    velocity = (open_count * avg_deal * (win_rate_pct / 100)) / cycle_days if cycle_days else 0
+    return {
+        "velocity_arr_per_day": velocity,
+        "open_count": open_count,
+        "avg_deal": avg_deal,
+        "win_rate_pct": win_rate_pct,
+        "cycle_days": cycle_days,
+    }
+
+
+def pull_win_rate_l4q() -> float:
+    """Empirical win rate L4Q (last 365 days, Land+Expand only).
+
+    Returns win rate as a percentage. SOQL count-based — the absolute
+    deal counts are integers (not currency) so multi-currency
+    aggregation rules don't apply.
+    """
+    soql_won = (
+        "SELECT COUNT(Id) ct FROM Opportunity WHERE IsClosed=true AND IsWon=true "
+        "AND Type IN ('Land','Expand') AND CloseDate >= LAST_N_DAYS:365"
+    )
+    soql_total = (
+        "SELECT COUNT(Id) ct FROM Opportunity WHERE IsClosed=true "
+        "AND Type IN ('Land','Expand') AND CloseDate >= LAST_N_DAYS:365"
+    )
+    won_recs = _sf_query(soql_won)
+    total_recs = _sf_query(soql_total)
+    won = (won_recs[0].get("ct") if won_recs else 0) or 0
+    total = (total_recs[0].get("ct") if total_recs else 0) or 0
+    return (won / total * 100) if total else 0
 
 
 def pull_zombie_owners(top_n: int = 5) -> list[dict[str, Any]]:
@@ -500,6 +605,14 @@ def synthesize(
         "These are the highest-leverage 1:1 coaching priorities. Call out the "
         "single worst by `zombie_pct` (gaming ratio) AND the worst by "
         "`zombie_arr` (absolute exposure) — usually different reps.\n\n"
+        "PIPELINE VELOCITY: `pipeline_velocity` is the composite RevOps KPI: "
+        "(# open opps × avg deal × win rate) / cycle length. Quote it as EUR/day "
+        "and call out which input is moving most (open count, avg deal, win rate, "
+        "or cycle length). NOTE: shares the gameable-win-rate caveat — read "
+        "alongside zombie ratio. `sales_cycle_length.by_quarter` shows the "
+        "trend; if cycle length is collapsing while win rate falls + zombie ARR "
+        "rises, that's the survivor-bias signature (easy deals winning fast, "
+        "hard deals rotting in pipeline).\n\n"
         "Produce a tight executive brief — 300-500 words max — with these sections:\n"
         "1) Current-quarter state — open vs weighted ARR (Land+Expand) and ACV (Renewal); "
         "include a one-line sub-callout on where the ARR sits by product line (top 1-2 families)\n"
@@ -761,6 +874,44 @@ def render_report(
         for i, p in enumerate(pfb, 1):
             arr = p.get("arr_open") or 0
             lines.append(f"| {i} | {p.get('family', '—')} | {p.get('num_opps', 0)} | ${arr:,.0f} |")
+
+    # Pipeline Velocity composite — the single canonical RevOps KPI
+    # combining all four levers: # opps × avg deal × win rate / cycle.
+    # Caveat: shares the gameable-win-rate caveat with the Win Rate
+    # Trend widget. Read together with the zombie ratio below.
+    velocity = sf_snapshot.get("pipeline_velocity") or {}
+    cycle_length = sf_snapshot.get("sales_cycle_length") or {}
+    if velocity:
+        v = velocity.get("velocity_arr_per_day", 0) or 0
+        oc = velocity.get("open_count", 0) or 0
+        ad = velocity.get("avg_deal", 0) or 0
+        wr = velocity.get("win_rate_pct", 0) or 0
+        cd = velocity.get("cycle_days", 0) or 0
+        lines += [
+            "",
+            "### Pipeline Velocity (composite RevOps KPI)",
+            "",
+            f"**EUR {v:,.0f} per day** "
+            f"= {oc} open opps × EUR {ad:,.0f} avg deal × {wr:.1f}% win rate "
+            f"÷ {cd:.0f}d cycle length.",
+            "",
+            "_Caveat — shares the gameable-win-rate problem: deals indefinitely "
+            "pushed never enter the won/lost denominator. Read alongside the "
+            "zombie ratio below for the full picture._",
+        ]
+        if cycle_length.get("by_quarter"):
+            lines += [
+                "",
+                "**Cycle length trend (won-deals avg days from creation→close):**",
+                "",
+                "| Fiscal Q | Won | Avg cycle (days) |",
+                "|---|---:|---:|",
+            ]
+            for q in cycle_length.get("by_quarter", []):
+                lines.append(
+                    f"| {q.get('quarter', '—')} | {q.get('won_count', 0)} | "
+                    f"{q.get('avg_days', 0):.0f} d |"
+                )
 
     # Pipeline health — FX-correct via SF report aggregation.
     # The antidote to gameable win-rate metrics: deals indefinitely
