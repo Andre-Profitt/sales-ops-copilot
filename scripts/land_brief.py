@@ -313,27 +313,30 @@ def _pull_zombie_for_director(where_clause: str) -> dict[str, Any]:
 
 
 def _pull_coverage_gap_for_director(where_clause: str) -> dict[str, Any]:
-    """Tier-1 accounts in director scope with no open opp in 90d.
+    """Tier-1 accounts in director scope with no open Land+Expand opp in 90d.
+
+    The intent of "coverage gap" is "no new-business pipeline" — a Renewal
+    in flight does NOT count as coverage. So the subquery is scoped to
+    Type IN ('Land','Expand'). Per the SimCorp ARR/ACV split rule.
 
     Translates the Opportunity-side where_clause to an Account-side scope
     via the same Region__c / BillingCountry / Industry filters.
     """
-    # Strip the "Account." prefix so we can use the same conditions on Account
-    # directly.
     acct_where = where_clause.replace("Account.", "")
     q = (
         "SELECT Id, Name FROM Account "
         f"WHERE Tier_Calculation__c = 'Tier 1' AND ({acct_where}) "
         "AND Id NOT IN ("
         "SELECT AccountId FROM Opportunity "
-        "WHERE IsClosed = false AND CreatedDate >= LAST_N_DAYS:90"
+        "WHERE IsClosed = false "
+        "AND Type IN ('Land','Expand') "
+        "AND CreatedDate >= LAST_N_DAYS:90"
         ")"
     )
     try:
         rows = _sf_query(q)
         return {"count": len(rows), "sample_accounts": [r.get("Name") for r in rows[:3]]}
     except Exception:
-        # Some director scope clauses may not translate cleanly to Account.* fields
         return {"count": 0, "sample_accounts": [], "_skipped": True}
 
 
@@ -360,12 +363,20 @@ def _pull_approval_gap_for_director(where_clause: str) -> dict[str, Any]:
 
 
 def _pull_activity_drought_for_director(where_clause: str) -> dict[str, Any]:
-    """This-Q open opps with no Task/Event activity in last 30d."""
+    """This-Q open Land+Expand opps with no Task/Event activity in last 30d.
+
+    Type-scoped to Land+Expand so the count and the ARR claim line up — a
+    Renewal opp in this list would inflate the count while contributing
+    EUR 0 to the ARR sum (per the APTS_Opportunity_ARR__c formula that
+    zeros it out for Renewal sub-types). For Renewal activity drought,
+    add a separate rule that uses ACV.
+    """
     q = (
         "SELECT Id, "
         "convertCurrency(APTS_Opportunity_ARR__c) arr_fx "
         "FROM Opportunity "
         f"WHERE IsClosed = false AND {where_clause} "
+        "AND Type IN ('Land','Expand') "
         "AND CloseDate = THIS_QUARTER "
         "AND Id NOT IN (SELECT WhatId FROM Task WHERE ActivityDate >= LAST_N_DAYS:30) "
         "AND Id NOT IN (SELECT WhatId FROM Event WHERE ActivityDate >= LAST_N_DAYS:30)"
@@ -455,7 +466,7 @@ def derive_action_items(envelope: dict, action_data: dict) -> dict:
             {
                 "rule_id": "coverage_gap",
                 "priority": "medium",
-                "claim": f"{cg['count']} Tier-1 accounts in your territory with no open opp in 90d",
+                "claim": f"{cg['count']} Tier-1 accounts in your territory with no open Land/Expand opp in 90d",
                 "suggested_action": "Run an account-coverage review with reps; assign opener "
                 "responsibility for each starved Tier-1.",
                 "evidence": [
@@ -515,7 +526,7 @@ def derive_action_items(envelope: dict, action_data: dict) -> dict:
             {
                 "rule_id": "activity_drought",
                 "priority": "medium",
-                "claim": f"{ad['count']} this-quarter open opps with no activity in 30d "
+                "claim": f"{ad['count']} this-quarter open Land/Expand opps with no activity in 30d "
                 f"(EUR {ad.get('total_arr_eur', 0):,.0f} ARR)",
                 "suggested_action": "Reset 14-day activity SLA with reps; require one logged "
                 "Task/Event per opp every 14 days to maintain forecast credibility.",
