@@ -389,32 +389,120 @@ def build_director_excel(
             row=2, column=1, value="(no Land/Expand wins in last 6 months for this director)"
         ).font = Font(italic=True, color="999999")
 
-    # Retention sheet stays placeholder until the cohort math is wired against
-    # Pipeline_Snapshot__c historical data (needs admin metadata deploy first).
+    # ── Retention ── GRR proxy from closed Renewal opps last 12 months
     ws = wb["Retention"]
-    ws["A1"] = (
-        "GRR + NRR — populate from Pipeline_Snapshot__c cohort math once the "
-        "Reporting Snapshot has accumulated 12+ months of history. See "
-        "docs/REPORTING_SNAPSHOTS.md for setup status."
-    )
-    ws["A1"].font = Font(italic=True, color="999999")
+    ws["A1"] = "Metric"
+    ws["B1"] = "Value"
+    ws["C1"] = "Note"
+    for col in ("A1", "B1", "C1"):
+        ws[col].font = Font(bold=True)
+    ret = (snapshot or {}).get("retention") or {}
+    if ret:
+        ws["A2"] = "Won Renewal ACV (L12M)"
+        ws["B2"] = _fmt_meur(ret.get("won_renewal_acv_eur_l12m") or 0)
+        ws["C2"] = f"{ret.get('won_count', 0)} renewals won"
+        ws["A3"] = "Lost Renewal ACV (L12M)"
+        ws["B3"] = _fmt_meur(ret.get("lost_renewal_acv_eur_l12m") or 0)
+        ws["C3"] = f"{ret.get('lost_count', 0)} renewals lost"
+        ws["A4"] = "GRR proxy"
+        ws["B4"] = f"{ret.get('grr_proxy_pct', 0):.1f}%"
+        ws["C4"] = "Won ACV / (Won + Lost ACV) — Renewals only, last 12 months"
+        ws["A6"] = "NRR"
+        ws["B6"] = "—"
+        ws["C6"] = (
+            "True NRR (incl. expansion uplift on existing accounts) requires "
+            "cohort math against historical snapshots — deferred until "
+            "Pipeline_Snapshot__c accumulates 12+ months of history."
+        )
+        ws["A6"].font = Font(italic=True, color="666666")
+        ws["B6"].font = Font(italic=True, color="666666")
+        ws["C6"].font = Font(italic=True, color="666666")
+        ws.column_dimensions["A"].width = 28
+        ws.column_dimensions["B"].width = 16
+        ws.column_dimensions["C"].width = 70
+    else:
+        ws.cell(
+            row=2, column=1, value="(no Renewal opps closed in last 12 months for this director)"
+        ).font = Font(italic=True, color="999999")
 
-    # Trend_MoM, Trend_QoQ - empty for now (filled by snapshot_diff wiring in Phase 1.5.A.5)
-    for trend_sheet in ("Trend_MoM", "Trend_QoQ"):
-        ws = wb[trend_sheet]
-        ws["A1"] = "KPI"
-        ws["B1"] = "Value"
-        ws["C1"] = f"Delta {trend_sheet.split('_')[1]} %"
-        for col in ("A1", "B1", "C1"):
-            ws[col].font = Font(bold=True)
-        row = 2
-        for k in envelope["kpis"]:
-            ws.cell(row=row, column=1, value=k["name"])
-            ws.cell(
-                row=row, column=2, value=_fmt_meur(k["value"]) if k["unit"] == "EUR" else k["value"]
-            )
-            ws.cell(row=row, column=3, value="-")
-            row += 1
+    # ── Trend_MoM ── month-over-month booked ARR from arr_roll (last 6 months)
+    ws = wb["Trend_MoM"]
+    ws["A1"] = "Month"
+    ws["B1"] = "# Won"
+    ws["C1"] = "Booked ARR"
+    ws["D1"] = "Δ MoM"
+    for col in ("A1", "B1", "C1", "D1"):
+        ws[col].font = Font(bold=True)
+    roll = (snapshot or {}).get("arr_roll") or []
+    if roll:
+        prev_arr: float | None = None
+        for i, r in enumerate(roll, start=1):
+            cur = float(r.get("arr_eur") or 0)
+            ws.cell(row=i + 1, column=1, value=r.get("month") or "")
+            ws.cell(row=i + 1, column=2, value=r.get("num_opps") or 0)
+            ws.cell(row=i + 1, column=3, value=_fmt_meur(cur))
+            if prev_arr is not None and prev_arr > 0:
+                pct = (cur - prev_arr) / prev_arr * 100
+                ws.cell(row=i + 1, column=4, value=f"{pct:+.0f}%")
+            else:
+                ws.cell(row=i + 1, column=4, value="—")
+            prev_arr = cur
+        ws.column_dimensions["A"].width = 10
+        ws.column_dimensions["B"].width = 8
+        ws.column_dimensions["C"].width = 14
+        ws.column_dimensions["D"].width = 10
+    else:
+        ws.cell(
+            row=2, column=1, value="(no Land/Expand wins in last 6 months for this director)"
+        ).font = Font(italic=True, color="999999")
+
+    # ── Trend_QoQ ── roll arr_roll up to fiscal quarters (calendar Q for now)
+    ws = wb["Trend_QoQ"]
+    ws["A1"] = "Quarter"
+    ws["B1"] = "# Won"
+    ws["C1"] = "Booked ARR"
+    ws["D1"] = "Δ QoQ"
+    for col in ("A1", "B1", "C1", "D1"):
+        ws[col].font = Font(bold=True)
+    if roll:
+        # Bucket months into calendar quarters (YYYY-Q1..Q4)
+        from collections import OrderedDict
+
+        q_acc: OrderedDict[str, dict[str, float]] = OrderedDict()
+        for r in roll:
+            ym = r.get("month") or ""
+            if len(ym) < 7:
+                continue
+            year, month_str = ym.split("-")
+            try:
+                month = int(month_str)
+            except ValueError:
+                continue
+            q_idx = (month - 1) // 3 + 1
+            qkey = f"{year}-Q{q_idx}"
+            bucket = q_acc.setdefault(qkey, {"num_opps": 0, "arr_eur": 0.0})
+            bucket["num_opps"] += int(r.get("num_opps") or 0)
+            bucket["arr_eur"] += float(r.get("arr_eur") or 0)
+        prev_arr = None
+        for i, (qk, v) in enumerate(q_acc.items(), start=1):
+            cur = v["arr_eur"]
+            ws.cell(row=i + 1, column=1, value=qk)
+            ws.cell(row=i + 1, column=2, value=int(v["num_opps"]))
+            ws.cell(row=i + 1, column=3, value=_fmt_meur(cur))
+            if prev_arr is not None and prev_arr > 0:
+                pct = (cur - prev_arr) / prev_arr * 100
+                ws.cell(row=i + 1, column=4, value=f"{pct:+.0f}%")
+            else:
+                ws.cell(row=i + 1, column=4, value="—")
+            prev_arr = cur
+        ws.column_dimensions["A"].width = 10
+        ws.column_dimensions["B"].width = 8
+        ws.column_dimensions["C"].width = 14
+        ws.column_dimensions["D"].width = 10
+    else:
+        ws.cell(
+            row=2, column=1, value="(no quarterly trend data — fewer than 6 months of wins)"
+        ).font = Font(italic=True, color="999999")
 
     # ── Process_Standards ──
     # Verbatim references from the SimCorp Commercial Handbook so the

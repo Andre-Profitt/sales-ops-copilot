@@ -279,6 +279,32 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
         reverse=True,
     )
 
+    # Retention (GRR proxy): closed-won Renewal ACV / closed-Renewal ACV last
+    # 12 months. True NRR (with expansion uplift) needs cohort snapshots that
+    # we don't have yet — deferred until Pipeline_Snapshot__c accumulates.
+    ret_q = (
+        "SELECT Id, IsWon, "
+        "convertCurrency(APTS_Renewal_ACV__c) acv_fx "
+        "FROM Opportunity "
+        "WHERE IsClosed = true AND Type = 'Renewal' "
+        "AND CloseDate >= LAST_N_DAYS:365 "
+        f"AND {where_clause}"
+    )
+    try:
+        ret_rows = _sf_query(ret_q)
+    except Exception:
+        ret_rows = []
+    won_acv = round(sum(float(r.get("acv_fx") or 0) for r in ret_rows if r.get("IsWon")), 2)
+    lost_acv = round(sum(float(r.get("acv_fx") or 0) for r in ret_rows if not r.get("IsWon")), 2)
+    grr_proxy = round(100.0 * won_acv / (won_acv + lost_acv), 1) if (won_acv + lost_acv) else 0.0
+    retention = {
+        "won_renewal_acv_eur_l12m": won_acv,
+        "lost_renewal_acv_eur_l12m": lost_acv,
+        "grr_proxy_pct": grr_proxy,
+        "won_count": sum(1 for r in ret_rows if r.get("IsWon")),
+        "lost_count": sum(1 for r in ret_rows if not r.get("IsWon")),
+    }
+
     # ARR_Roll: closed-won Land+Expand booked ARR by month, last 6 months.
     # Approximation of the booked-ARR roll-up that would otherwise come from
     # historical snapshots. FX-correct via per-record convertCurrency.
@@ -318,6 +344,7 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
         "at_risk_renewals": at_risk_renewals,
         "competitive_pressure": competitive_pressure,
         "arr_roll": arr_roll,
+        "retention": retention,
         "totals": {
             "new_business_arr_open_this_quarter": round(
                 sum(t["arr"] for t in by_type if t["type"] in ("Land", "Expand")), 2
