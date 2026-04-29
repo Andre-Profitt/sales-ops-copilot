@@ -146,7 +146,7 @@ def audit_reports(folder_id: str | None) -> list[dict[str, Any]]:
             "metadata": {
                 **base_meta,
                 "name": "Audit · Stuck-Created Contracts",
-                "description": "Standard Contract objects in Status='Created' for >30 days — likely abandoned. 13,904 records identified by sf_audit/dq.py.",
+                "description": "Standard Contract objects in Status='Created' for >30 days; likely abandoned. 13,904 records identified by sf_audit/dq.py.",
                 "reportFormat": "TABULAR",
                 "reportType": {"type": "ContractList"},
                 "reportFilters": [
@@ -178,7 +178,7 @@ def audit_reports(folder_id: str | None) -> list[dict[str, Any]]:
             "metadata": {
                 **base_meta,
                 "name": "Audit · Past-Close Open Opportunities",
-                "description": "Opps with CloseDate<TODAY but IsClosed=false — slipped without status update.",
+                "description": "Opps with CloseDate<TODAY but IsClosed=false; slipped without status update.",
                 "reportFormat": "TABULAR",
                 "reportType": {"type": "Opportunity"},
                 "reportFilters": [
@@ -194,7 +194,7 @@ def audit_reports(folder_id: str | None) -> list[dict[str, Any]]:
             "metadata": {
                 **base_meta,
                 "name": "Audit · Stale Open Opportunities (>120d)",
-                "description": "Open opps with CreatedDate >120d ago (target threshold). KPI median age in this org is 258d — 2x over.",
+                "description": "Open opps with CreatedDate >120d ago (target threshold). KPI median age in this org is 258d, 2x over.",
                 "reportFormat": "TABULAR",
                 "reportType": {"type": "Opportunity"},
                 "reportFilters": [
@@ -210,7 +210,7 @@ def audit_reports(folder_id: str | None) -> list[dict[str, Any]]:
             "metadata": {
                 **base_meta,
                 "name": "Audit · Contacts Missing Email",
-                "description": "Contacts where Email is null — can't be reached via email. ~13.7K records.",
+                "description": "Contacts where Email is null; cannot be reached via email. ~13.7K records.",
                 "reportFormat": "TABULAR",
                 "reportType": {"type": "ContactList"},
                 "reportFilters": [_filter("EMAIL", "equals", "")],
@@ -223,7 +223,7 @@ def audit_reports(folder_id: str | None) -> list[dict[str, Any]]:
             "metadata": {
                 **base_meta,
                 "name": "Audit · Owner-Inactive Cases",
-                "description": "Open Cases with deactivated owner — work that no one is tracking. ~88K records.",
+                "description": "Open Cases with deactivated owner; work that no one is tracking. ~88K records.",
                 "reportFormat": "TABULAR",
                 "reportType": {"type": "CaseList"},
                 "reportFilters": [_filter("OWNER.IsActive", "equals", "0")],

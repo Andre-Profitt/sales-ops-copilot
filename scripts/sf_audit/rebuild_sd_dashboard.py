@@ -101,7 +101,7 @@ def make_component(
 NEW_COMPONENTS = [
     make_component(
         title="Lost ARR This Quarter (L+E)",
-        header="Lost ARR — by Stage Where Lost",
+        header="Lost ARR by Stage Where Lost",
         report_id="00OTb000008msSvMAI",
         grouping_name="STAGE_NAME",
         visualization="Bar",
@@ -109,7 +109,7 @@ NEW_COMPONENTS = [
     ),
     make_component(
         title="Pipeline ARR by Owner (this-Q L+E)",
-        header="Pipeline Concentration — by Owner",
+        header="Pipeline Concentration by Owner",
         report_id="00OTb000008msPhMAI",
         grouping_name="FULL_NAME",
         visualization="Bar",
@@ -117,7 +117,7 @@ NEW_COMPONENTS = [
     ),
     make_component(
         title="New Opps Created Last Month",
-        header="Pipeline Velocity — by Type",
+        header="Pipeline Velocity by Type",
         report_id="00OTb000008msW9MAI",
         grouping_name="TYPE",
         visualization="Pie",
@@ -125,7 +125,7 @@ NEW_COMPONENTS = [
     ),
     make_component(
         title="Stage 3+ Opps Created This Month",
-        header="Governance Volume — Stage 3+ entry",
+        header="Governance Volume: Stage 3+ entry",
         report_id="00OTb000008msZNMAY",
         grouping_name="STAGE_NAME",
         visualization="Bar",
