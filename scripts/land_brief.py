@@ -362,6 +362,47 @@ def _pull_approval_gap_for_director(where_clause: str) -> dict[str, Any]:
     }
 
 
+def _pull_simcorp_one_share_for_director(where_clause: str) -> dict[str, Any]:
+    """SimCorp One (Standard Platform) attach rate within director's open
+    Land+Expand pipeline.
+
+    Defines "SimCorp One opp" as any open Land/Expand opp that has a
+    `Standard Platform` line item attached (via OpportunityLineItem +
+    Product2.Name). Returns total open Land+Expand count + SP-attached
+    count + ratio. Use the ratio to drive the action: < 30% triggers a
+    platform-selling motion review.
+    """
+    # Total open L+E opps in director scope
+    total_q = (
+        "SELECT COUNT(Id) n FROM Opportunity "
+        f"WHERE IsClosed = false AND {where_clause} "
+        "AND Type IN ('Land','Expand')"
+    )
+    total = _sf_query(total_q)
+    total_count = int((total[0].get("n") if total else 0) or 0)
+
+    # Subset that has a 'Standard Platform' line item — uses IN-subquery
+    # against OpportunityLineItem.
+    sp_q = (
+        "SELECT Id FROM Opportunity "
+        f"WHERE IsClosed = false AND {where_clause} "
+        "AND Type IN ('Land','Expand') "
+        "AND Id IN ("
+        "SELECT OpportunityId FROM OpportunityLineItem "
+        "WHERE Product2.Name = 'Standard Platform'"
+        ")"
+    )
+    sp_rows = _sf_query(sp_q)
+    sp_count = len(sp_rows)
+
+    pct = round(100.0 * sp_count / total_count, 1) if total_count else 0.0
+    return {
+        "total_count": total_count,
+        "sp_count": sp_count,
+        "share_pct": pct,
+    }
+
+
 def _pull_activity_drought_for_director(where_clause: str) -> dict[str, Any]:
     """This-Q open Land+Expand opps with no Task/Event activity in last 30d.
 
@@ -401,6 +442,7 @@ def pull_director_action_data(director: dict) -> dict[str, Any]:
         ("zombie", _pull_zombie_for_director),
         ("coverage_gap", _pull_coverage_gap_for_director),
         ("approval_gap", _pull_approval_gap_for_director),
+        ("simcorp_one_share", _pull_simcorp_one_share_for_director),
         ("activity_drought", _pull_activity_drought_for_director),
     ]:
         try:
@@ -495,7 +537,32 @@ def derive_action_items(envelope: dict, action_data: dict) -> dict:
             }
         )
 
-    # Rule 4: Late-stage concentration < 30% — already computed in highlights_risks
+    # Rule 4: SimCorp One attach rate < 30% in open Land+Expand pipeline.
+    # SimCorp One = the Standard Platform core product. Sub-30% attach means
+    # the territory is selling adjuncts/modules without the platform anchor.
+    sp = action_data.get("simcorp_one_share") or {}
+    if (sp.get("total_count") or 0) >= 5 and sp.get("share_pct", 100) < 30:
+        items.append(
+            {
+                "rule_id": "simcorp_one_attach_low",
+                "priority": "medium",
+                "claim": f"only {sp.get('share_pct', 0):.0f}% of open Land/Expand opps "
+                f"({sp.get('sp_count', 0)} of {sp.get('total_count', 0)}) attach Standard "
+                "Platform — SimCorp One penetration is thin",
+                "suggested_action": "Review platform-led selling motion with reps; identify "
+                "5-10 module-only opps where Standard Platform should be added before next "
+                "stage gate. Pair with the SimCorp One product team if needed.",
+                "evidence": [
+                    f"sp_count={sp.get('sp_count', 0)}",
+                    f"total_count={sp.get('total_count', 0)}",
+                    f"share_pct={sp.get('share_pct', 0)}",
+                ],
+                "owner": owner,
+                "due_date": due,
+            }
+        )
+
+    # Rule 5: Late-stage concentration < 30% — already computed in highlights_risks
     kpis = envelope["kpis"]
     total = next((k for k in kpis if k["name"] == "total_pipeline_arr"), None)
     stages = [k for k in kpis if k["name"].startswith("pipeline_arr_stage_")]
