@@ -80,7 +80,8 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
     # Also pull Account.BillingCountry + Risk for downstream sheets
     # (Territory_Performance + At_Risk_Renewals).
     detail_q = (
-        "SELECT Id, Type, StageName, "
+        "SELECT Id, Type, StageName, CreatedDate, "
+        "Owner.Name, "
         "Account.Name, Account.BillingCountry, "
         "Account.Risk_of_Potential_Termination__c, "
         "convertCurrency(APTS_Opportunity_ARR__c) arr_fx, "
@@ -333,6 +334,80 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
         for k, v in sorted(roll_acc.items())
     ]
 
+    # Top_Accounts: top 10 accounts by open Land+Expand ARR (account-level
+    # aggregate, different from Top_Deals which is per-opp).
+    acct_acc: dict[str, dict[str, float]] = {}
+    for r in rows:
+        if r.get("Type") not in ("Land", "Expand"):
+            continue
+        acct = (r.get("Account") or {}).get("Name") or "(unknown)"
+        bucket = acct_acc.setdefault(acct, {"num_opps": 0, "arr_eur": 0.0})
+        bucket["num_opps"] += 1
+        bucket["arr_eur"] += float(r.get("arr_fx") or 0)
+    top_accounts = sorted(
+        [
+            {"account": k, "num_opps": int(v["num_opps"]), "arr_eur": round(v["arr_eur"], 2)}
+            for k, v in acct_acc.items()
+        ],
+        key=lambda x: x["arr_eur"],
+        reverse=True,
+    )[:10]
+
+    # Pipeline_Aging: 5 age buckets via CreatedDate. ARR-weighted distribution.
+    today_d = dt.date.today()
+    aging_buckets: dict[str, dict[str, float]] = {
+        "0-30 days": {"num_opps": 0, "arr_eur": 0.0},
+        "31-90 days": {"num_opps": 0, "arr_eur": 0.0},
+        "91-180 days": {"num_opps": 0, "arr_eur": 0.0},
+        "181-365 days": {"num_opps": 0, "arr_eur": 0.0},
+        "365+ days": {"num_opps": 0, "arr_eur": 0.0},
+    }
+    for r in rows:
+        if r.get("Type") not in ("Land", "Expand"):
+            continue
+        cd = r.get("CreatedDate") or ""
+        if len(cd) < 10:
+            continue
+        try:
+            created = dt.date.fromisoformat(cd[:10])
+            age = (today_d - created).days
+        except Exception:
+            continue
+        if age <= 30:
+            key = "0-30 days"
+        elif age <= 90:
+            key = "31-90 days"
+        elif age <= 180:
+            key = "91-180 days"
+        elif age <= 365:
+            key = "181-365 days"
+        else:
+            key = "365+ days"
+        aging_buckets[key]["num_opps"] += 1
+        aging_buckets[key]["arr_eur"] += float(r.get("arr_fx") or 0)
+    pipeline_aging = [
+        {"bucket": k, "num_opps": int(v["num_opps"]), "arr_eur": round(v["arr_eur"], 2)}
+        for k, v in aging_buckets.items()
+    ]
+
+    # By_Owner: pipeline rollup by Owner.Name within director scope.
+    owner_acc: dict[str, dict[str, float]] = {}
+    for r in rows:
+        if r.get("Type") not in ("Land", "Expand"):
+            continue
+        owner = (r.get("Owner") or {}).get("Name") or "(unknown)"
+        bucket = owner_acc.setdefault(owner, {"num_opps": 0, "arr_eur": 0.0})
+        bucket["num_opps"] += 1
+        bucket["arr_eur"] += float(r.get("arr_fx") or 0)
+    by_owner = sorted(
+        [
+            {"owner": k, "num_opps": int(v["num_opps"]), "arr_eur": round(v["arr_eur"], 2)}
+            for k, v in owner_acc.items()
+        ],
+        key=lambda x: x["arr_eur"],
+        reverse=True,
+    )
+
     return {
         "by_type": by_type,
         "new_business_by_stage": new_business_by_stage,
@@ -345,6 +420,9 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
         "competitive_pressure": competitive_pressure,
         "arr_roll": arr_roll,
         "retention": retention,
+        "top_accounts": top_accounts,
+        "pipeline_aging": pipeline_aging,
+        "by_owner": by_owner,
         "totals": {
             "new_business_arr_open_this_quarter": round(
                 sum(t["arr"] for t in by_type if t["type"] in ("Land", "Expand")), 2
@@ -950,10 +1028,13 @@ def main() -> int:
             backtest_data = (
                 json.loads(backtest_path.read_text()) if backtest_path.exists() else None
             )
+            # Merge action_data (which has simcorp_one_share + others) into the
+            # snapshot dict so excel_companion can populate the SimCorp_One sheet.
+            sf_with_actions = {**sf, "simcorp_one": action_data.get("simcorp_one_share") or {}}
             build_director_excel(
                 envelope,
                 out_dir / "land.xlsx",
-                snapshot=sf,
+                snapshot=sf_with_actions,
                 backtest=backtest_data,
             )
             print(

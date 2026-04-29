@@ -26,6 +26,10 @@ SHEET_NAMES = [
     "Action_Items",
     "Top_Deals_Land",
     "Top_Deals_Expand",
+    "Top_Accounts",
+    "By_Owner",
+    "Pipeline_Aging",
+    "Weighted_Forecast",
     "Wins_Losses_QTD",
     "ARR_Roll",
     "Retention",
@@ -33,6 +37,7 @@ SHEET_NAMES = [
     "At_Risk_Renewals",
     "Competitive_Pressure",
     "Territory_Performance",
+    "SimCorp_One",
     "Trend_MoM",
     "Trend_QoQ",
     "Process_Standards",
@@ -450,6 +455,136 @@ def build_director_excel(
         ws.cell(row=2, column=1, value="run scripts/forecast_backtest.py first").font = Font(
             italic=True, color="999999"
         )
+
+    # ── Top_Accounts ── account-level rollup of open Land+Expand ARR
+    ws = wb["Top_Accounts"]
+    ws["A1"] = "#"
+    ws["B1"] = "Account"
+    ws["C1"] = "# Open opps"
+    ws["D1"] = "Open ARR"
+    for col in ("A1", "B1", "C1", "D1"):
+        ws[col].font = Font(bold=True)
+    accts = (snapshot or {}).get("top_accounts") or []
+    if accts:
+        for i, a in enumerate(accts, start=1):
+            ws.cell(row=i + 1, column=1, value=i)
+            ws.cell(row=i + 1, column=2, value=a.get("account") or "(unknown)")
+            ws.cell(row=i + 1, column=3, value=a.get("num_opps") or 0)
+            ws.cell(row=i + 1, column=4, value=_fmt_meur(a.get("arr_eur") or 0))
+        ws.column_dimensions["A"].width = 4
+        ws.column_dimensions["B"].width = 40
+        ws.column_dimensions["C"].width = 12
+        ws.column_dimensions["D"].width = 14
+    else:
+        ws.cell(row=2, column=1, value="(no open Land/Expand opps in scope)").font = Font(
+            italic=True, color="999999"
+        )
+
+    # ── By_Owner ── pipeline by rep within director scope
+    ws = wb["By_Owner"]
+    ws["A1"] = "Owner"
+    ws["B1"] = "# Open opps"
+    ws["C1"] = "Open ARR"
+    for col in ("A1", "B1", "C1"):
+        ws[col].font = Font(bold=True)
+    bo = (snapshot or {}).get("by_owner") or []
+    if bo:
+        for i, o in enumerate(bo, start=1):
+            ws.cell(row=i + 1, column=1, value=o.get("owner") or "(unknown)")
+            ws.cell(row=i + 1, column=2, value=o.get("num_opps") or 0)
+            ws.cell(row=i + 1, column=3, value=_fmt_meur(o.get("arr_eur") or 0))
+        ws.column_dimensions["A"].width = 32
+        ws.column_dimensions["B"].width = 12
+        ws.column_dimensions["C"].width = 14
+    else:
+        ws.cell(row=2, column=1, value="(no opps to attribute)").font = Font(
+            italic=True, color="999999"
+        )
+
+    # ── Pipeline_Aging ── 5 age buckets by CreatedDate
+    ws = wb["Pipeline_Aging"]
+    ws["A1"] = "Age bucket"
+    ws["B1"] = "# Opps"
+    ws["C1"] = "Open ARR"
+    for col in ("A1", "B1", "C1"):
+        ws[col].font = Font(bold=True)
+    aging = (snapshot or {}).get("pipeline_aging") or []
+    if aging:
+        for i, b in enumerate(aging, start=1):
+            ws.cell(row=i + 1, column=1, value=b.get("bucket") or "")
+            ws.cell(row=i + 1, column=2, value=b.get("num_opps") or 0)
+            ws.cell(row=i + 1, column=3, value=_fmt_meur(b.get("arr_eur") or 0))
+        ws.column_dimensions["A"].width = 18
+        ws.column_dimensions["B"].width = 10
+        ws.column_dimensions["C"].width = 14
+    else:
+        ws.cell(row=2, column=1, value="(no Land/Expand opps to age-bucket)").font = Font(
+            italic=True, color="999999"
+        )
+
+    # ── Weighted_Forecast ── apply backtest forward rates to current stage ARR
+    ws = wb["Weighted_Forecast"]
+    ws["A1"] = "Stage"
+    ws["B1"] = "Open ARR"
+    ws["C1"] = "Forward rate"
+    ws["D1"] = "Weighted ARR"
+    ws["E1"] = "Note"
+    for col in ("A1", "B1", "C1", "D1", "E1"):
+        ws[col].font = Font(bold=True)
+    rates = (backtest or {}).get("forward_rates") or {}
+    pipeline_kpis = [k for k in envelope["kpis"] if k["name"].startswith("pipeline_arr_stage_")]
+    if pipeline_kpis and rates:
+        total_weighted = 0.0
+        for i, k in enumerate(pipeline_kpis, start=1):
+            stage_num = k["name"].replace("pipeline_arr_stage_", "")
+            rate_key = f"stage_{stage_num}_forward_rate"
+            rate = rates.get(rate_key, 0.0)
+            arr = float(k.get("value") or 0)
+            weighted = arr * rate
+            total_weighted += weighted
+            ws.cell(row=i + 1, column=1, value=k.get("stage_label") or k["name"])
+            ws.cell(row=i + 1, column=2, value=_fmt_meur(arr))
+            ws.cell(row=i + 1, column=3, value=f"{rate * 100:.1f}%")
+            ws.cell(row=i + 1, column=4, value=_fmt_meur(weighted))
+            ws.cell(row=i + 1, column=5, value="org-wide rate × this director's open ARR")
+        last_row = len(pipeline_kpis) + 2
+        ws.cell(row=last_row, column=1, value="TOTAL weighted").font = Font(bold=True)
+        ws.cell(row=last_row, column=4, value=_fmt_meur(total_weighted)).font = Font(bold=True)
+        ws.column_dimensions["A"].width = 22
+        ws.column_dimensions["B"].width = 14
+        ws.column_dimensions["C"].width = 14
+        ws.column_dimensions["D"].width = 14
+        ws.column_dimensions["E"].width = 50
+    else:
+        ws.cell(
+            row=2, column=1, value="(insufficient stage data for weighted forecast)"
+        ).font = Font(italic=True, color="999999")
+
+    # ── SimCorp_One ── SP attach rate + SP share by stage
+    ws = wb["SimCorp_One"]
+    ws["A1"] = "SimCorp One (Standard Platform) penetration"
+    ws["A1"].font = Font(bold=True, size=12)
+    sp_data = (snapshot or {}).get("simcorp_one") or {}
+    if sp_data:
+        ws["A3"] = "Total open Land+Expand opps in scope"
+        ws["B3"] = sp_data.get("total_count", 0)
+        ws["A4"] = "With Standard Platform line item"
+        ws["B4"] = sp_data.get("sp_count", 0)
+        ws["A5"] = "Attach rate"
+        ws["B5"] = f"{sp_data.get('share_pct', 0):.1f}%"
+        ws["A5"].font = Font(bold=True)
+        ws["B5"].font = Font(bold=True)
+        ws["A7"] = (
+            "Threshold: < 30% AND total >= 5 trips a MEDIUM action item. "
+            "See Notes sheet for the policy + selling-motion implications."
+        )
+        ws["A7"].font = Font(italic=True, color="666666")
+        ws.column_dimensions["A"].width = 42
+        ws.column_dimensions["B"].width = 14
+    else:
+        ws.cell(
+            row=2, column=1, value="(SP data not available — check action_data wiring)"
+        ).font = Font(italic=True, color="999999")
 
     # ── Territory_Performance ── open Land+Expand pipeline by sub-region
     ws = wb["Territory_Performance"]
