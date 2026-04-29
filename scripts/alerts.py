@@ -348,6 +348,95 @@ def deal_shaping_gap() -> dict[str, Any]:
     }
 
 
+def pipeline_aging_365_plus() -> dict[str, Any]:
+    """Land/Expand opps open >365 days — zombie pipeline inflating coverage.
+
+    Largest single signal in the org by ARR — typically dwarfs the open
+    weighted forecast for the rest of FY. CreatedDate is unambiguous (no
+    lying-boolean risk).
+    """
+    where = (
+        "IsClosed = false AND Type IN ('Land','Expand') "
+        "AND CreatedDate < LAST_N_DAYS:365 "
+        f"{EXCLUDE_TEST_ARTIFACTS}{_ack_exclusion()}"
+    )
+    agg = _agg(
+        "SELECT COUNT(Id) num, SUM(APTS_Opportunity_ARR__c) total_arr "
+        f"FROM Opportunity WHERE {where}"
+    )
+    samples = _sample(
+        "SELECT Id, Name, StageName, CreatedDate, APTS_Opportunity_ARR__c, Owner.Name "
+        f"FROM Opportunity WHERE {where} ORDER BY APTS_Opportunity_ARR__c DESC NULLS LAST"
+    )
+    return {
+        "name": "Land/Expand opps open >365 days (zombie pipeline)",
+        "severity": "critical",
+        "rule": "Opps open >365 days are zombies — likely abandoned but inflating pipeline coverage.",
+        "count": agg.get("num", 0) or 0,
+        "total_arr": agg.get("total_arr") or 0,
+        "samples": _format_samples(samples, "ARR", extra="CreatedDate"),
+    }
+
+
+def missing_amount_open() -> dict[str, Any]:
+    """Open Land/Expand opps with APTS_Opportunity_ARR__c = 0 — distort forecast.
+
+    These can't be properly weighted into pipeline coverage. ARR=0 is
+    unambiguous (no lying-boolean risk). total_arr is $0 by construction.
+    """
+    where = (
+        "IsClosed = false AND Type IN ('Land','Expand') "
+        "AND APTS_Opportunity_ARR__c = 0 "
+        f"{EXCLUDE_TEST_ARTIFACTS}{_ack_exclusion()}"
+    )
+    agg = _agg(
+        "SELECT COUNT(Id) num, SUM(APTS_Opportunity_ARR__c) total_arr "
+        f"FROM Opportunity WHERE {where}"
+    )
+    samples = _sample(
+        "SELECT Id, Name, StageName, CloseDate, APTS_Opportunity_ARR__c, Owner.Name "
+        f"FROM Opportunity WHERE {where} ORDER BY CloseDate ASC NULLS LAST"
+    )
+    return {
+        "name": "Open Land/Expand opps with ARR=0 (data-quality)",
+        "severity": "important",
+        "rule": "Land/Expand opps with ARR=0 distort forecasting + can't be properly weighted.",
+        "count": agg.get("num", 0) or 0,
+        "total_arr": agg.get("total_arr") or 0,
+        "samples": _format_samples(samples, "ARR", extra="CloseDate"),
+    }
+
+
+def low_probability_in_quarter() -> dict[str, Any]:
+    """Current-quarter Land/Expand opps with rep-set Probability < 50%.
+
+    Forecast-ambiguous: deals expected to close this Q but rep flagged <50%
+    confidence. Either should slip out OR get explicit commit-level
+    treatment. Probability is a numeric percentage (0-100), not a boolean.
+    """
+    where = (
+        "IsClosed = false AND Type IN ('Land','Expand') "
+        "AND CloseDate = THIS_QUARTER AND Probability < 50 "
+        f"{EXCLUDE_TEST_ARTIFACTS}{_ack_exclusion()}"
+    )
+    agg = _agg(
+        "SELECT COUNT(Id) num, SUM(APTS_Opportunity_ARR__c) total_arr "
+        f"FROM Opportunity WHERE {where}"
+    )
+    samples = _sample(
+        "SELECT Id, Name, StageName, Probability, CloseDate, APTS_Opportunity_ARR__c, Owner.Name "
+        f"FROM Opportunity WHERE {where} ORDER BY APTS_Opportunity_ARR__c DESC NULLS LAST"
+    )
+    return {
+        "name": "Current-quarter Land/Expand with Probability <50% (forecast-ambiguous)",
+        "severity": "important",
+        "rule": "Current-quarter Land/Expand deals with rep-set probability <50% are forecast-ambiguous — either they should slip out OR get explicit commit-level treatment.",
+        "count": agg.get("num", 0) or 0,
+        "total_arr": agg.get("total_arr") or 0,
+        "samples": _format_samples(samples, "ARR", extra="CloseDate"),
+    }
+
+
 def inactive_owner() -> dict[str, Any]:
     """Open opps owned by an inactive Salesforce user — alerts go nowhere."""
     where = (
@@ -398,11 +487,14 @@ ALERT_FUNCTIONS = [
     commercial_approval_gap_land,
     commercial_approval_gap_big,
     kyc_gap_late_stage,
+    pipeline_aging_365_plus,
     close_date_in_past,
     dec_31_placeholder_dates,
     deal_shaping_gap,
     stale_activity,
     no_activity_ever,
+    missing_amount_open,
+    low_probability_in_quarter,
     approval_submitted_pending,
     inactive_owner,
 ]
@@ -445,6 +537,13 @@ def _flagged_union_where() -> str:
         f"  OR ({LATE_STAGE_LIKE} AND LastActivityDate = null) "
         # Inactive owner
         "  OR (Owner.IsActive = false) "
+        # Pipeline aging >365 days (Land/Expand only)
+        "  OR (Type IN ('Land','Expand') AND CreatedDate < LAST_N_DAYS:365) "
+        # Missing ARR on open Land/Expand
+        "  OR (Type IN ('Land','Expand') AND APTS_Opportunity_ARR__c = 0) "
+        # Current-quarter Land/Expand with Probability <50%
+        "  OR (Type IN ('Land','Expand') AND CloseDate = THIS_QUARTER "
+        "       AND Probability < 50) "
         ") "
         f"{EXCLUDE_TEST_ARTIFACTS}{_ack_exclusion()}"
     )
