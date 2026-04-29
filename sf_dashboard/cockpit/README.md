@@ -62,6 +62,31 @@ Auth comes from `sf org display --target-org apro@simcorp.com`.
   convention; the metadata-XML capital-case `True`/`False` rule applies
   to the Metadata API path, which is unavailable here).
 
+## Audit + fixes (drill / row caps / sort / resize)
+
+Post-rebuild audit (2026-04-28) found 4 issues; all fixed by `audit_fix.py`:
+
+| # | Issue                                                                | Affected                  | Fix                                                                                       |
+| - | -------------------------------------------------------------------- | ------------------------- | ----------------------------------------------------------------------------------------- |
+| 1 | `properties.drillUrl: null` — chart widgets don't link to report     | 6 widgets (Funnel/Column/Donut/3 Bars) | `/lightning/r/Report/<id>/view` (modern Lightning URL — accepted)             |
+| 2 | `properties.maxRows: null` — Bar charts render every row             | 3 Bar widgets             | Top Open Accounts=10, Owner Conc=10, Account Conc=15                                      |
+| 3 | `groupingsDown[0].sortAggregate` unset — Top-N reports unranked      | 3 ranking reports         | `sortAggregate=s!Opportunity.APTS_Opportunity_ARR__c`, `sortOrder=Desc`                   |
+| 4 | Account Concentration cell `rowspan=3` — too short for 15 bars       | 1 widget                  | `rowspan: 3 → 6` (cols 6-11, rows 19-24; no overlap, nothing else lives below)            |
+
+Re-run idempotently:
+
+```bash
+python3 audit_fix.py --dry-run    # preview
+python3 audit_fix.py              # apply + verify
+```
+
+Notes:
+- Metric widgets do NOT need `drillUrl`; Lightning natively navigates from a metric tile to its source report.
+- `reportMetadata.sortBy` is for TABULAR reports only; sending the aggregate
+  there returns errorCode 113 ("sort column must be from a selected column")
+  in this org. SUMMARY-with-grouping uses `groupingsDown[i].sortAggregate`.
+- Dashboard PATCH is full-resource replace (same as `rebuild_viz.py`).
+
 ## Re-applying viz types (post-deploy)
 
 If the dashboard viz selection drifts (or someone edits in the UI and
