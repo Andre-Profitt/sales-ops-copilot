@@ -126,9 +126,42 @@ def download_pptx(download_url: str, out_path: pathlib.Path) -> None:
     print(f"  Wrote {out_path} ({len(resp.content):,} bytes)")
 
 
+def _generate_for_one(director: str, period: str, endpoint: str, *, skip_regen: bool) -> int:
+    """Generate a deck for one director. Returns 0 on success, non-zero on
+    failure. Used both by the single-director CLI mode and by --all-directors."""
+    trends_path = ensure_trends_json(director, period, skip_regen=skip_regen)
+    trends = json.loads(trends_path.read_text())
+
+    job_id = post_envelope(endpoint, trends)
+    final = poll_until_done(endpoint, job_id)
+
+    download_url = final.get("downloadUrl") or final.get("download_url")
+    if not download_url:
+        print(f"  status=complete but no downloadUrl in response: {final}", file=sys.stderr)
+        return 2
+
+    director_slug = director.replace(" ", "-")
+    out_path = trends_path.parent / f"{director_slug}-{period}-LAND.pptx"
+    download_pptx(download_url, out_path)
+
+    print()
+    print(f"Summary [{director}]:")
+    print(f"  Quality:  {final.get('qualityScore')}/100  ({final.get('qualityGrade', '?')})")
+    print(f"  Slides:   {final.get('slideCount')}")
+    print(f"  PPTX:     {out_path}")
+    print(f"  jobId:    {job_id}")
+    print(f"  ts:       {dt.datetime.now().isoformat(timespec='seconds')}")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--director", required=True, help="e.g., 'Adam Steinhouse'")
+    ap.add_argument("--director", help="e.g., 'Adam Steinhouse' (single-director mode)")
+    ap.add_argument(
+        "--all-directors",
+        action="store_true",
+        help="Generate decks for all 9 MD-1 directors (cron mode)",
+    )
     ap.add_argument("--period", required=True, help="e.g., '2026-Q2'")
     ap.add_argument(
         "--endpoint",
@@ -142,29 +175,39 @@ def main() -> int:
     )
     args = ap.parse_args()
 
-    trends_path = ensure_trends_json(args.director, args.period, skip_regen=args.skip_regen)
-    trends = json.loads(trends_path.read_text())
+    if not args.director and not args.all_directors:
+        print("ERROR: pass either --director or --all-directors", file=sys.stderr)
+        return 1
 
-    job_id = post_envelope(args.endpoint, trends)
-    final = poll_until_done(args.endpoint, job_id)
+    if args.all_directors:
+        # Avoid hard-coding the canonical list — pull from the same module
+        # land_brief uses, so a director added there flows through here.
+        sys.path.insert(0, str(pathlib.Path(__file__).parent))
+        from _directors import canonical_directors  # type: ignore[import-not-found]
 
-    download_url = final.get("downloadUrl") or final.get("download_url")
-    if not download_url:
-        print(f"  status=complete but no downloadUrl in response: {final}", file=sys.stderr)
-        return 2
+        directors = [d["name"] for d in canonical_directors()]
+        failures = []
+        for name in directors:
+            try:
+                rc = _generate_for_one(name, args.period, args.endpoint, skip_regen=args.skip_regen)
+                if rc != 0:
+                    failures.append((name, f"return code {rc}"))
+            except Exception as e:
+                print(f"  ✗ {name}: {e}", file=sys.stderr)
+                failures.append((name, str(e)))
 
-    director_slug = args.director.replace(" ", "-")
-    out_path = trends_path.parent / f"{director_slug}-{args.period}-LAND.pptx"
-    download_pptx(download_url, out_path)
+        if failures:
+            print(
+                f"\n{len(failures)}/{len(directors)} director(s) failed:",
+                file=sys.stderr,
+            )
+            for name, err in failures:
+                print(f"  - {name}: {err}", file=sys.stderr)
+            return 2
+        print(f"\n✓ {len(directors)} deck(s) generated for {args.period}")
+        return 0
 
-    print()
-    print("Summary:")
-    print(f"  Quality:  {final.get('qualityScore')}/100  ({final.get('qualityGrade', '?')})")
-    print(f"  Slides:   {final.get('slideCount')}")
-    print(f"  PPTX:     {out_path}")
-    print(f"  jobId:    {job_id}")
-    print(f"  ts:       {dt.datetime.now().isoformat(timespec='seconds')}")
-    return 0
+    return _generate_for_one(args.director, args.period, args.endpoint, skip_regen=args.skip_regen)
 
 
 if __name__ == "__main__":
