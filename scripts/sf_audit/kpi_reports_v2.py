@@ -195,6 +195,116 @@ def kpi_v2_reports(folder_id: str | None) -> list[dict[str, Any]]:
                 ],
             },
         },
+        # 6. Top Accounts by Open ARR (account-concentration drill list) ─
+        {
+            "key": "kpi-top-accounts-by-arr",
+            "label": "KPI · Top Accounts by ARR (Q L+E)",
+            "metadata": {
+                **base_meta,
+                "name": "KPI · Top Accounts by ARR (Q L+E)",
+                "description": "Open Land+Expand opps grouped by account, ARR sum descending. Account-concentration drill list.",
+                "reportFormat": "SUMMARY",
+                "reportType": {"type": "Opportunity"},
+                "detailColumns": [
+                    "OPPORTUNITY_NAME",
+                    "STAGE_NAME",
+                    "FULL_NAME",
+                    "Opportunity.APTS_Opportunity_ARR__c.CONVERT",
+                ],
+                "groupingsDown": [
+                    {
+                        "name": "ACCOUNT_NAME",
+                        "sortOrder": "Desc",
+                        "sortAggregate": "s!Opportunity.APTS_Opportunity_ARR__c.CONVERT",
+                        "dateGranularity": "None",
+                    }
+                ],
+                "aggregates": [
+                    "s!Opportunity.APTS_Opportunity_ARR__c.CONVERT",
+                    "RowCount",
+                ],
+                "standardDateFilter": {
+                    "column": "CLOSE_DATE",
+                    "durationValue": "THIS_FISCAL_QUARTER",
+                },
+                "reportFilters": [
+                    _filter("CLOSED", "equals", "0"),
+                    _filter("TYPE", "equals", "Land,Expand"),
+                    *POLLUTION_FILTERS,
+                ],
+            },
+        },
+        # 7. Stuck Opps 90+ Days at Stage (Sales Ops governance) ──────
+        {
+            "key": "kpi-stuck-90d",
+            "label": "KPI · Stuck Opps 90+ Days",
+            "metadata": {
+                **base_meta,
+                "name": "KPI · Stuck Opps 90+ Days",
+                "description": "Open L+E opps unmodified for 90+ days, grouped by stage. Sales Ops hygiene attention.",
+                "reportFormat": "SUMMARY",
+                "reportType": {"type": "Opportunity"},
+                "detailColumns": [
+                    "OPPORTUNITY_NAME",
+                    "ACCOUNT_NAME",
+                    "FULL_NAME",
+                    "LAST_UPDATE",
+                    "Opportunity.APTS_Opportunity_ARR__c.CONVERT",
+                ],
+                "groupingsDown": [
+                    {"name": "STAGE_NAME", "sortOrder": "Asc", "dateGranularity": "None"}
+                ],
+                "aggregates": [
+                    "s!Opportunity.APTS_Opportunity_ARR__c.CONVERT",
+                    "RowCount",
+                ],
+                "reportFilters": [
+                    _filter("CLOSED", "equals", "0"),
+                    _filter("TYPE", "equals", "Land,Expand"),
+                    _filter("LAST_UPDATE", "lessThan", "LAST_N_DAYS:90"),
+                    *POLLUTION_FILTERS,
+                ],
+            },
+        },
+        # 8. Pipeline by Industry ─────────────────────────────────────
+        {
+            "key": "kpi-pipeline-by-industry",
+            "label": "KPI · Pipeline by Industry (this-Q L+E)",
+            "metadata": {
+                **base_meta,
+                "name": "KPI · Pipeline by Industry (this-Q L+E)",
+                "description": "Open L+E pipeline grouped by Account.Industry. Vertical performance cut.",
+                "reportFormat": "SUMMARY",
+                "reportType": {"type": "Opportunity"},
+                "detailColumns": [
+                    "OPPORTUNITY_NAME",
+                    "ACCOUNT_NAME",
+                    "STAGE_NAME",
+                    "Opportunity.APTS_Opportunity_ARR__c.CONVERT",
+                ],
+                "groupingsDown": [
+                    {
+                        "name": "INDUSTRY",
+                        "sortOrder": "Desc",
+                        "sortAggregate": "s!Opportunity.APTS_Opportunity_ARR__c.CONVERT",
+                        "dateGranularity": "None",
+                    }
+                ],
+                "aggregates": [
+                    "s!Opportunity.APTS_Opportunity_ARR__c.CONVERT",
+                    "RowCount",
+                ],
+                "standardDateFilter": {
+                    "column": "CLOSE_DATE",
+                    "durationValue": "THIS_FISCAL_QUARTER",
+                },
+                "reportFilters": [
+                    _filter("CLOSED", "equals", "0"),
+                    _filter("TYPE", "equals", "Land,Expand"),
+                    *POLLUTION_FILTERS,
+                ],
+            },
+        },
         # 5. Pipeline at Activity Risk ────────────────────────────────
         # Open L+E opps with no activity in 30 days, by stage.
         {
