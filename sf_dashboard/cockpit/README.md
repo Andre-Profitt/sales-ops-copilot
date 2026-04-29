@@ -87,6 +87,54 @@ Notes:
   in this org. SUMMARY-with-grouping uses `groupingsDown[i].sortAggregate`.
 - Dashboard PATCH is full-resource replace (same as `rebuild_viz.py`).
 
+## Executive polish (`polish.py`)
+
+Post-audit polish pass (2026-04-28) — turns the dashboard from a raw
+technical report into an executive cockpit. 7 fixes in one PATCH:
+
+| # | Fix                                                          | Status                                   |
+| - | ------------------------------------------------------------ | ---------------------------------------- |
+| 1 | Compact units — `displayUnits="auto"`, `decimalPrecision=1`  | shipped (16/16 widgets, charts incl.)    |
+| 2 | Executive headers — short, exec-readable                     | shipped (16/16)                          |
+| 3 | `metricLabel` subtitles on Metric tiles                      | shipped (10/10 Metric — Bar strips it)   |
+| 4 | Layout — KPI / viz / 3-rankings / critical / important strips | shipped (16/16 cells, no overlap)        |
+| 5 | Past Close Date primary aggregate → RowCount                 | rejected (silent strip — see notes)      |
+| 6 | Concentration tile context (Top 10 / Top 15)                 | partial (Bar viz strips `metricLabel`)   |
+| 7 | Donut scope — verifies TYPE in (Land, Expand)                | verified (no PATCH; already correct)     |
+
+```bash
+python3 polish.py --dry-run    # diff only
+python3 polish.py              # apply + verify
+```
+
+Idempotent — second run = 0 component changes, 0 layout changes. Verify
+loop re-GETs and reports persistence counts:
+
+```
+displayUnits='auto' persisted: 16/16
+headers persisted:            16/16
+metricLabel persisted:        10/10
+layout cells correct:         16/16
+```
+
+### API gotchas discovered
+
+- `displayUnits` enum is **lowercase** in this org. Sending `"Auto"` 400s
+  with `JSON_PARSER_ERROR`. `"auto"` is accepted on every viz type
+  (Metric, Bar, Funnel, Column, Donut). The org's UI editor writes
+  capital-case, but the REST API only accepts lower.
+- `metricLabel` is **Metric-only**. Setting it on a Bar widget PATCHes
+  successfully but is silently stripped on re-GET. So Owner / Account
+  Concentration tiles can't carry "Top N · flagged ARR" subtitles —
+  the header carries the context instead.
+- **Past Close Date aggregate (Fix 5) is silently stripped.** Both the
+  report-level reorder (`reportMetadata.aggregates = [RowCount, ARR]`)
+  and the dashboard widget-level override (`properties.aggregates[0].name
+  = "RowCount"`) PATCH successfully — and the org reverts both on the
+  next re-GET. Sticking with the ARR sum tile + `metricLabel="open
+  opps"` so the subtitle still tells the executive that the count, not
+  the €325k, is the signal.
+
 ## Re-applying viz types (post-deploy)
 
 If the dashboard viz selection drifts (or someone edits in the UI and
