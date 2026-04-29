@@ -44,6 +44,7 @@ from brief import (  # type: ignore[import-not-found]  # noqa: E402
     OPENAI_ENDPOINT,
     REPORTS_DIR,
     pull_fabric_workspace_summary as _pull_fabric_summary_raw,
+    pull_product_family_breakdown as _pull_product_family_raw,
     pull_salesforce_snapshot as _pull_sf_snapshot_raw,
     render_report,
 )
@@ -97,12 +98,19 @@ SYSTEM_PROMPT = (
     "forward shape of the book. Flag if a forward quarter is suspiciously "
     "front-loaded (e.g., Q4 renewal ACV inflated by Dec 31 placeholder dates). "
     "Always cite the quarter label (e.g., 2026-Q3) when comparing.\n\n"
+    "PRODUCT FAMILY BREAKDOWN: `pull_product_family_breakdown` returns open "
+    "Land+Expand ARR aggregated by `APTS_RH_Product_Family__c`. The field is a "
+    "multipicklist — opps with multiple families are counted toward each, so "
+    "the sum across families OVERSTATES total open ARR. Call out the top 1-2 "
+    "families by ARR and any concentration concerns.\n\n"
     "TOOL USE: Call `pull_salesforce_snapshot`, `pull_fabric_workspace_summary`, "
-    "`pull_all_alerts`, `pull_owner_concentration`, and `pull_account_concentration` "
+    "`pull_all_alerts`, `pull_owner_concentration`, `pull_account_concentration`, "
+    "and `pull_product_family_breakdown` "
     "ONCE EACH at the start of the conversation to gather the data, then write "
     "the brief. Do not call any tool more than once.\n\n"
     "Produce a tight executive brief — 300-500 words max — with these sections:\n"
-    "1) Current-quarter state — open vs weighted ARR (Land+Expand) and ACV (Renewal)\n"
+    "1) Current-quarter state — open vs weighted ARR (Land+Expand) and ACV (Renewal); "
+    "include a one-line sub-callout on where the ARR sits by product line (top 1-2 families)\n"
     "2) **Forward forecast (Q+1, Q+2) — weighted ARR and ACV per quarter, "
     "with one sentence on the shape (front-loaded? back-loaded? Dec-31 inflated?)**\n"
     "3) **Top 3 governance/hygiene alerts to act on this week** "
@@ -190,6 +198,19 @@ def pull_account_concentration(top_n: int = 15) -> list[dict[str, Any]]:
     return accounts
 
 
+def pull_product_family_breakdown() -> list[dict[str, Any]]:
+    """Aggregate open Land+Expand ARR by `APTS_RH_Product_Family__c` value.
+
+    The field is a multipicklist (semicolon-separated). Opps with multiple
+    families are counted toward each, so the sum across families OVERSTATES
+    total open ARR. Returns top 12 families ranked by ARR:
+      [{family, num_opps, arr_open}, ...]
+    """
+    rows = _pull_product_family_raw()
+    TOOL_CACHE["product_family_breakdown"] = rows
+    return rows
+
+
 def pull_radar_recommendations() -> list[dict[str, Any]]:
     """Pull actionable recommendations from radar's claim pipeline.
 
@@ -236,6 +257,7 @@ async def _run_agent(model: str) -> str:
             pull_all_alerts,
             pull_owner_concentration,
             pull_account_concentration,
+            pull_product_family_breakdown,
             pull_radar_recommendations,
         ],
         # GPT-5.x rejects non-default temperature; do not set it. max_tokens
@@ -272,6 +294,7 @@ def _build_agent(model: str) -> Any:
             pull_all_alerts,
             pull_owner_concentration,
             pull_account_concentration,
+            pull_product_family_breakdown,
             pull_radar_recommendations,
         ],
         default_options={"max_tokens": 1500},

@@ -22,7 +22,9 @@
     "alert_count_important": 5,
     "alert_count_info": 0,
     "stage_5_kyc_gap_count": 70,
-    "stage_5_kyc_gap_arr": 30377592
+    "stage_5_kyc_gap_arr": 30377592,
+    "top_product_family_name": "SCD Software",
+    "top_product_family_arr": 887905019
   },
   "tolerance_pct": 5.0,
   "notes": [

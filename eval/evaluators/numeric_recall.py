@@ -96,6 +96,21 @@ def _count_alerts_in_section(text: str, section: str) -> int:
     return len(re.findall(r"^\*\*[^*]+\*\*\s*—", block, re.MULTILINE))
 
 
+def _extract_top_product_family(text: str) -> tuple[str, int] | None:
+    """Pull rank-1 from the product-family table.
+
+    Row shape: `| 1 | SCD Software | 865 | $887,905,019 |`
+    """
+    m = re.search(
+        r"###\s*Open Land\+Expand ARR by Product Family.*?\|\s*1\s*\|\s*([^|]+?)\s*\|\s*\d+\s*\|\s*\$([\d,]+)",
+        text,
+        re.DOTALL | re.IGNORECASE,
+    )
+    if not m:
+        return None
+    return m.group(1).strip(), _to_int(m.group(2))
+
+
 def _extract_kyc_alert(text: str) -> tuple[int, int] | None:
     """`**Stage 5+ ... without KYC clearance** — 70 opps, $30,377,592 ARR`"""
     m = re.search(
@@ -158,6 +173,7 @@ class NumericFactRecallEvaluator:
         "top_owner_arr",
         "top_account_arr",
         "stage_5_kyc_gap_arr",
+        "top_product_family_arr",
     }
 
     def __init__(self, tolerance_pct: float = 5.0) -> None:
@@ -256,5 +272,10 @@ class NumericFactRecallEvaluator:
         kyc = _extract_kyc_alert(text)
         if kyc:
             out["stage_5_kyc_gap_count"], out["stage_5_kyc_gap_arr"] = kyc
+
+        # Product family top-1
+        pf = _extract_top_product_family(text)
+        if pf:
+            out["top_product_family_name"], out["top_product_family_arr"] = pf
 
         return out

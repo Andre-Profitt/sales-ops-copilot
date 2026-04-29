@@ -216,8 +216,11 @@ def pull_salesforce_snapshot() -> dict[str, Any]:
     next_q = quarters[1]
     q_plus_2 = quarters[2]
 
+    product_family_breakdown = pull_product_family_breakdown()
+
     return {
         "by_type": by_type,
+        "product_family_breakdown": product_family_breakdown,
         # Backward-compatible top-level fields = current quarter
         "new_business_by_stage": current["new_business_by_stage"],
         "renewals_by_stage": current["renewals_by_stage"],
@@ -236,6 +239,43 @@ def pull_salesforce_snapshot() -> dict[str, Any]:
             "weighted_renewal_acv_q_plus_2": q_plus_2["weighted_renewal_acv"],
         },
     }
+
+
+def pull_product_family_breakdown(top_n: int = 12) -> list[dict[str, Any]]:
+    from _filters import EXCLUDE_TEST_ARTIFACTS  # type: ignore[import-not-found,import-untyped]
+
+    try:
+        from ack import soql_exclusion  # type: ignore[import-not-found]
+
+        ack_excl = soql_exclusion()
+    except Exception:
+        ack_excl = ""
+
+    soql = (
+        "SELECT Id, APTS_RH_Product_Family__c, APTS_Opportunity_ARR__c "
+        "FROM Opportunity "
+        "WHERE IsClosed = false AND Type IN ('Land', 'Expand') "
+        "AND APTS_RH_Product_Family__c != null "
+        f"{EXCLUDE_TEST_ARTIFACTS}{ack_excl} "
+        "LIMIT 5000"
+    )
+    records = _sf_query(soql)
+
+    agg: dict[str, dict[str, float]] = {}
+    for r in records:
+        raw = r.get("APTS_RH_Product_Family__c") or ""
+        arr = r.get("APTS_Opportunity_ARR__c") or 0
+        for fam in (f.strip() for f in raw.split(";") if f.strip()):
+            entry = agg.setdefault(fam, {"num_opps": 0, "arr_open": 0.0})
+            entry["num_opps"] += 1
+            entry["arr_open"] += arr
+
+    rows = [
+        {"family": fam, "num_opps": int(v["num_opps"]), "arr_open": float(v["arr_open"])}
+        for fam, v in agg.items()
+    ]
+    rows.sort(key=lambda x: x["arr_open"], reverse=True)
+    return rows[:top_n]
 
 
 def pull_fabric_workspace_summary() -> list[dict[str, Any]]:
@@ -315,8 +355,15 @@ def synthesize(
         "forward shape of the book. Flag if a forward quarter is suspiciously "
         "front-loaded (e.g., Q4 renewal ACV inflated by Dec 31 placeholder dates). "
         "Always cite the quarter label (e.g., 2026-Q3) when comparing.\n\n"
+        "PRODUCT FAMILY BREAKDOWN: `product_family_breakdown` lists open "
+        "Land+Expand ARR aggregated by `APTS_RH_Product_Family__c`. The field is "
+        "a multipicklist — opps with multiple families are counted toward each, "
+        "so the sum across families OVERSTATES total open ARR. Call out the top "
+        "1-2 families by ARR and any concentration concerns (e.g., a single "
+        "family carrying the bulk of pipeline).\n\n"
         "Produce a tight executive brief — 300-500 words max — with these sections:\n"
-        "1) Current-quarter state — open vs weighted ARR (Land+Expand) and ACV (Renewal)\n"
+        "1) Current-quarter state — open vs weighted ARR (Land+Expand) and ACV (Renewal); "
+        "include a one-line sub-callout on where the ARR sits by product line (top 1-2 families)\n"
         "2) **Forward forecast (Q+1, Q+2) — weighted ARR and ACV per quarter, "
         "with one sentence on the shape (front-loaded? back-loaded? Dec-31 inflated?)**\n"
         "3) **Top 3 governance/hygiene alerts to act on this week** "
@@ -373,6 +420,7 @@ def _persist_alert_counts_today(alerts: list[dict[str, Any]]) -> None:
 
 
 def _load_trailing_alert_counts(days: int = 7, exclude_today: bool = True) -> dict[str, list[int]]:
+    """Return {alert_name: [count, count, ...]} from up to `days` prior sidecar files."""
     today = dt.date.today()
     out: dict[str, list[int]] = {}
     for offset in range(1 if exclude_today else 0, days + 1):
@@ -556,6 +604,22 @@ def render_report(
     open_acv = totals.get("renewal_acv_open_this_quarter", 0) or 0
     weighted_acv = totals.get("weighted_renewal_acv", 0) or 0
     prob_source = totals.get("stage_probability_source", "—")
+
+    pfb = sf_snapshot.get("product_family_breakdown") or []
+    if pfb:
+        lines += [
+            "",
+            "### Open Land+Expand ARR by Product Family",
+            "",
+            "*Multipicklist field — opps with multiple families count toward each. "
+            "Sum across families exceeds total open ARR by design.*",
+            "",
+            "| # | Product Family | # Opps | ARR |",
+            "|---|---|---:|---:|",
+        ]
+        for i, p in enumerate(pfb, 1):
+            arr = p.get("arr_open") or 0
+            lines.append(f"| {i} | {p.get('family', '—')} | {p.get('num_opps', 0)} | ${arr:,.0f} |")
 
     lines += [
         "",
