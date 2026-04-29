@@ -61,6 +61,12 @@ SLA_REPORT: dict[str, Any] = {
         "RowCount",
     ],
     "filters": [
+        # SimCorp ARR/ACV split: Stage 20 Commercial Approval applies to
+        # Land+Expand (which carry APTS_Opportunity_ARR__c). Renewals use
+        # APTS_Renewal_ACV__c and a different governance path. Without
+        # this filter, the row count includes Renewals while the ARR sum
+        # only reflects L+E — blended apples and oranges.
+        {"column": "TYPE", "operator": "equals", "value": "Land,Expand"},
         {"column": "CLOSED", "operator": "equals", "value": "False"},
         {
             "column": "Opportunity.Submit_for_Stage_20_Review__c",

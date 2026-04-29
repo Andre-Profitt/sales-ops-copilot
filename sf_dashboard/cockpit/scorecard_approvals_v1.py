@@ -48,6 +48,12 @@ APPROVALS_STUCK_REPORT: dict[str, Any] = {
         "RowCount",
     ],
     "filters": [
+        # SimCorp ARR/ACV split: Stage 20 Commercial Approval applies to
+        # Land+Expand only. Renewals use ACV + a different governance
+        # flow. Filtering to L+E prevents a blended row count vs ARR
+        # sum where Renewal opps would inflate the count without
+        # contributing to ARR.
+        {"column": "TYPE", "operator": "equals", "value": "Land,Expand"},
         {"column": "CLOSED", "operator": "equals", "value": "False"},
         {
             "column": "Opportunity.Submit_for_Stage_20_Review__c",
