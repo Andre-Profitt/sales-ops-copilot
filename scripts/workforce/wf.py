@@ -47,50 +47,83 @@ def _print_table(rows: list, headers: list[str]) -> None:
         print("  ".join(str(c).ljust(w) for c, w in zip(r, widths)))
 
 
+def _table(args: argparse.Namespace) -> str:
+    """Pick static vs live person-week table per --live flag."""
+    return "weekly_person_kpis_live" if args.live else "weekly_person_kpis"
+
+
+# Service / system users to exclude from live results (bulk-automation,
+# not coachable individuals). Live data only — the static pack already
+# filters these out.
+_EXCLUDE_LIVE = ("Salesforce Integrator",)
+
+
+def _exclude_clause(args: argparse.Namespace, name_col: str = "canonical_name") -> str:
+    if not args.live:
+        return ""
+    names = ",".join(f"'{n}'" for n in _EXCLUDE_LIVE)
+    return f"AND {name_col} NOT IN ({names})"
+
+
 def cmd_team_week(args: argparse.Namespace) -> int:
     con = _con()
+    table = _table(args)
     if args.week:
         week = args.week
     else:
         # Most-recent week with non-zero data.
         row = con.execute(
-            "SELECT MAX(event_week_start) FROM weekly_person_kpis "
-            "WHERE TRY_CAST(actions AS BIGINT) > 0"
+            f"SELECT MAX(event_week_start) FROM {table} WHERE TRY_CAST(actions AS BIGINT) > 0"
         ).fetchone()
         week = row[0] if row else None
     if not week:
         print("no week data found")
         return 1
+    # Live table doesn't carry utilization_index_p75 (derived metric
+    # from the static pack's analysis); only static pack does.
+    util_col = (
+        "ROUND(CAST(utilization_index_p75 AS DOUBLE), 2) AS util_p75"
+        if not args.live
+        else "NULL AS util_p75"
+    )
     rows = con.execute(
-        """
+        f"""
         SELECT
             canonical_name                                          AS owner,
             CAST(actions AS BIGINT)                                 AS actions,
             CAST(actions_adj AS BIGINT)                             AS actions_adj,
             ROUND(CAST(effort_units AS DOUBLE), 1)                  AS effort,
-            ROUND(CAST(utilization_index_p75 AS DOUBLE), 2)         AS util_p75
-        FROM weekly_person_kpis
+            {util_col}
+        FROM {table}
         WHERE event_week_start = ?
           AND TRY_CAST(actions AS BIGINT) > 0
+          {_exclude_clause(args)}
         ORDER BY CAST(effort_units AS DOUBLE) DESC NULLS LAST
         """,
         [week],
     ).fetchall()
-    print(f"Week of {week} — {len(rows)} reps with activity\n")
+    src = "live" if args.live else "static-pack"
+    print(f"Week of {week} ({src}) — {len(rows)} reps with activity\n")
     _print_table(list(rows), ["Owner", "Actions", "Adj actions", "Effort", "Util p75"])
     return 0
 
 
 def cmd_person(args: argparse.Namespace) -> int:
     con = _con()
+    table = _table(args)
+    util_col = (
+        "ROUND(CAST(utilization_index_p75 AS DOUBLE), 2) AS util_p75"
+        if not args.live
+        else "NULL AS util_p75"
+    )
     rows = con.execute(
-        """
+        f"""
         SELECT event_week_start                              AS week,
                CAST(actions AS BIGINT)                       AS actions,
                CAST(actions_adj AS BIGINT)                   AS actions_adj,
                ROUND(CAST(effort_units AS DOUBLE), 1)        AS effort,
-               ROUND(CAST(utilization_index_p75 AS DOUBLE), 2) AS util_p75
-        FROM weekly_person_kpis
+               {util_col}
+        FROM {table}
         WHERE canonical_name = ?
         ORDER BY event_week_start DESC
         LIMIT ?
@@ -184,6 +217,15 @@ def cmd_process_mix(args: argparse.Namespace) -> int:
 
 def main() -> int:
     p = argparse.ArgumentParser(prog="wf.py", description=__doc__)
+    # Global flag — default is the static pack (Phase 1 baseline);
+    # --live swaps to the live SF refresh tables (Phase 2 source).
+    p.add_argument(
+        "--live",
+        action="store_true",
+        help="Query against fact_activity_live + weekly_person_kpis_live "
+        "(refreshed by `python3 scripts/workforce/refresh.py`) instead of "
+        "the 2025-12-15 static pack.",
+    )
     sub = p.add_subparsers(dest="cmd", required=True)
 
     p_tw = sub.add_parser("team-week")
