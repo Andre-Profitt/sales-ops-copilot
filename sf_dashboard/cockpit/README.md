@@ -208,7 +208,140 @@ curl -sS -o /dev/null -X DELETE \
   $500k–$580k drop below the €500k threshold after FX conversion.
   This is inherent to Reports vs raw SOQL and matches what users see in
   every other SF report in this org.
-- Filters at the dashboard level (Region, Product) were de-scoped: the
-  dashboardFilter Analytics-API surface was returning JSON_PARSER_ERROR
-  for our payload shape and the precedent (`deploy_coo_dashboard.py`)
-  doesn't deploy them either. Add via UI if needed.
+
+## Upgrade v2 — Filters + Asset Integrity + Renewal Health (`upgrade_v2.py`)
+
+Three coordinated upgrades shipped 2026-04-28 in one atomic PATCH (script
+is idempotent — second run is a no-op on the dashboard, only re-PATCHes
+the four owned reports):
+
+```bash
+python3 upgrade_v2.py --dry-run    # preview
+python3 upgrade_v2.py              # apply + verify
+```
+
+### A. Dashboard filters (3 picklist + free-text filters)
+
+Top-level `filters` array on the dashboard, plus per-component
+`properties.filterColumns` so each filter actually constrains the
+underlying widgets. Verified shape against
+`01ZTb00000FSP7hMAH` (Sales Directors Monthly) and
+`01ZTb00000CcCHNMA3` (Client Accounts Pipeline).
+
+| Filter        | dataType      | Bound column (Opp widgets)                  | Bound column (Asset widgets)        |
+| ------------- | ------------- | ------------------------------------------- | ----------------------------------- |
+| Region        | picklist      | `Account.Region__c`                         | not exposed on AssetWithProduct     |
+| Product Family | multipicklist | `Opportunity.APTS_RH_Product_Family__c`     | not exposed on AssetWithProduct     |
+| Owner         | string (contains) | `FULL_NAME` (Opportunity.Owner.Name)    | `ACCOUNT_OWNER_NAME` (best-effort)  |
+
+API findings:
+
+- The top-level key is `filters`, NOT `dashboardFilters`. Earlier rounds
+  failed because we sent the documented Analytics-API name. The org's
+  `/describe` exposes `filters`.
+- Each filter object is `{dataType, name, options[], selectedOption,
+  errorMessage}` — server allocates `id` + option-`id`, so we must
+  OMIT those on PATCH.
+- Per-widget binding lives at `components[i].properties.filterColumns`
+  as `[{label, name}]` — `label` matches the filter `name`, `name` is
+  the report column. Mis-bound entries (column not in the report)
+  return `400 "<col> is not a valid filter column"` — so Asset widgets
+  bind only to the columns AssetWithProduct actually exposes.
+- 232 dashboards probed in this org for canonical shape: only ~3 use
+  filters at all, and the LAND Pipeline / Sales Directors Monthly
+  shape is what we mirror.
+
+If filters get rejected for any reason in the future, `upgrade_v2.py`
+auto-retries the dashboard PATCH WITHOUT filters or `filterColumns`, so
+B + C ship even when A fails.
+
+### B. Asset Integrity (3 new Metric tiles)
+
+Three new SF Reports + three new widgets in a new bottom row (row 22,
+4 cols each, side-by-side). Report type: `AssetWithProduct` (folder
+`Sales Ops Commercial Health`).
+
+| Header                        | Logic                                      | Live count today |
+| ----------------------------- | ------------------------------------------ | ---------------- |
+| Ghost Assets                  | `USAGE_END_DATE < TODAY`                   | **0**            |
+| Duplicate Active Assets       | SUMMARY grouped by `ACCOUNT.NAME` × `PRODUCT.NAME`, RowCount | **86**           |
+| Expiring · No Renewal Check   | `USAGE_END_DATE <= NEXT_90_DAYS` AND `>= TODAY` | **0**            |
+
+Data sparsity in this preprod org:
+
+- `Asset` SObject has 95 records; **`Status`, `UsageEndDate`,
+  `InstallDate`, `PurchaseDate` are universally null** in the data.
+- Therefore Ghost + Expiring read 0 — there are no records with a
+  populated end date, the filter has nothing to match. This is the
+  honest report; per the build rules ("Better honest than fake")
+  we did not invent counts.
+- Duplicate-by-product reads 86 — the grand-total RowCount across
+  the SUMMARY report after the test-artifact filter (CLM_SimCorp +
+  QtC excluded). All 86 sit on a single `SC Test Account` —
+  surfaces the real signal that the same product appears multiple
+  times for the same account.
+
+API findings on AssetWithProduct:
+
+- Default `standardDateFilter` is `INSTALL_DATE = THIS_FISCAL_QUARTER`.
+  With `InstallDate` null on every row, this filter alone returns 0.
+  Set `durationValue=CUSTOM` with `startDate="" endDate=""` (server
+  normalizes to null) so null-date rows are included.
+- Cannot use SUMMARY-with-no-grouping for Metric tiles — every Asset
+  report needs at least one grouping (Ghost/Expiring use
+  `ACCOUNT.NAME`, Duplicate uses `ACCOUNT.NAME × PRODUCT.NAME`).
+- Component-level `filterColumns` MUST reference columns that exist
+  on the report; AssetWithProduct doesn't expose `Account.Region__c`
+  or `Opportunity.APTS_RH_Product_Family__c`, so Asset widgets bind
+  only to the Owner filter (`ACCOUNT_OWNER_NAME`).
+- "No Renewal Opp" join on Asset → Account → Opportunity (Type=Renewal)
+  needs a Custom Report Type, which Andre cannot author via REST
+  (no Metadata API perms). Shipped the simpler "Expiring ≤90d"
+  variant and documented the gap in the widget header.
+
+### C. Renewal Health donut (replaces Past Close Date tile)
+
+Past Close Date Metric tile (€325k — trivial signal) was dropped from
+the dashboard. The vacated slot at (row 16, col 9, rowspan 3,
+colspan 3) is now occupied by a Donut showing **Renewal Health by
+Fiscal Quarter** — open Renewal opps grouped by `FISCAL_QUARTER`,
+sliced by `APTS_Renewal_ACV__c`.
+
+Live slices today (Open Renewals, EUR ACV):
+
+| Fiscal Quarter | ACV          | Renewal count |
+| -------------- | ------------ | ------------- |
+| Q2-2026        | EUR 2.4 M    | 24            |
+| Q3-2026        | EUR 6.4 M    | 17            |
+| Q4-2026        | EUR 145.0 M  | 42            |
+| Q1-2027        | EUR 2.5 M    | 11            |
+| Q2-2027        | EUR 1.2 M    | 3             |
+| Q3-2027        | EUR 9.8 M    | 10            |
+| Q4-2027        | EUR 7.7 M    | 14            |
+| Q1-2028        | EUR 0.4 M    | 4             |
+| Q2-2028        | EUR 1.5 M    | 2             |
+| Q4-2028        | EUR 0.1 M    | 2             |
+| **Total**      | **EUR 177.3 M** | **134**    |
+
+This is a **simpler fallback** than the originally-spec'd On Track /
+At Risk / No Opp categorization — Reports doesn't support multi-
+condition CASE (rule-based bucketing requires a Custom Report Type
+with formula columns, which Andre cannot author via REST). The
+fiscal-quarter slicing surfaces the same business question
+("when is the renewal book due, and what's overdue?") via the
+implicit At-Risk-If-Past-Quarter heuristic.
+
+Note: the Renewal Health report explicitly filters `Type='Renewal'`
+and `IsClosed=false` — ARR is NOT mixed with the Open Pipeline KPI
+tile (Land+Expand ARR). ACV vs ARR separation per the SimCorp
+canonical rule (memory `feedback_simcorp_arr_acv_separation.md`).
+
+### Final state
+
+- Dashboard: 16 widgets (pre-v2) → 19 widgets (post-v2). Past Close
+  Date dropped, Renewal Health donut added, 3 Asset tiles added.
+- Filters: 3 declared, 3 verified on re-GET.
+- All 4 new reports live in `Sales Ops Commercial Health` folder.
+- Idempotent: `python3 upgrade_v2.py` second run = re-PATCHes report
+  metadata (filters, date ranges) but makes 0 dashboard changes;
+  third run on top of identical metadata = full no-op.
