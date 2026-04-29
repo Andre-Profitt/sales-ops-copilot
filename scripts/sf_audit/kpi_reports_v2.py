@@ -163,6 +163,71 @@ def kpi_v2_reports(folder_id: str | None) -> list[dict[str, Any]]:
                 ],
             },
         },
+        # 4. Win/Loss by Fiscal Quarter (last fiscal year) ────────────
+        # Two-level grouping: quarter -> won/lost so each Q shows both bars.
+        {
+            "key": "kpi-winloss-by-quarter",
+            "label": "KPI · Win/Loss by Fiscal Quarter (L+E)",
+            "metadata": {
+                **base_meta,
+                "name": "KPI · Win/Loss by Fiscal Quarter (L+E)",
+                "description": "Closed-Won and Closed-Lost L+E ARR by fiscal quarter, last fiscal year. Bookings vs leakage trend.",
+                "reportFormat": "SUMMARY",
+                "reportType": {"type": "Opportunity"},
+                "detailColumns": [
+                    "OPPORTUNITY_NAME",
+                    "ACCOUNT_NAME",
+                    "Opportunity.APTS_Opportunity_ARR__c.CONVERT",
+                ],
+                "groupingsDown": [
+                    {"name": "CLOSE_DATE", "sortOrder": "Asc", "dateGranularity": "fiscalQuarter"},
+                    {"name": "WON", "sortOrder": "Desc", "dateGranularity": "None"},
+                ],
+                "aggregates": [
+                    "s!Opportunity.APTS_Opportunity_ARR__c.CONVERT",
+                    "RowCount",
+                ],
+                "standardDateFilter": {"column": "CLOSE_DATE", "durationValue": "LAST_FISCAL_YEAR"},
+                "reportFilters": [
+                    _filter("CLOSED", "equals", "1"),
+                    _filter("TYPE", "equals", "Land,Expand"),
+                    *POLLUTION_FILTERS,
+                ],
+            },
+        },
+        # 5. Pipeline at Activity Risk ────────────────────────────────
+        # Open L+E opps with no activity in 30 days, by stage.
+        {
+            "key": "kpi-pipeline-at-activity-risk",
+            "label": "KPI · Pipeline at Activity Risk",
+            "metadata": {
+                **base_meta,
+                "name": "KPI · Pipeline at Activity Risk",
+                "description": "Open L+E opps with LastActivityDate older than 30 days. ARR at risk because no recent engagement. Activity discipline KPI.",
+                "reportFormat": "SUMMARY",
+                "reportType": {"type": "Opportunity"},
+                "detailColumns": [
+                    "OPPORTUNITY_NAME",
+                    "ACCOUNT_NAME",
+                    "FULL_NAME",
+                    "LAST_ACTIVITY",
+                    "Opportunity.APTS_Opportunity_ARR__c.CONVERT",
+                ],
+                "groupingsDown": [
+                    {"name": "STAGE_NAME", "sortOrder": "Asc", "dateGranularity": "None"},
+                ],
+                "aggregates": [
+                    "s!Opportunity.APTS_Opportunity_ARR__c.CONVERT",
+                    "RowCount",
+                ],
+                "reportFilters": [
+                    _filter("CLOSED", "equals", "0"),
+                    _filter("TYPE", "equals", "Land,Expand"),
+                    _filter("LAST_ACTIVITY", "lessThan", "LAST_N_DAYS:30"),
+                    *POLLUTION_FILTERS,
+                ],
+            },
+        },
     ]
 
 

@@ -51,6 +51,23 @@ NEW_WIDGETS = [
         "grouping": "FORECAST_CATEGORY",
         "aggregate": "s!Opportunity.APTS_Opportunity_ARR__c.CONVERT",
     },
+    {
+        "header": "Win/Loss by Fiscal Quarter",
+        "title": "Bookings vs leakage trend (L+E)",
+        "report_id": "00OTb000008mvKLMAY",
+        "viz": "Column",
+        "grouping": "CLOSE_DATE",
+        "groupingDateGranularity": "fiscalQuarter",
+        "aggregate": "s!Opportunity.APTS_Opportunity_ARR__c.CONVERT",
+    },
+    {
+        "header": "Pipeline at Activity Risk",
+        "title": "30d+ no activity, by Stage",
+        "report_id": "00OTb000008mvLxMAI",
+        "viz": "Bar",
+        "grouping": "STAGE_NAME",
+        "aggregate": "s!Opportunity.APTS_Opportunity_ARR__c.CONVERT",
+    },
 ]
 
 
