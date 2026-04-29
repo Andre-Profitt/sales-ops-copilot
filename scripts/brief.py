@@ -823,6 +823,43 @@ def summarize_snapshot_history(rows: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+CAPABILITY_SCOUT_MATCHES = pathlib.Path(
+    "/Users/test/code/apps/capability-scout/state/matches.jsonl"
+)
+
+
+def pull_capability_matches(min_confidence: float = 0.7, limit: int = 5) -> list[dict[str, Any]]:
+    """Read capability-scout match output. Self-contained, fail-quiet.
+
+    Returns up to `limit` matches at confidence ≥ `min_confidence`, sorted desc.
+    Empty list if file missing or unparseable — never raises (the brief should
+    not break because scout hasn't run yet).
+    """
+    if not CAPABILITY_SCOUT_MATCHES.exists():
+        return []
+    out: list[dict[str, Any]] = []
+    try:
+        for line in CAPABILITY_SCOUT_MATCHES.read_bytes().splitlines():
+            if not line.strip():
+                continue
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if not isinstance(row, dict):
+                continue
+            try:
+                conf = float(row.get("confidence", 0))
+            except (TypeError, ValueError):
+                continue
+            if conf >= min_confidence:
+                out.append(row)
+    except OSError:
+        return []
+    out.sort(key=lambda x: -float(x.get("confidence", 0)))
+    return out[:limit]
+
+
 def pull_fabric_workspace_summary() -> list[dict[str, Any]]:
     """List datasets and reports per Sales-Ops-relevant workspace."""
     out = []
@@ -1059,6 +1096,7 @@ def render_report(
     synthesis: str | None,
     model: str,
     radar_recs: list | None = None,
+    capability_matches: list | None = None,
 ) -> str:
     today = dt.date.today().isoformat()
     lines = [
@@ -1201,6 +1239,31 @@ def render_report(
                             f"{amt_s} | {s.get('owner', '—')} | {also_s} |"
                         )
                     lines.append("")
+        lines.append("")
+
+    # Capability matches — upstream rec × internal pain joins from capability-scout.
+    # Empty list (file missing or no high-conf matches) → section skipped.
+    if capability_matches:
+        lines += [
+            "## Capability matches",
+            "",
+            "*Upstream capabilities that may address known internal pain points. "
+            "Source: `~/code/apps/capability-scout/state/matches.jsonl` "
+            "(conf ≥0.7). Triage with `/capability-scan`.*",
+            "",
+            "| conf | action | rec | registry pain | rationale |",
+            "|---:|:--:|---|---|---|",
+        ]
+        for cm in capability_matches:
+            try:
+                conf = float(cm.get("confidence", 0))
+            except (TypeError, ValueError):
+                conf = 0.0
+            rec = (cm.get("rec_summary") or "—")[:50]
+            registry = (cm.get("registry_name") or "—")[:35]
+            rationale = (cm.get("rationale") or "—")[:60]
+            action = cm.get("proposed_action") or "—"
+            lines.append(f"| {conf:.2f} | {action} | {rec} | {registry} | {rationale} |")
         lines.append("")
 
     totals = sf_snapshot.get("totals", {})
@@ -1678,8 +1741,20 @@ def main() -> int:
             print(f"  ⚠ Synthesis failed: {e}")
             synthesis = f"_Synthesis failed: {e}_"
 
+    capability_matches = pull_capability_matches()
+    if capability_matches:
+        print(f"  Capability matches surfaced: {len(capability_matches)}")
+
     report = render_report(
-        sf, fabric, alerts, owners, accounts, synthesis, args.model, radar_recs=radar_recs
+        sf,
+        fabric,
+        alerts,
+        owners,
+        accounts,
+        synthesis,
+        args.model,
+        radar_recs=radar_recs,
+        capability_matches=capability_matches,
     )
     out_path.write_text(report, encoding="utf-8")
     print(f"\n✓ Wrote {out_path}")
