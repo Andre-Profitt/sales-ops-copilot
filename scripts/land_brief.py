@@ -53,6 +53,20 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
     BillingCountry + Industry per the canonical MD-1 scope map). Falls back to
     Account.Sales_Director_Book__c IN (book_codes) for legacy callers if no
     where_clause is set.
+
+    FX-correctness: APTS_Opportunity_ARR__c and APTS_Renewal_ACV__c are stored
+    in each opp's transactional currency (verified 2026-04-29 — e.g. a CAD opp
+    holds CAD 2.84M, convertCurrency returns EUR 1.78M). SOQL SUM aggregates
+    on these fields are NOT FX-converted (SF's `convertCurrency()` function is
+    documented as not supported inside aggregate functions — silently returns
+    raw multi-currency sums). Per the SimCorp cardinal rule
+    (`feedback_sf_multi_currency_aggregation.md`), this is wrong for any
+    director with non-EUR pipeline (Canada, NA, UKI, APAC, ME&A — most of
+    them).
+
+    Fix: pull per-record values with `convertCurrency()` in SELECT (which
+    DOES work — verified per-row), then sum in Python. Result is FX-converted
+    to apro@simcorp.com's display currency (EUR).
     """
     where_clause = director.get("where_clause")
     if not where_clause:
@@ -60,50 +74,58 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
         where_clause = f"Account.Sales_Director_Book__c IN {book_codes}"
     period_clause = "CloseDate = THIS_QUARTER"  # TODO: parameterize by `period`
 
-    by_type_q = (
-        "SELECT Type, COUNT(Id) num_opps, "
-        "SUM(APTS_Opportunity_ARR__c) total_arr, "
-        "SUM(APTS_Renewal_ACV__c) total_renewal_acv "
+    # Pull per-record FX-converted values, aggregate in Python.
+    # SOQL SUM(convertCurrency(...)) does NOT work — silently returns raw sum.
+    # SOQL SELECT convertCurrency(...) DOES work — returns per-record FX value.
+    detail_q = (
+        "SELECT Id, Type, StageName, "
+        "convertCurrency(APTS_Opportunity_ARR__c) arr_fx, "
+        "convertCurrency(APTS_Renewal_ACV__c) acv_fx "
         "FROM Opportunity "
         f"WHERE IsClosed = false AND {period_clause} "
-        f"AND {where_clause} "
-        "GROUP BY Type ORDER BY Type"
+        f"AND {where_clause}"
     )
-    by_type = []
-    for r in _sf_query(by_type_q):
-        by_type.append(
-            {
-                "type": r.get("Type") or "(unset)",
-                "num_opps": r.get("num_opps") or 0,
-                "arr": r.get("total_arr") or 0,
-                "renewal_acv": r.get("total_renewal_acv") or 0,
-            }
-        )
+    rows = _sf_query(detail_q)
 
-    new_arr_q = (
-        "SELECT StageName, COUNT(Id) num_opps, SUM(APTS_Opportunity_ARR__c) arr "
-        "FROM Opportunity "
-        f"WHERE IsClosed = false AND {period_clause} "
-        "AND Type IN ('Land','Expand') "
-        f"AND {where_clause} "
-        "GROUP BY StageName ORDER BY StageName"
-    )
-    new_business_by_stage = [
-        {"stage": r.get("StageName"), "num_opps": r.get("num_opps") or 0, "arr": r.get("arr") or 0}
-        for r in _sf_query(new_arr_q)
+    # Aggregate by Type
+    by_type_acc: dict[str, dict[str, float]] = {}
+    for r in rows:
+        t = r.get("Type") or "(unset)"
+        bucket = by_type_acc.setdefault(t, {"num_opps": 0, "arr": 0.0, "renewal_acv": 0.0})
+        bucket["num_opps"] += 1
+        bucket["arr"] += float(r.get("arr_fx") or 0)
+        bucket["renewal_acv"] += float(r.get("acv_fx") or 0)
+    by_type = [
+        {"type": t, **{k: (round(v, 2) if k != "num_opps" else int(v)) for k, v in vals.items()}}
+        for t, vals in sorted(by_type_acc.items())
     ]
 
-    renewal_acv_q = (
-        "SELECT StageName, COUNT(Id) num_opps, SUM(APTS_Renewal_ACV__c) acv "
-        "FROM Opportunity "
-        f"WHERE IsClosed = false AND {period_clause} "
-        "AND Type = 'Renewal' "
-        f"AND {where_clause} "
-        "GROUP BY StageName ORDER BY StageName"
-    )
+    # New-business (Land+Expand) by stage — uses arr_fx
+    nb_acc: dict[str, dict[str, float]] = {}
+    for r in rows:
+        if r.get("Type") not in ("Land", "Expand"):
+            continue
+        s = r.get("StageName") or "(unset)"
+        bucket = nb_acc.setdefault(s, {"num_opps": 0, "arr": 0.0})
+        bucket["num_opps"] += 1
+        bucket["arr"] += float(r.get("arr_fx") or 0)
+    new_business_by_stage = [
+        {"stage": s, "num_opps": int(v["num_opps"]), "arr": round(v["arr"], 2)}
+        for s, v in sorted(nb_acc.items())
+    ]
+
+    # Renewals by stage — uses acv_fx
+    ren_acc: dict[str, dict[str, float]] = {}
+    for r in rows:
+        if r.get("Type") != "Renewal":
+            continue
+        s = r.get("StageName") or "(unset)"
+        bucket = ren_acc.setdefault(s, {"num_opps": 0, "acv": 0.0})
+        bucket["num_opps"] += 1
+        bucket["acv"] += float(r.get("acv_fx") or 0)
     renewals_by_stage = [
-        {"stage": r.get("StageName"), "num_opps": r.get("num_opps") or 0, "acv": r.get("acv") or 0}
-        for r in _sf_query(renewal_acv_q)
+        {"stage": s, "num_opps": int(v["num_opps"]), "acv": round(v["acv"], 2)}
+        for s, v in sorted(ren_acc.items())
     ]
 
     return {
@@ -111,9 +133,15 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
         "new_business_by_stage": new_business_by_stage,
         "renewals_by_stage": renewals_by_stage,
         "totals": {
-            "new_business_arr_open_this_quarter": sum(t["arr"] for t in by_type),
-            "renewal_acv_open_this_quarter": sum(t["renewal_acv"] for t in by_type),
+            "new_business_arr_open_this_quarter": round(
+                sum(t["arr"] for t in by_type if t["type"] in ("Land", "Expand")), 2
+            ),
+            "renewal_acv_open_this_quarter": round(
+                sum(t["renewal_acv"] for t in by_type if t["type"] == "Renewal"), 2
+            ),
         },
+        "_fx_converted": True,
+        "_fx_target_currency": "EUR (apro display currency)",
     }
 
 
