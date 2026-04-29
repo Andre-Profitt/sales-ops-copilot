@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Opp_Type__c</fullName>
+    <description>Opportunity Type — Land, Expand, or Renewal. Per SimCorp metric convention, ARR fields apply to Land+Expand, ACV fields apply to Renewal. Never blend.</description>
+    <externalId>false</externalId>
+    <label>Opp Type</label>
+    <length>20</length>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

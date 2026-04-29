@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Stage_Name__c</fullName>
+    <description>Opportunity stage at snapshot time. SimCorp 8-stage process: 1 Prospecting, 2 Discovery, 3 Engagement, 4 Shortlisted, 5 Preferred, 6 Contracting, 7 Opt-out, 8 Won.</description>
+    <externalId>false</externalId>
+    <label>Stage Name</label>
+    <length>40</length>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AnalyticSnapshot xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Daily pipeline rollup: Owner x Stage x Type, materialized into Pipeline_Snapshot__c. Aggregate-only (no per-deal detail) — compliant with SimCorp AI Code of Conduct §8. Source report aggregates are FX-converted via s!field.CONVERT, so multi-currency ARR/ACV is settled at snapshot time. Replaces the disk-based snapshot_diff hack in scripts/brief.py with a SOQL-queryable, audit-trail-friendly trend store.</description>
+    <groupColumn>FULL_NAME</groupColumn>
+    <mappings>
+        <!-- Snapshot Date is auto-populated from the run date -->
+        <sourceField>EXECUTION_DATE</sourceField>
+        <targetField>Pipeline_Snapshot__c.Snapshot_Date__c</targetField>
+    </mappings>
+    <mappings>
+        <sourceField>FULL_NAME</sourceField>
+        <targetField>Pipeline_Snapshot__c.Owner_Name__c</targetField>
+    </mappings>
+    <mappings>
+        <sourceField>STAGE_NAME</sourceField>
+        <targetField>Pipeline_Snapshot__c.Stage_Name__c</targetField>
+    </mappings>
+    <mappings>
+        <sourceField>TYPE</sourceField>
+        <targetField>Pipeline_Snapshot__c.Opp_Type__c</targetField>
+    </mappings>
+    <mappings>
+        <sourceField>Opportunity.APTS_Opportunity_ARR__c</sourceField>
+        <targetField>Pipeline_Snapshot__c.Total_ARR__c</targetField>
+    </mappings>
+    <mappings>
+        <sourceField>Opportunity.APTS_Renewal_ACV__c</sourceField>
+        <targetField>Pipeline_Snapshot__c.Total_ACV__c</targetField>
+    </mappings>
+    <mappings>
+        <sourceField>Opportunity.APTS_Forecast_ARR__c</sourceField>
+        <targetField>Pipeline_Snapshot__c.Weighted_ARR__c</targetField>
+    </mappings>
+    <mappings>
+        <sourceField>RowCount</sourceField>
+        <targetField>Pipeline_Snapshot__c.Opp_Count__c</targetField>
+    </mappings>
+    <name>Pipeline Snapshot Daily</name>
+    <runningUser>apro@simcorp.com</runningUser>
+    <sourceReport>Sales_Ops_Commercial_Health/Snapshot_Pipeline_Daily_v1</sourceReport>
+    <targetObject>Pipeline_Snapshot__c</targetObject>
+</AnalyticSnapshot>

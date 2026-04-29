@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Opp_Count__c</fullName>
+    <description>Count of opportunities in this Owner x Stage x Type bucket on Snapshot_Date. Sourced from RowCount on the source summary report.</description>
+    <externalId>false</externalId>
+    <label>Opp Count</label>
+    <precision>8</precision>
+    <required>false</required>
+    <scale>0</scale>
+    <trackTrending>false</trackTrending>
+    <type>Number</type>
+    <unique>false</unique>
+</CustomField>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Snapshot_Date__c</fullName>
+    <description>Date the snapshot row was materialized (one row per Snapshot_Date x Owner x Stage x Type). Indexed via external-id for efficient LAST_N_DAYS / date-range filters.</description>
+    <externalId>true</externalId>
+    <label>Snapshot Date</label>
+    <required>true</required>
+    <trackTrending>false</trackTrending>
+    <type>Date</type>
+</CustomField>

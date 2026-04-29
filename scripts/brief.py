@@ -291,6 +291,17 @@ def pull_salesforce_snapshot() -> dict[str, Any]:
         print(f"  [WARN] renewal-retention pull failed: {e}", file=sys.stderr)
         renewal_retention = {}
 
+    # 30-day trend from the Pipeline_Snapshot__c SObject (Reporting
+    # Snapshot). Empty until the daily AnalyticSnapshot has run a few
+    # times — render section handles the empty case gracefully. Setup
+    # runbook: docs/REPORTING_SNAPSHOTS.md.
+    try:
+        snapshot_rows = pull_snapshot_history(days=30)
+        snapshot_history = summarize_snapshot_history(snapshot_rows)
+    except Exception as e:
+        print(f"  [WARN] snapshot-history pull failed: {e}", file=sys.stderr)
+        snapshot_history = {"by_date": [], "days": 0, "first_date": None, "last_date": None}
+
     # Pipeline Velocity composite — the canonical RevOps single-number
     # health metric. Caveat: built on the same count-based win rate as
     # the Win Rate Trend widget, so it inherits the gameable-win-rate
@@ -321,6 +332,7 @@ def pull_salesforce_snapshot() -> dict[str, Any]:
         "commit_at_risk": commit_at_risk,
         "slippage_push_count": slippage,
         "renewal_retention": renewal_retention,
+        "snapshot_history": snapshot_history,
         # Empirical win-rate-conditional-on-stage (from stage_probs cache).
         # NOT N→N+1 progression rate — it's "P(Won | currently at stage N)"
         # learned from OpportunityFieldHistory transitions over the last
@@ -711,6 +723,106 @@ def pull_zombie_owners(top_n: int = 5) -> list[dict[str, Any]]:
     return rows[:top_n]
 
 
+def pull_snapshot_history(days: int = 30) -> list[dict[str, Any]]:
+    """30-day pipeline trend from the `Pipeline_Snapshot__c` SObject.
+
+    Sourced from the daily AnalyticSnapshot ("Pipeline Snapshot Daily" —
+    setup runbook in `docs/REPORTING_SNAPSHOTS.md`). Replaces the disk-
+    based snapshot_diff hack with a SOQL-queryable, audit-trail-friendly
+    materialized aggregate (Owner x Stage x Type x Date).
+
+    Per AGENTS.md SimCorp rules:
+    - ARR (Land + Expand) and ACV (Renewal) are stored in **separate**
+      currency fields (`Total_ARR__c`, `Total_ACV__c`) and never blended.
+    - Aggregates persisted are FX-converted at snapshot time via the
+      source report's `s!field.CONVERT` columns; raw multi-currency
+      values do not flow into the SObject.
+    - Aggregate-only — no per-deal detail; compliant with AI Code of
+      Conduct §8 (no sole-basis decisions).
+
+    Empty-graceful: returns [] if the SObject is not yet deployed or
+    no snapshots have run. Caller must handle this — the daily snapshot
+    fires at 06:00 UTC each morning, so day 1 of deployment will have 0
+    rows.
+
+    Returns: list of {date, owner, stage, opp_type, total_arr,
+    total_acv, weighted_arr, opp_count}.
+    """
+    soql = (
+        "SELECT Snapshot_Date__c, Owner_Name__c, Stage_Name__c, Opp_Type__c, "
+        "Total_ARR__c, Total_ACV__c, Weighted_ARR__c, Opp_Count__c "
+        "FROM Pipeline_Snapshot__c "
+        f"WHERE Snapshot_Date__c >= LAST_N_DAYS:{days} "
+        "ORDER BY Snapshot_Date__c DESC, Owner_Name__c ASC, Stage_Name__c ASC, Opp_Type__c ASC"
+    )
+    try:
+        records = _sf_query(soql)
+    except RuntimeError as e:
+        # SObject not deployed yet → INVALID_TYPE; treat as empty rather
+        # than crash the brief.
+        msg = str(e)
+        if "INVALID_TYPE" in msg or "sObject type" in msg or "Pipeline_Snapshot__c" in msg:
+            return []
+        raise
+
+    rows: list[dict[str, Any]] = []
+    for r in records:
+        rows.append(
+            {
+                "date": r.get("Snapshot_Date__c"),
+                "owner": r.get("Owner_Name__c"),
+                "stage": r.get("Stage_Name__c"),
+                "opp_type": r.get("Opp_Type__c"),
+                "total_arr": r.get("Total_ARR__c") or 0,
+                "total_acv": r.get("Total_ACV__c") or 0,
+                "weighted_arr": r.get("Weighted_ARR__c") or 0,
+                "opp_count": int(r.get("Opp_Count__c") or 0),
+            }
+        )
+    return rows
+
+
+def summarize_snapshot_history(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    """Roll up snapshot-history rows to per-day open-pipeline totals.
+
+    Returns: {
+      "by_date": [{date, total_arr, total_acv, total_weighted_arr, opp_count}, ...],
+      "days": int,
+      "first_date": str | None,
+      "last_date": str | None,
+    }
+    """
+    if not rows:
+        return {"by_date": [], "days": 0, "first_date": None, "last_date": None}
+
+    agg: dict[str, dict[str, float]] = {}
+    for r in rows:
+        d = str(r.get("date") or "")
+        if not d:
+            continue
+        e = agg.setdefault(d, {"arr": 0.0, "acv": 0.0, "warr": 0.0, "count": 0.0})
+        e["arr"] += float(r.get("total_arr") or 0)
+        e["acv"] += float(r.get("total_acv") or 0)
+        e["warr"] += float(r.get("weighted_arr") or 0)
+        e["count"] += float(r.get("opp_count") or 0)
+    by_date = [
+        {
+            "date": d,
+            "total_arr": v["arr"],
+            "total_acv": v["acv"],
+            "total_weighted_arr": v["warr"],
+            "opp_count": int(v["count"]),
+        }
+        for d, v in sorted(agg.items())
+    ]
+    return {
+        "by_date": by_date,
+        "days": len(by_date),
+        "first_date": by_date[0]["date"] if by_date else None,
+        "last_date": by_date[-1]["date"] if by_date else None,
+    }
+
+
 def pull_fabric_workspace_summary() -> list[dict[str, Any]]:
     """List datasets and reports per Sales-Ops-relevant workspace."""
     out = []
@@ -972,6 +1084,42 @@ def render_report(
             f"(today {diff_data['renewal_acv']['today']:,.0f}, prior {diff_data['renewal_acv']['prior']:,.0f})",
             "",
         ]
+
+    # 30-day pipeline trend from the Pipeline_Snapshot__c SObject
+    # (Reporting Snapshot). Replaces the disk-based snapshot_diff hack
+    # with a SOQL-queryable, audit-trail-friendly aggregate. Empty until
+    # the daily AnalyticSnapshot has run a few times.
+    snap_hist = sf_snapshot.get("snapshot_history") or {}
+    by_date = snap_hist.get("by_date") or []
+    lines += ["## 30-day pipeline trend (from snapshots)", ""]
+    if not by_date:
+        lines += [
+            "_no snapshot history yet — first snapshot runs at 06:00 UTC tomorrow._",
+            "_(See `docs/REPORTING_SNAPSHOTS.md` for setup status.)_",
+            "",
+        ]
+    else:
+        lines += [
+            f"*{snap_hist.get('days', 0)} day"
+            f"{'' if snap_hist.get('days') == 1 else 's'} of history "
+            f"({snap_hist.get('first_date')} → {snap_hist.get('last_date')}). "
+            "Source: `Pipeline_Snapshot__c`. ARR (Land+Expand) and ACV (Renewal) "
+            "stored separately — never blended.*",
+            "",
+            "| Date | Open ARR | Open ACV | Weighted ARR | # Opps |",
+            "|---|---:|---:|---:|---:|",
+        ]
+        # Trend table — show last 14 days max (newest first) to keep the brief tight
+        for row in list(reversed(by_date))[:14]:
+            arr = row.get("total_arr") or 0
+            acv = row.get("total_acv") or 0
+            warr = row.get("total_weighted_arr") or 0
+            cnt = row.get("opp_count") or 0
+            lines.append(
+                f"| {row.get('date', '—')} | EUR {arr:,.0f} | EUR {acv:,.0f} | "
+                f"EUR {warr:,.0f} | {cnt} |"
+            )
+        lines.append("")
 
     # Owner concentration — single highest-leverage view of who owns the risk
     if owner_concentration:
