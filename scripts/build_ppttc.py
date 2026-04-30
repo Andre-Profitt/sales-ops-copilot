@@ -25,12 +25,12 @@ import contextlib
 import io
 import json
 import math
+import numbers
 import sys
 from dataclasses import dataclass
 from datetime import date, datetime
 from pathlib import Path
 from typing import Any
-from zipfile import ZipFile
 
 try:
     import formulas  # type: ignore[import-untyped]
@@ -45,6 +45,7 @@ from openpyxl.utils.cell import range_boundaries
 
 from _directors import canonical_directors
 from model_recalc import _parse_key, _unwrap
+from ppttc_template import build_director_template, template_has_named_elements
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_TEMPLATE = ROOT / "assets/LAND_template.pptx"
@@ -284,6 +285,20 @@ def _table_entry(name: str, rows: list[list[Any]]) -> dict[str, Any]:
     return {"name": name, "table": _json_table(rows)}
 
 
+def _chart_entry(
+    name: str,
+    *,
+    categories: list[Any],
+    series_rows: list[tuple[str, list[Any]]],
+) -> dict[str, Any]:
+    if not categories:
+        return _table_entry(name, [[None]])
+    table: list[list[Any]] = [[None, *categories]]
+    for label, values in series_rows:
+        table.append([label, *values])
+    return _table_entry(name, table)
+
+
 def _last_nonempty_row(
     workbook: LiteralWorkbook | ModelWorkbook,
     sheet_name: str,
@@ -305,17 +320,6 @@ def _last_nonempty_row(
         if row_has_value:
             last = row_idx
     return last
-
-
-def _template_has_named_elements(template_path: Path) -> bool:
-    with ZipFile(template_path) as zf:
-        for name in zf.namelist():
-            if not name.endswith(".xml"):
-                continue
-            data = zf.read(name)
-            if b"AddRangeData" in data or b"addrangedata" in data:
-                return True
-    return False
 
 
 def _action_items_table(trends: dict[str, Any]) -> list[list[Any]]:
@@ -353,6 +357,176 @@ def _territory_bar_matrix(model: ModelWorkbook) -> list[list[Any]]:
 
 def _forecast_category_matrix(model: ModelWorkbook) -> list[list[Any]]:
     return model.matrix("Forecast_Category", "A1:C7")
+
+
+def _number_or_zero(value: Any) -> float:
+    if isinstance(value, numbers.Real) and not isinstance(value, bool):
+        numeric = float(value)
+        if math.isfinite(numeric):
+            return numeric
+    return 0.0
+
+
+def _number_or_none(value: Any) -> float | None:
+    if isinstance(value, numbers.Real) and not isinstance(value, bool):
+        numeric = float(value)
+        if math.isfinite(numeric):
+            return numeric
+    return None
+
+
+def _pipe_movement_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
+    matrix = model.matrix("Pipe_Movement", "A2:B6")
+    categories = [row[0] for row in matrix if row[0] not in (None, "")]
+    values = [_number_or_zero(row[1]) for row in matrix if row[0] not in (None, "")]
+    return _chart_entry("S04_PipeMovement", categories=categories, series_rows=[("ARR (EUR)", values)])
+
+
+def _pipeline_by_stage_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
+    matrix = model.matrix("Pipeline_By_Stage", "A2:B9")
+    categories = [row[0] for row in matrix if row[0] not in (None, "")]
+    values = [_number_or_zero(row[1]) for row in matrix if row[0] not in (None, "")]
+    return _chart_entry(
+        "S05_PipelineByStage",
+        categories=categories,
+        series_rows=[("Open ARR (EUR)", values)],
+    )
+
+
+def _pipeline_aging_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
+    matrix = model.matrix("Pipeline_Aging", "A2:E7")
+    categories = [row[0] for row in matrix if row[0] not in (None, "")]
+    values = [_number_or_zero(row[3]) for row in matrix if row[0] not in (None, "")]
+    return _chart_entry(
+        "S06_PipelineAging",
+        categories=categories,
+        series_rows=[("Open ARR (EUR)", values)],
+    )
+
+
+def _forecast_category_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
+    matrix = _forecast_category_matrix(model)
+    categories = [row[0] for row in matrix[1:] if row[0] not in (None, "")]
+    values = [_number_or_zero(row[2]) for row in matrix[1:] if row[0] not in (None, "")]
+    return _chart_entry(
+        "S13_ForecastCategory",
+        categories=categories,
+        series_rows=[("ARR (EUR)", values)],
+    )
+
+
+def _by_owner_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
+    last_row = _last_nonempty_row(model, "By_Owner", start_row=2, columns=["A", "B"])
+    rows = []
+    for owner, arr in model.matrix("By_Owner", f"A2:B{last_row}"):
+        if owner in (None, ""):
+            continue
+        numeric = _number_or_zero(arr)
+        if numeric <= 0:
+            continue
+        rows.append((owner, numeric))
+    rows.sort(key=lambda item: item[1], reverse=True)
+    return _chart_entry(
+        "S15_ByOwner",
+        categories=[owner for owner, _ in rows],
+        series_rows=[("Open ARR (EUR)", [arr for _, arr in rows])],
+    )
+
+
+def _stage_by_industry_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
+    matrix = model.matrix("Pivots", "A5:M13")
+    headers = matrix[0]
+    categories = [row[0] for row in matrix[1:]]
+    series_rows: list[tuple[str, list[Any]]] = []
+    for col_idx, series_name in enumerate(headers[1:], start=1):
+        values = [_number_or_zero(row[col_idx]) for row in matrix[1:]]
+        if any(values):
+            series_rows.append((str(series_name), values))
+    return _chart_entry("S16_StageByIndustry", categories=categories, series_rows=series_rows)
+
+
+def _territory_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
+    rows = []
+    for country, arr in _territory_bar_matrix(model)[1:]:
+        if country in (None, "", "TOTAL"):
+            continue
+        numeric = _number_or_zero(arr)
+        if numeric <= 0:
+            continue
+        rows.append((country, numeric))
+    rows.sort(key=lambda item: item[1], reverse=True)
+    return _chart_entry(
+        "S17_TerritoryPerformance",
+        categories=[country for country, _ in rows],
+        series_rows=[("Open ARR (EUR)", [arr for _, arr in rows])],
+    )
+
+
+def _wins_losses_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
+    matrix = model.matrix("Wins_Losses_QTD", "A1:D3")
+    categories = [row[0] for row in matrix[1:]]
+    arr = [_number_or_zero(row[2]) for row in matrix[1:]]
+    acv = [_number_or_zero(row[3]) for row in matrix[1:]]
+    return _chart_entry(
+        "S18_WinsLossesQTD",
+        categories=categories,
+        series_rows=[
+            ("ARR (Land+Expand, EUR)", arr),
+            ("ACV (Renewal, EUR)", acv),
+        ],
+    )
+
+
+def _velocity_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
+    matrix = model.matrix("Velocity", "A3:E10")
+    categories = [row[0] for row in matrix]
+    line_values = [_number_or_none(row[2]) for row in matrix]
+    bar_values = [_number_or_zero(row[1]) for row in matrix]
+    return _chart_entry(
+        "S19_Velocity",
+        categories=categories,
+        series_rows=[
+            ("Median age (days)", line_values),
+            ("# Open opps", bar_values),
+        ],
+    )
+
+
+def _concentration_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
+    matrix = model.matrix("Concentration", "A11:C15")
+    categories = [row[0] for row in matrix[1:]]
+    shares = [_number_or_zero(row[2]) * 100 for row in matrix[1:]]
+    return _chart_entry(
+        "S21_ConcentrationRiskChart",
+        categories=categories,
+        series_rows=[("Share (%)", shares)],
+    )
+
+
+def _stale_activity_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
+    matrix = model.matrix("Stale_Activity", "A1:C5")
+    categories = [row[0] for row in matrix[1:]]
+    values = [_number_or_zero(row[2]) for row in matrix[1:]]
+    return _chart_entry(
+        "S22_StaleActivity",
+        categories=categories,
+        series_rows=[("ARR (EUR)", values)],
+    )
+
+
+def _pipeline_creation_velocity_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
+    matrix = model.matrix("Pipeline_Creation_Velocity", "A1:C13")
+    categories = [row[0] for row in matrix[1:]]
+    arr_values = [_number_or_zero(row[2]) for row in matrix[1:]]
+    count_values = [_number_or_zero(row[1]) for row in matrix[1:]]
+    return _chart_entry(
+        "S25_PipelineCreationVelocity",
+        categories=categories,
+        series_rows=[
+            ("New ARR (EUR)", arr_values),
+            ("# New opps", count_values),
+        ],
+    )
 
 
 def _exec_summary_entries(
@@ -437,12 +611,14 @@ def _risks_outlook_entry(
     )
 
 
-def _ppttc_entries(artifacts: DirectorArtifacts) -> list[dict[str, Any]]:
-    trends = _load_json(artifacts.trends_path)
-    brief_sections = _parse_markdown_sections(artifacts.brief_path.read_text())
-    model = ModelWorkbook(artifacts.model_path)
-    legacy = LiteralWorkbook(artifacts.legacy_path)
-
+def _ppttc_entries_from_context(
+    artifacts: DirectorArtifacts,
+    *,
+    trends: dict[str, Any],
+    brief_sections: dict[str, list[str]],
+    model: ModelWorkbook,
+    legacy: LiteralWorkbook,
+) -> list[dict[str, Any]]:
     pending_last = _last_nonempty_row(
         legacy,
         "Pending_Commercial_Approval",
@@ -476,9 +652,9 @@ def _ppttc_entries(artifacts: DirectorArtifacts) -> list[dict[str, Any]]:
     entries.extend(_exec_summary_entries(trends, brief_sections))
     entries.extend(
         [
-            _table_entry("S04_PipeMovement", model.matrix("Pipe_Movement", "A2:B6")),
-            _table_entry("S05_PipelineByStage", model.matrix("Pipeline_By_Stage", "A2:B9")),
-            _table_entry("S06_PipelineAging", model.matrix("Pipeline_Aging", "A2:E7")),
+            _pipe_movement_chart_entry(model),
+            _pipeline_by_stage_chart_entry(model),
+            _pipeline_aging_chart_entry(model),
             _table_entry("S07_TopDealsLand", legacy.matrix("Top_Deals_Land", f"A1:H{top_land_last}")),
             _table_entry(
                 "S08_TopDealsExpand", legacy.matrix("Top_Deals_Expand", f"A1:H{top_expand_last}")
@@ -494,21 +670,19 @@ def _ppttc_entries(artifacts: DirectorArtifacts) -> list[dict[str, Any]]:
             _text_entry(
                 "S12_GRRProxyFootnote", str(model.cell_value("Retention", "A5") or "")
             ),
-            _table_entry("S13_ForecastCategory", _forecast_category_matrix(model)),
-            _table_entry("S15_ByOwner", model.matrix("By_Owner", f"A2:B{by_owner_last}")),
-            _table_entry("S16_StageByIndustry", model.matrix("Pivots", "A5:M13")),
-            _table_entry("S17_TerritoryPerformance", _territory_bar_matrix(model)),
-            _table_entry("S18_WinsLossesQTD", model.matrix("Wins_Losses_QTD", "A1:D3")),
-            _table_entry("S19_Velocity", model.matrix("Velocity", "A3:E10")),
-            _table_entry("S22_StaleActivity", model.matrix("Stale_Activity", "A1:C5")),
+            _forecast_category_chart_entry(model),
+            _by_owner_chart_entry(model),
+            _stage_by_industry_chart_entry(model),
+            _territory_chart_entry(model),
+            _wins_losses_chart_entry(model),
+            _velocity_chart_entry(model),
+            _concentration_chart_entry(model),
+            _stale_activity_chart_entry(model),
             _text_entry(
                 "S22_StaleActivityFootnote", str(model.cell_value("Stale_Activity", "A7") or "")
             ),
             _table_entry("S24_AccountExpansion", model.matrix("Account_Expansion", "A1:F16")),
-            _table_entry(
-                "S25_PipelineCreationVelocity",
-                model.matrix("Pipeline_Creation_Velocity", "A1:C13"),
-            ),
+            _pipeline_creation_velocity_chart_entry(model),
             _table_entry("S26_ActionItems", _action_items_table(trends)),
         ]
     )
@@ -516,6 +690,20 @@ def _ppttc_entries(artifacts: DirectorArtifacts) -> list[dict[str, Any]]:
     entries.extend(_sales_velocity_entries(model))
     entries.append(_risks_outlook_entry(trends, brief_sections))
     return entries
+
+
+def _ppttc_entries(artifacts: DirectorArtifacts) -> list[dict[str, Any]]:
+    trends = _load_json(artifacts.trends_path)
+    brief_sections = _parse_markdown_sections(artifacts.brief_path.read_text())
+    model = ModelWorkbook(artifacts.model_path)
+    legacy = LiteralWorkbook(artifacts.legacy_path)
+    return _ppttc_entries_from_context(
+        artifacts,
+        trends=trends,
+        brief_sections=brief_sections,
+        model=model,
+        legacy=legacy,
+    )
 
 
 def _build_payload(template_path: Path, entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -526,9 +714,10 @@ def _write_ppttc(
     artifacts: DirectorArtifacts,
     *,
     template_path: Path,
+    entries: list[dict[str, Any]],
 ) -> Path:
     out_path = artifacts.director_dir / f"{artifacts.slug}-LAND-{artifacts.period}.ppttc"
-    payload = _build_payload(template_path, _ppttc_entries(artifacts))
+    payload = _build_payload(template_path, entries)
     out_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False))
     return out_path
 
@@ -558,7 +747,30 @@ def _build_for_director(
 ) -> Path:
     artifacts = _director_artifacts(period, director)
     _validate_inputs(artifacts)
-    return _write_ppttc(artifacts, template_path=template_path)
+    trends = _load_json(artifacts.trends_path)
+    brief_sections = _parse_markdown_sections(artifacts.brief_path.read_text())
+    model = ModelWorkbook(artifacts.model_path)
+    legacy = LiteralWorkbook(artifacts.legacy_path)
+
+    resolved_template = template_path
+    if template_path == DEFAULT_TEMPLATE.resolve():
+        resolved_template = build_director_template(
+            artifacts=artifacts,
+            base_template_path=template_path,
+            trends=trends,
+            brief_sections=brief_sections,
+            model=model,
+            legacy=legacy,
+        )
+
+    entries = _ppttc_entries_from_context(
+        artifacts,
+        trends=trends,
+        brief_sections=brief_sections,
+        model=model,
+        legacy=legacy,
+    )
+    return _write_ppttc(artifacts, template_path=resolved_template, entries=entries)
 
 
 def main() -> int:
@@ -588,18 +800,19 @@ def main() -> int:
     if not template_path.exists():
         raise SystemExit(f"Template not found: {template_path}")
 
-    template_wired = _template_has_named_elements(template_path)
-    if not template_wired:
-        message = (
-            "warning: template does not appear to contain AddRangeData-named think-cell "
-            "elements yet; emitted .ppttc files are structurally valid, but think-cell "
-            "will ignore these names until a once-wired template is saved. "
-            f"Style is also not part of JSON automation; keep {DEFAULT_STYLE} loaded in "
-            "the saved template."
-        )
-        if args.strict_template:
-            raise SystemExit(message)
-        print(message, file=sys.stderr)
+    if template_path != DEFAULT_TEMPLATE.resolve():
+        template_wired = template_has_named_elements(template_path)
+        if not template_wired:
+            message = (
+                "warning: template does not appear to contain named think-cell elements yet; "
+                "emitted .ppttc files are structurally valid, but think-cell will ignore "
+                "these names until a once-wired template is saved. "
+                f"Style is also not part of JSON automation; keep {DEFAULT_STYLE} loaded in "
+                "the saved template."
+            )
+            if args.strict_template:
+                raise SystemExit(message)
+            print(message, file=sys.stderr)
 
     if args.all_directors:
         directors = canonical_directors()
