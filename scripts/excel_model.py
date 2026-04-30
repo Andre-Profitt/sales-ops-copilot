@@ -76,6 +76,11 @@ DATA_COLUMNS = [
     ("RiskTermination", "string"),
     ("ARR_EUR", "number"),
     ("ACV_EUR", "number"),
+    # ForecastCategoryName is in the SOQL select in land_brief.py but is
+    # not yet surfaced by `_flat()` into raw_opps. Once surfaced, the
+    # Forecast_Category sheet here pivots over it via SUMIFS. Until then
+    # the column lands as None per row and the formulas resolve to 0.
+    ("ForecastCategoryName", "string"),
 ]
 
 
@@ -162,6 +167,16 @@ def build_director_model(
     _build_trend_qoq(wb)
     _build_retention(wb)
     _build_wins_losses_qtd(wb)
+    # Migrated formula-driven sheets (used to be precomputed in
+    # excel_companion.py) and three new insight sheets. Order doesn't
+    # matter — none of them reference each other.
+    _build_forecast_category(wb)
+    _build_top_accounts(wb, snapshot)
+    _build_territory_performance(wb, snapshot)
+    _build_sales_velocity(wb)
+    _build_account_expansion(wb, snapshot)
+    _build_pipeline_creation_velocity(wb)
+    _build_stale_activity(wb)
     # Phase 3: Competitive_Pressure — needs Lost_to_Competitor__r.Name in
     # the SF queries before it can be wired here. Tracked separately.
     _build_methodology(wb)
@@ -338,6 +353,7 @@ def _build_data(wb: Workbook, raw_opps: list[dict]) -> None:
     ws.column_dimensions["J"].width = 14
     ws.column_dimensions["K"].width = 14
     ws.column_dimensions["L"].width = 14
+    ws.column_dimensions["M"].width = 16
     ws.freeze_panes = "A2"
 
 
@@ -1724,6 +1740,659 @@ def _build_wins_losses_qtd(wb: Workbook) -> None:
     ws.column_dimensions["B"].width = 8
     ws.column_dimensions["C"].width = 26
     ws.column_dimensions["D"].width = 26
+    ws.freeze_panes = "A2"
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Migrated + new insight sheets (Phase 2 → formula-driven)
+#
+# Three sheets migrated from the precomputed excel_companion.py legacy:
+#   - Forecast_Category   (CFQ Land+Expand pipe by SF ForecastCategoryName)
+#   - Top_Accounts        (top-10 accounts by open Land+Expand ARR)
+#   - Territory_Performance (per-country open Land+Expand ARR)
+#
+# Four new insight sheets:
+#   - Sales_Velocity              ((# opps × win rate × avg deal size) ÷ cycle)
+#   - Account_Expansion           (top-15 accounts × motion cross-tab)
+#   - Pipeline_Creation_Velocity  (12-week-bucketed new-pipe creation)
+#   - Stale_Activity              (Stage 3-6 L+E opps older than 60d, proxy)
+#
+# All seven follow the same convention as the rest of the model:
+#   INPUT  (blue)   - hardcoded names / category labels seeded from Python
+#   LOCAL  (black)  - formula referencing only its own sheet
+#   XREF   (green)  - formula referencing Data_*, ClosedCFQ_*, ClosedWon6mo_*,
+#                     Renewals12mo_*, Parameters or Stages named ranges
+# ──────────────────────────────────────────────────────────────────────────
+
+
+def _build_forecast_category(wb: Workbook) -> None:
+    """SF ForecastCategoryName breakdown of CFQ Land+Expand open pipe.
+
+    Categories are SF system labels (Pipeline / Best Case / Commit / Closed
+    / Omitted) plus an "(unset)" bucket for opps where the field is null.
+    Each row's # Opps and ARR are SUMIFS over Data_* with Type IN (Land,
+    Expand) AND ForecastCategoryName = <category>. TOTAL is a same-sheet
+    SUM (LOCAL black).
+
+    TODO: ForecastCategoryName lands in raw_opps once land_brief.py's
+    `_flat()` surfaces it. Until then this sheet renders the categories
+    but every value resolves to 0 because the column is empty in Data.
+    """
+    ws = wb.create_sheet("Forecast_Category")
+    _set_header(ws, 1, ["Category", "# Opps", "ARR (EUR)"])
+
+    input_font = Font(color=INPUT_COLOR)
+    xref_font = Font(color=XREF_COLOR)
+    local_bold = Font(color=LOCAL_COLOR, bold=True)
+    note_font = Font(italic=True, color=BRAND_GRAY)
+
+    # SF category labels — INPUT cells, blue. Stakeholders editing one of
+    # these to match a custom forecast value would re-aggregate that row.
+    categories = ["Pipeline", "Best Case", "Commit", "Closed", "Omitted", "(unset)"]
+
+    for i, cat in enumerate(categories, start=2):
+        cat_lit = cat.replace('"', '""')
+        ws.cell(row=i, column=1, value=cat).font = input_font
+        c = ws.cell(
+            row=i,
+            column=2,
+            value=(
+                f'=COUNTIFS(Data_Type, "Land", Data_ForecastCategoryName, "{cat_lit}") '
+                f'+ COUNTIFS(Data_Type, "Expand", Data_ForecastCategoryName, "{cat_lit}")'
+            ),
+        )
+        c.font = xref_font
+        c = ws.cell(
+            row=i,
+            column=3,
+            value=(
+                f'=SUMIFS(Data_ARR_EUR, Data_Type, "Land", Data_ForecastCategoryName, "{cat_lit}") '
+                f'+ SUMIFS(Data_ARR_EUR, Data_Type, "Expand", Data_ForecastCategoryName, "{cat_lit}")'
+            ),
+        )
+        c.font = xref_font
+        c.number_format = "#,##0"
+
+    last_row = 1 + len(categories)
+    total_row = last_row + 1
+    ws.cell(row=total_row, column=1, value="TOTAL").font = local_bold
+    c = ws.cell(row=total_row, column=2, value=f"=SUM(B2:B{last_row})")
+    c.font = local_bold
+    c = ws.cell(row=total_row, column=3, value=f"=SUM(C2:C{last_row})")
+    c.font = local_bold
+    c.number_format = "#,##0"
+
+    ws.cell(
+        row=total_row + 2,
+        column=1,
+        value=(
+            "Per SF: Pipeline = early upside, Best Case = upside if things go "
+            "well, Commit = floor (must hit), Closed = booked, Omitted = "
+            "explicitly excluded. Commit is the call to the field; Best Case "
+            "+ Pipeline is the upside."
+        ),
+    ).font = note_font
+    ws.cell(row=total_row + 2, column=1).alignment = Alignment(wrap_text=True)
+    ws.row_dimensions[total_row + 2].height = 36
+
+    ws.column_dimensions["A"].width = 18
+    ws.column_dimensions["B"].width = 8
+    ws.column_dimensions["C"].width = 16
+    ws.freeze_panes = "A2"
+
+
+def _build_top_accounts(wb: Workbook, snapshot: dict | None) -> None:
+    """Top-10 accounts by open Land+Expand ARR — formula-driven version.
+
+    Account names are pre-derived in Python from snapshot.raw_opps (filter
+    to L+E, group by AccountName, sort desc) and written as INPUT cells
+    (blue). The # Opps and ARR cells are SUMIFS/COUNTIFS over Data_*
+    (XREF green) so totals reconcile to the open Data rows. TOTAL row is
+    a same-sheet SUM (LOCAL black).
+    """
+    ws = wb.create_sheet("Top_Accounts")
+    _set_header(ws, 1, ["#", "Account", "# Opps", "ARR (EUR)"])
+
+    input_font = Font(color=INPUT_COLOR)
+    xref_font = Font(color=XREF_COLOR)
+    local_bold = Font(color=LOCAL_COLOR, bold=True)
+
+    raw = (snapshot or {}).get("raw_opps") or []
+    acct_totals: dict[str, float] = {}
+    for r in raw:
+        if r.get("Type") not in ("Land", "Expand"):
+            continue
+        n = r.get("AccountName") or "(unknown)"
+        acct_totals[n] = acct_totals.get(n, 0.0) + float(r.get("ARR_EUR") or 0)
+    top_accounts = sorted(acct_totals.items(), key=lambda kv: kv[1], reverse=True)[:10]
+
+    for i, (acct, _total) in enumerate(top_accounts, start=2):
+        acct_lit = acct.replace('"', '""')
+        ws.cell(row=i, column=1, value=i - 1).font = input_font
+        ws.cell(row=i, column=2, value=acct).font = input_font
+        c = ws.cell(
+            row=i,
+            column=3,
+            value=(
+                f'=COUNTIFS(Data_AccountName, "{acct_lit}", Data_Type, "Land") '
+                f'+ COUNTIFS(Data_AccountName, "{acct_lit}", Data_Type, "Expand")'
+            ),
+        )
+        c.font = xref_font
+        c = ws.cell(
+            row=i,
+            column=4,
+            value=(
+                f'=SUMIFS(Data_ARR_EUR, Data_AccountName, "{acct_lit}", Data_Type, "Land") '
+                f'+ SUMIFS(Data_ARR_EUR, Data_AccountName, "{acct_lit}", Data_Type, "Expand")'
+            ),
+        )
+        c.font = xref_font
+        c.number_format = "#,##0"
+
+    if top_accounts:
+        last_row = 1 + len(top_accounts)
+        total_row = last_row + 1
+        ws.cell(row=total_row, column=2, value="TOTAL").font = local_bold
+        c = ws.cell(row=total_row, column=3, value=f"=SUM(C2:C{last_row})")
+        c.font = local_bold
+        c = ws.cell(row=total_row, column=4, value=f"=SUM(D2:D{last_row})")
+        c.font = local_bold
+        c.number_format = "#,##0"
+
+    ws.column_dimensions["A"].width = 4
+    ws.column_dimensions["B"].width = 40
+    ws.column_dimensions["C"].width = 10
+    ws.column_dimensions["D"].width = 16
+    ws.freeze_panes = "A2"
+
+
+def _build_territory_performance(wb: Workbook, snapshot: dict | None) -> None:
+    """Per-country aggregate of open Land+Expand ARR.
+
+    Country labels are pre-derived from snapshot.raw_opps (filter to L+E,
+    group by BillingCountry, sort by total ARR desc) and written as INPUT
+    cells (blue). # Opps and ARR are SUMIFS/COUNTIFS over Data_* (XREF
+    green). TOTAL row is a same-sheet SUM (LOCAL black).
+    """
+    ws = wb.create_sheet("Territory_Performance")
+    _set_header(ws, 1, ["#", "Country", "# Opps", "Open ARR (EUR)"])
+
+    input_font = Font(color=INPUT_COLOR)
+    xref_font = Font(color=XREF_COLOR)
+    local_bold = Font(color=LOCAL_COLOR, bold=True)
+
+    raw = (snapshot or {}).get("raw_opps") or []
+    country_totals: dict[str, float] = {}
+    for r in raw:
+        if r.get("Type") not in ("Land", "Expand"):
+            continue
+        country = r.get("BillingCountry") or "(unset)"
+        country_totals[country] = country_totals.get(country, 0.0) + float(r.get("ARR_EUR") or 0)
+    countries = sorted(country_totals.items(), key=lambda kv: kv[1], reverse=True)
+
+    for i, (country, _total) in enumerate(countries, start=2):
+        c_lit = country.replace('"', '""')
+        ws.cell(row=i, column=1, value=i - 1).font = input_font
+        ws.cell(row=i, column=2, value=country).font = input_font
+        c = ws.cell(
+            row=i,
+            column=3,
+            value=(
+                f'=COUNTIFS(Data_BillingCountry, "{c_lit}", Data_Type, "Land") '
+                f'+ COUNTIFS(Data_BillingCountry, "{c_lit}", Data_Type, "Expand")'
+            ),
+        )
+        c.font = xref_font
+        c = ws.cell(
+            row=i,
+            column=4,
+            value=(
+                f'=SUMIFS(Data_ARR_EUR, Data_BillingCountry, "{c_lit}", Data_Type, "Land") '
+                f'+ SUMIFS(Data_ARR_EUR, Data_BillingCountry, "{c_lit}", Data_Type, "Expand")'
+            ),
+        )
+        c.font = xref_font
+        c.number_format = "#,##0"
+
+    if countries:
+        last_row = 1 + len(countries)
+        total_row = last_row + 1
+        ws.cell(row=total_row, column=2, value="TOTAL").font = local_bold
+        c = ws.cell(row=total_row, column=3, value=f"=SUM(C2:C{last_row})")
+        c.font = local_bold
+        c = ws.cell(row=total_row, column=4, value=f"=SUM(D2:D{last_row})")
+        c.font = local_bold
+        c.number_format = "#,##0"
+
+    ws.column_dimensions["A"].width = 4
+    ws.column_dimensions["B"].width = 32
+    ws.column_dimensions["C"].width = 10
+    ws.column_dimensions["D"].width = 16
+    ws.freeze_panes = "A2"
+
+
+def _build_sales_velocity(wb: Workbook) -> None:
+    """Canonical SaaS sales-velocity KPI: v = (#opps × win_rate × avg_deal_size) / avg_cycle_days.
+
+    All five components are formula-driven so a stakeholder can click any
+    cell and trace the inputs:
+
+      B2: # open Land+Expand opps   (XREF, COUNTIFS over Data_Type)
+      B3: win rate                  (XREF, ClosedCFQ_IsWon TRUE/FALSE ratio)
+      B4: avg deal size last 6mo    (XREF, AVERAGE(ClosedWon6mo_ARR_EUR))
+      B5: avg cycle days last 6mo   (LOCAL plug — see TODO below)
+      B6: velocity (EUR/day)        (LOCAL, B2*B3*B4/B5)
+
+    TODO: B5 (avg cycle days) ideally is
+        AVERAGE(ClosedWon6mo_CloseDate) - AVERAGE(ClosedWon6mo_CreatedDate)
+    but ClosedWon6mo_CreatedDate is NOT a defined named range — the
+    closed-history sheets (CLOSED_HISTORY_COLUMNS) carry CloseDate but
+    not CreatedDate. Until that lands, B5 is a hardcoded 90-day input
+    (industry-typical SaaS cycle for $50k+ deals) — flagged blue as
+    INPUT so a stakeholder editing it sees the velocity move.
+    """
+    ws = wb.create_sheet("Sales_Velocity")
+    _set_header(ws, 1, ["Metric", "Value", "Note"])
+
+    input_font = Font(color=INPUT_COLOR, bold=True)
+    xref_font = Font(color=XREF_COLOR, bold=True)
+    local_font = Font(color=LOCAL_COLOR, bold=True)
+    note_font = Font(italic=True, color=BRAND_GRAY)
+
+    # Row 2: # open L+E opps — XREF over Data_Type.
+    ws.cell(row=2, column=1, value="# Open L+E opps").font = Font(bold=True)
+    c = ws.cell(
+        row=2,
+        column=2,
+        value='=COUNTIFS(Data_Type,"Land")+COUNTIFS(Data_Type,"Expand")',
+    )
+    c.font = xref_font
+    c.number_format = "#,##0"
+    ws.cell(
+        row=2,
+        column=3,
+        value="Open Land + Expand opp count (any CloseDate). Higher = bigger funnel.",
+    ).font = note_font
+
+    # Row 3: win rate — over closed-CFQ outcomes.
+    ws.cell(row=3, column=1, value="Win rate (CFQ closed outcomes)").font = Font(bold=True)
+    c = ws.cell(
+        row=3,
+        column=2,
+        value=(
+            "=IFERROR(COUNTIFS(ClosedCFQ_IsWon,TRUE)/"
+            "(COUNTIFS(ClosedCFQ_IsWon,TRUE)+COUNTIFS(ClosedCFQ_IsWon,FALSE)),0)"
+        ),
+    )
+    c.font = xref_font
+    c.number_format = "0.0%"
+    ws.cell(
+        row=3,
+        column=3,
+        value="Won / (Won + Lost) over CFQ closed outcomes (Land + Expand + Renewal).",
+    ).font = note_font
+
+    # Row 4: avg deal size last 6mo — AVERAGE over ClosedWon6mo_ARR_EUR.
+    ws.cell(row=4, column=1, value="Avg deal size (won, last 6mo, EUR)").font = Font(bold=True)
+    c = ws.cell(
+        row=4,
+        column=2,
+        value="=IFERROR(AVERAGE(ClosedWon6mo_ARR_EUR),0)",
+    )
+    c.font = xref_font
+    c.number_format = "#,##0"
+    ws.cell(
+        row=4,
+        column=3,
+        value="AVERAGE of ClosedWon6mo_ARR_EUR (Land + Expand wins last 180d).",
+    ).font = note_font
+
+    # Row 5: avg cycle days — INPUT plug (90 days).
+    # TODO: switch to =AVERAGE(ClosedWon6mo_CloseDate)-AVERAGE(ClosedWon6mo_CreatedDate)
+    # once CreatedDate lands in CLOSED_HISTORY_COLUMNS.
+    ws.cell(row=5, column=1, value="Avg cycle days (won last 6mo)").font = Font(bold=True)
+    c = ws.cell(row=5, column=2, value=90)
+    c.font = input_font
+    c.number_format = "#,##0"
+    ws.cell(
+        row=5,
+        column=3,
+        value=(
+            "Phase 2: needs CreatedDate in closed-won-6mo Data sheet. "
+            "Current value is industry-typical placeholder (~90d for $50k+ SaaS deals)."
+        ),
+    ).font = note_font
+
+    # Row 6: velocity = B2 * B3 * B4 / B5 — LOCAL same-sheet.
+    ws.cell(row=6, column=1, value="Velocity (EUR / day)").font = Font(bold=True)
+    c = ws.cell(row=6, column=2, value="=IFERROR(B2*B3*B4/B5,0)")
+    c.font = local_font
+    c.number_format = "#,##0"
+    ws.cell(
+        row=6,
+        column=3,
+        value="(B2 * B3 * B4) / B5 — same-sheet multiply.",
+    ).font = note_font
+
+    # Row 8: methodology block.
+    ws.cell(row=8, column=1, value="How to read this sheet").font = Font(
+        bold=True, color=BRAND_PRIMARY
+    )
+    ws.cell(
+        row=9,
+        column=1,
+        value=(
+            "Sales velocity = (open opp count × win rate × avg deal size) / "
+            "avg cycle days. Higher = pipeline converts to revenue faster. "
+            "Compare across quarters or against rep peers. The four inputs "
+            "are independent levers: more opps, higher win rate, bigger "
+            "deals, or shorter cycles all increase velocity. Caveat: this "
+            "is a director-scope rollup, not per-rep — for rep-level "
+            "comparison combine with By_Owner."
+        ),
+    ).font = note_font
+    ws.cell(row=9, column=1).alignment = Alignment(wrap_text=True)
+    ws.row_dimensions[9].height = 70
+
+    ws.column_dimensions["A"].width = 36
+    ws.column_dimensions["B"].width = 18
+    ws.column_dimensions["C"].width = 60
+    ws.freeze_panes = "A2"
+
+
+def _build_account_expansion(wb: Workbook, snapshot: dict | None) -> None:
+    """Top-15 accounts × motion (Land/Expand/Renewal) cross-tab.
+
+    Surfaces multi-motion accounts — where a single account is
+    simultaneously running Land + Expand + Renewal opps. Three-motion
+    accounts are the highest-leverage relationships (depth + breadth).
+
+    Account names are pre-derived in Python (top-15 by total
+    ARR+ACV across all motions) and written as INPUT (blue). The four
+    formula columns are:
+        C: Land ARR     - SUMIFS over Data_ARR_EUR with Type=Land
+        D: Expand ARR   - SUMIFS over Data_ARR_EUR with Type=Expand
+        E: Renewal ACV  - SUMIFS over Data_ACV_EUR with Type=Renewal
+        F: Motion count - LOCAL same-sheet IF flags (1-3)
+    """
+    ws = wb.create_sheet("Account_Expansion")
+    _set_header(
+        ws,
+        1,
+        [
+            "#",
+            "Account",
+            "Land ARR (EUR)",
+            "Expand ARR (EUR)",
+            "Renewal ACV (EUR)",
+            "# Motions",
+        ],
+    )
+
+    input_font = Font(color=INPUT_COLOR)
+    xref_font = Font(color=XREF_COLOR)
+    local_font = Font(color=LOCAL_COLOR, bold=True)
+    note_font = Font(italic=True, color=BRAND_GRAY)
+
+    raw = (snapshot or {}).get("raw_opps") or []
+
+    # Aggregate total value per account across ALL motions (ARR for L+E,
+    # ACV for Renewal). Sort desc, take top-15.
+    acct_totals: dict[str, float] = {}
+    for r in raw:
+        n = r.get("AccountName") or "(unknown)"
+        t = r.get("Type") or ""
+        if t in ("Land", "Expand"):
+            acct_totals[n] = acct_totals.get(n, 0.0) + float(r.get("ARR_EUR") or 0)
+        elif t == "Renewal":
+            acct_totals[n] = acct_totals.get(n, 0.0) + float(r.get("ACV_EUR") or 0)
+    top_accts = sorted(acct_totals.items(), key=lambda kv: kv[1], reverse=True)[:15]
+
+    for i, (acct, _total) in enumerate(top_accts, start=2):
+        acct_lit = acct.replace('"', '""')
+        ws.cell(row=i, column=1, value=i - 1).font = input_font
+        ws.cell(row=i, column=2, value=acct).font = input_font
+        # Land ARR
+        c = ws.cell(
+            row=i,
+            column=3,
+            value=f'=SUMIFS(Data_ARR_EUR, Data_AccountName, "{acct_lit}", Data_Type, "Land")',
+        )
+        c.font = xref_font
+        c.number_format = "#,##0"
+        # Expand ARR
+        c = ws.cell(
+            row=i,
+            column=4,
+            value=f'=SUMIFS(Data_ARR_EUR, Data_AccountName, "{acct_lit}", Data_Type, "Expand")',
+        )
+        c.font = xref_font
+        c.number_format = "#,##0"
+        # Renewal ACV
+        c = ws.cell(
+            row=i,
+            column=5,
+            value=f'=SUMIFS(Data_ACV_EUR, Data_AccountName, "{acct_lit}", Data_Type, "Renewal")',
+        )
+        c.font = xref_font
+        c.number_format = "#,##0"
+        # Motion count: LOCAL same-sheet sum of three IF flags. 3 = full
+        # leverage account (Land + Expand + Renewal active simultaneously).
+        c = ws.cell(
+            row=i,
+            column=6,
+            value=f"=IF(C{i}>0,1,0)+IF(D{i}>0,1,0)+IF(E{i}>0,1,0)",
+        )
+        c.font = local_font
+
+    # Caveat row
+    if top_accts:
+        last_row = 1 + len(top_accts)
+        ws.cell(
+            row=last_row + 2,
+            column=1,
+            value=(
+                "Read the # Motions column: 3 = full-leverage relationship "
+                "(Land + Expand + Renewal all active), 2 = expanding-renewal "
+                "or landing-renewal mix, 1 = single-motion account. Multi-"
+                "motion accounts are the deepest customer relationships and "
+                "warrant exec coverage. Top-15 are by combined ARR+ACV across "
+                "motions."
+            ),
+        ).font = note_font
+        ws.cell(row=last_row + 2, column=1).alignment = Alignment(wrap_text=True)
+        ws.row_dimensions[last_row + 2].height = 60
+
+    ws.column_dimensions["A"].width = 4
+    ws.column_dimensions["B"].width = 36
+    ws.column_dimensions["C"].width = 16
+    ws.column_dimensions["D"].width = 16
+    ws.column_dimensions["E"].width = 16
+    ws.column_dimensions["F"].width = 12
+    ws.freeze_panes = "A2"
+
+
+def _last_n_weeks(n: int) -> list[date]:
+    """List of `n` Monday week-start dates ending with the Monday of the
+    current week, oldest first."""
+    today = date.today()
+    # Monday of current week — Python date.weekday(): Mon=0..Sun=6.
+    from datetime import timedelta
+
+    monday_this_week = today - timedelta(days=today.weekday())
+    weeks = [monday_this_week - timedelta(weeks=(n - 1 - i)) for i in range(n)]
+    return weeks
+
+
+def _build_pipeline_creation_velocity(wb: Workbook) -> None:
+    """12-week-bucketed pipeline creation by CreatedDate.
+
+    Leading indicator for sales motion health: each bucket counts open
+    L+E opps that were CREATED in the week starting at that Monday and
+    sums their ARR. Steady = healthy (consistent prospecting); declining
+    = pipeline drying up; spiky = lumpy demand-gen.
+
+    Each row's date is a Monday week-start (INPUT blue). The week is a
+    half-open 7-day interval: [Monday, Monday+7). # Opps and New ARR are
+    SUMIFS/COUNTIFS over Data_CreatedDate (XREF green). AVG row at the
+    bottom is a same-sheet AVERAGE (LOCAL black).
+    """
+    ws = wb.create_sheet("Pipeline_Creation_Velocity")
+    _set_header(ws, 1, ["Week starting", "# New opps", "New ARR (EUR)"])
+
+    input_font = Font(color=INPUT_COLOR)
+    xref_font = Font(color=XREF_COLOR)
+    local_bold = Font(color=LOCAL_COLOR, bold=True)
+    note_font = Font(italic=True, color=BRAND_GRAY)
+
+    weeks = _last_n_weeks(12)
+    for i, week_start in enumerate(weeks, start=2):
+        # Compute exclusive upper bound (week_start + 7 days) inline so
+        # the formula doesn't depend on a same-sheet date math chain.
+        from datetime import timedelta
+
+        week_end = week_start + timedelta(days=7)
+        ws.cell(row=i, column=1, value=week_start).font = input_font
+        ws.cell(row=i, column=1).number_format = "yyyy-mm-dd"
+        # # New opps — COUNTIFS over Data_CreatedDate in [week_start, week_end).
+        # Filter to L+E so this matches the open-pipe scope used elsewhere.
+        c = ws.cell(
+            row=i,
+            column=2,
+            value=(
+                f'=COUNTIFS(Data_Type, "Land", '
+                f'Data_CreatedDate, ">="&DATE({week_start.year},{week_start.month},{week_start.day}), '
+                f'Data_CreatedDate, "<"&DATE({week_end.year},{week_end.month},{week_end.day})) '
+                f'+ COUNTIFS(Data_Type, "Expand", '
+                f'Data_CreatedDate, ">="&DATE({week_start.year},{week_start.month},{week_start.day}), '
+                f'Data_CreatedDate, "<"&DATE({week_end.year},{week_end.month},{week_end.day}))'
+            ),
+        )
+        c.font = xref_font
+        # New ARR
+        c = ws.cell(
+            row=i,
+            column=3,
+            value=(
+                f'=SUMIFS(Data_ARR_EUR, Data_Type, "Land", '
+                f'Data_CreatedDate, ">="&DATE({week_start.year},{week_start.month},{week_start.day}), '
+                f'Data_CreatedDate, "<"&DATE({week_end.year},{week_end.month},{week_end.day})) '
+                f'+ SUMIFS(Data_ARR_EUR, Data_Type, "Expand", '
+                f'Data_CreatedDate, ">="&DATE({week_start.year},{week_start.month},{week_start.day}), '
+                f'Data_CreatedDate, "<"&DATE({week_end.year},{week_end.month},{week_end.day}))'
+            ),
+        )
+        c.font = xref_font
+        c.number_format = "#,##0"
+
+    # AVG row — same-sheet AVERAGE, LOCAL black.
+    last_row = 1 + len(weeks)
+    avg_row = last_row + 1
+    ws.cell(row=avg_row, column=1, value="AVG / week").font = local_bold
+    c = ws.cell(row=avg_row, column=2, value=f"=AVERAGE(B2:B{last_row})")
+    c.font = local_bold
+    c.number_format = "#,##0.0"
+    c = ws.cell(row=avg_row, column=3, value=f"=AVERAGE(C2:C{last_row})")
+    c.font = local_bold
+    c.number_format = "#,##0"
+
+    # Caveat / interpretation row.
+    ws.cell(
+        row=avg_row + 2,
+        column=1,
+        value=(
+            "Healthy = steady. Sustained decline = pipeline drying up — root-cause "
+            "before it shows up in CFQ forecast (8-12 weeks lagged). Buckets are "
+            "Mon-Sun; CreatedDate is the SF system-of-record timestamp for opp "
+            "creation. Note: this counts only opps still OPEN today (closed opps "
+            "from earlier weeks have already been cleaned out of Data) — for a "
+            "true creation-velocity signal use SF report on CreatedDate directly."
+        ),
+    ).font = note_font
+    ws.cell(row=avg_row + 2, column=1).alignment = Alignment(wrap_text=True)
+    ws.row_dimensions[avg_row + 2].height = 70
+
+    ws.column_dimensions["A"].width = 14
+    ws.column_dimensions["B"].width = 12
+    ws.column_dimensions["C"].width = 18
+    ws.freeze_panes = "A2"
+
+
+def _build_stale_activity(wb: Workbook) -> None:
+    """Stage 3-6 Land+Expand opps where CreatedDate is >60 days ago.
+
+    PROXY: true stale-activity needs Account.LastActivityDate which isn't
+    in Data today. CreatedDate-age is a weak proxy — it catches deals
+    that have been in the funnel a long time, but a young deal that
+    never had a touchpoint isn't flagged. Caveat row makes that explicit.
+
+    Per stage: # stale opps + their ARR (EUR), via SUMPRODUCT over
+    Data_* (matches the Pipeline_Aging pattern).
+    """
+    ws = wb.create_sheet("Stale_Activity")
+    _set_header(ws, 1, ["Stage", "# Stale opps", "ARR (EUR)"])
+
+    input_font = Font(color=INPUT_COLOR)
+    xref_font = Font(color=XREF_COLOR)
+    note_font = Font(italic=True, color=BRAND_GRAY)
+
+    # Stages 3-6 are the post-Discovery, pre-contracting band — these are
+    # where stalls are most concerning (qualified but not advancing).
+    target_stages = [s for s in GRAPH.stages if s.number in (3, 4, 5, 6)]
+    for i, s in enumerate(target_stages, start=2):
+        st_label = f"{s.number} - {s.name}"
+        st_lit = st_label.replace('"', '""')
+        ws.cell(row=i, column=1, value=st_label).font = input_font
+        # # stale opps — SUMPRODUCT over Data with stage match + age >60d
+        # filtered to L+E. SUMPRODUCT pattern matches Pipeline_Aging.
+        c = ws.cell(
+            row=i,
+            column=2,
+            value=(
+                "=SUMPRODUCT("
+                f'((Data_Type="Land")+(Data_Type="Expand"))'
+                f'*(Data_StageName="{st_lit}")'
+                "*((today-Data_CreatedDate)>60))"
+            ),
+        )
+        c.font = xref_font
+        # ARR — SUMPRODUCT with the same predicate, weighted by Data_ARR_EUR.
+        c = ws.cell(
+            row=i,
+            column=3,
+            value=(
+                "=SUMPRODUCT("
+                f'((Data_Type="Land")+(Data_Type="Expand"))'
+                f'*(Data_StageName="{st_lit}")'
+                "*((today-Data_CreatedDate)>60)"
+                "*Data_ARR_EUR)"
+            ),
+        )
+        c.font = xref_font
+        c.number_format = "#,##0"
+
+    last_row = 1 + len(target_stages)
+
+    # Caveat — italic gray.
+    ws.cell(
+        row=last_row + 2,
+        column=1,
+        value=(
+            "PROXY caveat: 'stale' = days since CreatedDate > 60, NOT days since "
+            "last activity. A young deal with no touchpoints isn't flagged here; "
+            "an old deal with regular activity IS. True stale-activity needs "
+            "Account.LastActivityDate pulled into Data (Phase 3). Stages 3-6 "
+            "selected because they're the qualified-but-not-contracting band — "
+            "stalls there are most actionable."
+        ),
+    ).font = note_font
+    ws.cell(row=last_row + 2, column=1).alignment = Alignment(wrap_text=True)
+    ws.row_dimensions[last_row + 2].height = 70
+
+    ws.column_dimensions["A"].width = 24
+    ws.column_dimensions["B"].width = 14
+    ws.column_dimensions["C"].width = 16
     ws.freeze_panes = "A2"
 
 
