@@ -5,11 +5,14 @@ top-level ARRAY -> one template object -> `data[]` entries with `name`
 and `table`.
 
 Important constraint: the current `assets/LAND_template.pptx` is a visual
-placeholder deck, not a fully wired think-cell automation template.
-This script still emits structurally valid `.ppttc` files so the data
-contract is in place, but think-cell will only populate slides after a
-one-time template save with named think-cell elements whose AddRangeData
-names match the element names below.
+placeholder deck, not a fully wired think-cell automation template. The
+auto-generated donor-chart template path is still experimental too: the
+resulting `.pptx` can open directly in PowerPoint, but think-cell rejects
+it as a `.ppttc` template on this machine.
+
+Use a manually wired template for production `.ppttc` output. The default
+auto-generated path now requires an explicit opt-in flag so broken files
+are not emitted by accident.
 
 Run after activating the project venv:
 
@@ -45,7 +48,11 @@ from openpyxl.utils.cell import range_boundaries
 
 from _directors import canonical_directors
 from model_recalc import _parse_key, _unwrap
-from ppttc_template import build_director_template, template_has_named_elements
+from ppttc_template import (
+    build_director_template,
+    template_has_named_elements,
+    template_named_elements,
+)
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_TEMPLATE = ROOT / "assets/LAND_template.pptx"
@@ -643,7 +650,6 @@ def _ppttc_entries_from_context(
         start_row=1,
         columns=["A", "B", "C", "D", "E", "F", "G", "H"],
     )
-    by_owner_last = _last_nonempty_row(model, "By_Owner", start_row=2, columns=["A", "B"])
     entries: list[dict[str, Any]] = [
         _text_entry("S01_DirectorName", artifacts.name),
         _text_entry("S01_Period", artifacts.period),
@@ -770,6 +776,9 @@ def _build_for_director(
         model=model,
         legacy=legacy,
     )
+    if resolved_template != template_path:
+        backed_names = template_named_elements(resolved_template)
+        entries = [entry for entry in entries if entry["name"] in backed_names]
     return _write_ppttc(artifacts, template_path=resolved_template, entries=entries)
 
 
@@ -794,11 +803,29 @@ def main() -> int:
         action="store_true",
         help="Fail if the template does not appear to contain named think-cell elements.",
     )
+    parser.add_argument(
+        "--experimental-generated-template",
+        action="store_true",
+        help=(
+            "Allow the default auto-generated director template path. "
+            "This is research-only until think-cell accepts the generated "
+            "template during real .ppttc import."
+        ),
+    )
     args = parser.parse_args()
 
     template_path = args.template.expanduser().resolve()
     if not template_path.exists():
         raise SystemExit(f"Template not found: {template_path}")
+
+    if template_path == DEFAULT_TEMPLATE.resolve() and not args.experimental_generated_template:
+        raise SystemExit(
+            "The default auto-generated think-cell template path is still experimental: "
+            "PowerPoint can open the generated .pptx, but think-cell rejects it during real "
+            ".ppttc import with 'The template failed to load'. Use a manually wired template "
+            "via --template for production output, or pass --experimental-generated-template "
+            "for research-only builds."
+        )
 
     if template_path != DEFAULT_TEMPLATE.resolve():
         template_wired = template_has_named_elements(template_path)

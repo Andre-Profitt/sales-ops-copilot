@@ -269,15 +269,27 @@ def build_director_template(
 def template_has_named_elements(template_path: Path) -> bool:
     """Detect generated templates by looking for non-empty think-cell OLE names."""
 
-    pattern = re.compile(rb"<m_strName>([^<]+)</m_strName>")
+    return bool(template_named_elements(template_path))
+
+
+def template_named_elements(template_path: Path) -> set[str]:
+    """Return all automation names discoverable in a think-cell template."""
+
+    binary_pattern = re.compile(rb"<m_strName>([^<]+)</m_strName>")
+    escaped_xml_pattern = re.compile(r"&lt;m_strName&gt;([^<]+)&lt;/m_strName&gt;")
+
+    names: set[str] = set()
     with ZipFile(template_path) as zf:
         for name in zf.namelist():
-            if not name.startswith("ppt/embeddings/") or not name.endswith(".bin"):
+            if name.startswith("ppt/embeddings/") and name.endswith(".bin"):
+                match = binary_pattern.search(zf.read(name))
+                if match:
+                    names.add(match.group(1).decode("utf-8"))
                 continue
-            match = pattern.search(zf.read(name))
-            if match:
-                return True
-    return False
+            if name.startswith("ppt/slides/") and name.endswith(".xml"):
+                text = zf.read(name).decode("utf-8", "ignore")
+                names.update(escaped_xml_pattern.findall(text))
+    return names
 
 
 def _replace_tokens_in_deck(prs: Presentation, tokens: dict[str, str]) -> None:
@@ -1061,10 +1073,14 @@ def _rewrite_relationships(
     donor_rel_map: dict[str, ET.Element],
     copier: _PartCopier,
 ) -> None:
+    rewritten_rids: dict[str, str] = {}
     for node in element.iter():
         for attr_name in (f"{{{R_NS}}}id", f"{{{R_NS}}}embed", f"{{{R_NS}}}link"):
             old_rid = node.get(attr_name)
             if not old_rid or old_rid not in donor_rel_map:
+                continue
+            if old_rid in rewritten_rids:
+                node.set(attr_name, rewritten_rids[old_rid])
                 continue
             donor_rel = donor_rel_map[old_rid]
             target_mode = donor_rel.get("TargetMode")
@@ -1082,6 +1098,7 @@ def _rewrite_relationships(
                 donor_target = _resolve_target(target_slide_name, donor_rel.get("Target", ""))
                 copied_target = copier.copy_part(donor_target)
                 new_rel.set("Target", _relative_target(target_slide_name, copied_target))
+            rewritten_rids[old_rid] = new_rid
             node.set(attr_name, new_rid)
 
 
