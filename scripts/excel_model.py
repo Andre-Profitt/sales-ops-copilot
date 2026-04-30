@@ -205,19 +205,24 @@ def _build_cover(wb: Workbook, director: dict, period: str, period_end: str) -> 
     ws["A6"].font = Font(name="Arial", size=11, color=BRAND_SECONDARY)
     ws["A8"] = (
         "Internal SimCorp Sales Director monthly pipeline review. "
-        "Per-deal context (named accounts, owners, amounts) flows directly "
-        "from Salesforce via the director's own access — no AI processing "
-        "of client data. All KPIs reference the Data sheet via Excel "
-        "formulas; click any cell to inspect its computation. Period "
-        "boundaries and rule thresholds live in Parameters; stage labels "
-        "live in Stages. Not for redistribution outside SimCorp."
+        "This workbook is local + formula-driven (no AI in the build path). "
+        "All KPIs reference the Data sheet via Excel formulas; click any "
+        "cell to inspect its computation. Period boundaries and rule "
+        "thresholds live in Parameters; stage labels live in Stages. "
+        "Per-deal context (named accounts, owners, amounts) is sourced "
+        "from Salesforce via the director's own access. The broader "
+        "pipeline may route this context through approved enterprise "
+        "Claude surfaces (data residency + no-training + audit) when "
+        "generating narrative slides — covered by SimCorp's enterprise "
+        "Anthropic contract per AI Code of Conduct §8. Not for "
+        "redistribution outside SimCorp."
     )
     ws["A8"].font = Font(name="Arial", size=10, italic=True, color=BRAND_GRAY)
     ws["A8"].alignment = Alignment(wrap_text=True)
     ws.column_dimensions["A"].width = 100
     ws.row_dimensions[1].height = 36
     ws.row_dimensions[4].height = 28
-    ws.row_dimensions[8].height = 50
+    ws.row_dimensions[8].height = 90  # longer disclaimer needs more vertical room
 
 
 def _build_parameters(wb: Workbook, period_start: date, period_end: date) -> None:

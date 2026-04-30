@@ -35,6 +35,50 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 STATE_DIR = ROOT / "state"
 
 
+# Reproducibility anchor: every SOQL day-window literal in pull_director_snapshot
+# and the per-rule action helpers derives from `_period_bounds(period)` rather
+# than `dt.date.today()`. This means re-running `--period 2025-Q4` on April 30
+# 2026 reconstructs Q4-2025-anchored data, not today's snapshot. Mirrors
+# `scripts/excel_model.py:_period_bounds`. Defensive fallback: a non-quarter
+# period string returns (today, today) and emits a stderr warning rather than
+# crashing — keeps the daily cadence resilient to malformed `--period` args.
+def _period_bounds(period: str) -> tuple[dt.date, dt.date]:
+    """'2026-Q2' -> (2026-04-01, 2026-07-01). period_end is the FIRST day
+    of the quarter AFTER the requested one (exclusive bound). On a
+    malformed string, falls back to (today, today) and warns to stderr."""
+    try:
+        if "-Q" not in period:
+            raise ValueError(f"period missing '-Q' separator: {period!r}")
+        year_s, q_s = period.split("-Q")
+        qn = int(q_s)
+        if not (1 <= qn <= 4):
+            raise ValueError(f"quarter must be 1..4: {period!r}")
+        year = int(year_s)
+        start_month = (qn - 1) * 3 + 1
+        end_year = year + (1 if qn == 4 else 0)
+        end_month = (start_month + 3) if qn != 4 else 1
+        return dt.date(year, start_month, 1), dt.date(end_year, end_month, 1)
+    except Exception as e:
+        print(
+            f"  [WARN] _period_bounds: malformed period {period!r} ({e}); "
+            "falling back to (today, today)",
+            file=sys.stderr,
+        )
+        today = dt.date.today()
+        return today, today
+
+
+def _period_anchor(period: str) -> dt.date:
+    """Anchor date for SOQL day-window math (e.g., LAST_N_DAYS:730 →
+    `CreatedDate <= anchor - 730d`). For past or current quarters this
+    is `period_end`; for a future quarter the anchor is clamped to
+    tomorrow so we never reach into a date range SF cannot have data
+    for yet."""
+    _, period_end = _period_bounds(period)
+    today_plus_one = dt.date.today() + dt.timedelta(days=1)
+    return min(period_end, today_plus_one)
+
+
 # Org-wide benchmark report IDs (verified live 2026-04-29)
 _REPORT_OPEN_PIPE_BY_REGION = "00OTb000008mvyfMAA"  # CRO · Open Pipeline by Region
 _REPORT_WIN_RATE_8Q = "00OTb000008neanMAA"  # CRO · Win Rate Trend 8Q
@@ -176,7 +220,15 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
     if not where_clause:
         book_codes = "(" + ",".join(f"'{b}'" for b in director["book_codes"]) + ")"
         where_clause = f"Account.Sales_Director_Book__c IN {book_codes}"
-    period_clause = "CloseDate = THIS_QUARTER"  # TODO: parameterize by `period`
+
+    # Period-anchored SOQL date bounds. Every CloseDate / CreatedDate /
+    # ActivityDate window below derives from these — never `dt.date.today()`
+    # — so reproducing a prior period reconstructs that period's snapshot.
+    period_start, period_end = _period_bounds(period)
+    period_anchor = _period_anchor(period)
+    period_clause = (
+        f"CloseDate >= {period_start.isoformat()} AND CloseDate < {period_end.isoformat()}"
+    )
 
     # Pull per-record FX-converted values, aggregate in Python.
     # SOQL SUM(convertCurrency(...)) does NOT work — silently returns raw sum.
@@ -273,7 +325,9 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
         "convertCurrency(APTS_Opportunity_ARR__c) arr_fx, "
         "convertCurrency(APTS_Renewal_ACV__c) acv_fx "
         "FROM Opportunity "
-        f"WHERE IsClosed = true AND CloseDate = THIS_QUARTER "
+        f"WHERE IsClosed = true "
+        f"AND CloseDate >= {period_start.isoformat()} "
+        f"AND CloseDate < {period_end.isoformat()} "
         f"AND {where_clause}"
     )
     try:
@@ -357,11 +411,13 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
         # 0 = safe, 4 = highest urgency. Used for Harvey balls on the deck slide.
         risk_text = (acct.get("Risk_of_Potential_Termination__c") or "").lower()
         risk_base = {"very high": 2, "high": 1, "medium": 0, "low": 0}.get(risk_text, 0)
-        # Close-date proximity: this Q = +2, next 6mo = +1, beyond = 0
+        # Close-date proximity: this Q = +2, next 6mo = +1, beyond = 0.
+        # Anchored on `period_anchor` (not today) so re-running a past period
+        # reproduces the same risk_score as the original run.
         close = (r.get("CloseDate") or "")[:10]
         try:
             close_d = dt.date.fromisoformat(close)
-            days_out = (close_d - dt.date.today()).days
+            days_out = (close_d - period_anchor).days
             proximity_bonus = 2 if days_out <= 90 else (1 if days_out <= 180 else 0)
         except Exception:
             proximity_bonus = 0
@@ -389,7 +445,8 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
         "Reason_Won_Lost__c "
         "FROM Opportunity "
         "WHERE IsClosed = true AND IsWon = false "
-        "AND CloseDate = THIS_QUARTER "
+        f"AND CloseDate >= {period_start.isoformat()} "
+        f"AND CloseDate < {period_end.isoformat()} "
         "AND Type IN ('Land','Expand') "
         f"AND {where_clause}"
     )
@@ -421,7 +478,7 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
         "convertCurrency(APTS_Renewal_ACV__c) acv_fx "
         "FROM Opportunity "
         "WHERE IsClosed = true AND Type = 'Renewal' "
-        "AND CloseDate >= LAST_N_DAYS:365 "
+        f"AND CloseDate >= {(period_anchor - dt.timedelta(days=365)).isoformat()} "
         f"AND {where_clause}"
     )
     try:
@@ -448,7 +505,7 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
         "convertCurrency(APTS_Opportunity_ARR__c) arr_fx "
         "FROM Opportunity "
         "WHERE IsClosed = true AND IsWon = true "
-        "AND CloseDate >= LAST_N_DAYS:180 "
+        f"AND CloseDate >= {(period_anchor - dt.timedelta(days=180)).isoformat()} "
         "AND Type IN ('Land','Expand') "
         f"AND {where_clause}"
     )
@@ -488,7 +545,9 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
     )[:10]
 
     # Pipeline_Aging: 5 age buckets via CreatedDate. ARR-weighted distribution.
-    today_d = dt.date.today()
+    # Anchored on period_anchor (not today) so the bucket boundaries reproduce
+    # for past periods.
+    today_d = period_anchor
     aging_buckets: dict[str, dict[str, float]] = {
         "0-30 days": {"num_opps": 0, "arr_eur": 0.0},
         "31-90 days": {"num_opps": 0, "arr_eur": 0.0},
@@ -593,7 +652,7 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
         "convertCurrency(APTS_Renewal_ACV__c) acv_fx "
         "FROM Opportunity "
         "WHERE IsClosed = false AND Type IN ('Land','Expand') "
-        "AND CloseDate > THIS_QUARTER "
+        f"AND CloseDate >= {period_end.isoformat()} "
         f"AND {where_clause}"
     )
     try:
@@ -601,6 +660,16 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
     except Exception:
         beyond_rows = []
     beyond_cfq_arr = round(sum(float(r.get("arr_fx") or 0) for r in beyond_rows), 2)
+
+    # Canonical normalization point for free-text identifier fields. Every
+    # downstream SUMIFS / set-derivation (Account_Expansion, Top_Accounts,
+    # By_Owner, Territory_Performance) reads the normalized values, so a
+    # stray trailing space on "Acme Inc " doesn't fork into two seed-list
+    # entries that each only match half of the real rows.
+    def _norm(s: str | None) -> str:
+        if not s:
+            return ""
+        return " ".join(s.split())
 
     # raw_opps — flattened per-row dataset for the formula-driven model's
     # Data sheet. Combines CFQ rows (`rows`) and beyond-CFQ rows. Renewals
@@ -615,10 +684,10 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
             "StageName": r.get("StageName") or "",
             "CreatedDate": (r.get("CreatedDate") or "")[:10],
             "CloseDate": (r.get("CloseDate") or "")[:10],
-            "OwnerName": owner.get("Name") or "",
-            "AccountName": acct.get("Name") or "",
-            "BillingCountry": acct.get("BillingCountry") or "",
-            "Industry": acct.get("Industry") or "",
+            "OwnerName": _norm(owner.get("Name")),
+            "AccountName": _norm(acct.get("Name")),
+            "BillingCountry": _norm(acct.get("BillingCountry")),
+            "Industry": _norm(acct.get("Industry")),
             "ForecastCategoryName": r.get("ForecastCategoryName") or "",
             "RiskTermination": acct.get("Risk_of_Potential_Termination__c") or "",
             "ARR_EUR": round(float(r.get("arr_fx") or 0), 2),
@@ -654,6 +723,9 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
     def _flat_closed(r: dict) -> dict:
         acct = r.get("Account") or {}
         owner = r.get("Owner") or {}
+        # Same canonical normalization as _flat (above) — keeps the closed-
+        # history Data tables and the open Data tables on a single string
+        # convention so SUMIFS across the two never miss-match on whitespace.
         return {
             "Id": r.get("Id") or "",
             "Name": r.get("Name") or "",
@@ -662,8 +734,8 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
             "IsWon": bool(r.get("IsWon")),
             "CreatedDate": (r.get("CreatedDate") or "")[:10],
             "CloseDate": (r.get("CloseDate") or "")[:10],
-            "OwnerName": owner.get("Name") or "",
-            "AccountName": acct.get("Name") or "",
+            "OwnerName": _norm(owner.get("Name")),
+            "AccountName": _norm(acct.get("Name")),
             "ARR_EUR": round(float(r.get("arr_fx") or 0), 2),
             "ACV_EUR": round(float(r.get("acv_fx") or 0), 2),
         }
@@ -895,14 +967,16 @@ def derive_highlights_risks(envelope: dict) -> dict:
 # ──────────────────────────────────────────────────────────────────────────────
 
 
-def _pull_zombie_for_director(where_clause: str) -> dict[str, Any]:
+def _pull_zombie_for_director(where_clause: str, period_anchor: dt.date) -> dict[str, Any]:
     """Open Land+Expand opps >730d old with no Task/Event activity in 60d.
 
     Salesforce rejects `Id NOT IN (SELECT WhatId FROM Task ...)` semi-joins
     with MALFORMED_QUERY ('Entity Task is not supported for semi join inner
     selects'). Workaround: pull candidate opps first, then pull recent
     Task+Event WhatIds separately, subtract in Python. FX-correct via per-
-    record convertCurrency.
+    record convertCurrency. Day-window math anchored on `period_anchor`
+    rather than today, so re-running a past period reproduces the same
+    zombie set.
     """
     cand_q = (
         "SELECT Id, Owner.Name, "
@@ -910,7 +984,9 @@ def _pull_zombie_for_director(where_clause: str) -> dict[str, Any]:
         "FROM Opportunity "
         f"WHERE IsClosed = false AND {where_clause} "
         "AND Type IN ('Land','Expand') "
-        "AND CreatedDate <= LAST_N_DAYS:730"
+        # CreatedDate is a DateTime field — SOQL requires the T00:00:00Z
+        # suffix for typed comparison; bare YYYY-MM-DD raises INVALID_FIELD.
+        f"AND CreatedDate <= {(period_anchor - dt.timedelta(days=730)).isoformat()}T00:00:00Z"
     )
     candidates = _sf_query(cand_q)
     candidate_ids = [c.get("Id") for c in candidates if c.get("Id")]
@@ -919,6 +995,7 @@ def _pull_zombie_for_director(where_clause: str) -> dict[str, Any]:
 
     # Pull recent activities for THIS director's candidates only — bounded query.
     active_ids: set[str] = set()
+    activity_floor = (period_anchor - dt.timedelta(days=60)).isoformat()
     for activity_obj in ("Task", "Event"):
         # SOQL IN list cap: SF ~ 4000 elements, but be conservative — chunk by 200.
         for i in range(0, len(candidate_ids), 200):
@@ -928,7 +1005,7 @@ def _pull_zombie_for_director(where_clause: str) -> dict[str, Any]:
                 act = _sf_query(
                     f"SELECT WhatId FROM {activity_obj} "
                     f"WHERE WhatId IN {id_list} "
-                    "AND ActivityDate >= LAST_N_DAYS:60"
+                    f"AND ActivityDate >= {activity_floor}"
                 )
                 active_ids.update(r.get("WhatId") for r in act if r.get("WhatId"))
             except Exception:
@@ -945,7 +1022,7 @@ def _pull_zombie_for_director(where_clause: str) -> dict[str, Any]:
     }
 
 
-def _pull_coverage_gap_for_director(where_clause: str) -> dict[str, Any]:
+def _pull_coverage_gap_for_director(where_clause: str, period_anchor: dt.date) -> dict[str, Any]:
     """Tier-1 accounts in director scope with no open Land+Expand opp in 90d.
 
     The intent of "coverage gap" is "no new-business pipeline" — a Renewal
@@ -953,9 +1030,12 @@ def _pull_coverage_gap_for_director(where_clause: str) -> dict[str, Any]:
     Type IN ('Land','Expand'). Per the SimCorp ARR/ACV split rule.
 
     Translates the Opportunity-side where_clause to an Account-side scope
-    via the same Region__c / BillingCountry / Industry filters.
+    via the same Region__c / BillingCountry / Industry filters. 90-day
+    activity floor anchored on `period_anchor` for reproducibility.
     """
     acct_where = where_clause.replace("Account.", "")
+    # CreatedDate is a DateTime field — needs T00:00:00Z for typed comparison.
+    floor = (period_anchor - dt.timedelta(days=90)).isoformat() + "T00:00:00Z"
     q = (
         "SELECT Id, Name FROM Account "
         f"WHERE Tier_Calculation__c = 'Tier 1' AND ({acct_where}) "
@@ -963,7 +1043,7 @@ def _pull_coverage_gap_for_director(where_clause: str) -> dict[str, Any]:
         "SELECT AccountId FROM Opportunity "
         "WHERE IsClosed = false "
         "AND Type IN ('Land','Expand') "
-        "AND CreatedDate >= LAST_N_DAYS:90"
+        f"AND CreatedDate >= {floor}"
         ")"
     )
     try:
@@ -973,7 +1053,7 @@ def _pull_coverage_gap_for_director(where_clause: str) -> dict[str, Any]:
         return {"count": 0, "sample_accounts": [], "_skipped": True}
 
 
-def _pull_approval_gap_for_director(where_clause: str) -> dict[str, Any]:
+def _pull_approval_gap_for_director(where_clause: str, period_anchor: dt.date) -> dict[str, Any]:
     """Stage 3+ Land+Expand opps >= EUR 500k without Commercial Approval
     (Stage_20_Approval__c = false).
 
@@ -983,7 +1063,10 @@ def _pull_approval_gap_for_director(where_clause: str) -> dict[str, Any]:
     UKI, Canada, MEA). Pull all stage-qualified rows with
     convertCurrency() in SELECT, then apply the threshold in Python on
     the EUR-converted value. Pattern matches pending_commercial_approval.
+    `period_anchor` is unused here today — accepted for signature
+    uniformity with the other action-rule pullers.
     """
+    del period_anchor  # currently unused; kept for signature uniformity
     q = (
         "SELECT Id, Name, Owner.Name, "
         "convertCurrency(APTS_Opportunity_ARR__c) arr_fx "
@@ -1003,7 +1086,9 @@ def _pull_approval_gap_for_director(where_clause: str) -> dict[str, Any]:
     }
 
 
-def _pull_simcorp_one_share_for_director(where_clause: str) -> dict[str, Any]:
+def _pull_simcorp_one_share_for_director(
+    where_clause: str, period_anchor: dt.date
+) -> dict[str, Any]:
     """SimCorp One (Standard Platform) attach rate within director's open
     Land+Expand pipeline.
 
@@ -1011,8 +1096,10 @@ def _pull_simcorp_one_share_for_director(where_clause: str) -> dict[str, Any]:
     `Standard Platform` line item attached (via OpportunityLineItem +
     Product2.Name). Returns total open Land+Expand count + SP-attached
     count + ratio. Use the ratio to drive the action: < 30% triggers a
-    platform-selling motion review.
+    platform-selling motion review. `period_anchor` is unused here today
+    — accepted for signature uniformity with the other action-rule pullers.
     """
+    del period_anchor  # currently unused; kept for signature uniformity
     # Total open L+E opps in director scope
     total_q = (
         "SELECT COUNT(Id) n FROM Opportunity "
@@ -1044,23 +1131,30 @@ def _pull_simcorp_one_share_for_director(where_clause: str) -> dict[str, Any]:
     }
 
 
-def _pull_activity_drought_for_director(where_clause: str) -> dict[str, Any]:
-    """This-Q open Land+Expand opps with no Task/Event activity in last 30d.
+def _pull_activity_drought_for_director(
+    where_clause: str, period: str, period_anchor: dt.date
+) -> dict[str, Any]:
+    """Period-bounded open Land+Expand opps with no Task/Event activity in
+    last 30d.
 
     Same SOQL-semi-join workaround as _pull_zombie_for_director: candidates-
     first, then subtract Task+Event WhatIds in Python.
 
     Type-scoped to Land+Expand so the count and the ARR claim line up — a
     Renewal opp in this list would inflate the count while contributing
-    EUR 0 to the ARR sum.
+    EUR 0 to the ARR sum. Day-window math anchored on `period_anchor`
+    (CloseDate window from `period`) rather than today, so re-running a
+    past period reproduces the same drought set.
     """
+    period_start, period_end = _period_bounds(period)
     cand_q = (
         "SELECT Id, "
         "convertCurrency(APTS_Opportunity_ARR__c) arr_fx "
         "FROM Opportunity "
         f"WHERE IsClosed = false AND {where_clause} "
         "AND Type IN ('Land','Expand') "
-        "AND CloseDate = THIS_QUARTER"
+        f"AND CloseDate >= {period_start.isoformat()} "
+        f"AND CloseDate < {period_end.isoformat()}"
     )
     candidates = _sf_query(cand_q)
     candidate_ids = [c.get("Id") for c in candidates if c.get("Id")]
@@ -1068,6 +1162,7 @@ def _pull_activity_drought_for_director(where_clause: str) -> dict[str, Any]:
         return {"count": 0, "total_arr_eur": 0.0}
 
     active_ids: set[str] = set()
+    activity_floor = (period_anchor - dt.timedelta(days=30)).isoformat()
     for activity_obj in ("Task", "Event"):
         for i in range(0, len(candidate_ids), 200):
             chunk = candidate_ids[i : i + 200]
@@ -1076,7 +1171,7 @@ def _pull_activity_drought_for_director(where_clause: str) -> dict[str, Any]:
                 act = _sf_query(
                     f"SELECT WhatId FROM {activity_obj} "
                     f"WHERE WhatId IN {id_list} "
-                    "AND ActivityDate >= LAST_N_DAYS:30"
+                    f"AND ActivityDate >= {activity_floor}"
                 )
                 active_ids.update(r.get("WhatId") for r in act if r.get("WhatId"))
             except Exception:
@@ -1088,24 +1183,35 @@ def _pull_activity_drought_for_director(where_clause: str) -> dict[str, Any]:
     }
 
 
-def pull_director_action_data(director: dict) -> dict[str, Any]:
-    """Runs the four director-scoped action queries. Each rule wrapped so a
-    single failure doesn't break the rest."""
+def pull_director_action_data(
+    director: dict, period: str, period_anchor: dt.date
+) -> dict[str, Any]:
+    """Runs the five director-scoped action queries. Each rule wrapped so a
+    single failure doesn't break the rest. `period` (e.g. '2026-Q2') and
+    `period_anchor` are plumbed to every helper so day-window math
+    reproduces the requested period."""
     where = director.get("where_clause")
     if not where:
         book_codes = "(" + ",".join(f"'{b}'" for b in director["book_codes"]) + ")"
         where = f"Account.Sales_Director_Book__c IN {book_codes}"
 
     out: dict[str, Any] = {}
-    for key, fn in [
+    rules: list[tuple[str, Any]] = [
         ("zombie", _pull_zombie_for_director),
         ("coverage_gap", _pull_coverage_gap_for_director),
         ("approval_gap", _pull_approval_gap_for_director),
         ("simcorp_one_share", _pull_simcorp_one_share_for_director),
         ("activity_drought", _pull_activity_drought_for_director),
-    ]:
+    ]
+    for key, fn in rules:
         try:
-            out[key] = fn(where)
+            if key == "activity_drought":
+                # Only this helper needs the period STRING (it bounds CloseDate
+                # to the requested quarter); the others derive everything they
+                # need from period_anchor.
+                out[key] = fn(where, period, period_anchor)
+            else:
+                out[key] = fn(where, period_anchor)
         except Exception as e:
             print(f"  [WARN] action-data {key} failed: {e}", file=sys.stderr)
             out[key] = {"_error": str(e)}
@@ -1423,7 +1529,7 @@ def main() -> int:
             sf = pull_director_snapshot(d, args.period)
             envelope = build_trends_envelope(sf, d, args.period, backtest_path=backtest_path)
             envelope = derive_highlights_risks(envelope)
-            action_data = pull_director_action_data(d)
+            action_data = pull_director_action_data(d, args.period, _period_anchor(args.period))
             envelope = derive_action_items(envelope, action_data)
             (out_dir / "trends.json").write_text(json.dumps(envelope, indent=2))
             (out_dir / "brief.md").write_text(render_director_brief(envelope))
