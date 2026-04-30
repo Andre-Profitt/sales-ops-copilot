@@ -95,14 +95,67 @@ SLIDES: list[dict] = [
     },
     {
         "layout": LAYOUT_TITLE_CONTENT,
-        "title": "Top accounts",
-        "subtitle": "Top-10 accounts by open Land+Expand ARR",
+        "title": "Top deals — Land",
+        "subtitle": "Top-10 open Land deals by ARR (named accounts, owners, ages)",
         "placeholder": (
-            "[think-cell horizontal BAR chart, sorted descending]\n"
-            "Range: Pivots — find 'Top-10 Accounts × Stage' block\n"
-            "  Y-axis  = Account name (col A)\n"
-            "  X-axis  = SUM of stages (col B onwards) — use a helper col\n"
-            "          OR rebuild as a SUMIFS in the deck cell"
+            "[think-cell TABLE WITH FORMATTING — datalinked]\n"
+            "Source: legacy land.xlsx (NOT model.xlsx)\n"
+            "Range: Top_Deals_Land!A1:H11\n"
+            "  Columns: # / Account / Opportunity / Owner / Stage /\n"
+            "           Close Date / Age (days) / ARR (EUR)\n"
+            "Highlight Stage 5+ rows in pale green; flag Age > 365d in coral."
+        ),
+    },
+    {
+        "layout": LAYOUT_TITLE_CONTENT,
+        "title": "Top deals — Expand",
+        "subtitle": "Top-10 open Expand deals by ARR (existing accounts being grown)",
+        "placeholder": (
+            "[think-cell TABLE WITH FORMATTING — datalinked]\n"
+            "Source: legacy land.xlsx (NOT model.xlsx)\n"
+            "Range: Top_Deals_Expand!A1:H11\n"
+            "Same columns as Top deals — Land slide."
+        ),
+    },
+    {
+        "layout": LAYOUT_TITLE_CONTENT,
+        "title": "Pending Commercial Approval",
+        "subtitle": "Stage 3+ Land/Expand deals missing the SimCorp Commercial Approval gate",
+        "placeholder": (
+            "[think-cell TABLE WITH FORMATTING — datalinked]\n"
+            "Source: legacy land.xlsx (NOT model.xlsx)\n"
+            "Range: Pending_Commercial_Approval!A3:H<last>\n"
+            "  Columns: # / Account / Opportunity / Owner / Stage /\n"
+            "           Close Date / Type / ARR (EUR)\n"
+            "Per Commercial Handbook: Land = ALL deals require approval,\n"
+            "Expand triggers at AER >= EUR 500k. Flag any rows here for the\n"
+            "next Commercial Approval committee."
+        ),
+    },
+    {
+        "layout": LAYOUT_TITLE_CONTENT,
+        "title": "Renewal Pipeline",
+        "subtitle": "Open Renewal opps in scope — risk-of-termination flagged",
+        "placeholder": (
+            "[think-cell TABLE WITH FORMATTING — datalinked]\n"
+            "Source: legacy land.xlsx (NOT model.xlsx)\n"
+            "Range: At_Risk_Renewals!A1:G<last>\n"
+            "  Columns: # / Account / Owner / Stage / Close Date / ACV / Risk\n"
+            "Empty if no Renewal opps with High/Very-High risk in scope."
+        ),
+    },
+    {
+        "layout": LAYOUT_TITLE_CONTENT,
+        "title": "Forecast Category breakdown",
+        "subtitle": "CFQ Land+Expand pipeline by SF ForecastCategoryName",
+        "placeholder": (
+            "[think-cell COLUMN chart or table — datalinked]\n"
+            "Source: legacy land.xlsx (NOT model.xlsx)\n"
+            "Range: Forecast_Category!A4:C<last>\n"
+            "  Columns: Category / # Opps / ARR (EUR)\n"
+            "Categories: Pipeline / Best Case / Commit / Closed / Omitted.\n"
+            "Stakeholder framing: Commit is the floor; Best Case + Pipeline\n"
+            "is the upside."
         ),
     },
     {
