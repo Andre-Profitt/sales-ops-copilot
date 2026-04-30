@@ -10,7 +10,36 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from openpyxl import Workbook
-from openpyxl.styles import Font
+from openpyxl.formatting.rule import CellIsRule
+from openpyxl.styles import Font, PatternFill
+from openpyxl.worksheet.page import PageMargins
+
+
+# SimCorp 2024 brand palette — verbatim from
+# ~/projects/brand-deck-agent-py/assets/simcorp-2024.json. Single source
+# of truth for colors used across xlsx + (eventually) deck.
+BRAND = {
+    "primary": "083EA7",  # SimCorp blue
+    "secondary": "1A1D31",  # near-black
+    "purple": "4B17B6",
+    "coral": "EF3E4A",  # error / HIGH priority
+    "orange": "FB9B2A",  # warning / MEDIUM priority
+    "gold": "F0CF61",
+    "success": "33D8CE",
+    "lightGray": "E3E3E3",  # LOW priority / placeholders
+    "white": "FFFFFF",
+    "black": "000000",
+}
+
+# Light tints for row fills (conditional formatting on Action_Items)
+ROW_TINT = {
+    "high": "FCE4E6",  # very-light coral
+    "medium": "FEF1DD",  # very-light orange
+    "low": "F2F2F2",  # very-light gray
+}
+
+# Logo path for the Cover sheet (master-slide logo from brand-deck-agent assets)
+SIMCORP_LOGO_PATH = Path("/Users/test/projects/brand-deck-agent-py/assets/images/master_0_logo.png")
 
 
 def _fmt_meur(value: float) -> str:
@@ -1073,5 +1102,144 @@ def build_director_excel(
         ),
     ).font = Font(italic=True, color="666666")
 
+    # Apply final polish pass before saving
+    _apply_polish(wb, envelope)
+
     out_path.parent.mkdir(parents=True, exist_ok=True)
     wb.save(out_path)
+
+
+def _apply_polish(wb: Workbook, envelope: dict) -> None:
+    """Final visual + print polish across the workbook.
+
+    Single pass at the end of build_director_excel so the polish logic
+    lives in one place instead of being scattered through each sheet's
+    populate block.
+    """
+    # ── Cover hierarchy (SimCorp brand colors + visual rhythm) ──
+    ws = wb["Cover"]
+    # Re-write the Cover sheet with proper hierarchy. Original cells (A1..A7)
+    # are already set; here we just upgrade fonts + colors and try to embed
+    # the logo if accessible.
+    director = envelope.get("director") or {}
+    period = envelope.get("period") or ""
+    period_end = envelope.get("period_end") or ""
+
+    ws["A1"] = director.get("name") or "(unknown director)"
+    ws["A1"].font = Font(name="Arial", size=24, bold=True, color=BRAND["primary"])
+    ws["A2"] = director.get("scope_label") or ""
+    ws["A2"].font = Font(name="Arial", size=14, italic=True, color=BRAND["secondary"])
+    ws["A3"] = ""  # spacer
+    ws["A4"] = f"{period} LAND review"
+    ws["A4"].font = Font(name="Arial", size=18, bold=True, color=BRAND["secondary"])
+    ws["A5"] = f"Period end: {period_end}"
+    ws["A5"].font = Font(name="Arial", size=11, color=BRAND["secondary"])
+    ws["A6"] = f"Generated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}"
+    ws["A6"].font = Font(name="Arial", size=11, color=BRAND["secondary"])
+    ws["A7"] = ""
+    ws["A8"] = (
+        "Aggregate-only per SimCorp AI Code of Conduct §8 — no client-level data. "
+        "Proxy / derived metrics are flagged in their respective sheets and "
+        "documented in the Notes appendix."
+    )
+    ws["A8"].font = Font(name="Arial", size=10, italic=True, color="666666")
+    ws["A8"].alignment = ws["A8"].alignment.copy(wrap_text=True)
+    ws.column_dimensions["A"].width = 100
+    ws.row_dimensions[1].height = 36
+    ws.row_dimensions[2].height = 22
+    ws.row_dimensions[4].height = 28
+    ws.row_dimensions[8].height = 40
+
+    # Embed SimCorp logo if available
+    if SIMCORP_LOGO_PATH.exists():
+        try:
+            from openpyxl.drawing.image import Image
+
+            img = Image(str(SIMCORP_LOGO_PATH))
+            # Scale conservatively (the source is large)
+            img.width = 180
+            img.height = 60
+            ws.add_image(img, "F1")
+        except Exception:
+            pass  # logo embed is non-critical
+
+    # ── Conditional formatting on Action_Items priority column ──
+    ws = wb["Action_Items"]
+    if ws.max_row > 1:
+        red_fill = PatternFill(
+            start_color=ROW_TINT["high"], end_color=ROW_TINT["high"], fill_type="solid"
+        )
+        amber_fill = PatternFill(
+            start_color=ROW_TINT["medium"], end_color=ROW_TINT["medium"], fill_type="solid"
+        )
+        gray_fill = PatternFill(
+            start_color=ROW_TINT["low"], end_color=ROW_TINT["low"], fill_type="solid"
+        )
+        # Apply to whole row by extending fill across columns (B is the
+        # priority column; we'll color just the Priority cell + Claim cell
+        # for visual lift without overwhelming the sheet).
+        rng = f"B2:E{ws.max_row}"
+        ws.conditional_formatting.add(
+            rng, CellIsRule(operator="equal", formula=['"HIGH"'], fill=red_fill)
+        )
+        ws.conditional_formatting.add(
+            rng, CellIsRule(operator="equal", formula=['"MEDIUM"'], fill=amber_fill)
+        )
+        ws.conditional_formatting.add(
+            rng, CellIsRule(operator="equal", formula=['"LOW"'], fill=gray_fill)
+        )
+
+    # ── Frozen header rows + print setup on tabular sheets ──
+    tabular_sheets = [
+        "Pipeline_By_Stage",
+        "Action_Items",
+        "Top_Deals_Land",
+        "Top_Deals_Expand",
+        "Top_Accounts",
+        "By_Owner",
+        "Pipeline_Aging",
+        "Weighted_Forecast",
+        "Wins_Losses_QTD",
+        "ARR_Roll",
+        "Forecast_Backtest",
+        "At_Risk_Renewals",
+        "Competitive_Pressure",
+        "Territory_Performance",
+        "Trend_MoM",
+        "Trend_QoQ",
+        "Regional_Benchmarks",
+        "Region_Trend_8Q",
+        "Discount_Analysis",
+    ]
+    for name in tabular_sheets:
+        if name not in wb.sheetnames:
+            continue
+        ws = wb[name]
+        # Freeze first row only on sheets where the data starts at row 2
+        # (Discount_Analysis / Regional_Benchmarks / Region_Trend_8Q have
+        # title + source rows above the data; freeze A5 instead).
+        if name in ("Discount_Analysis", "Regional_Benchmarks", "Region_Trend_8Q"):
+            ws.freeze_panes = "A5"
+        else:
+            ws.freeze_panes = "A2"
+
+    # ── Print setup across every sheet — landscape, fit-to-width ──
+    for ws in wb.worksheets:
+        ws.page_setup.orientation = "landscape"
+        ws.page_setup.fitToWidth = 1
+        ws.page_setup.fitToHeight = 0
+        ws.print_options.horizontalCentered = True
+        ws.page_margins = PageMargins(left=0.5, right=0.5, top=0.6, bottom=0.6)
+        ws.sheet_properties.pageSetUpPr.fitToPage = True
+        # Director name in the print header so paper copies can't get orphaned
+        try:
+            d_name = (envelope.get("director") or {}).get("name") or ""
+            period = envelope.get("period") or ""
+            ws.oddHeader.left.text = f"{d_name} | {period}"
+            ws.oddHeader.right.text = ws.title
+            ws.oddFooter.center.text = "Aggregate-only per SimCorp AI Code of Conduct §8"
+            for el in (ws.oddHeader.left, ws.oddHeader.right, ws.oddFooter.center):
+                el.size = 9
+                el.color = "666666"
+        except Exception:
+            pass
