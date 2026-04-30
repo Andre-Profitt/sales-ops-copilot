@@ -1309,6 +1309,7 @@ def main() -> int:
                 envelope,
                 out_dir / "land.model.xlsx",
                 snapshot=sf_with_actions,
+                backtest=backtest_data,
             )
             print(
                 f"  Wrote {out_dir / 'trends.json'} + brief.md + land.xlsx + land.model.xlsx "

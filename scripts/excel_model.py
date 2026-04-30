@@ -108,6 +108,7 @@ def build_director_model(
     out_path: Path,
     *,
     snapshot: dict | None = None,
+    backtest: dict | None = None,
 ) -> None:
     """Build the formula-driven model workbook.
 
@@ -117,6 +118,10 @@ def build_director_model(
         snapshot: per-director snapshot from pull_director_snapshot. The
             'raw_opps' key is the seed for the Data sheet. If absent, the
             Data sheet is empty and downstream formulas resolve to zero.
+        backtest: parsed state/forecast_backtest_q4.json — used by
+            Weighted_Forecast sheet to seed the org-wide stage forward
+            rates as INPUT (blue) cells. Stakeholders can edit these to
+            see how the weighted forecast moves.
     """
     wb = Workbook()
     default = wb.active
@@ -140,6 +145,7 @@ def build_director_model(
     _build_pivots(wb, snapshot)
     _build_velocity(wb)
     _build_concentration(wb, snapshot, period)
+    _build_weighted_forecast(wb, backtest)
     _build_methodology(wb)
 
     _apply_print_setup(wb, director, period)
@@ -1026,6 +1032,102 @@ def _build_concentration(wb: Workbook, snapshot: dict | None, period: str) -> No
     ws.column_dimensions["A"].width = 36
     ws.column_dimensions["B"].width = 24
     ws.column_dimensions["C"].width = 14
+
+
+def _build_weighted_forecast(wb: Workbook, backtest: dict | None) -> None:
+    """Probability-weighted forecast — formula-driven so a stakeholder can
+    click any cell and trace.
+
+      Open ARR per stage  → '=Pipeline_By_Stage!B<n>'    (XREF green)
+      Forward rate        → INPUT cell, blue, editable   (from backtest)
+      Weighted ARR        → '=B<row>*C<row>'             (LOCAL black)
+      TOTAL row           → '=SUM(D2:D9)'                (LOCAL black, bold)
+
+    Forward rates come from `state/forecast_backtest_q4.json`
+    (org-wide rates from OFH 4-quarter backtest). They are written as
+    INPUT cells so a stakeholder can override one and see the weighted
+    forecast move. The "rate source" column tells the audit reader where
+    each rate came from (org-wide backtest vs override).
+    """
+    ws = wb.create_sheet("Weighted_Forecast")
+    _set_header(
+        ws,
+        1,
+        ["Stage", "Open ARR (EUR)", "Forward rate", "Weighted ARR (EUR)", "Rate source"],
+    )
+
+    input_font = Font(color=INPUT_COLOR)
+    xref_font = Font(color=XREF_COLOR)
+    local_bold = Font(color=LOCAL_COLOR, bold=True)
+    note_font = Font(italic=True, color=BRAND_GRAY)
+
+    forward_rates = ((backtest or {}).get("forward_rates") or {}) if backtest else {}
+
+    for i, s in enumerate(GRAPH.stages, start=2):
+        # Stage label (XREF — references Stages sheet)
+        ws.cell(row=i, column=1, value=f"=Stages!B{i}").font = xref_font
+
+        # Open ARR (XREF — references Pipeline_By_Stage)
+        c = ws.cell(row=i, column=2, value=f"=Pipeline_By_Stage!B{i}")
+        c.font = xref_font
+        c.number_format = "#,##0"
+
+        # Forward rate — INPUT cell. If backtest data has a rate for this
+        # stage use it; otherwise blank (formula will yield 0 weighted).
+        rate_key = f"stage_{s.number}_forward_rate"
+        rate_val = float(forward_rates.get(rate_key) or 0.0)
+        c = ws.cell(row=i, column=3, value=rate_val)
+        c.font = input_font
+        c.number_format = "0.0%"
+
+        # Weighted ARR (LOCAL — same-sheet multiply)
+        c = ws.cell(row=i, column=4, value=f"=B{i}*C{i}")
+        c.font = Font(color=LOCAL_COLOR)
+        c.number_format = "#,##0"
+
+        # Note (text)
+        note = (
+            "Org-wide backtest (last 4 fiscal quarters)"
+            if rate_val
+            else "(no backtest rate available — input as 0)"
+        )
+        ws.cell(row=i, column=5, value=note).font = note_font
+
+    # TOTAL row — local sum
+    total_row = 1 + len(GRAPH.stages) + 1
+    ws.cell(row=total_row, column=1, value="TOTAL weighted").font = local_bold
+    c = ws.cell(row=total_row, column=4, value=f"=SUM(D2:D{total_row - 1})")
+    c.font = local_bold
+    c.number_format = "#,##0"
+
+    # Caveat / methodology row
+    caveat_row = total_row + 2
+    ws.cell(row=caveat_row, column=1, value="How to read this sheet").font = Font(
+        bold=True, color=BRAND_PRIMARY
+    )
+    ws.cell(
+        row=caveat_row + 1,
+        column=1,
+        value=(
+            "Open ARR per stage is pulled from Pipeline_By_Stage (which itself "
+            "is SUMIFS over Data filtered to CFQ-closing Land+Expand). "
+            "Forward rate is the org-wide P(advanced) per stage from "
+            "OpportunityFieldHistory over the last 4 fiscal quarters — these "
+            "are inputs (blue) and editable. Weighted ARR = Open × Rate. "
+            "Click any blue cell to see what's editable; click any green or "
+            "black cell to see the formula. Caveat: rates are population-level, "
+            "not director-specific."
+        ),
+    ).font = note_font
+    ws.cell(row=caveat_row + 1, column=1).alignment = Alignment(wrap_text=True)
+    ws.row_dimensions[caveat_row + 1].height = 60
+
+    ws.column_dimensions["A"].width = 26
+    ws.column_dimensions["B"].width = 16
+    ws.column_dimensions["C"].width = 14
+    ws.column_dimensions["D"].width = 18
+    ws.column_dimensions["E"].width = 50
+    ws.freeze_panes = "A2"
 
 
 def _build_methodology(wb: Workbook) -> None:
