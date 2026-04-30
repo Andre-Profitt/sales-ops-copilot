@@ -29,6 +29,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
 from _directors import canonical_directors
 from excel_companion import build_director_excel
+from excel_model import build_director_model  # noqa: F401  # formatter strips otherwise
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 STATE_DIR = ROOT / "state"
@@ -512,12 +513,17 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
     )
 
     # Open Land+Expand ARR beyond CFQ — context for the headline number.
-    # The main snapshot is CFQ-only ("monthly review for current quarter"),
-    # so a director seeing e.g. EUR 31K can wonder if the deck is broken.
-    # This sibling figure shows what's open in their book waiting in
-    # later quarters, so the headline isn't read in isolation.
+    # Also serves as the seed for the formula-driven model's Data sheet
+    # (combined with `rows`, this gives us all open L+E in scope, regardless
+    # of CloseDate). Same column shape as the main detail_q so the two can
+    # be concatenated into raw_opps below.
     beyond_q = (
-        "SELECT convertCurrency(APTS_Opportunity_ARR__c) arr_fx "
+        "SELECT Id, Type, StageName, CreatedDate, CloseDate, "
+        "Owner.Name, "
+        "Account.Name, Account.BillingCountry, "
+        "Account.Risk_of_Potential_Termination__c, "
+        "convertCurrency(APTS_Opportunity_ARR__c) arr_fx, "
+        "convertCurrency(APTS_Renewal_ACV__c) acv_fx "
         "FROM Opportunity "
         "WHERE IsClosed = false AND Type IN ('Land','Expand') "
         "AND CloseDate > THIS_QUARTER "
@@ -528,6 +534,29 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
     except Exception:
         beyond_rows = []
     beyond_cfq_arr = round(sum(float(r.get("arr_fx") or 0) for r in beyond_rows), 2)
+
+    # raw_opps — flattened per-row dataset for the formula-driven model's
+    # Data sheet. Combines CFQ rows (`rows`) and beyond-CFQ rows. Renewals
+    # only show up in `rows` because `beyond_q` is L+E-only (matches what
+    # the model needs since renewal pipeline is small and CFQ-bounded).
+    def _flat(r: dict) -> dict:
+        acct = r.get("Account") or {}
+        owner = r.get("Owner") or {}
+        return {
+            "Id": r.get("Id") or "",
+            "Type": r.get("Type") or "",
+            "StageName": r.get("StageName") or "",
+            "CreatedDate": (r.get("CreatedDate") or "")[:10],
+            "CloseDate": (r.get("CloseDate") or "")[:10],
+            "OwnerName": owner.get("Name") or "",
+            "AccountName": acct.get("Name") or "",
+            "BillingCountry": acct.get("BillingCountry") or "",
+            "RiskTermination": acct.get("Risk_of_Potential_Termination__c") or "",
+            "ARR_EUR": round(float(r.get("arr_fx") or 0), 2),
+            "ACV_EUR": round(float(r.get("acv_fx") or 0), 2),
+        }
+
+    raw_opps = [_flat(r) for r in rows] + [_flat(r) for r in beyond_rows]
 
     return {
         "by_type": by_type,
@@ -553,6 +582,7 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
             ),
             "new_business_arr_open_beyond_cfq": beyond_cfq_arr,
         },
+        "raw_opps": raw_opps,
         "_fx_converted": True,
         "_fx_target_currency": "EUR (apro display currency)",
     }
@@ -1206,8 +1236,16 @@ def main() -> int:
                 snapshot=sf_with_actions,
                 backtest=backtest_data,
             )
+            # Formula-driven sibling — same envelope + snapshot, but with a
+            # canonical Data sheet and SUMIFS-based analytical sheets so a
+            # director / analyst can trace any KPI to its inputs.
+            build_director_model(
+                envelope,
+                out_dir / "land.model.xlsx",
+                snapshot=sf_with_actions,
+            )
             print(
-                f"  Wrote {out_dir / 'trends.json'} + brief.md + land.xlsx "
+                f"  Wrote {out_dir / 'trends.json'} + brief.md + land.xlsx + land.model.xlsx "
                 f"({len(envelope.get('action_items') or [])} action items)"
             )
         except Exception as e:

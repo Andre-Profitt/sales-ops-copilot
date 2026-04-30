@@ -1,12 +1,27 @@
-"""Excel companion for LAND-monthly per-director brief.
+"""LEGACY xlsx companion for LAND-monthly per-director brief.
 
-15 sheets. mEUR formatting, no em-dashes per project memory.
-Sheets 4-12 are scaffolded for future enrichment from forecast_backtest /
-snapshot_diff (Phase 1.5.A.4 + .5).
+**Status:** legacy/knowledge-artifact as of 2026-04-30. Co-emitted with
+the formula-driven model (`scripts/excel_model.py` -> `land.model.xlsx`)
+for stakeholders who need to trace KPIs to their inputs. This module
+remains the source of truth for the analytical sheets that haven't yet
+been migrated to formulas (top deals, weighted forecast, retention,
+action items, regional benchmarks, trend MoM/QoQ — see excel_model.py
+docstring "Phase 2 sheets" list).
 
-Process facts (stages / gates / motions / metric caveats) are imported from
-the canonical knowledge graph at scripts/sales_process_graph.py — single
-source of truth used across this repo + brand-deck-agent-py.
+What this file is NOT:
+  - It is NOT a model. Every analytical cell is a precomputed value from
+    Python; clicking a cell shows a constant, not a formula. To audit a
+    KPI here, you have to read the Python that produced it.
+  - It is NOT going away soon. The 22 Phase-2 sheets still need it; this
+    docstring just flags that new analytical sheets should be authored in
+    excel_model.py, not added here.
+
+Process facts (stages / gates / motions / metric caveats) are imported
+from the canonical knowledge graph at scripts/sales_process_graph.py.
+
+Original docstring (preserved): 26 sheets. mEUR formatting, no em-dashes
+per project memory. Sheets 4-12 are scaffolded for future enrichment
+from forecast_backtest / snapshot_diff (Phase 1.5.A.4 + .5).
 """
 
 from __future__ import annotations
