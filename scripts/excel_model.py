@@ -33,6 +33,7 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 
 from openpyxl import Workbook
+from openpyxl.formatting.rule import ColorScaleRule
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 from openpyxl.workbook.defined_name import DefinedName
@@ -642,6 +643,26 @@ def _build_pivots(wb: Workbook, snapshot: dict | None) -> None:
                 )
                 c.font = xref_font
                 c.number_format = "#,##0"
+        # Heat-map conditional formatting on the Stage × Industry matrix
+        # interior (excludes row/col headers). think-cell on macOS lacks a
+        # native heat-map; the runbook (docs/THINKCELL_SETUP.md) binds a
+        # think-cell "Table with Formatting" to this range so the cells
+        # render heat-map-like via the conditional fills below. SimCorp
+        # brand-blue gradient: white (empty/zero) → pale blue (median) →
+        # SimCorp primary (max).
+        first_row = row + 1
+        last_row = row + len(stages)
+        last_col = get_column_letter(1 + len(industries))
+        heatmap_rule = ColorScaleRule(
+            start_type="min",
+            start_color="FFFFFF",
+            mid_type="percentile",
+            mid_value=50,
+            mid_color="A9C0E5",
+            end_type="max",
+            end_color="083EA7",
+        )
+        ws.conditional_formatting.add(f"B{first_row}:{last_col}{last_row}", heatmap_rule)
         row = row + 1 + len(stages) + 2
 
     # ── Pivot 2: Owner × Stage (count, Land+Expand) ──
