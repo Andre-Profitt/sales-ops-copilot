@@ -302,22 +302,52 @@ def build_director_excel(
     ws["A5"] = f"Currency: {envelope.get('currency_format', 'mEUR')}"
     ws["A7"] = "Aggregate-only per SimCorp AI Code of Conduct. No client-level data."
 
-    # Pipeline_Total
+    # Pipeline_Total — period-aware labels so a small CFQ headline isn't read
+    # as "no pipeline." We surface CFQ-closeable as the headline, then beyond-
+    # CFQ as context, then renewals.
+    period = envelope.get("period") or ""
     ws = wb["Pipeline_Total"]
     ws["A1"] = "KPI"
     ws["B1"] = "Value"
     ws["A1"].font = Font(bold=True)
     ws["B1"].font = Font(bold=True)
     pipeline = next((k for k in envelope["kpis"] if k["name"] == "total_pipeline_arr"), None)
+    beyond = next((k for k in envelope["kpis"] if k["name"] == "pipeline_arr_beyond_cfq"), None)
     renewal = next((k for k in envelope["kpis"] if k["name"] == "total_renewal_acv"), None)
-    ws["A2"] = "Total new-business ARR"
+    ws["A2"] = (
+        pipeline.get("display_label")
+        if pipeline and pipeline.get("display_label")
+        else f"{period} closeable Land+Expand ARR"
+    )
     ws["B2"] = _fmt_meur(pipeline["value"]) if pipeline else "-"
-    ws["A3"] = "Total renewal ACV"
-    ws["B3"] = _fmt_meur(renewal["value"]) if renewal else "-"
+    ws["A2"].font = Font(bold=True)
+    ws["B2"].font = Font(bold=True)
+    if beyond:
+        ws["A3"] = beyond.get("display_label") or f"Open Land+Expand beyond {period}"
+        ws["B3"] = _fmt_meur(beyond["value"])
+        ws["C3"] = "out-of-quarter pipe; context only, not in CFQ forecast"
+        ws["C3"].font = Font(italic=True, color="666666")
+        ws["A4"] = (
+            renewal.get("display_label")
+            if renewal and renewal.get("display_label")
+            else f"{period} renewal ACV"
+        )
+        ws["B4"] = _fmt_meur(renewal["value"]) if renewal else "-"
+    else:
+        # Older envelope without beyond-CFQ — fall back to 2-row layout.
+        ws["A3"] = (
+            renewal.get("display_label")
+            if renewal and renewal.get("display_label")
+            else f"{period} renewal ACV"
+        )
+        ws["B3"] = _fmt_meur(renewal["value"]) if renewal else "-"
+    ws.column_dimensions["A"].width = 38
+    ws.column_dimensions["B"].width = 14
+    ws.column_dimensions["C"].width = 50
 
     # Pipeline_By_Stage
     ws = wb["Pipeline_By_Stage"]
-    ws["A1"] = "Stage"
+    ws["A1"] = f"Stage ({period} closeable)"
     ws["B1"] = "ARR"
     ws["C1"] = "# Opps"
     for col in ("A1", "B1", "C1"):

@@ -76,6 +76,7 @@ def render_region_memo(region: str, period: str, envelopes: list[dict]) -> str:
         return f"# {region} regional memo — {period}\n\n_No director envelopes found._\n"
 
     total_arr = sum(_kpi(e, "total_pipeline_arr") for e in envelopes)
+    total_beyond = sum(_kpi(e, "pipeline_arr_beyond_cfq") for e in envelopes)
     total_acv = sum(_kpi(e, "total_renewal_acv") for e in envelopes)
     all_actions: list[dict] = []
     for e in envelopes:
@@ -101,8 +102,10 @@ def render_region_memo(region: str, period: str, envelopes: list[dict]) -> str:
         "## Region snapshot",
         "",
         f"- **Directors covered:** {len(envelopes)}",
-        f"- **Total open pipeline ARR (Land+Expand):** EUR {total_arr:,.0f}",
-        f"- **Total open renewal ACV:** EUR {total_acv:,.0f}",
+        f"- **{period} closeable Land+Expand ARR:** EUR {total_arr:,.0f}",
+        f"- **Open Land+Expand beyond {period}:** EUR {total_beyond:,.0f} "
+        f"_(out-of-quarter pipe — context, not in CFQ forecast)_",
+        f"- **{period} renewal ACV:** EUR {total_acv:,.0f}",
         f"- **Total action items across the region:** {len(all_actions)}",
         f"- **HIGH-priority actions:** {sum(1 for a in all_actions if a.get('priority') == 'high')}",
         "",
@@ -137,8 +140,8 @@ def render_region_memo(region: str, period: str, envelopes: list[dict]) -> str:
     lines += [
         "## Director-by-director action summary",
         "",
-        "| Director | Scope | Open ARR | Open ACV | # Actions | Themes |",
-        "|---|---|---:|---:|---:|---|",
+        f"| Director | Scope | {period} ARR | Beyond {period} | {period} ACV | # Actions | Themes |",
+        "|---|---|---:|---:|---:|---:|---|",
     ]
     for e in envelopes:
         d = e.get("director") or {}
@@ -147,6 +150,7 @@ def render_region_memo(region: str, period: str, envelopes: list[dict]) -> str:
         lines.append(
             f"| {d.get('name')} | {d.get('scope_label', '')} | "
             f"EUR {_kpi(e, 'total_pipeline_arr'):,.0f} | "
+            f"EUR {_kpi(e, 'pipeline_arr_beyond_cfq'):,.0f} | "
             f"EUR {_kpi(e, 'total_renewal_acv'):,.0f} | "
             f"{len(actions)} | {themes} |"
         )
