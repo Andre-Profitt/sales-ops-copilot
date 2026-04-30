@@ -38,6 +38,9 @@ SHEET_NAMES = [
     "Competitive_Pressure",
     "Territory_Performance",
     "SimCorp_One",
+    "Discount_Analysis",
+    "Regional_Benchmarks",
+    "Region_Trend_8Q",
     "Trend_MoM",
     "Trend_QoQ",
     "Process_Standards",
@@ -584,6 +587,131 @@ def build_director_excel(
     else:
         ws.cell(
             row=2, column=1, value="(SP data not available — check action_data wiring)"
+        ).font = Font(italic=True, color="999999")
+
+    # ── Discount_Analysis ── pulled from DD · Discount Depth Pending report (org-wide)
+    ws = wb["Discount_Analysis"]
+    ws["A1"] = "Discount Depth Pending — org-wide (not director-scoped)"
+    ws["A1"].font = Font(bold=True, size=12)
+    ws["A2"] = (
+        "Source: DD · Discount Depth Pending (00OTb000008njSPMAY). Field "
+        "ZIMIT_Discount__c is sparsely populated; treat the figures as "
+        "indicative, not comprehensive. See Notes sheet."
+    )
+    ws["A2"].font = Font(italic=True, color="666666")
+    ws["A4"] = "Discount band"
+    ws["B4"] = "# Opps"
+    ws["C4"] = "ARR"
+    for col in ("A4", "B4", "C4"):
+        ws[col].font = Font(bold=True)
+    disc = ((snapshot or {}).get("benchmarks") or {}).get("discount_pending") or {}
+    rows_disc = disc.get("rows") or []
+    if rows_disc:
+        for i, r in enumerate(rows_disc, start=5):
+            ws.cell(row=i, column=1, value=r.get("discount_band") or "?")
+            ws.cell(row=i, column=2, value=r.get("num_opps") or 0)
+            ws.cell(row=i, column=3, value=_fmt_meur(r.get("arr_eur") or 0))
+        last = 4 + len(rows_disc) + 1
+        ws.cell(row=last, column=1, value="TOTAL").font = Font(bold=True)
+        ws.cell(row=last, column=2, value=disc.get("grand_num_opps") or 0).font = Font(bold=True)
+        ws.cell(row=last, column=3, value=_fmt_meur(disc.get("grand_arr_eur") or 0)).font = Font(
+            bold=True
+        )
+        ws.column_dimensions["A"].width = 16
+        ws.column_dimensions["B"].width = 10
+        ws.column_dimensions["C"].width = 14
+    else:
+        ws.cell(
+            row=5,
+            column=1,
+            value="(report unreachable or returned no rows)",
+        ).font = Font(italic=True, color="999999")
+
+    # ── Regional_Benchmarks ── pulled from CRO · Open Pipeline by Region (org-wide)
+    ws = wb["Regional_Benchmarks"]
+    ws["A1"] = "Open pipeline ARR by region — org-wide context"
+    ws["A1"].font = Font(bold=True, size=12)
+    ws["A2"] = (
+        "Source: CRO · Open Pipeline by Region (00OTb000008mvyfMAA). "
+        "FX-correct via SF Report `s!field.CONVERT` aggregates. The "
+        "row matching this director's region is highlighted in bold."
+    )
+    ws["A2"].font = Font(italic=True, color="666666")
+    ws["A4"] = "Region"
+    ws["B4"] = "Open ARR"
+    ws["C4"] = "% of org"
+    ws["D4"] = "# Opps"
+    for col in ("A4", "B4", "C4", "D4"):
+        ws[col].font = Font(bold=True)
+    pbr = ((snapshot or {}).get("benchmarks") or {}).get("open_pipe_by_region") or {}
+    pbr_rows = pbr.get("rows") or []
+    grand = pbr.get("grand_arr_eur") or 0
+    director_scope = (envelope.get("director") or {}).get("scope_label", "") or ""
+    if pbr_rows:
+        for i, r in enumerate(pbr_rows, start=5):
+            region = r.get("region") or ""
+            arr = r.get("arr_eur") or 0
+            pct = (arr / grand * 100) if grand else 0
+            cell_a = ws.cell(row=i, column=1, value=region)
+            cell_b = ws.cell(row=i, column=2, value=_fmt_meur(arr))
+            cell_c = ws.cell(row=i, column=3, value=f"{pct:.1f}%")
+            cell_d = ws.cell(row=i, column=4, value=r.get("opp_count") or 0)
+            # Bold the row that matches the director's scope (loose substring match)
+            if region and (
+                region.lower() in director_scope.lower()
+                or director_scope.lower() in region.lower()
+                or any(
+                    word in region.lower()
+                    for word in director_scope.lower().split()
+                    if len(word) > 3
+                )
+            ):
+                for c in (cell_a, cell_b, cell_c, cell_d):
+                    c.font = Font(bold=True)
+        last = 4 + len(pbr_rows) + 1
+        ws.cell(row=last, column=1, value="ORG TOTAL").font = Font(bold=True)
+        ws.cell(row=last, column=2, value=_fmt_meur(grand)).font = Font(bold=True)
+        ws.cell(row=last, column=3, value="100.0%").font = Font(bold=True)
+        ws.column_dimensions["A"].width = 28
+        ws.column_dimensions["B"].width = 14
+        ws.column_dimensions["C"].width = 10
+        ws.column_dimensions["D"].width = 10
+    else:
+        ws.cell(
+            row=5,
+            column=1,
+            value="(benchmark report unreachable)",
+        ).font = Font(italic=True, color="999999")
+
+    # ── Region_Trend_8Q ── pulled from CRO · Win Rate Trend 8Q (org-wide)
+    ws = wb["Region_Trend_8Q"]
+    ws["A1"] = "Win Rate trend by Fiscal Quarter — org-wide (last 8 FQ)"
+    ws["A1"].font = Font(bold=True, size=12)
+    ws["A2"] = (
+        "Source: CRO · Win Rate Trend 8Q (00OTb000008neanMAA). Org-wide "
+        "win rate (Closed-Won / Closed-Total) by fiscal quarter. Use as "
+        "context for your territory's QoQ trend in Trend_QoQ."
+    )
+    ws["A2"].font = Font(italic=True, color="666666")
+    ws["A4"] = "Fiscal Quarter"
+    ws["B4"] = "Win rate"
+    ws["C4"] = "# Closed opps"
+    for col in ("A4", "B4", "C4"):
+        ws[col].font = Font(bold=True)
+    wrt = ((snapshot or {}).get("benchmarks") or {}).get("win_rate_trend_8q") or []
+    if wrt:
+        for i, r in enumerate(wrt, start=5):
+            ws.cell(row=i, column=1, value=r.get("quarter") or "?")
+            ws.cell(row=i, column=2, value=f"{r.get('win_rate_pct', 0):.1f}%")
+            ws.cell(row=i, column=3, value=r.get("num_opps") or 0)
+        ws.column_dimensions["A"].width = 14
+        ws.column_dimensions["B"].width = 12
+        ws.column_dimensions["C"].width = 14
+    else:
+        ws.cell(
+            row=5,
+            column=1,
+            value="(benchmark report unreachable)",
         ).font = Font(italic=True, color="999999")
 
     # ── Territory_Performance ── open Land+Expand pipeline by sub-region

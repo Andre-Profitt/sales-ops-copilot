@@ -34,6 +34,109 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 STATE_DIR = ROOT / "state"
 
 
+# Org-wide benchmark report IDs (verified live 2026-04-29)
+_REPORT_OPEN_PIPE_BY_REGION = "00OTb000008mvyfMAA"  # CRO · Open Pipeline by Region
+_REPORT_WIN_RATE_8Q = "00OTb000008neanMAA"  # CRO · Win Rate Trend 8Q
+_REPORT_DISCOUNT_DEPTH_PENDING = "00OTb000008njSPMAY"  # DD · Discount Depth Pending
+
+
+def _sf_access_token_and_instance() -> tuple[str, str]:
+    out = subprocess.run(
+        ["sf", "org", "display", "--target-org", "preprod", "--json"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    d = json.loads(out.stdout)["result"]
+    return d["accessToken"], d["instanceUrl"]
+
+
+def _sf_analytics_get(report_id: str) -> dict[str, Any]:
+    """Hit the Reports REST API for an org-wide aggregate. FX-correct via
+    the report engine's `s!field.CONVERT` aggregates."""
+    import urllib.request
+
+    token, instance = _sf_access_token_and_instance()
+    url = f"{instance}/services/data/v66.0/analytics/reports/{report_id}?includeDetails=false"
+    req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
+    with urllib.request.urlopen(req, timeout=30) as resp:  # noqa: S310 — https-only internal call
+        return json.loads(resp.read().decode())
+
+
+def pull_org_benchmarks() -> dict[str, Any]:
+    """One-shot org-wide benchmarks from existing FX-correct SF reports.
+    Cached at the run level — every director's xlsx references the same
+    org-wide figures so the comparison is consistent."""
+    out: dict[str, Any] = {}
+
+    # Open pipeline by region (CRO · Open Pipeline by Region)
+    try:
+        d = _sf_analytics_get(_REPORT_OPEN_PIPE_BY_REGION)
+        fact = d.get("factMap") or {}
+        rows = []
+        for g in (d.get("groupingsDown") or {}).get("groupings", []):
+            cells = (fact.get(f"{g.get('key')}!T") or {}).get("aggregates") or []
+            arr_label = (cells[0] or {}).get("label") if cells else None
+            arr_val = float((cells[0] or {}).get("value") or 0) if cells else 0
+            cnt_val = int((cells[2] or {}).get("value") or 0) if len(cells) >= 3 else 0
+            rows.append(
+                {
+                    "region": g.get("label", "?"),
+                    "arr_label": arr_label,
+                    "arr_eur": arr_val,
+                    "opp_count": cnt_val,
+                }
+            )
+        grand_cells = (fact.get("T!T") or {}).get("aggregates") or []
+        grand_arr = float((grand_cells[0] or {}).get("value") or 0) if grand_cells else 0
+        out["open_pipe_by_region"] = {
+            "rows": rows,
+            "grand_arr_eur": grand_arr,
+        }
+    except Exception as e:
+        print(f"  [WARN] benchmarks: open_pipe_by_region failed: {e}", file=sys.stderr)
+        out["open_pipe_by_region"] = {}
+
+    # Win rate trend 8Q (CRO · Win Rate Trend 8Q)
+    try:
+        d = _sf_analytics_get(_REPORT_WIN_RATE_8Q)
+        fact = d.get("factMap") or {}
+        rows = []
+        for g in (d.get("groupingsDown") or {}).get("groupings", []):
+            cells = (fact.get(f"{g.get('key')}!T") or {}).get("aggregates") or []
+            wr = float((cells[0] or {}).get("value") or 0) if cells else 0
+            n = int((cells[1] or {}).get("value") or 0) if len(cells) >= 2 else 0
+            rows.append({"quarter": g.get("label", "?"), "win_rate_pct": wr, "num_opps": n})
+        out["win_rate_trend_8q"] = rows
+    except Exception as e:
+        print(f"  [WARN] benchmarks: win_rate_trend_8q failed: {e}", file=sys.stderr)
+        out["win_rate_trend_8q"] = []
+
+    # Discount depth pending (DD · Discount Depth Pending)
+    try:
+        d = _sf_analytics_get(_REPORT_DISCOUNT_DEPTH_PENDING)
+        fact = d.get("factMap") or {}
+        rows = []
+        for g in (d.get("groupingsDown") or {}).get("groupings", []):
+            cells = (fact.get(f"{g.get('key')}!T") or {}).get("aggregates") or []
+            arr_val = float((cells[0] or {}).get("value") or 0) if cells else 0
+            n = int((cells[1] or {}).get("value") or 0) if len(cells) >= 2 else 0
+            rows.append({"discount_band": g.get("label", "?"), "arr_eur": arr_val, "num_opps": n})
+        grand_cells = (fact.get("T!T") or {}).get("aggregates") or []
+        grand_arr = float((grand_cells[0] or {}).get("value") or 0) if grand_cells else 0
+        grand_n = int((grand_cells[1] or {}).get("value") or 0) if len(grand_cells) >= 2 else 0
+        out["discount_pending"] = {
+            "rows": rows,
+            "grand_arr_eur": grand_arr,
+            "grand_num_opps": grand_n,
+        }
+    except Exception as e:
+        print(f"  [WARN] benchmarks: discount_pending failed: {e}", file=sys.stderr)
+        out["discount_pending"] = {}
+
+    return out
+
+
 def _sf_query(soql: str) -> list[dict[str, Any]]:
     p = subprocess.run(
         ["sf", "data", "query", "--query", soql, "--json"],
@@ -1011,6 +1114,15 @@ def main() -> int:
 
     backtest_path = STATE_DIR / "forecast_backtest_q4.json"
 
+    # Pull org-wide benchmarks once (shared across all 9 directors so they
+    # can compare their scope vs the org).
+    print("→ Pulling org-wide benchmarks (shared across directors)...")
+    try:
+        benchmarks = pull_org_benchmarks()
+    except Exception as e:
+        print(f"  [WARN] benchmark pull failed: {e}", file=sys.stderr)
+        benchmarks = {}
+
     failures = []
     for d in directors:
         dn = d["name"].replace(" ", "-")
@@ -1030,7 +1142,11 @@ def main() -> int:
             )
             # Merge action_data (which has simcorp_one_share + others) into the
             # snapshot dict so excel_companion can populate the SimCorp_One sheet.
-            sf_with_actions = {**sf, "simcorp_one": action_data.get("simcorp_one_share") or {}}
+            sf_with_actions = {
+                **sf,
+                "simcorp_one": action_data.get("simcorp_one_share") or {},
+                "benchmarks": benchmarks,
+            }
             build_director_excel(
                 envelope,
                 out_dir / "land.xlsx",
