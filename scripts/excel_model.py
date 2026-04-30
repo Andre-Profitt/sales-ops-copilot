@@ -146,6 +146,7 @@ def build_director_model(
     _build_closed_won_6mo(wb, snapshot)
     _build_renewals_12mo(wb, snapshot)
     _build_pipeline_total(wb, period)
+    _build_pipe_movement(wb, snapshot, period)
     _build_pipeline_by_stage(wb, period)
     _build_pipeline_aging(wb)
     _build_by_owner(wb, snapshot)
@@ -560,6 +561,130 @@ def _build_pipeline_total(wb: Workbook, period: str) -> None:
     ws.column_dimensions["B"].width = 18
     ws.column_dimensions["C"].width = 14
     ws.column_dimensions["D"].width = 70
+    ws.freeze_panes = "A2"
+
+
+def _build_pipe_movement(wb: Workbook, snapshot: dict | None, period: str) -> None:
+    """Bridge from prior-period closeable Land+Expand pipe to current.
+
+    Six-row waterfall:
+        opening (INPUT) + (new + advanced − slipped, residual) − won − lost
+            = closing.
+    Closing pulls from Pipeline_Total!B2 (the headline closeable L+E ARR);
+    Won/Lost pull from Wins_Losses_QTD!C2/C3 (which themselves are SUMIFS
+    over closed-CFQ rows). The "+ New + Advanced (residual)" row is a
+    same-sheet plug computed as closing − opening + won + lost — it lumps
+    new deals + advanced-into-CFQ + slipped-out together until the
+    OpportunityFieldHistory-driven decomposition lands in Phase 2.
+
+    Opening pipe comes from the prior monthly snapshot (Phase 2 plumbing
+    in land_brief.py reads state/<period>/<director>/snapshot_prev.json
+    and surfaces it on snapshot.pipe_movement_opening_arr). If no prior
+    snapshot exists the opening is 0 and the residual bucket carries the
+    full closing — flagged in the methodology row below the bridge.
+    """
+    ws = wb.create_sheet("Pipe_Movement")
+    _set_header(ws, 1, ["Bucket", "ARR (EUR)", "Note"])
+
+    opening = float((snapshot or {}).get("pipe_movement_opening_arr") or 0)
+    has_prior = opening > 0
+
+    input_font = Font(color=INPUT_COLOR, bold=True)
+    xref_font = Font(color=XREF_COLOR, bold=True)
+    local_font = Font(color=LOCAL_COLOR, bold=True)
+    note_font = Font(italic=True, color=BRAND_GRAY)
+
+    # Row 2: Opening pipe (INPUT — pulled from prior snapshot).
+    ws.cell(row=2, column=1, value=f"Opening pipe (start of {period})")
+    c = ws.cell(row=2, column=2, value=round(opening, 2))
+    c.font = input_font
+    c.number_format = "#,##0"
+    ws.cell(
+        row=2,
+        column=3,
+        value=(
+            "Prior monthly snapshot — closeable L+E ARR"
+            if has_prior
+            else "(no prior snapshot — first run)"
+        ),
+    ).font = note_font
+
+    # Row 3: New + Advanced (residual) — same-sheet plug. LOCAL black.
+    # NOTE: row labels intentionally avoid leading +/=/- characters because
+    # both Excel and the `formulas` recalc lib interpret a cell starting
+    # with one of those as a formula expression. Prefix the bridge symbol
+    # with ASCII text instead of leaving it as the first glyph.
+    ws.cell(row=3, column=1, value="(+) New + Advanced (residual)")
+    c = ws.cell(row=3, column=2, value="=B6-B2+B4+B5")
+    c.font = local_font
+    c.number_format = "#,##0"
+    ws.cell(
+        row=3,
+        column=3,
+        value=(
+            "Residual: closing minus opening plus won plus lost. Lumps new "
+            "deals + advanced-into-CFQ + slipped-out until Phase 2 OFH wiring."
+        ),
+    ).font = note_font
+
+    # Row 4: Won this Q (Land+Expand) — XREF green.
+    ws.cell(row=4, column=1, value="(-) Won this Q (Land+Expand)")
+    c = ws.cell(row=4, column=2, value="=Wins_Losses_QTD!C2")
+    c.font = xref_font
+    c.number_format = "#,##0"
+    ws.cell(
+        row=4,
+        column=3,
+        value="From Wins_Losses_QTD!C2 (SUMIFS over closed-CFQ Land+Expand wins)",
+    ).font = note_font
+
+    # Row 5: Lost this Q (Land+Expand) — XREF green.
+    ws.cell(row=5, column=1, value="(-) Lost this Q (Land+Expand)")
+    c = ws.cell(row=5, column=2, value="=Wins_Losses_QTD!C3")
+    c.font = xref_font
+    c.number_format = "#,##0"
+    ws.cell(
+        row=5,
+        column=3,
+        value="From Wins_Losses_QTD!C3 (SUMIFS over closed-CFQ Land+Expand losses)",
+    ).font = note_font
+
+    # Row 6: Closing pipe (CFQ closeable) — XREF green, references the
+    # headline. Bold to mark it as the bridge end-state.
+    ws.cell(row=6, column=1, value=f"Closing pipe ({period} CFQ)").font = Font(bold=True)
+    c = ws.cell(row=6, column=2, value="=Pipeline_Total!B2")
+    c.font = xref_font
+    c.number_format = "#,##0"
+    ws.cell(
+        row=6,
+        column=3,
+        value="From Pipeline_Total!B2 (headline closeable Land+Expand ARR)",
+    ).font = note_font
+
+    # Methodology caveat row — same style as _build_weighted_forecast.
+    ws.cell(row=8, column=1, value="How to read this sheet").font = Font(
+        bold=True, color=BRAND_PRIMARY
+    )
+    ws.cell(
+        row=9,
+        column=1,
+        value=(
+            "Opening pipe (B2) is read from the prior monthly snapshot if "
+            "available (state/<period>/<director>/snapshot_prev.json); on "
+            "the first run for a director it starts at 0 and the residual "
+            "bucket (B3) carries the full closing figure. The 'New + "
+            "Advanced (residual)' bucket is intentionally plug-style — it "
+            "currently lumps new deals + advanced-into-CFQ + slipped-out "
+            "together. Phase 2 will decompose it into discrete movements "
+            "via OpportunityFieldHistory snapshots."
+        ),
+    ).font = note_font
+    ws.cell(row=9, column=1).alignment = Alignment(wrap_text=True)
+    ws.row_dimensions[9].height = 60
+
+    ws.column_dimensions["A"].width = 32
+    ws.column_dimensions["B"].width = 18
+    ws.column_dimensions["C"].width = 60
     ws.freeze_panes = "A2"
 
 

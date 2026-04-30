@@ -71,6 +71,20 @@ SLIDES: list[dict] = [
     },
     {
         "layout": LAYOUT_TITLE_CONTENT,
+        "title": "Pipe-movement bridge",
+        "subtitle": "What moved this quarter — opening + new − won − lost = closing",
+        "placeholder": (
+            "[think-cell WATERFALL chart — datalinked]\n"
+            "Range: Pipe_Movement!A2:B6\n"
+            "  Categories  = Bucket label (col A)\n"
+            "  Values      = ARR EUR (col B)\n"
+            "Use 'e' (subtotal) on Closing pipe row. Connectors on by default.\n"
+            "New+Advanced is currently a residual bucket — Phase 2 will\n"
+            "decompose via OpportunityFieldHistory."
+        ),
+    },
+    {
+        "layout": LAYOUT_TITLE_CONTENT,
         "title": "Pipeline by stage",
         "subtitle": "8-stage SimCorp sales process — open Land+Expand ARR, {period}",
         "placeholder": (
@@ -137,11 +151,14 @@ SLIDES: list[dict] = [
         "title": "Renewal Pipeline",
         "subtitle": "Open Renewal opps in scope — risk-of-termination flagged",
         "placeholder": (
-            "[think-cell TABLE WITH FORMATTING — datalinked]\n"
+            "[think-cell TABLE WITH FORMATTING + HARVEY BALLS]\n"
             "Source: legacy land.xlsx (NOT model.xlsx)\n"
-            "Range: At_Risk_Renewals!A1:G<last>\n"
-            "  Columns: # / Account / Owner / Stage / Close Date / ACV / Risk\n"
-            "Empty if no Renewal opps with High/Very-High risk in scope."
+            "Range: At_Risk_Renewals!A1:H<last>\n"
+            "  Columns: # / Account / Owner / Stage / Close Date / ACV /\n"
+            "           Risk / Risk score (0-4)\n"
+            "Insert a think-cell HARVEY BALL (Insert > think-cell > Elements >\n"
+            "Harvey ball) in a new column to the right of Risk score. Bind the\n"
+            "ball value to the Risk score column (0=empty, 4=full)."
         ),
     },
     {
@@ -174,11 +191,12 @@ SLIDES: list[dict] = [
         "title": "Stage × Industry",
         "subtitle": "Where the pipeline lives — cross-tab heat map",
         "placeholder": (
-            "[think-cell HEAT MAP or 100%-stacked]\n"
-            "Range: Pivots — find 'Stage × Industry' block\n"
-            "  Rows  = Stages 1-8\n"
-            "  Cols  = Industries (Asset Mgmt, Insurance, Bank, ...)\n"
-            "Use color intensity to encode ARR magnitude"
+            "[think-cell MEKKO chart — variable-width 100%-stacked]\n"
+            "Range: Pivots — find 'Stage × Industry' block on the Pivots sheet\n"
+            "  Bar width  = total ARR per industry (column totals)\n"
+            "  Bar height = stage mix % within each industry\n"
+            "Mekko encodes ARR weight in bar width — heavier-pipe industries\n"
+            "appear visually larger, replacing the heat-map workaround."
         ),
     },
     {

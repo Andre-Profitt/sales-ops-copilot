@@ -883,7 +883,10 @@ def build_director_excel(
     ws["E1"] = "Close Date"
     ws["F1"] = "ACV"
     ws["G1"] = "Risk"
-    for col in ("A1", "B1", "C1", "D1", "E1", "F1", "G1"):
+    # Risk score (0-4): blended termination-risk + close-date proximity +
+    # ACV size. Drives the think-cell Harvey-ball viz on slide 8.
+    ws["H1"] = "Risk score (0-4)"
+    for col in ("A1", "B1", "C1", "D1", "E1", "F1", "G1", "H1"):
         ws[col].font = Font(bold=True)
     at_risk = (snapshot or {}).get("at_risk_renewals") or []
     if at_risk:
@@ -895,6 +898,8 @@ def build_director_excel(
             ws.cell(row=i + 1, column=5, value=r.get("close_date") or "")
             ws.cell(row=i + 1, column=6, value=_fmt_meur(r.get("acv_eur") or 0))
             ws.cell(row=i + 1, column=7, value=r.get("risk_level") or "")
+            # Defensive: missing risk_score (older snapshots) → 0.
+            ws.cell(row=i + 1, column=8, value=int(r.get("risk_score") or 0))
         ws.column_dimensions["A"].width = 4
         ws.column_dimensions["B"].width = 36
         ws.column_dimensions["C"].width = 22
@@ -902,6 +907,7 @@ def build_director_excel(
         ws.column_dimensions["E"].width = 12
         ws.column_dimensions["F"].width = 12
         ws.column_dimensions["G"].width = 14
+        ws.column_dimensions["H"].width = 14
     else:
         ws.cell(
             row=2,

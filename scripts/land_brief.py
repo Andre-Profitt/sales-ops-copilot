@@ -352,14 +352,31 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
         risk = (acct.get("Risk_of_Potential_Termination__c") or "").lower()
         if "high" not in risk:  # catches "High" + "Very High"
             continue
+        acv_eur_value = round(float(r.get("acv_fx") or 0), 2)
+        # Risk scoring 0-4: combines termination-risk + close-date proximity + size.
+        # 0 = safe, 4 = highest urgency. Used for Harvey balls on the deck slide.
+        risk_text = (acct.get("Risk_of_Potential_Termination__c") or "").lower()
+        risk_base = {"very high": 2, "high": 1, "medium": 0, "low": 0}.get(risk_text, 0)
+        # Close-date proximity: this Q = +2, next 6mo = +1, beyond = 0
+        close = (r.get("CloseDate") or "")[:10]
+        try:
+            close_d = dt.date.fromisoformat(close)
+            days_out = (close_d - dt.date.today()).days
+            proximity_bonus = 2 if days_out <= 90 else (1 if days_out <= 180 else 0)
+        except Exception:
+            proximity_bonus = 0
+        # Size: ACV >= 500K adds +1
+        size_bonus = 1 if acv_eur_value >= 500_000 else 0
+        risk_score = min(4, risk_base + proximity_bonus + size_bonus)
         at_risk_renewals.append(
             {
                 "stage": r.get("StageName") or "",
                 "account": acct.get("Name") or "(unknown)",
                 "owner": (r.get("Owner") or {}).get("Name") or "",
                 "close_date": (r.get("CloseDate") or "")[:10],
-                "acv_eur": round(float(r.get("acv_fx") or 0), 2),
+                "acv_eur": acv_eur_value,
                 "risk_level": acct.get("Risk_of_Potential_Termination__c") or "",
+                "risk_score": risk_score,
             }
         )
     at_risk_renewals.sort(key=lambda x: x["acv_eur"], reverse=True)
@@ -653,6 +670,24 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
     closed_won_6mo_rows = [_flat_closed(r) for r in roll_rows]
     closed_renewals_12mo_rows = [_flat_closed(r) for r in ret_rows]
 
+    # Pipe movement opening — read prior monthly snapshot if available.
+    # Mirrors the per-director out_dir slug used by main(): name with
+    # spaces collapsed to hyphens. This unblocks the Pipe_Movement sheet
+    # without requiring any new SOQL — when no prior snapshot exists the
+    # opening defaults to 0 and the residual bucket carries the closing.
+    director_slug = director.get("name", "").replace(" ", "-")
+    prev_snapshot_path = STATE_DIR / period / director_slug / "snapshot_prev.json"
+    opening_arr = 0.0
+    if prev_snapshot_path.exists():
+        try:
+            with prev_snapshot_path.open() as fh:
+                prev = json.load(fh)
+            opening_arr = float(
+                ((prev.get("totals") or {}).get("new_business_arr_open_this_quarter") or 0)
+            )
+        except Exception:
+            pass
+
     return {
         "by_type": by_type,
         "new_business_by_stage": new_business_by_stage,
@@ -683,6 +718,7 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
         "closed_cfq_rows": closed_cfq_rows,
         "closed_won_6mo_rows": closed_won_6mo_rows,
         "closed_renewals_12mo_rows": closed_renewals_12mo_rows,
+        "pipe_movement_opening_arr": opening_arr,
         "_fx_converted": True,
         "_fx_target_currency": "EUR (apro display currency)",
     }
