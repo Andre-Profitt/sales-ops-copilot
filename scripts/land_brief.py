@@ -268,7 +268,7 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
 
     # Wins / Losses QTD — closed-this-Q opps, FX-correct
     wl_q = (
-        "SELECT Id, Name, IsWon, Type, StageName, CloseDate, "
+        "SELECT Id, Name, IsWon, Type, StageName, CreatedDate, CloseDate, "
         "Owner.Name, Account.Name, "
         "convertCurrency(APTS_Opportunity_ARR__c) arr_fx, "
         "convertCurrency(APTS_Renewal_ACV__c) acv_fx "
@@ -416,7 +416,7 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
     # 12 months. True NRR (with expansion uplift) needs cohort snapshots that
     # we don't have yet — deferred until Pipeline_Snapshot__c accumulates.
     ret_q = (
-        "SELECT Id, Name, IsWon, CloseDate, "
+        "SELECT Id, Name, IsWon, CreatedDate, CloseDate, "
         "Owner.Name, Account.Name, "
         "convertCurrency(APTS_Renewal_ACV__c) acv_fx "
         "FROM Opportunity "
@@ -443,7 +443,7 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
     # Approximation of the booked-ARR roll-up that would otherwise come from
     # historical snapshots. FX-correct via per-record convertCurrency.
     roll_q = (
-        "SELECT Id, Name, Type, StageName, CloseDate, "
+        "SELECT Id, Name, Type, StageName, CreatedDate, CloseDate, "
         "Owner.Name, Account.Name, "
         "convertCurrency(APTS_Opportunity_ARR__c) arr_fx "
         "FROM Opportunity "
@@ -619,6 +619,7 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
             "AccountName": acct.get("Name") or "",
             "BillingCountry": acct.get("BillingCountry") or "",
             "Industry": acct.get("Industry") or "",
+            "ForecastCategoryName": r.get("ForecastCategoryName") or "",
             "RiskTermination": acct.get("Risk_of_Potential_Termination__c") or "",
             "ARR_EUR": round(float(r.get("arr_fx") or 0), 2),
             "ACV_EUR": round(float(r.get("acv_fx") or 0), 2),
@@ -659,6 +660,7 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
             "Type": r.get("Type") or "",
             "StageName": r.get("StageName") or "",
             "IsWon": bool(r.get("IsWon")),
+            "CreatedDate": (r.get("CreatedDate") or "")[:10],
             "CloseDate": (r.get("CloseDate") or "")[:10],
             "OwnerName": owner.get("Name") or "",
             "AccountName": acct.get("Name") or "",
@@ -802,7 +804,7 @@ def build_trends_envelope(
             )
 
     return {
-        "schema_version": "1.0",
+        "schema_version": "2.0",
         "director": {
             "name": director["name"],
             "book_codes": director.get("book_codes", []),
@@ -1231,7 +1233,9 @@ def derive_action_items(envelope: dict, action_data: dict) -> dict:
     priority_order = {"high": 0, "medium": 1, "low": 2}
     items.sort(key=lambda x: priority_order.get(x["priority"], 9))
     envelope["action_items"] = items[:8]
-    envelope["schema_version"] = 2  # introduces action_items field
+    # schema_version was already set to "2.0" by build_trends_envelope —
+    # action_items is part of the v2 contract, no need to overwrite the
+    # version string here (was a int-vs-string drift bug).
     return envelope
 
 

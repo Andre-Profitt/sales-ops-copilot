@@ -374,6 +374,7 @@ CLOSED_HISTORY_COLUMNS = [
     ("Type", "string"),
     ("StageName", "string"),
     ("IsWon", "bool"),
+    ("CreatedDate", "date"),
     ("CloseDate", "date"),
     ("OwnerName", "string"),
     ("AccountName", "string"),
@@ -2048,20 +2049,20 @@ def _build_sales_velocity(wb: Workbook) -> None:
         value="AVERAGE of ClosedWon6mo_ARR_EUR (Land + Expand wins last 180d).",
     ).font = note_font
 
-    # Row 5: avg cycle days — INPUT plug (90 days).
-    # TODO: switch to =AVERAGE(ClosedWon6mo_CloseDate)-AVERAGE(ClosedWon6mo_CreatedDate)
-    # once CreatedDate lands in CLOSED_HISTORY_COLUMNS.
+    # Row 5: avg cycle days — formula-driven from CreatedDate to CloseDate
+    # on the closed-won-6mo data table. XREF green.
     ws.cell(row=5, column=1, value="Avg cycle days (won last 6mo)").font = Font(bold=True)
-    c = ws.cell(row=5, column=2, value=90)
-    c.font = input_font
+    c = ws.cell(
+        row=5,
+        column=2,
+        value="=IFERROR(AVERAGE(ClosedWon6mo_CloseDate)-AVERAGE(ClosedWon6mo_CreatedDate),0)",
+    )
+    c.font = xref_font
     c.number_format = "#,##0"
     ws.cell(
         row=5,
         column=3,
-        value=(
-            "Phase 2: needs CreatedDate in closed-won-6mo Data sheet. "
-            "Current value is industry-typical placeholder (~90d for $50k+ SaaS deals)."
-        ),
+        value="AVERAGE(CloseDate) - AVERAGE(CreatedDate) over closed-won L+E last 180d.",
     ).font = note_font
 
     # Row 6: velocity = B2 * B3 * B4 / B5 — LOCAL same-sheet.
