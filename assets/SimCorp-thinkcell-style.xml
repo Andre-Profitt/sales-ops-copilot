@@ -1,0 +1,870 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<style name="SimCorp 2026" xmlns="https://schemas.think-cell.com/36264/tcstyle" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://schemas.think-cell.com/36264/tcstyle https://schemas.think-cell.com/36264/tcstyle.xsd">
+	<fillLst>
+		<noFill name="No Fill"/>
+		<solidFill name="tx1">
+			<schemeClr val="tx1"/>
+		</solidFill>
+		<solidFill name="bg1">
+			<schemeClr val="bg1"/>
+		</solidFill>
+		<solidFill name="tx2">
+			<schemeClr val="tx2"/>
+		</solidFill>
+		<solidFill name="bg2">
+			<schemeClr val="bg2"/>
+		</solidFill>
+		<solidFill name="accent1">
+			<schemeClr val="accent1"/>
+		</solidFill>
+		<solidFill name="accent2">
+			<schemeClr val="accent2"/>
+		</solidFill>
+		<solidFill name="accent3">
+			<schemeClr val="accent3"/>
+		</solidFill>
+		<solidFill name="accent4">
+			<schemeClr val="accent4"/>
+		</solidFill>
+		<solidFill name="accent5">
+			<schemeClr val="accent5"/>
+		</solidFill>
+		<solidFill name="accent6">
+			<schemeClr val="accent6"/>
+		</solidFill>
+		<separator/>
+		<solidFill name="Accent 1, Lighter 60%">
+			<schemeClr val="accent1">
+				<lumMod val="40%"/>
+				<lumOff val="60%"/>
+			</schemeClr>
+		</solidFill>
+		<solidFill name="Accent 1, Lighter 20%">
+			<schemeClr val="accent1">
+				<lumMod val="80%"/>
+				<lumOff val="20%"/>
+			</schemeClr>
+		</solidFill>
+		<solidFill name="Accent 1, Darker 20%">
+			<schemeClr val="accent1">
+				<lumMod val="80%"/>
+			</schemeClr>
+		</solidFill>
+		<solidFill name="Accent 1, Darker 60%">
+			<schemeClr val="accent1">
+				<lumMod val="40%"/>
+			</schemeClr>
+		</solidFill>
+		<separator/>
+		<solidFill name="Deep Red">
+			<srgbClr val="800000"/>
+		</solidFill>
+		<solidFill name="Orange">
+			<srgbClr val="FF7F00"/>
+		</solidFill>
+		<solidFill name="Light Orange">
+			<srgbClr val="FFAA00"/>
+		</solidFill>
+		<solidFill name="White">
+			<prstClr val="white"/>
+		</solidFill>
+		<solidFill name="Light Gray">
+			<srgbClr val="B4B4B4"/>
+		</solidFill>
+		<solidFill name="Medium Gray">
+			<prstClr val="gray"/>
+		</solidFill>
+		<solidFill name="Dark Gray">
+			<sdrgbClr r="90" g="90" b="90"/>
+		</solidFill>
+		<solidFill name="Black">
+			<prstClr val="black"/>
+		</solidFill>
+		<solidFill name="Pink">
+			<srgbClr val="FF00FF"/>
+		</solidFill>
+		<solidFill name="Green">
+			<sdrgbClr r="0" g="255" b="0"/>
+		</solidFill>
+		<solidFill name="Yellow">
+			<scrgbClr r="100%" g="100%" b="0%"/>
+		</solidFill>
+		<solidFill name="Blue">
+			<sdrgbClr r="0" g="0" b="255"/>
+		</solidFill>
+		<separator/>
+		<pattFill name="Brick" prst="diagBrick">
+			<fgClr>
+				<srgbClr val="000000"/>
+			</fgClr>
+			<bgClr>
+				<srgbClr val="FFFFFF"/>
+			</bgClr>
+		</pattFill>
+		<pattFill name="Light Down" prst="ltDnDiag">
+			<fgClr>
+				<srgbClr val="000000"/>
+			</fgClr>
+			<bgClr>
+				<srgbClr val="FFFFFF"/>
+			</bgClr>
+		</pattFill>
+		<pattFill name="Light Up" prst="ltUpDiag">
+			<fgClr>
+				<srgbClr val="000000"/>
+			</fgClr>
+			<bgClr>
+				<srgbClr val="FFFFFF"/>
+			</bgClr>
+		</pattFill>
+		<pattFill name="Horizontal" prst="ltHorz">
+			<fgClr>
+				<srgbClr val="000000"/>
+			</fgClr>
+			<bgClr>
+				<srgbClr val="FFFFFF"/>
+			</bgClr>
+		</pattFill>
+		<pattFill name="Vertical" prst="ltVert">
+			<fgClr>
+				<srgbClr val="000000"/>
+			</fgClr>
+			<bgClr>
+				<srgbClr val="FFFFFF"/>
+			</bgClr>
+		</pattFill>
+		<pattFill name="Light downward diagonal" prst="ltDnDiag">
+			<fgClr>
+				<schemeClr val="tx1"/>
+			</fgClr>
+			<bgClr>
+   				<schemeClr val="bg1"/>
+			</bgClr>
+		</pattFill>
+		<pattFill name="Wide upward diagonal" prst="wdUpDiag">
+  			<fgClr>
+   				<schemeClr val="tx1"/>
+  			</fgClr>
+  			<bgClr>
+   				<schemeClr val="bg1"/>
+  			</bgClr>
+ 		</pattFill>
+	</fillLst>
+	<lnLst>
+		<ln name="Solid 0.25 pt" w="3175">
+			<prstDash val="solid"/>
+		</ln>
+		<ln name="Solid 0.5 pt" w="6350">
+			<prstDash val="solid"/>
+		</ln>
+		<ln name="Solid 0.75 pt" w="9525">
+			<prstDash val="solid"/>
+		</ln>
+		<ln name="Solid 1 pt" w="12700">
+			<prstDash val="solid"/>
+		</ln>
+		<ln name="Solid 1.5 pt" w="19050">
+			<prstDash val="solid"/>
+		</ln>
+		<ln name="Solid 2.25 pt" w="28575">
+			<prstDash val="solid"/>
+		</ln>
+		<ln name="Solid 3 pt" w="38100">
+			<prstDash val="solid"/>
+		</ln>
+		<ln name="Long Dash 0.25 pt" w="3175">
+			<prstDash val="lgDash"/>
+		</ln>
+		<ln name="Long Dash 0.5 pt" w="6350">
+			<prstDash val="lgDash"/>
+		</ln>
+		<ln name="Long Dash 0.75 pt" w="9525">
+			<prstDash val="lgDash"/>
+		</ln>
+		<ln name="Long Dash 1 pt" w="12700">
+			<prstDash val="lgDash"/>
+		</ln>
+		<ln name="Long Dash 1.5 pt" w="19050">
+			<prstDash val="lgDash"/>
+		</ln>
+		<ln name="Long Dash 2.25 pt" w="28575">
+			<prstDash val="lgDash"/>
+		</ln>
+		<ln name="Long Dash 3 pt" w="38100">
+			<prstDash val="lgDash"/>
+		</ln>
+		<ln name="Dash 0.25 pt" w="3175">
+			<prstDash val="dash"/>
+		</ln>
+		<ln name="Dash 0.5 pt" w="6350">
+			<prstDash val="dash"/>
+		</ln>
+		<ln name="Dash 0.75 pt" w="9525">
+			<prstDash val="dash"/>
+		</ln>
+		<ln name="Dash 1 pt" w="12700">
+			<prstDash val="dash"/>
+		</ln>
+		<ln name="Dash 1.5 pt" w="19050">
+			<prstDash val="dash"/>
+		</ln>
+		<ln name="Dash 2.25 pt" w="28575">
+			<prstDash val="dash"/>
+		</ln>
+		<ln name="Dash 3 pt" w="38100">
+			<prstDash val="dash"/>
+		</ln>
+		<ln name="Dot 0.25 pt" w="3175">
+			<prstDash val="sysDot"/>
+		</ln>
+		<ln name="Dot 0.5 pt" w="6350">
+			<prstDash val="sysDot"/>
+		</ln>
+		<ln name="Dot 0.75 pt" w="9525">
+			<prstDash val="sysDot"/>
+		</ln>
+		<ln name="Dot 1 pt" w="12700">
+			<prstDash val="sysDot"/>
+		</ln>
+		<ln name="Dot 1.5 pt" w="19050">
+			<prstDash val="sysDot"/>
+		</ln>
+		<ln name="Dot 2.25 pt" w="28575">
+			<prstDash val="sysDot"/>
+		</ln>
+		<ln name="Dot 3 pt" w="38100">
+			<prstDash val="sysDot"/>
+		</ln>
+		<ln name="Morse 0.25 pt" w="3175">
+			<prstDash val="sysDashDotDot"/>
+		</ln>
+		<ln name="Morse 0.5 pt" w="6350">
+			<prstDash val="sysDashDotDot"/>
+		</ln>
+		<ln name="Morse 0.75 pt" w="9525">
+			<prstDash val="sysDashDotDot"/>
+		</ln>
+		<ln name="Morse 1 pt" w="12700">
+			<prstDash val="sysDashDotDot"/>
+		</ln>
+		<ln name="Morse 1.5 pt" w="19050">
+			<prstDash val="sysDashDotDot"/>
+		</ln>
+		<ln name="Morse 2.25 pt" w="28575">
+			<prstDash val="sysDashDotDot"/>
+		</ln>
+		<ln name="Morse 3 pt" w="38100">
+			<prstDash val="sysDashDotDot"/>
+		</ln>
+	</lnLst>
+	<markerLst>
+		<marker name="Marker1">
+			<symbol val="circle"/>
+		</marker>
+		<marker name="Marker2">
+			<symbol val="triangle"/>
+		</marker>
+		<marker name="Marker3">
+			<symbol val="diamond"/>
+		</marker>
+		<marker name="Marker4">
+			<symbol val="square"/>
+		</marker>
+		<marker name="Marker5">
+			<symbol val="star"/>
+		</marker>
+		<marker name="Marker6">
+			<symbol val="x"/>
+		</marker>
+		<marker name="HollowMarker1">
+			<symbol val="hollowCircle"/>
+		</marker>
+		<marker name="HollowMarker2">
+			<symbol val="hollowTriangle"/>
+		</marker>
+		<marker name="HollowMarker3">
+			<symbol val="hollowDiamond"/>
+		</marker>
+		<marker name="HollowMarker4">
+			<symbol val="hollowSquare"/>
+		</marker>
+		<marker name="ExtraMarker1">
+			<symbol val="dash"/>
+		</marker>
+		<marker name="ExtraMarker2">
+			<symbol val="dot"/>
+		</marker>
+		<marker name="ExtraMarker3">
+			<symbol val="plus"/>
+		</marker>
+	</markerLst>
+	<solidfillRefBackground name="Yellow"/>
+	<lnfillDefault>
+		<lnRef name="Solid 0.75 pt" />
+		<solidfillRef name="tx1" />
+	</lnfillDefault>
+	<lnfillGridline>
+		<lnRef name="Solid 0.25 pt" />
+		<solidfillRef name="tx2" />
+	</lnfillGridline>
+	<shapestyleLst>
+		<shapestyle name="Bubble">
+			<fillRef name="Light Orange"/>
+			<lnfill>
+				<noLine/>
+			</lnfill>
+		</shapestyle>
+		<shapestyle name="Solid Pentagon">
+			<fillRef name="accent1"/>
+		</shapestyle>
+		<shapestyle name="Dashed Pentagon">
+			<fillRef name="accent2"/>
+			<lnfill>
+				<lnRef name="Dash 0.75 pt"/>
+			</lnfill>
+		</shapestyle>
+		<shapestyle name="Solid Bar">
+			<fillRef name="tx1"/>
+			<lnfill>
+				<noLine/>
+			</lnfill>
+		</shapestyle>
+		<shapestyle name="Dashed Bar">
+			<fillRef name="bg1"/>
+			<lnfill>
+				<lnRef name="Dash 1.5 pt"/>
+				<solidfillRef name="tx1"/>
+			</lnfill>
+		</shapestyle>
+	</shapestyleLst>
+	<fillSchemeLst>
+		<fillScheme name="All Accent 1" fillRefOtherSeries="accent1">
+			<!-- Segment outlines may be specified for each fill scheme. If not specified, lnfillDefault is used. -->
+			<lnfillSegment>
+				<!-- lnRef is taken from lnfillDefault -->
+				<solidfillRef name="White" />
+			</lnfillSegment>
+			<!-- Segment outlines may be specified differently for Mekko charts. If not specified, lnfillSegment is used. -->
+			<lnfillSegmentMekko>
+				<lnRef name="Solid 0.25 pt" />
+				<!-- solidFillRef is taken from lnfillSegment -->
+			</lnfillSegmentMekko>
+			<fillRef name="accent1"/>
+		</fillScheme>
+		<fillScheme name="PowerPoint Theme" fillRefOtherSeries="Medium Gray">
+			<lnfillSegment>
+				<noLine/>
+			</lnfillSegment>
+			<!-- Mekko charts with segment outlines "No Line" do not look visually appealing. -->
+			<!-- Outlines for Mekko charts are explicitly specified in this scheme, because lnfillSegment is "No Line". -->
+			<lnfillSegmentMekko>
+				<lnRef name="Solid 0.25 pt" />
+				<solidfillRef name="tx1" />
+			</lnfillSegmentMekko>
+			<fillRef name="accent1"/>
+			<fillRef name="accent2"/>
+			<fillRef name="accent3"/>
+			<fillRef name="accent4"/>
+			<fillRef name="accent5"/>
+			<fillRef name="accent6"/>
+			<fillRef name="bg2"/>
+			<fillRef name="tx2"/>
+		</fillScheme>
+		<fillScheme name="Colorful" fillRefOtherSeries="Blue">
+			<!-- segment outlines for all charts (including Mekko) are taken from lnfillDefault -->
+			<fillRef name="Orange"/>
+			<fillRef name="Green"/>
+			<fillRef name="Yellow"/>
+			<fillRef name="Pink"/>
+		</fillScheme>
+		<fillScheme name="Reddish" fillRefOtherSeries="White">
+			<fillRef name="Pink"/>
+			<fillRef name="Orange"/>
+			<fillRef name="Light Orange"/>
+			<fillRef name="Yellow"/>
+		</fillScheme>
+		<fillScheme name="Grays" fillRefOtherSeries="White">
+			<fillRef name="Black"/>
+			<fillRef name="Dark Gray"/>
+			<fillRef name="Light Gray"/>
+		</fillScheme>
+		<fillScheme name="All Orange" fillRefOtherSeries="Orange">
+			<fillRef name="Orange"/>
+		</fillScheme>
+		<fillScheme name="Two Colors" fillRefOtherSeries="White">
+			<fillRef name="Green"/>
+			<fillRef name="Yellow"/>
+		</fillScheme>
+		<fillScheme name="Patterns" fillRefOtherSeries="No Fill" repeatLast="true">
+			<fillRef name="Brick"/>
+			<fillRef name="Light Down"/>
+			<fillRef name="Light Up"/>
+			<fillRef name="Horizontal"/>
+			<fillRef name="Vertical"/>
+			<seriesCountSpecific seriesCount="2">
+				<!-- unique fill scheme for charts with two series -->
+				<fillRef name="Light downward diagonal" />
+				<fillRef name="Wide upward diagonal" />
+			</seriesCountSpecific>
+		</fillScheme>
+	</fillSchemeLst>
+	<lnfillmarkerSchemeLst>
+		<lnfillmarkerScheme name="PowerPoint Theme">
+			<lnfillmarker>
+				<lnRef name="Solid 2.25 pt"/>
+				<solidfillRef name="accent1"/>
+			</lnfillmarker>
+			<lnfillmarker>
+				<lnRef name="Solid 2.25 pt"/>
+				<solidfillRef name="accent2"/>
+			</lnfillmarker>
+			<lnfillmarker>
+				<lnRef name="Solid 2.25 pt"/>
+				<solidfillRef name="accent3"/>
+			</lnfillmarker>
+			<lnfillmarker>
+				<lnRef name="Solid 2.25 pt"/>
+				<solidfillRef name="accent4"/>
+			</lnfillmarker>
+			<lnfillmarker>
+				<lnRef name="Solid 2.25 pt"/>
+				<solidfillRef name="accent5"/>
+			</lnfillmarker>
+			<lnfillmarker>
+				<lnRef name="Solid 2.25 pt"/>
+				<solidfillRef name="accent6"/>
+			</lnfillmarker>
+			<lnfillmarker>
+				<lnRef name="Solid 2.25 pt"/>
+				<solidfillRef name="bg2"/>
+			</lnfillmarker>
+			<lnfillmarker>
+				<lnRef name="Solid 2.25 pt"/>
+				<solidfillRef name="tx2"/>
+			</lnfillmarker>
+		</lnfillmarkerScheme>
+		<lnfillmarkerScheme name="PowerPoint Theme w/ markers">
+			<lnfillmarker>
+				<lnRef name="Solid 2.25 pt"/>
+				<solidfillRef name="accent1"/>
+				<markerRef name="Marker1"/>
+			</lnfillmarker>
+			<lnfillmarker>
+				<lnRef name="Solid 2.25 pt"/>
+				<solidfillRef name="accent2"/>
+				<markerRef name="Marker2"/>
+			</lnfillmarker>
+			<lnfillmarker>
+				<lnRef name="Solid 2.25 pt"/>
+				<solidfillRef name="accent3"/>
+				<markerRef name="Marker3"/>
+			</lnfillmarker>
+			<lnfillmarker>
+				<lnRef name="Solid 2.25 pt"/>
+				<solidfillRef name="accent4"/>
+				<markerRef name="Marker4"/>
+			</lnfillmarker>
+			<lnfillmarker>
+				<lnRef name="Solid 2.25 pt"/>
+				<solidfillRef name="accent5"/>
+				<markerRef name="Marker5"/>
+			</lnfillmarker>
+			<lnfillmarker>
+				<lnRef name="Solid 2.25 pt"/>
+				<solidfillRef name="accent6"/>
+				<markerRef name="Marker6"/>
+			</lnfillmarker>
+			<lnfillmarker>
+				<lnRef name="Solid 2.25 pt"/>
+				<solidfillRef name="bg2"/>
+				<markerRef name="HollowMarker3"/>
+			</lnfillmarker>
+			<lnfillmarker>
+				<lnRef name="Solid 2.25 pt"/>
+				<solidfillRef name="tx2"/>
+				<markerRef name="HollowMarker4"/>
+			</lnfillmarker>
+		</lnfillmarkerScheme>
+		<lnfillmarkerScheme name="Colorful">
+			<lnfillmarker>
+				<lnRef name="Solid 2.25 pt"/>
+				<solidfillRef name="Orange"/>
+			</lnfillmarker>
+			<lnfillmarker>
+				<lnRef name="Solid 2.25 pt"/>
+				<solidfillRef name="Green"/>
+			</lnfillmarker>
+			<lnfillmarker>
+				<lnRef name="Solid 2.25 pt"/>
+				<solidfillRef name="Yellow"/>
+			</lnfillmarker>
+			<lnfillmarker>
+				<lnRef name="Solid 2.25 pt"/>
+				<solidfillRef name="Pink"/>
+			</lnfillmarker>
+		</lnfillmarkerScheme>
+		<lnfillmarkerScheme name="Colorful with Markers">
+			<lnfillmarker>
+				<lnRef name="Solid 2.25 pt"/>
+				<solidfillRef name="Orange"/>
+				<markerRef name="Marker1"/>
+			</lnfillmarker>
+			<lnfillmarker>
+				<lnRef name="Solid 2.25 pt"/>
+				<solidfillRef name="Green"/>
+				<markerRef name="Marker2"/>
+			</lnfillmarker>
+			<lnfillmarker>
+				<lnRef name="Solid 2.25 pt"/>
+				<solidfillRef name="Yellow"/>
+				<markerRef name="Marker3"/>
+			</lnfillmarker>
+			<lnfillmarker>
+				<lnRef name="Solid 2.25 pt"/>
+				<solidfillRef name="Pink"/>
+				<markerRef name="Marker4"/>
+			</lnfillmarker>
+		</lnfillmarkerScheme>
+		<lnfillmarkerScheme name="Colorful with Hollow Markers">
+			<lnfillmarker>
+				<lnRef name="Solid 2.25 pt"/>
+				<solidfillRef name="Orange"/>
+				<markerRef name="HollowMarker1"/>
+			</lnfillmarker>
+			<lnfillmarker>
+				<lnRef name="Solid 2.25 pt"/>
+				<solidfillRef name="Green"/>
+				<markerRef name="HollowMarker2"/>
+			</lnfillmarker>
+			<lnfillmarker>
+				<lnRef name="Solid 2.25 pt"/>
+				<solidfillRef name="Yellow"/>
+				<markerRef name="HollowMarker3"/>
+			</lnfillmarker>
+			<lnfillmarker>
+				<lnRef name="Solid 2.25 pt"/>
+				<solidfillRef name="Pink"/>
+				<markerRef name="HollowMarker4"/>
+			</lnfillmarker>
+		</lnfillmarkerScheme>
+		<lnfillmarkerScheme name="Reddish">
+			<lnfillmarker>
+				<lnRef name="Solid 2.25 pt"/>
+				<solidfillRef name="Pink"/>
+			</lnfillmarker>
+			<lnfillmarker>
+				<lnRef name="Solid 2.25 pt"/>
+				<solidfillRef name="Orange"/>
+			</lnfillmarker>
+			<lnfillmarker>
+				<lnRef name="Solid 2.25 pt"/>
+				<solidfillRef name="Light Orange"/>
+			</lnfillmarker>
+			<lnfillmarker>
+				<lnRef name="Solid 2.25 pt"/>
+				<solidfillRef name="Yellow"/>
+			</lnfillmarker>
+		</lnfillmarkerScheme>
+		<lnfillmarkerScheme name="Reddish with dash markers">
+			<lnfillmarker>
+				<lnRef name="Solid 1.5 pt"/>
+				<solidfillRef name="Pink"/>
+				<markerRef name="Marker5"/>
+			</lnfillmarker>
+			<lnfillmarker>
+				<lnRef name="Solid 1.5 pt"/>
+				<solidfillRef name="Orange"/>
+				<markerRef name="Marker6"/>
+			</lnfillmarker>
+			<lnfillmarker>
+				<lnRef name="Solid 1.5 pt"/>
+				<solidfillRef name="Light Orange"/>
+				<markerRef name="ExtraMarker1"/>
+			</lnfillmarker>
+			<lnfillmarker>
+				<lnRef name="Solid 1.5 pt"/>
+				<solidfillRef name="Yellow"/>
+				<markerRef name="ExtraMarker3"/>
+			</lnfillmarker>
+		</lnfillmarkerScheme>
+		<lnfillmarkerScheme name="Mono">
+			<lnfillmarker>
+				<lnRef name="Solid 1.5 pt"/>
+				<solidfillRef name="tx1"/>
+			</lnfillmarker>
+		</lnfillmarkerScheme>
+		<lnfillmarkerScheme name="Mono with Markers">
+			<lnfillmarker>
+				<lnRef name="Solid 1.5 pt"/>
+				<solidfillRef name="tx1"/>
+				<markerRef name="Marker1"/>
+			</lnfillmarker>
+			<lnfillmarker>
+				<lnRef name="Solid 1.5 pt"/>
+				<solidfillRef name="tx1"/>
+				<markerRef name="Marker2"/>
+			</lnfillmarker>
+			<lnfillmarker>
+				<lnRef name="Solid 1.5 pt"/>
+				<solidfillRef name="tx1"/>
+				<markerRef name="Marker3"/>
+			</lnfillmarker>
+			<lnfillmarker>
+				<lnRef name="Solid 1.5 pt"/>
+				<solidfillRef name="tx1"/>
+				<markerRef name="Marker4"/>
+			</lnfillmarker>
+			<lnfillmarker>
+				<lnRef name="Solid 1.5 pt"/>
+				<solidfillRef name="tx1"/>
+				<markerRef name="Marker5"/>
+			</lnfillmarker>
+			<lnfillmarker>
+				<lnRef name="Solid 1.5 pt"/>
+				<solidfillRef name="tx1"/>
+				<markerRef name="Marker6"/>
+			</lnfillmarker>
+		</lnfillmarkerScheme>
+	</lnfillmarkerSchemeLst>
+	<fillmarkerSchemeLst>
+		<fillmarkerScheme name="No Markers">
+			<noMarker/>
+		</fillmarkerScheme>
+		<fillmarkerScheme name="Shapes">
+			<fillmarker>
+				<markerRef name="Marker1"/>
+				<solidfillRef name="accent1"/>
+			</fillmarker>
+			<fillmarker>
+				<markerRef name="Marker2"/>
+				<solidfillRef name="accent1"/>
+			</fillmarker>
+			<fillmarker>
+				<markerRef name="Marker3"/>
+				<solidfillRef name="accent1"/>
+			</fillmarker>
+			<fillmarker>
+				<markerRef name="Marker4"/>
+				<solidfillRef name="accent1"/>
+			</fillmarker>
+		</fillmarkerScheme>
+		<fillmarkerScheme name="Dash Markers">
+			<fillmarker>
+				<markerRef name="Marker5"/>
+				<solidfillRef name="accent1"/>
+			</fillmarker>
+			<fillmarker>
+				<markerRef name="Marker6"/>
+				<solidfillRef name="accent1"/>
+			</fillmarker>
+			<fillmarker>
+				<markerRef name="ExtraMarker1"/>
+				<solidfillRef name="accent1"/>
+			</fillmarker>
+			<fillmarker>
+				<markerRef name="ExtraMarker3"/>
+				<solidfillRef name="accent1"/>
+			</fillmarker>
+		</fillmarkerScheme>
+		<fillmarkerScheme name="Reddish Hollow Shapes">
+			<fillmarker>
+				<markerRef name="HollowMarker1"/>
+				<solidfillRef name="Pink"/>
+			</fillmarker>
+			<fillmarker>
+				<markerRef name="HollowMarker2"/>
+				<solidfillRef name="Orange"/>
+			</fillmarker>
+			<fillmarker>
+				<markerRef name="HollowMarker3"/>
+				<solidfillRef name="Light Orange"/>
+			</fillmarker>
+			<fillmarker>
+				<markerRef name="HollowMarker4"/>
+				<solidfillRef name="Yellow"/>
+			</fillmarker>
+		</fillmarkerScheme>
+	</fillmarkerSchemeLst>
+	<fillSchemeRefDefault name="Colorful"/>
+	<fillSchemeRefDefaultWaterfall name="Two Colors"/>
+	<fillSchemeRefDefaultMekko name="Reddish"/>
+	<fillSchemeRefDefaultArea name="Patterns"/>
+	<fillSchemeRefDefaultPie name="All Orange"/>
+	<fillSchemeRefDefaultBubble name="Grays"/>
+	<lnfillmarkerSchemeRefDefault name="Colorful"/>
+	<lnfillmarkerSchemeRefDefaultCombination name="Mono"/>
+	<fillmarkerSchemeRefDefault name="Shapes"/>
+	<defPPr lvl="2">
+		<defRPr sz="1000" b="true" i="false">
+			<solidfillRef name="Deep Red"/>
+			<solidfillRefAlt name="Yellow"/>
+			<latin typeface="Courier New"/>
+		</defRPr>
+	</defPPr>
+	<fixedLayoutLst>
+		<fixedLayout for="pie">
+			<rect l="50%-2000000" t="66.67%-2000000" r="50%+2000000" b="66.67%+2000000"/>
+		</fixedLayout>
+		<fixedLayout for="chart pie">
+			<rect l="10%" t="30%" r="45%" b="90%"/>
+			<rect l="55%" t="30%" r="90%" b="90%"/>
+		</fixedLayout>
+		<fixedLayout for="chart">
+			<rect l="10%" t="30%" r="45%" b="55%"/>
+			<rect l="55%" t="30%" r="90%" b="55%"/>
+			<rect l="10%" t="60%" r="90%" b="90%"/>
+		</fixedLayout>
+		<fixedLayout for="gantt">
+			<rect l="1000000" t="2000000" r="100%-1000000" b="100%-1000000"/>
+		</fixedLayout>
+	</fixedLayoutLst>
+	<label>
+		<lnfillLeaderLine>
+			<lnRef name="Solid 0.5 pt"/>
+		</lnfillLeaderLine>
+		<shapestyleRefBubble name="Bubble"/>
+		<sumLabelPosition val="accordingToSign"/>
+	</label>
+	<chart>
+		<lnfillAxis>
+			<!-- lnRef taken from lnfillDefault -->
+			<solidfillRef name="Medium Gray" />
+		</lnfillAxis>
+		<lnfillAxisCategory>
+			<lnRef name="Solid 2.25 pt" />
+			<!-- fillRef taken from lnfillAxis -->
+		</lnfillAxisCategory>
+		<lnfillArrow>
+			<lnRef name="Solid 2.25 pt" />
+			<!-- fillRef taken from lnfillDefault -->
+		</lnfillArrow>
+		<lnfillArrowCAGR>
+			<!-- lnRef taken from lnfillArrow -->
+			<solidfillRef name="Orange" />
+		</lnfillArrowCAGR>
+		<lnfillArrowCategoryDifference>
+			<!-- lnRef taken from lnfillArrow -->
+			<solidfillRef name="Green" />
+		</lnfillArrowCategoryDifference>
+		<lnfillArrowSegmentDifference>
+			<!-- lnRef taken from lnfillArrow -->
+			<solidfillRef name="Blue" />
+		</lnfillArrowSegmentDifference>
+		<lnfillExtensionLine>
+			<lnRef name="Long Dash 0.25 pt" />
+			<!-- fillRef taken from lnfillDefault -->
+		</lnfillExtensionLine>
+		<lnfillConnector>
+			<lnRef name="Long Dash 0.25 pt"/>
+			<!-- fillRef taken from lnfillDefault -->
+		</lnfillConnector>
+		<lnfillConnectorWaterfall>
+			<noLine/>
+		</lnfillConnectorWaterfall>
+		<lnfillValueLine>
+			<lnRef name="Long Dash 0.75 pt"/>
+			<!-- fillRef taken from lnfillDefault -->
+		</lnfillValueLine>
+		<fillOrderStacked val="topToBottom"/>
+		<defaultLabels>
+			<segment val="totalAndSegment"/>
+			<segmentWaterfallFloating val="totalAndSegmentSingleSegmentInside"/>
+			<pieSlice val="outerAndInner"/>
+		</defaultLabels>
+	</chart>
+	<legend>
+		<lnfill>
+			<!-- by default, legend outline is invisible -->
+			<!-- lnRef taken from lnfillDefault -->
+			<solidfillRef name="Dark Gray" />
+		</lnfill>
+		<pPr>
+			<defRPr sz="1000"/>
+		</pPr>
+	</legend>
+	<harveyball sz="1400">
+		<fillRefCompleted name="Black"/>
+		<fillRefBackground name="Light Orange"/>
+		<lnfill>
+			<lnRef name="Solid 0.5 pt"/>
+			<solidfillRef name="accent1"/>
+		</lnfill>
+	</harveyball>
+	<checkbox sz="1400">
+		<fillRef name="No Fill"/>
+		<lnfill>
+			<noLine/>
+		</lnfill>
+		<choices>
+			<fillRef name="Yellow"/>
+			<lnfill>
+				<lnRef name="Solid 0.5 pt"/>
+				<solidfillRef name="accent1"/>
+			</lnfill>
+			<glyph hotkeys="VO1" sz="1867">
+				<solidfillRef name="Green"/>
+				<t>✓</t>
+			</glyph>
+			<glyph hotkeys="X2" sz="1867">
+				<solidfillRef name="Pink"/>
+				<font typeface="Arial Unicode MS"/>
+				<t>&#10007;</t>
+			</glyph>
+			<glyph hotkeys="Q3" sz="1400">
+				<font typeface="Arial Unicode MS"/>
+				<t>?!</t>
+			</glyph>
+		</choices>
+		<choices>
+			<pic hotkeys="R4">
+				<Relationship Target="traffic_light_horizontal_red.emf"/>
+			</pic>
+			<pic hotkeys="Y5">
+				<Relationship Target="traffic_light_horizontal_yellow.emf"/>
+			</pic>
+			<pic hotkeys="G6">
+				<Relationship Target="traffic_light_horizontal_green.emf"/>
+			</pic>
+		</choices>
+		<choices>
+			<glyph hotkeys=" 0" sz="1867">
+				<t> </t>
+			</glyph>
+		</choices>
+	</checkbox>
+	<gantt>
+		<scaleFrame/>
+		<fillRefDefaultBody name="No Fill"/>
+		<fillRefHorzShading name="accent1"/>
+		<fillRefVertShading name="bg2"/>
+		<lnfillSeparatorHorz>
+			<lnRef name="Solid 0.25 pt"/>
+		</lnfillSeparatorHorz>
+		<lnfillSeparatorVertPrimary>
+			<lnRef name="Solid 0.25 pt"/>
+		</lnfillSeparatorVertPrimary>
+		<lnfillSeparatorVertSecondary>
+			<lnRef name="Dash 0.25 pt"/>
+		</lnfillSeparatorVertSecondary>
+		<shapestyleLstPentagonAndChevron>
+			<shapestyleRef name="Solid Pentagon"/>
+			<shapestyleRef name="Dashed Pentagon"/>
+		</shapestyleLstPentagonAndChevron>
+		<shapestyleLstBar w="98425">
+			<shapestyleRef name="Solid Bar"/>
+			<shapestyleRef name="Dashed Bar"/>
+		</shapestyleLstBar>
+		<bracket style="triangle"/>
+		<milestone w="119063">
+			<markerRef name="Marker2"/>
+			<solidfillRef name="tx1"/>
+			<lnfill>
+				<lnRef name="Long Dash 1.5 pt"/>
+			</lnfill>
+		</milestone>
+	</gantt>
+	<fiscalYear>
+		<!-- End fiscal years in September. Q1 of FY2020 starts in October/2019. -->
+		<end month="sep"/>
+	</fiscalYear>
+</style>
