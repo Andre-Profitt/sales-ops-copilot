@@ -268,7 +268,8 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
 
     # Wins / Losses QTD — closed-this-Q opps, FX-correct
     wl_q = (
-        "SELECT Id, IsWon, Type, StageName, "
+        "SELECT Id, Name, IsWon, Type, StageName, CloseDate, "
+        "Owner.Name, Account.Name, "
         "convertCurrency(APTS_Opportunity_ARR__c) arr_fx, "
         "convertCurrency(APTS_Renewal_ACV__c) acv_fx "
         "FROM Opportunity "
@@ -398,7 +399,8 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
     # 12 months. True NRR (with expansion uplift) needs cohort snapshots that
     # we don't have yet — deferred until Pipeline_Snapshot__c accumulates.
     ret_q = (
-        "SELECT Id, IsWon, "
+        "SELECT Id, Name, IsWon, CloseDate, "
+        "Owner.Name, Account.Name, "
         "convertCurrency(APTS_Renewal_ACV__c) acv_fx "
         "FROM Opportunity "
         "WHERE IsClosed = true AND Type = 'Renewal' "
@@ -424,7 +426,8 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
     # Approximation of the booked-ARR roll-up that would otherwise come from
     # historical snapshots. FX-correct via per-record convertCurrency.
     roll_q = (
-        "SELECT Id, CloseDate, "
+        "SELECT Id, Name, Type, StageName, CloseDate, "
+        "Owner.Name, Account.Name, "
         "convertCurrency(APTS_Opportunity_ARR__c) arr_fx "
         "FROM Opportunity "
         "WHERE IsClosed = true AND IsWon = true "
@@ -622,6 +625,34 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
         for cat, v in sorted(forecast_acc.items())
     ]
 
+    # Raw closed-history rows surfaced for the model's auditable Data
+    # sheets. ARR_Roll / Trend_MoM / Trend_QoQ / Retention / Wins_Losses_QTD
+    # / Competitive_Pressure all derive from one of these three lists, so
+    # writing them as named Excel Tables (`tblClosedCFQ`, `tblClosedWon6mo`,
+    # `tblRenewals12mo`) lets every analytical sheet trace SUMIFS back to
+    # raw FX-converted opportunity rows. Per AI Code of Conduct §8: per-
+    # deal data stays in the director's own xlsx — same scope rule as
+    # Top_Deals.
+    def _flat_closed(r: dict) -> dict:
+        acct = r.get("Account") or {}
+        owner = r.get("Owner") or {}
+        return {
+            "Id": r.get("Id") or "",
+            "Name": r.get("Name") or "",
+            "Type": r.get("Type") or "",
+            "StageName": r.get("StageName") or "",
+            "IsWon": bool(r.get("IsWon")),
+            "CloseDate": (r.get("CloseDate") or "")[:10],
+            "OwnerName": owner.get("Name") or "",
+            "AccountName": acct.get("Name") or "",
+            "ARR_EUR": round(float(r.get("arr_fx") or 0), 2),
+            "ACV_EUR": round(float(r.get("acv_fx") or 0), 2),
+        }
+
+    closed_cfq_rows = [_flat_closed(r) for r in wl_rows]
+    closed_won_6mo_rows = [_flat_closed(r) for r in roll_rows]
+    closed_renewals_12mo_rows = [_flat_closed(r) for r in ret_rows]
+
     return {
         "by_type": by_type,
         "new_business_by_stage": new_business_by_stage,
@@ -649,6 +680,9 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
             "new_business_arr_open_beyond_cfq": beyond_cfq_arr,
         },
         "raw_opps": raw_opps,
+        "closed_cfq_rows": closed_cfq_rows,
+        "closed_won_6mo_rows": closed_won_6mo_rows,
+        "closed_renewals_12mo_rows": closed_renewals_12mo_rows,
         "_fx_converted": True,
         "_fx_target_currency": "EUR (apro display currency)",
     }

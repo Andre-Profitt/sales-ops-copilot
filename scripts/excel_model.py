@@ -138,6 +138,13 @@ def build_director_model(
     _build_parameters(wb, period_start, period_end)
     _build_stages(wb)
     _build_data(wb, (snapshot or {}).get("raw_opps") or [])
+    # Closed-history raw Data sheets — auditable inputs for ARR_Roll,
+    # Trend_MoM/QoQ, Retention, Wins_Losses_QTD. Must sit BEFORE the
+    # analytical sheets so their named ranges exist by the time we wire
+    # SUMIFS criteria.
+    _build_closed_cfq(wb, snapshot)
+    _build_closed_won_6mo(wb, snapshot)
+    _build_renewals_12mo(wb, snapshot)
     _build_pipeline_total(wb, period)
     _build_pipeline_by_stage(wb, period)
     _build_pipeline_aging(wb)
@@ -146,6 +153,16 @@ def build_director_model(
     _build_velocity(wb)
     _build_concentration(wb, snapshot, period)
     _build_weighted_forecast(wb, backtest)
+    # Formula-driven analytical sheets that consume the closed-history
+    # named ranges above. Order doesn't matter among these except
+    # Trend_MoM/QoQ which reference ARR_Roll!B<n> — keep ARR_Roll first.
+    _build_arr_roll(wb)
+    _build_trend_mom(wb)
+    _build_trend_qoq(wb)
+    _build_retention(wb)
+    _build_wins_losses_qtd(wb)
+    # Phase 3: Competitive_Pressure — needs Lost_to_Competitor__r.Name in
+    # the SF queries before it can be wired here. Tracked separately.
     _build_methodology(wb)
 
     _apply_print_setup(wb, director, period)
@@ -318,6 +335,145 @@ def _build_data(wb: Workbook, raw_opps: list[dict]) -> None:
     ws.column_dimensions["K"].width = 14
     ws.column_dimensions["L"].width = 14
     ws.freeze_panes = "A2"
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Closed-history Data sheets — auditable inputs for ARR_Roll / Trend_MoM /
+# Trend_QoQ / Retention / Wins_Losses_QTD. Each mirrors `_build_data`'s
+# pattern: header row, INPUT (blue) cells, an Excel Table for ad-hoc pivots,
+# and per-column workbook-scoped named ranges so analytical sheets can
+# write SUMIFS that survive row-count changes.
+# ──────────────────────────────────────────────────────────────────────────
+
+
+# 10 columns shared by all three closed-history sheets — matches the dict
+# shape produced by `_flat_closed` in scripts/land_brief.py.
+CLOSED_HISTORY_COLUMNS = [
+    ("Id", "string"),
+    ("Name", "string"),
+    ("Type", "string"),
+    ("StageName", "string"),
+    ("IsWon", "bool"),
+    ("CloseDate", "date"),
+    ("OwnerName", "string"),
+    ("AccountName", "string"),
+    ("ARR_EUR", "number"),
+    ("ACV_EUR", "number"),
+]
+
+
+def _build_closed_history_sheet(
+    wb: Workbook,
+    *,
+    sheet_name: str,
+    table_name: str,
+    name_prefix: str,
+    rows: list[dict],
+) -> None:
+    """Shared writer for the three closed-history raw Data sheets.
+
+    Writes header + INPUT-blue cells, registers per-column named ranges
+    (e.g., ClosedCFQ_ARR_EUR -> 'Data_Closed_CFQ!$I$2:$I$<last>') and
+    converts the data range to an Excel Table for ad-hoc pivot use. The
+    sheet is empty-safe: when `rows` is empty we still write the header
+    and register named ranges pointing at row 2 so SUMIFS in analytical
+    sheets resolve to zero rather than #REF!.
+    """
+    ws = wb.create_sheet(sheet_name)
+    headers = [c[0] for c in CLOSED_HISTORY_COLUMNS]
+    _set_header(ws, 1, headers)
+
+    input_font = Font(color=INPUT_COLOR)
+    for row_idx, opp in enumerate(rows, start=2):
+        for col_idx, (col_name, col_type) in enumerate(CLOSED_HISTORY_COLUMNS, start=1):
+            val = opp.get(col_name)
+            cell = ws.cell(row=row_idx, column=col_idx, value=val if val != "" else None)
+            cell.font = input_font
+            if col_type == "date" and isinstance(val, str) and len(val) >= 10:
+                # Mirror _build_data: parse ISO date so Excel stores a real
+                # date serial (required for SUMIFS(..., ">="&DATE(y,m,1))).
+                try:
+                    cell.value = date.fromisoformat(val[:10])
+                    cell.number_format = "yyyy-mm-dd"
+                except ValueError:
+                    pass
+            elif col_type == "number" and val is not None:
+                cell.number_format = "#,##0.00"
+            elif col_type == "bool":
+                # openpyxl serializes Python bool as Excel TRUE/FALSE;
+                # SUMIFS criteria of `, IsWon, TRUE` will match.
+                cell.value = bool(val) if val is not None else False
+
+    n_rows = len(rows)
+    last_row = n_rows + 1 if n_rows > 0 else 2
+    last_col = get_column_letter(len(CLOSED_HISTORY_COLUMNS))
+
+    # Per-column named ranges: <name_prefix>_<col_name>. These let the
+    # analytical sheets reference e.g. ClosedCFQ_ARR_EUR without binding
+    # to absolute cell ranges that would drift on data refresh.
+    for col_idx, (col_name, _) in enumerate(CLOSED_HISTORY_COLUMNS, start=1):
+        col_letter = get_column_letter(col_idx)
+        ref = f"{sheet_name}!${col_letter}$2:${col_letter}${last_row}"
+        _add_named_range(wb, f"{name_prefix}_{col_name}", ref)
+
+    # Excel Table — only valid when there's at least one data row. Mirrors
+    # the guard in _build_data.
+    if n_rows > 0:
+        table_ref = f"A1:{last_col}{last_row}"
+        table = Table(displayName=table_name, ref=table_ref)
+        table.tableStyleInfo = TableStyleInfo(
+            name="TableStyleMedium2",
+            showFirstColumn=False,
+            showLastColumn=False,
+            showRowStripes=True,
+            showColumnStripes=False,
+        )
+        ws.add_table(table)
+
+    # Column widths — match `_build_data` style for legibility.
+    widths = [20, 36, 10, 22, 8, 12, 24, 36, 14, 14]
+    for i, w in enumerate(widths, start=1):
+        ws.column_dimensions[get_column_letter(i)].width = w
+    ws.freeze_panes = "A2"
+
+
+def _build_closed_cfq(wb: Workbook, snapshot: dict | None) -> None:
+    """Closed-this-Q opps (won + lost; Land/Expand/Renewal). Source for
+    Wins_Losses_QTD."""
+    rows = (snapshot or {}).get("closed_cfq_rows") or []
+    _build_closed_history_sheet(
+        wb,
+        sheet_name="Data_Closed_CFQ",
+        table_name="tblClosedCFQ",
+        name_prefix="ClosedCFQ",
+        rows=rows,
+    )
+
+
+def _build_closed_won_6mo(wb: Workbook, snapshot: dict | None) -> None:
+    """Closed-WON Land+Expand opps last 180 days. Source for ARR_Roll +
+    Trend_MoM/QoQ."""
+    rows = (snapshot or {}).get("closed_won_6mo_rows") or []
+    _build_closed_history_sheet(
+        wb,
+        sheet_name="Data_Closed_Won_6mo",
+        table_name="tblClosedWon6mo",
+        name_prefix="ClosedWon6mo",
+        rows=rows,
+    )
+
+
+def _build_renewals_12mo(wb: Workbook, snapshot: dict | None) -> None:
+    """Closed Renewal opps last 365 days (won + lost). Source for the
+    Retention GRR proxy."""
+    rows = (snapshot or {}).get("closed_renewals_12mo_rows") or []
+    _build_closed_history_sheet(
+        wb,
+        sheet_name="Data_Renewals_12mo",
+        table_name="tblRenewals12mo",
+        name_prefix="Renewals12mo",
+        rows=rows,
+    )
 
 
 def _build_pipeline_total(wb: Workbook, period: str) -> None:
@@ -1127,6 +1283,319 @@ def _build_weighted_forecast(wb: Workbook, backtest: dict | None) -> None:
     ws.column_dimensions["C"].width = 14
     ws.column_dimensions["D"].width = 18
     ws.column_dimensions["E"].width = 50
+    ws.freeze_panes = "A2"
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Closed-history analytical sheets — formula-driven replacements for the
+# legacy precomputed ARR_Roll / Trend_MoM / Trend_QoQ / Retention /
+# Wins_Losses_QTD blocks in excel_companion.py. Each references the
+# ClosedCFQ_* / ClosedWon6mo_* / Renewals12mo_* named ranges so click-to-
+# trace audit works the same as the open-pipeline sheets above.
+# ──────────────────────────────────────────────────────────────────────────
+
+
+def _last_n_months(n: int) -> list[tuple[int, int]]:
+    """List of (year, month) pairs covering the last `n` calendar months
+    ending with the current month, oldest first."""
+    today = date.today()
+    months: list[tuple[int, int]] = []
+    y, m = today.year, today.month
+    for _ in range(n):
+        months.append((y, m))
+        m -= 1
+        if m == 0:
+            m = 12
+            y -= 1
+    months.reverse()
+    return months
+
+
+def _build_arr_roll(wb: Workbook) -> None:
+    """6-month closed-won Land+Expand booked-ARR roll.
+
+    Rows = the 6 calendar months ending with the current month. Booked
+    ARR per month is a SUMIFS over ClosedWon6mo_ARR_EUR with a date
+    half-open interval [DATE(y,m,1), DATE(next_y,next_m,1)). # Won is the
+    matching COUNTIFS. TOTAL row is a same-sheet SUM (LOCAL black) since
+    the underlying records ARE all in this 6-month window.
+    """
+    ws = wb.create_sheet("ARR_Roll")
+    _set_header(ws, 1, ["Month", "Booked ARR (EUR)", "# Won"])
+
+    input_font = Font(color=INPUT_COLOR)
+    xref_font = Font(color=XREF_COLOR)
+    local_bold = Font(color=LOCAL_COLOR, bold=True)
+
+    months = _last_n_months(6)
+    for i, (y, m) in enumerate(months, start=2):
+        # Month label as YYYY-MM string (input — blue) so stakeholders can
+        # see the period without parsing a serial.
+        ws.cell(row=i, column=1, value=f"{y:04d}-{m:02d}").font = input_font
+        # Compute exclusive upper bound (first day of NEXT month) inline.
+        ny, nm = (y, m + 1) if m < 12 else (y + 1, 1)
+        c = ws.cell(
+            row=i,
+            column=2,
+            value=(
+                f"=SUMIFS(ClosedWon6mo_ARR_EUR, "
+                f'ClosedWon6mo_CloseDate, ">="&DATE({y},{m},1), '
+                f'ClosedWon6mo_CloseDate, "<"&DATE({ny},{nm},1))'
+            ),
+        )
+        c.font = xref_font
+        c.number_format = "#,##0"
+        c2 = ws.cell(
+            row=i,
+            column=3,
+            value=(
+                f'=COUNTIFS(ClosedWon6mo_CloseDate, ">="&DATE({y},{m},1), '
+                f'ClosedWon6mo_CloseDate, "<"&DATE({ny},{nm},1))'
+            ),
+        )
+        c2.font = xref_font
+
+    # TOTAL row — same-sheet sum, LOCAL color.
+    last_data_row = 1 + len(months)  # header + 6 month rows
+    total_row = last_data_row + 1
+    ws.cell(row=total_row, column=1, value="TOTAL").font = local_bold
+    c = ws.cell(row=total_row, column=2, value=f"=SUM(B2:B{last_data_row})")
+    c.font = local_bold
+    c.number_format = "#,##0"
+    c = ws.cell(row=total_row, column=3, value=f"=SUM(C2:C{last_data_row})")
+    c.font = local_bold
+
+    ws.column_dimensions["A"].width = 14
+    ws.column_dimensions["B"].width = 18
+    ws.column_dimensions["C"].width = 10
+    ws.freeze_panes = "A2"
+
+
+def _build_trend_mom(wb: Workbook) -> None:
+    """Month-over-month delta on the 6-month roll. Pulls month label, #
+    Won, and Booked ARR straight from ARR_Roll (XREF), then computes
+    Δ MoM as IFERROR((C<n>-C<n-1>)/C<n-1>,"-") — LOCAL same-sheet."""
+    ws = wb.create_sheet("Trend_MoM")
+    _set_header(ws, 1, ["Month", "# Won", "Booked ARR (EUR)", "Δ MoM (Booked ARR)"])
+
+    xref_font = Font(color=XREF_COLOR)
+    local_font = Font(color=LOCAL_COLOR)
+
+    # 6 months pulled from ARR_Roll!A2:A7 / B2:B7 / C2:C7. Δ MoM is "-"
+    # on the first row (no prior period to compare against).
+    n = 6
+    for i in range(2, 2 + n):
+        c = ws.cell(row=i, column=1, value=f"=ARR_Roll!A{i}")
+        c.font = xref_font
+        # ARR_Roll col B = Booked ARR; col C = # Won. Surface # Won first
+        # for parity with the spec's column order (Month / # Won / Booked
+        # ARR / Δ MoM).
+        c = ws.cell(row=i, column=2, value=f"=ARR_Roll!C{i}")
+        c.font = xref_font
+        c = ws.cell(row=i, column=3, value=f"=ARR_Roll!B{i}")
+        c.font = xref_font
+        c.number_format = "#,##0"
+        if i == 2:
+            c = ws.cell(row=i, column=4, value="-")
+            c.font = local_font
+        else:
+            c = ws.cell(
+                row=i,
+                column=4,
+                value=f'=IFERROR((C{i}-C{i - 1})/C{i - 1},"-")',
+            )
+            c.font = local_font
+            c.number_format = "0.0%"
+
+    ws.column_dimensions["A"].width = 14
+    ws.column_dimensions["B"].width = 10
+    ws.column_dimensions["C"].width = 18
+    ws.column_dimensions["D"].width = 16
+    ws.freeze_panes = "A2"
+
+
+def _build_trend_qoq(wb: Workbook) -> None:
+    """Quarter-over-quarter on the same 6-month closed-won window.
+
+    The 6 months bucket into ~2 calendar quarters (sometimes 3 if the
+    window straddles a boundary). Quarters are pre-derived in Python
+    (input-blue label) and the per-quarter # Won + Booked ARR cells are
+    SUMIFS/COUNTIFS over ClosedWon6mo_* (XREF green) with DATE() bounds.
+    Δ QoQ uses the same IFERROR percent pattern as Trend_MoM."""
+    ws = wb.create_sheet("Trend_QoQ")
+    _set_header(ws, 1, ["Quarter", "# Won", "Booked ARR (EUR)", "Δ QoQ (Booked ARR)"])
+
+    input_font = Font(color=INPUT_COLOR)
+    xref_font = Font(color=XREF_COLOR)
+    local_font = Font(color=LOCAL_COLOR)
+
+    # Bucket the 6-month window into quarters, oldest first.
+    quarters: list[tuple[int, int]] = []  # (year, q) pairs
+    for y, m in _last_n_months(6):
+        q = (m - 1) // 3 + 1
+        if (y, q) not in quarters:
+            quarters.append((y, q))
+
+    for i, (y, q) in enumerate(quarters, start=2):
+        start_month = (q - 1) * 3 + 1
+        end_year = y + (1 if q == 4 else 0)
+        end_month = start_month + 3 if q != 4 else 1
+        ws.cell(row=i, column=1, value=f"{y:04d}-Q{q}").font = input_font
+        c = ws.cell(
+            row=i,
+            column=2,
+            value=(
+                f'=COUNTIFS(ClosedWon6mo_CloseDate, ">="&DATE({y},{start_month},1), '
+                f'ClosedWon6mo_CloseDate, "<"&DATE({end_year},{end_month},1))'
+            ),
+        )
+        c.font = xref_font
+        c = ws.cell(
+            row=i,
+            column=3,
+            value=(
+                f"=SUMIFS(ClosedWon6mo_ARR_EUR, "
+                f'ClosedWon6mo_CloseDate, ">="&DATE({y},{start_month},1), '
+                f'ClosedWon6mo_CloseDate, "<"&DATE({end_year},{end_month},1))'
+            ),
+        )
+        c.font = xref_font
+        c.number_format = "#,##0"
+        if i == 2:
+            ws.cell(row=i, column=4, value="-").font = local_font
+        else:
+            c = ws.cell(
+                row=i,
+                column=4,
+                value=f'=IFERROR((C{i}-C{i - 1})/C{i - 1},"-")',
+            )
+            c.font = local_font
+            c.number_format = "0.0%"
+
+    ws.column_dimensions["A"].width = 14
+    ws.column_dimensions["B"].width = 10
+    ws.column_dimensions["C"].width = 18
+    ws.column_dimensions["D"].width = 16
+    ws.freeze_panes = "A2"
+
+
+def _build_retention(wb: Workbook) -> None:
+    """GRR proxy — Won Renewal ACV / (Won + Lost Renewal ACV) over the
+    last 12 months of opp-driven Renewals.
+
+    NOT a true GRR: auto-renewals (the bulk of renewal volume at SimCorp)
+    don't surface as opps and are excluded from this denominator. The
+    caveat row makes that explicit so a stakeholder reading the cell
+    doesn't take it as the published org-wide GRR."""
+    ws = wb.create_sheet("Retention")
+    _set_header(ws, 1, ["Metric", "Value"])
+
+    xref_font = Font(color=XREF_COLOR)
+    local_font = Font(color=LOCAL_COLOR)
+    note_font = Font(italic=True, color=BRAND_GRAY)
+
+    # Row 2: Won Renewal ACV (XREF — references Renewals12mo_*).
+    ws.cell(row=2, column=1, value="Won Renewal ACV (last 12mo)").font = Font(bold=True)
+    c = ws.cell(
+        row=2,
+        column=2,
+        value="=SUMIFS(Renewals12mo_ACV_EUR, Renewals12mo_IsWon, TRUE)",
+    )
+    c.font = xref_font
+    c.number_format = "#,##0"
+
+    # Row 3: Lost Renewal ACV.
+    ws.cell(row=3, column=1, value="Lost Renewal ACV (last 12mo)").font = Font(bold=True)
+    c = ws.cell(
+        row=3,
+        column=2,
+        value="=SUMIFS(Renewals12mo_ACV_EUR, Renewals12mo_IsWon, FALSE)",
+    )
+    c.font = xref_font
+    c.number_format = "#,##0"
+
+    # Row 4: GRR proxy % — same-sheet division, LOCAL black.
+    ws.cell(row=4, column=1, value="GRR proxy %").font = Font(bold=True)
+    c = ws.cell(row=4, column=2, value="=IFERROR(B2/(B2+B3), 0)")
+    c.font = local_font
+    c.number_format = "0.0%"
+
+    # Row 5: caveat — italic gray, spanning conceptually (we just write
+    # to col A and let it overflow visually).
+    ws.cell(
+        row=5,
+        column=1,
+        value=(
+            "PROXY caveat: Won Renewal ACV / (Won + Lost). NOT the org's true "
+            "GRR — auto-renewals (majority of renewal volume) never become "
+            "opps and are excluded from this denominator."
+        ),
+    ).font = note_font
+    ws.cell(row=5, column=1).alignment = Alignment(wrap_text=True)
+    ws.row_dimensions[5].height = 36
+
+    ws.column_dimensions["A"].width = 40
+    ws.column_dimensions["B"].width = 22
+    ws.freeze_panes = "A2"
+
+
+def _build_wins_losses_qtd(wb: Workbook) -> None:
+    """Closed-this-Q outcomes — count + ARR (Land+Expand) + ACV (Renewal)
+    split into Won and Lost rows. Every # / ARR / ACV cell is a SUMIFS or
+    COUNTIFS over the ClosedCFQ_* named ranges → XREF green."""
+    ws = wb.create_sheet("Wins_Losses_QTD")
+    _set_header(ws, 1, ["Outcome", "#", "ARR (Land+Expand, EUR)", "ACV (Renewal, EUR)"])
+
+    xref_font = Font(color=XREF_COLOR)
+
+    # Row 2 — Won.
+    ws.cell(row=2, column=1, value="Won").font = Font(bold=True)
+    c = ws.cell(row=2, column=2, value="=COUNTIFS(ClosedCFQ_IsWon, TRUE)")
+    c.font = xref_font
+    c = ws.cell(
+        row=2,
+        column=3,
+        value=(
+            '=SUMIFS(ClosedCFQ_ARR_EUR, ClosedCFQ_IsWon, TRUE, ClosedCFQ_Type, "Land") '
+            '+ SUMIFS(ClosedCFQ_ARR_EUR, ClosedCFQ_IsWon, TRUE, ClosedCFQ_Type, "Expand")'
+        ),
+    )
+    c.font = xref_font
+    c.number_format = "#,##0"
+    c = ws.cell(
+        row=2,
+        column=4,
+        value=('=SUMIFS(ClosedCFQ_ACV_EUR, ClosedCFQ_IsWon, TRUE, ClosedCFQ_Type, "Renewal")'),
+    )
+    c.font = xref_font
+    c.number_format = "#,##0"
+
+    # Row 3 — Lost.
+    ws.cell(row=3, column=1, value="Lost").font = Font(bold=True)
+    c = ws.cell(row=3, column=2, value="=COUNTIFS(ClosedCFQ_IsWon, FALSE)")
+    c.font = xref_font
+    c = ws.cell(
+        row=3,
+        column=3,
+        value=(
+            '=SUMIFS(ClosedCFQ_ARR_EUR, ClosedCFQ_IsWon, FALSE, ClosedCFQ_Type, "Land") '
+            '+ SUMIFS(ClosedCFQ_ARR_EUR, ClosedCFQ_IsWon, FALSE, ClosedCFQ_Type, "Expand")'
+        ),
+    )
+    c.font = xref_font
+    c.number_format = "#,##0"
+    c = ws.cell(
+        row=3,
+        column=4,
+        value=('=SUMIFS(ClosedCFQ_ACV_EUR, ClosedCFQ_IsWon, FALSE, ClosedCFQ_Type, "Renewal")'),
+    )
+    c.font = xref_font
+    c.number_format = "#,##0"
+
+    ws.column_dimensions["A"].width = 14
+    ws.column_dimensions["B"].width = 8
+    ws.column_dimensions["C"].width = 26
+    ws.column_dimensions["D"].width = 26
     ws.freeze_panes = "A2"
 
 
