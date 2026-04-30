@@ -184,9 +184,9 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
     # Also pull Account.BillingCountry + Risk for downstream sheets
     # (Territory_Performance + At_Risk_Renewals).
     detail_q = (
-        "SELECT Id, Type, StageName, CreatedDate, "
+        "SELECT Id, Type, StageName, CreatedDate, CloseDate, "
         "Owner.Name, "
-        "Account.Name, Account.BillingCountry, "
+        "Account.Name, Account.BillingCountry, Account.Industry, "
         "Account.Risk_of_Potential_Termination__c, "
         "convertCurrency(APTS_Opportunity_ARR__c) arr_fx, "
         "convertCurrency(APTS_Renewal_ACV__c) acv_fx "
@@ -520,7 +520,7 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
     beyond_q = (
         "SELECT Id, Type, StageName, CreatedDate, CloseDate, "
         "Owner.Name, "
-        "Account.Name, Account.BillingCountry, "
+        "Account.Name, Account.BillingCountry, Account.Industry, "
         "Account.Risk_of_Potential_Termination__c, "
         "convertCurrency(APTS_Opportunity_ARR__c) arr_fx, "
         "convertCurrency(APTS_Renewal_ACV__c) acv_fx "
@@ -551,6 +551,7 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
             "OwnerName": owner.get("Name") or "",
             "AccountName": acct.get("Name") or "",
             "BillingCountry": acct.get("BillingCountry") or "",
+            "Industry": acct.get("Industry") or "",
             "RiskTermination": acct.get("Risk_of_Potential_Termination__c") or "",
             "ARR_EUR": round(float(r.get("arr_fx") or 0), 2),
             "ACV_EUR": round(float(r.get("acv_fx") or 0), 2),

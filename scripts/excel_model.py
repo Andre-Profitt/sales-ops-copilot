@@ -37,6 +37,10 @@ from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 from openpyxl.workbook.defined_name import DefinedName
 from openpyxl.worksheet.page import PageMargins
+from openpyxl.worksheet.table import (  # noqa: F401  # formatter strips otherwise
+    Table,
+    TableStyleInfo,
+)
 
 from sales_process_graph import GRAPH
 
@@ -67,6 +71,7 @@ DATA_COLUMNS = [
     ("OwnerName", "string"),
     ("AccountName", "string"),
     ("BillingCountry", "string"),
+    ("Industry", "string"),
     ("RiskTermination", "string"),
     ("ARR_EUR", "number"),
     ("ACV_EUR", "number"),
@@ -131,6 +136,9 @@ def build_director_model(
     _build_pipeline_by_stage(wb, period)
     _build_pipeline_aging(wb)
     _build_by_owner(wb, snapshot)
+    _build_pivots(wb, snapshot)
+    _build_velocity(wb)
+    _build_concentration(wb, snapshot, period)
     _build_methodology(wb)
 
     _apply_print_setup(wb, director, period)
@@ -273,6 +281,23 @@ def _build_data(wb: Workbook, raw_opps: list[dict]) -> None:
     # Total range covering all data rows for COUNTA-style queries.
     _add_named_range(wb, "Data_All", f"Data!$A$2:${last_col}${last_row}")
 
+    # Convert Data to a real Excel Table (`tblData`) — unlocks the
+    # Insert > PivotTable workflow for stakeholders without code, and
+    # gives them tblData[ARR_EUR] structured-reference syntax in any
+    # ad-hoc formulas they write.
+    if n_rows > 0:
+        table_ref = f"A1:${last_col}${last_row}".replace("$", "")
+        # Use a recognizable name; openpyxl rejects names containing spaces.
+        table = Table(displayName="tblData", ref=table_ref)
+        table.tableStyleInfo = TableStyleInfo(
+            name="TableStyleMedium2",
+            showFirstColumn=False,
+            showLastColumn=False,
+            showRowStripes=True,
+            showColumnStripes=False,
+        )
+        ws.add_table(table)
+
     ws.column_dimensions["A"].width = 20
     ws.column_dimensions["B"].width = 10
     ws.column_dimensions["C"].width = 22
@@ -281,9 +306,10 @@ def _build_data(wb: Workbook, raw_opps: list[dict]) -> None:
     ws.column_dimensions["F"].width = 24
     ws.column_dimensions["G"].width = 36
     ws.column_dimensions["H"].width = 18
-    ws.column_dimensions["I"].width = 14
+    ws.column_dimensions["I"].width = 18
     ws.column_dimensions["J"].width = 14
     ws.column_dimensions["K"].width = 14
+    ws.column_dimensions["L"].width = 14
     ws.freeze_panes = "A2"
 
 
@@ -535,6 +561,452 @@ def _build_by_owner(wb: Workbook, snapshot: dict | None) -> None:
     ws.freeze_panes = "A2"
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Pivot-equivalent dynamic-array sheets
+# ──────────────────────────────────────────────────────────────────────────
+
+
+def _unique_sorted(seq, key=None):
+    """Stable de-dup + sort. Empty values collapse to '(unset)'."""
+    seen = []
+    for s in seq:
+        v = (s or "(unset)") if not callable(key) else key(s)
+        if v not in seen:
+            seen.append(v)
+    return sorted(seen)
+
+
+def _build_pivots(wb: Workbook, snapshot: dict | None) -> None:
+    """Five pre-built cross-tabs over Data via SUMIFS. Row/column axes are
+    derived in Python (deduped from raw_opps and written as INPUT cells —
+    blue) so the model doesn't depend on dynamic-array Excel functions
+    (UNIQUE/SORT) that older Excel can't evaluate. The matrix interior
+    cells are SUMIFS — XREF green — and they reference Data_* named ranges
+    so re-running re-aggregates without code changes.
+    """
+    ws = wb.create_sheet("Pivots")
+    raw = (snapshot or {}).get("raw_opps") or []
+
+    input_font = Font(color=INPUT_COLOR)
+    xref_font = Font(color=XREF_COLOR)
+    title_font = Font(bold=True, size=12, color=BRAND_PRIMARY)
+    note_font = Font(italic=True, color=BRAND_GRAY)
+
+    row = 1
+    ws.cell(row=row, column=1, value="Pivot views — open Land+Expand pipeline").font = Font(
+        bold=True, size=14, color=BRAND_PRIMARY
+    )
+    row += 1
+    ws.cell(
+        row=row,
+        column=1,
+        value=(
+            "Each block is a pre-built cross-tab. Row + column headers are inputs "
+            "(blue); matrix cells are SUMIFS over Data (green). To slice differently "
+            "than the pre-builts here, click anywhere in the Data sheet and use "
+            "Insert > PivotTable — the table is named tblData."
+        ),
+    ).font = note_font
+    ws.cell(row=row, column=1).alignment = Alignment(wrap_text=True)
+    ws.row_dimensions[row].height = 36
+    row += 2
+
+    # ── Pivot 1: Stage × Industry (ARR, Land+Expand only) ──
+    stages = [f"{s.number} - {s.name}" for s in GRAPH.stages]
+    industries = _unique_sorted(
+        r.get("Industry") for r in raw if r.get("Type") in ("Land", "Expand")
+    )
+    if industries:
+        ws.cell(row=row, column=1, value="Stage × Industry — ARR (EUR)").font = title_font
+        row += 1
+        # Header row: empty + industries
+        ws.cell(row=row, column=1, value="Stage").font = Font(bold=True)
+        for j, ind in enumerate(industries, start=2):
+            c = ws.cell(row=row, column=j, value=ind)
+            c.font = Font(bold=True, color=INPUT_COLOR)
+        # Stage rows
+        for i, st in enumerate(stages, start=row + 1):
+            ws.cell(row=i, column=1, value=st).font = input_font
+            for j, ind in enumerate(industries, start=2):
+                ind_lit = ind.replace('"', '""')
+                st_lit = st.replace('"', '""')
+                c = ws.cell(
+                    row=i,
+                    column=j,
+                    value=(
+                        f'=SUMIFS(Data_ARR_EUR, Data_Type, "Land", Data_StageName, "{st_lit}", '
+                        f'Data_Industry, "{ind_lit}") '
+                        f'+ SUMIFS(Data_ARR_EUR, Data_Type, "Expand", Data_StageName, "{st_lit}", '
+                        f'Data_Industry, "{ind_lit}")'
+                    ),
+                )
+                c.font = xref_font
+                c.number_format = "#,##0"
+        row = row + 1 + len(stages) + 2
+
+    # ── Pivot 2: Owner × Stage (count, Land+Expand) ──
+    owners = _unique_sorted(r.get("OwnerName") for r in raw if r.get("Type") in ("Land", "Expand"))
+    if owners:
+        ws.cell(row=row, column=1, value="Owner × Stage — # Opps").font = title_font
+        row += 1
+        ws.cell(row=row, column=1, value="Owner").font = Font(bold=True)
+        for j, st in enumerate(stages, start=2):
+            ws.cell(row=row, column=j, value=st).font = Font(bold=True, color=INPUT_COLOR)
+        for i, owner in enumerate(owners, start=row + 1):
+            owner_lit = owner.replace('"', '""')
+            ws.cell(row=i, column=1, value=owner).font = input_font
+            for j, st in enumerate(stages, start=2):
+                st_lit = st.replace('"', '""')
+                c = ws.cell(
+                    row=i,
+                    column=j,
+                    value=(
+                        f'=COUNTIFS(Data_OwnerName, "{owner_lit}", Data_StageName, "{st_lit}", '
+                        f'Data_Type, "Land") '
+                        f'+ COUNTIFS(Data_OwnerName, "{owner_lit}", Data_StageName, "{st_lit}", '
+                        f'Data_Type, "Expand")'
+                    ),
+                )
+                c.font = xref_font
+        row = row + 1 + len(owners) + 2
+
+    # ── Pivot 3: Country × Type (ARR) ──
+    countries = _unique_sorted(r.get("BillingCountry") for r in raw)
+    types = ["Land", "Expand", "Renewal"]
+    if countries:
+        ws.cell(row=row, column=1, value="Country × Type — ARR / ACV (EUR)").font = title_font
+        row += 1
+        ws.cell(row=row, column=1, value="Country").font = Font(bold=True)
+        for j, t in enumerate(types, start=2):
+            ws.cell(row=row, column=j, value=t).font = Font(bold=True, color=INPUT_COLOR)
+        for i, country in enumerate(countries, start=row + 1):
+            country_lit = country.replace('"', '""')
+            ws.cell(row=i, column=1, value=country).font = input_font
+            for j, t in enumerate(types, start=2):
+                # Renewal uses ACV column; Land/Expand use ARR column.
+                value_range = "Data_ACV_EUR" if t == "Renewal" else "Data_ARR_EUR"
+                c = ws.cell(
+                    row=i,
+                    column=j,
+                    value=(
+                        f'=SUMIFS({value_range}, Data_BillingCountry, "{country_lit}", '
+                        f'Data_Type, "{t}")'
+                    ),
+                )
+                c.font = xref_font
+                c.number_format = "#,##0"
+        row = row + 1 + len(countries) + 2
+
+    # ── Pivot 4: Top-10 Accounts × Stage (ARR, Land+Expand) ──
+    # Predetermine top-10 accounts in Python by total open L+E ARR
+    # (input names in blue; SUMIFS for the matrix in green).
+    acct_totals: dict[str, float] = {}
+    for r in raw:
+        if r.get("Type") not in ("Land", "Expand"):
+            continue
+        n = r.get("AccountName") or "(unknown)"
+        acct_totals[n] = acct_totals.get(n, 0.0) + float(r.get("ARR_EUR") or 0)
+    top_accounts = sorted(acct_totals.items(), key=lambda kv: kv[1], reverse=True)[:10]
+    if top_accounts:
+        ws.cell(row=row, column=1, value="Top-10 Accounts × Stage — ARR (EUR)").font = title_font
+        row += 1
+        ws.cell(row=row, column=1, value="Account").font = Font(bold=True)
+        for j, st in enumerate(stages, start=2):
+            ws.cell(row=row, column=j, value=st).font = Font(bold=True, color=INPUT_COLOR)
+        for i, (acct, _total) in enumerate(top_accounts, start=row + 1):
+            acct_lit = acct.replace('"', '""')
+            ws.cell(row=i, column=1, value=acct).font = input_font
+            for j, st in enumerate(stages, start=2):
+                st_lit = st.replace('"', '""')
+                c = ws.cell(
+                    row=i,
+                    column=j,
+                    value=(
+                        f'=SUMIFS(Data_ARR_EUR, Data_AccountName, "{acct_lit}", '
+                        f'Data_StageName, "{st_lit}", Data_Type, "Land") '
+                        f'+ SUMIFS(Data_ARR_EUR, Data_AccountName, "{acct_lit}", '
+                        f'Data_StageName, "{st_lit}", Data_Type, "Expand")'
+                    ),
+                )
+                c.font = xref_font
+                c.number_format = "#,##0"
+        row = row + 1 + len(top_accounts) + 2
+
+    # ── Pivot 5: Stage × Quarter (ARR, Land+Expand by CloseDate quarter) ──
+    # Quarters derived from CloseDate values present in the data; capped
+    # to a reasonable forward window (current year + next year quarters).
+    quarters: list[str] = []
+    for r in raw:
+        if r.get("Type") not in ("Land", "Expand"):
+            continue
+        cd = r.get("CloseDate") or ""
+        if len(cd) >= 7:
+            try:
+                y, m = int(cd[:4]), int(cd[5:7])
+                qk = f"{y}-Q{(m - 1) // 3 + 1}"
+                if qk not in quarters:
+                    quarters.append(qk)
+            except ValueError:
+                pass
+    quarters = sorted(quarters)[:8]  # cap at 8 forward quarters
+    if quarters:
+        ws.cell(
+            row=row, column=1, value="Stage × Quarter (CloseDate) — ARR (EUR)"
+        ).font = title_font
+        row += 1
+        ws.cell(row=row, column=1, value="Stage").font = Font(bold=True)
+        for j, q in enumerate(quarters, start=2):
+            ws.cell(row=row, column=j, value=q).font = Font(bold=True, color=INPUT_COLOR)
+        for i, st in enumerate(stages, start=row + 1):
+            ws.cell(row=i, column=1, value=st).font = input_font
+            st_lit = st.replace('"', '""')
+            for j, q in enumerate(quarters, start=2):
+                qy, qn = q.split("-Q")
+                qm_start = (int(qn) - 1) * 3 + 1
+                qm_end = qm_start + 3
+                qend_year = int(qy) + (1 if qm_end > 12 else 0)
+                qend_month = qm_end if qm_end <= 12 else 1
+                q_start = f"DATE({qy},{qm_start},1)"
+                q_end = f"DATE({qend_year},{qend_month},1)"
+                c = ws.cell(
+                    row=i,
+                    column=j,
+                    value=(
+                        f'=SUMIFS(Data_ARR_EUR, Data_Type, "Land", Data_StageName, "{st_lit}", '
+                        f'Data_CloseDate, ">="&{q_start}, Data_CloseDate, "<"&{q_end}) '
+                        f'+ SUMIFS(Data_ARR_EUR, Data_Type, "Expand", Data_StageName, "{st_lit}", '
+                        f'Data_CloseDate, ">="&{q_start}, Data_CloseDate, "<"&{q_end})'
+                    ),
+                )
+                c.font = xref_font
+                c.number_format = "#,##0"
+
+    ws.column_dimensions["A"].width = 32
+    for col in range(2, 16):
+        ws.column_dimensions[get_column_letter(col)].width = 18
+
+
+def _build_velocity(wb: Workbook) -> None:
+    """Stage age proxy via CreatedDate (no OFH today). Per stage: avg age
+    of open L+E opps + count >60d + count >180d. Honest about the proxy:
+    age is opp lifetime, NOT time-in-current-stage. A young deal that
+    sat in early stages and just advanced shows the same age as a deal
+    that's been in this stage for months."""
+    ws = wb.create_sheet("Velocity")
+    _set_header(
+        ws,
+        1,
+        ["Stage", "# Open opps", "Avg age (days)", "# > 60 days old", "# > 180 days old"],
+    )
+    ws.cell(row=2, column=1, value="").font = Font()  # spacer for caveat
+    ws.cell(
+        row=1,
+        column=6,
+        value=(
+            "Caveat: 'age' is days since CreatedDate, NOT time in current stage. "
+            "True time-in-stage requires OpportunityFieldHistory wiring (deferred)."
+        ),
+    ).font = Font(italic=True, color=BRAND_GRAY)
+
+    xref_font = Font(color=XREF_COLOR)
+    input_font = Font(color=INPUT_COLOR)
+
+    # Threshold inputs (so a stakeholder can edit and re-recompute).
+    ws.cell(row=2, column=4, value=60).font = input_font
+    ws.cell(row=2, column=5, value=180).font = input_font
+    # Stage rows
+    for i, s in enumerate(GRAPH.stages, start=3):
+        st_label = f"{s.number} - {s.name}"
+        st_lit = st_label.replace('"', '""')
+        ws.cell(row=i, column=1, value=st_label).font = input_font
+        # Count of open L+E opps in this stage
+        c = ws.cell(
+            row=i,
+            column=2,
+            value=(
+                f'=COUNTIFS(Data_Type, "Land", Data_StageName, "{st_lit}") '
+                f'+ COUNTIFS(Data_Type, "Expand", Data_StageName, "{st_lit}")'
+            ),
+        )
+        c.font = xref_font
+        # Avg age — SUMPRODUCT trick (avoid div-by-zero)
+        c = ws.cell(
+            row=i,
+            column=3,
+            value=(
+                "=IFERROR("
+                f'SUMPRODUCT(((Data_Type="Land")+(Data_Type="Expand"))*(Data_StageName="{st_lit}")*(today-Data_CreatedDate))/B{i},'
+                '"-")'
+            ),
+        )
+        c.font = xref_font
+        c.number_format = "#,##0"
+        # Count > 60 days
+        c = ws.cell(
+            row=i,
+            column=4,
+            value=(
+                "=SUMPRODUCT("
+                f'((Data_Type="Land")+(Data_Type="Expand"))*(Data_StageName="{st_lit}")'
+                f"*((today-Data_CreatedDate)>$D$2))"
+            ),
+        )
+        c.font = xref_font
+        # Count > 180 days
+        c = ws.cell(
+            row=i,
+            column=5,
+            value=(
+                "=SUMPRODUCT("
+                f'((Data_Type="Land")+(Data_Type="Expand"))*(Data_StageName="{st_lit}")'
+                f"*((today-Data_CreatedDate)>$E$2))"
+            ),
+        )
+        c.font = xref_font
+    ws.column_dimensions["A"].width = 24
+    ws.column_dimensions["B"].width = 14
+    ws.column_dimensions["C"].width = 16
+    ws.column_dimensions["D"].width = 18
+    ws.column_dimensions["E"].width = 18
+    ws.column_dimensions["F"].width = 60
+    ws.freeze_panes = "A3"
+
+
+def _build_concentration(wb: Workbook, snapshot: dict | None, period: str) -> None:
+    """Concentration risk — what share of pipeline sits in the top N
+    accounts / top N owners. Single-deal-risk flag if any one open L+E
+    deal exceeds 25% of the CFQ-closeable headline.
+
+    Top-N values are seeded as INPUTS (Python pre-derives the ranking) so
+    the model doesn't depend on dynamic-array LARGE+IF combinations that
+    older Excel rejects. Ratios are XREF formulas referencing Data
+    (so totals tie back even if the user edits values)."""
+    ws = wb.create_sheet("Concentration")
+    raw = (snapshot or {}).get("raw_opps") or []
+
+    title_font = Font(bold=True, size=12, color=BRAND_PRIMARY)
+    input_font = Font(color=INPUT_COLOR)
+    xref_font = Font(color=XREF_COLOR)
+    note_font = Font(italic=True, color=BRAND_GRAY)
+
+    row = 1
+    ws.cell(row=row, column=1, value="Concentration risk").font = Font(
+        bold=True, size=14, color=BRAND_PRIMARY
+    )
+    row += 1
+    ws.cell(
+        row=row,
+        column=1,
+        value=(
+            f"How concentrated is open Land+Expand pipeline in this director's "
+            f"book? Single-deal flag fires if ANY one open L+E deal > 25% of "
+            f"the {period} closeable forecast (Pipeline_Total!B2)."
+        ),
+    ).font = note_font
+    ws.cell(row=row, column=1).alignment = Alignment(wrap_text=True)
+    ws.row_dimensions[row].height = 32
+    row += 2
+
+    # Single-deal risk: pull the largest open L+E ARR. Compare to total
+    # open Land+Expand pipeline (CFQ + beyond) so the share is meaningful
+    # regardless of whether the largest deal closes in CFQ.
+    le_opps = [
+        (r.get("AccountName") or "(unknown)", float(r.get("ARR_EUR") or 0))
+        for r in raw
+        if r.get("Type") in ("Land", "Expand")
+    ]
+    le_opps.sort(key=lambda kv: kv[1], reverse=True)
+    largest_acct, largest_arr = le_opps[0] if le_opps else ("-", 0.0)
+
+    ws.cell(row=row, column=1, value="Single-deal risk").font = title_font
+    row += 1
+    ws.cell(row=row, column=1, value="Largest open L+E deal — account").font = Font(bold=True)
+    ws.cell(row=row, column=2, value=largest_acct).font = input_font
+    row += 1
+    ws.cell(row=row, column=1, value="Largest open L+E deal — ARR (EUR)").font = Font(bold=True)
+    c = ws.cell(row=row, column=2, value=round(largest_arr, 2))
+    c.font = input_font
+    c.number_format = "#,##0"
+    largest_arr_row = row
+    row += 1
+    ws.cell(row=row, column=1, value="Share of total open Land+Expand pipeline")
+    # Denominator = Pipeline_Total CFQ closeable + beyond-CFQ. Both live
+    # on Pipeline_Total!B2 and !B3 respectively.
+    c = ws.cell(
+        row=row,
+        column=2,
+        value=(f"=IFERROR(B{largest_arr_row}/(Pipeline_Total!$B$2+Pipeline_Total!$B$3),0)"),
+    )
+    c.font = xref_font
+    c.number_format = "0.0%"
+    share_row = row
+    row += 1
+    ws.cell(row=row, column=1, value="25% threshold tripped?")
+    c = ws.cell(
+        row=row,
+        column=2,
+        value=f'=IF(B{share_row}>0.25,"YES — single-deal risk","no")',
+    )
+    c.font = xref_font
+    row += 2
+
+    # Top-N account share
+    account_totals: dict[str, float] = {}
+    for n, a in le_opps:
+        account_totals[n] = account_totals.get(n, 0.0) + a
+    top_accts = sorted(account_totals.items(), key=lambda kv: kv[1], reverse=True)
+    grand = sum(a for _, a in top_accts) or 1.0  # avoid div-by-zero on empty data
+
+    ws.cell(row=row, column=1, value="Account concentration (open L+E ARR)").font = title_font
+    row += 1
+    _set_header(ws, row, ["Slice", "ARR (EUR)", "% of total"])
+    row += 1
+    for label, n in [
+        ("Top 1 account", 1),
+        ("Top 3 accounts", 3),
+        ("Top 5 accounts", 5),
+        ("Top 10 accounts", 10),
+    ]:
+        slice_total = sum(a for _, a in top_accts[:n])
+        ws.cell(row=row, column=1, value=label).font = input_font
+        c = ws.cell(row=row, column=2, value=round(slice_total, 2))
+        c.font = input_font
+        c.number_format = "#,##0"
+        c = ws.cell(row=row, column=3, value=slice_total / grand)
+        c.font = input_font
+        c.number_format = "0.0%"
+        row += 1
+    row += 1
+
+    # Top-N owner share
+    owner_totals: dict[str, float] = {}
+    for r in raw:
+        if r.get("Type") not in ("Land", "Expand"):
+            continue
+        nm = r.get("OwnerName") or "(unknown)"
+        owner_totals[nm] = owner_totals.get(nm, 0.0) + float(r.get("ARR_EUR") or 0)
+    top_owners = sorted(owner_totals.items(), key=lambda kv: kv[1], reverse=True)
+
+    ws.cell(row=row, column=1, value="Owner concentration (open L+E ARR)").font = title_font
+    row += 1
+    _set_header(ws, row, ["Slice", "ARR (EUR)", "% of total"])
+    row += 1
+    for label, n in [("Top 1 owner", 1), ("Top 3 owners", 3), ("Top 5 owners", 5)]:
+        slice_total = sum(a for _, a in top_owners[:n])
+        ws.cell(row=row, column=1, value=label).font = input_font
+        c = ws.cell(row=row, column=2, value=round(slice_total, 2))
+        c.font = input_font
+        c.number_format = "#,##0"
+        c = ws.cell(row=row, column=3, value=slice_total / grand)
+        c.font = input_font
+        c.number_format = "0.0%"
+        row += 1
+
+    ws.column_dimensions["A"].width = 36
+    ws.column_dimensions["B"].width = 24
+    ws.column_dimensions["C"].width = 14
+
+
 def _build_methodology(wb: Workbook) -> None:
     """Documents the model contract: how to read the formulas, which
     cells are the inputs, how to extend the model."""
@@ -569,6 +1041,27 @@ def _build_methodology(wb: Workbook) -> None:
             "Data_ARR_EUR and Data_ACV_EUR are FX-converted at the per-record level "
             "by Salesforce's convertCurrency() before being written to the Data "
             "sheet. SUMIFS over these columns is therefore FX-correct.",
+        ),
+        (
+            "Pivots (ad-hoc slicing)",
+            "Data is a real Excel Table named tblData — click anywhere in Data and "
+            "use Insert > PivotTable to slice by stage / owner / industry / country / "
+            "age. The Pivots sheet has 5 pre-built cross-tabs (Stage × Industry, "
+            "Owner × Stage, Country × Type, Top-10 Accounts × Stage, Stage × Quarter); "
+            "row/column headers are inputs (blue), matrix cells are SUMIFS over "
+            "Data (green).",
+        ),
+        (
+            "Velocity",
+            "Per-stage avg deal age + count of deals over 60 / 180 days old. "
+            "Caveat: 'age' is days since CreatedDate, NOT time in current stage. "
+            "True time-in-stage requires OpportunityFieldHistory wiring (deferred).",
+        ),
+        (
+            "Concentration",
+            "Top-1/3/5/10 account share + top-1/3/5 owner share of total open "
+            "Land+Expand pipeline (CFQ + beyond). Single-deal risk fires when any "
+            "one open L+E deal exceeds 25% of total open pipeline.",
         ),
         (
             "Phase 2 sheets (still precomputed)",
