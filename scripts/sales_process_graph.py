@@ -495,7 +495,7 @@ _METRICS = (
     Metric(
         name="approval_gap_arr",
         type="raw",
-        formula="SUM(convertCurrency(APTS_Opportunity_ARR__c)) WHERE Type IN ('Land','Expand') AND APTS_Opportunity_ARR__c >= 500000 AND StageName IN ('3','4','5','6') AND Stage_20_Approval__c IN (false,null)",
+        formula="(EUR-correct) SOQL SELECT convertCurrency(APTS_Opportunity_ARR__c) WHERE Type IN ('Land','Expand') AND StageName IN ('3','4','5','6') AND Stage_20_Approval__c IN (false,null) — then filter arr_fx >= EUR 500_000 in Python. WHERE on raw APTS_Opportunity_ARR__c is transactional-currency, so the EUR threshold must apply post-FX-convert.",
         captures="ARR exposure on policy violations under the SimCorp Commercial Approval gate",
         does_not_capture="Whether the missing flag is data-entry lag vs. real policy violation",
         how_to_read="Per the handbook: Commercial Approval is mandatory for ALL Land deals + AER >€500k Expand. Any matching opp without the flag must be reviewed.",
