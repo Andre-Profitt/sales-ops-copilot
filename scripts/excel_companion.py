@@ -88,6 +88,7 @@ SHEET_NAMES = [
     "Pipeline_Total",
     "Pipeline_By_Stage",
     "Action_Items",
+    "Pending_Commercial_Approval",
     "Top_Deals_Land",
     "Top_Deals_Expand",
     "Top_Accounts",
@@ -95,6 +96,7 @@ SHEET_NAMES = [
     "Pipeline_Aging",
     "Weighted_Forecast",
     "Wins_Losses_QTD",
+    "Forecast_Category",
     "ARR_Roll",
     "Retention",
     "Forecast_Backtest",
@@ -409,28 +411,101 @@ def build_director_excel(
             italic=True, color="999999"
         )
 
+    # ── Pending_Commercial_Approval ── Stage 3-6 Land/Expand opps
+    # missing the Stage_20_Approval__c flag. Per Commercial Handbook this
+    # is a governance gate; matches slide 9 of the legacy 2026-04-10 deck.
+    ws = wb["Pending_Commercial_Approval"]
+    ws["A1"] = (
+        "Land/Expand deals at Stage 3+ missing Commercial Approval — "
+        "per Commercial Handbook governance gate"
+    )
+    ws["A1"].font = Font(bold=True, size=12)
+    headers = [
+        "#",
+        "Account",
+        "Opportunity",
+        "Owner",
+        "Stage",
+        "Close Date",
+        "Type",
+        "ARR (EUR)",
+    ]
+    for col_idx, h in enumerate(headers, start=1):
+        cell = ws.cell(row=3, column=col_idx, value=h)
+        cell.font = Font(bold=True)
+    pending = (snapshot or {}).get("pending_commercial_approval") or []
+    if pending:
+        for i, p in enumerate(pending, start=1):
+            ws.cell(row=i + 3, column=1, value=i)
+            ws.cell(row=i + 3, column=2, value=p.get("account") or "")
+            ws.cell(row=i + 3, column=3, value=p.get("name") or "")
+            ws.cell(row=i + 3, column=4, value=p.get("owner") or "")
+            ws.cell(row=i + 3, column=5, value=p.get("stage") or "")
+            ws.cell(row=i + 3, column=6, value=p.get("close_date") or "")
+            ws.cell(row=i + 3, column=7, value=p.get("type") or "")
+            ws.cell(row=i + 3, column=8, value=_fmt_meur(p.get("arr_eur") or 0))
+        ws.column_dimensions["A"].width = 4
+        ws.column_dimensions["B"].width = 32
+        ws.column_dimensions["C"].width = 36
+        ws.column_dimensions["D"].width = 22
+        ws.column_dimensions["E"].width = 22
+        ws.column_dimensions["F"].width = 12
+        ws.column_dimensions["G"].width = 8
+        ws.column_dimensions["H"].width = 12
+    else:
+        ws.cell(row=4, column=1, value="(no pending Land/Expand approvals)").font = Font(
+            italic=True, color="999999"
+        )
+
     # ── Top_Deals_Land + Top_Deals_Expand ──
-    # Two-column ranked list: stage + ARR. From the per-director SOQL
-    # snapshot (FX-correct via convertCurrency).
+    # Named-account ranked list matching the format Rebekka approved for
+    # the legacy 2026-04-10 deck. From the per-director SOQL snapshot
+    # (FX-correct via convertCurrency).
+    today_utc = datetime.now(timezone.utc).date()
     for sheet_name, source_key in [
         ("Top_Deals_Land", "top_deals_land"),
         ("Top_Deals_Expand", "top_deals_expand"),
     ]:
         ws = wb[sheet_name]
-        ws["A1"] = "#"
-        ws["B1"] = "Stage"
-        ws["C1"] = "ARR (EUR)"
-        for col in ("A1", "B1", "C1"):
-            ws[col].font = Font(bold=True)
+        headers = [
+            "#",
+            "Account",
+            "Opportunity",
+            "Owner",
+            "Stage",
+            "Close Date",
+            "Age (days)",
+            "ARR (EUR)",
+        ]
+        for col_idx, header in enumerate(headers, start=1):
+            cell = ws.cell(row=1, column=col_idx, value=header)
+            cell.font = Font(bold=True)
         deals = (snapshot or {}).get(source_key) or []
         if deals:
             for i, d_row in enumerate(deals, start=1):
+                created = d_row.get("created_date") or ""
+                age_days: int | str = ""
+                if created:
+                    try:
+                        age_days = (today_utc - datetime.fromisoformat(created).date()).days
+                    except ValueError:
+                        age_days = ""
                 ws.cell(row=i + 1, column=1, value=i)
-                ws.cell(row=i + 1, column=2, value=d_row.get("stage") or "")
-                ws.cell(row=i + 1, column=3, value=_fmt_meur(d_row.get("arr_eur") or 0))
+                ws.cell(row=i + 1, column=2, value=d_row.get("account") or "")
+                ws.cell(row=i + 1, column=3, value=d_row.get("name") or "")
+                ws.cell(row=i + 1, column=4, value=d_row.get("owner") or "")
+                ws.cell(row=i + 1, column=5, value=d_row.get("stage") or "")
+                ws.cell(row=i + 1, column=6, value=d_row.get("close_date") or "")
+                ws.cell(row=i + 1, column=7, value=age_days)
+                ws.cell(row=i + 1, column=8, value=_fmt_meur(d_row.get("arr_eur") or 0))
             ws.column_dimensions["A"].width = 4
-            ws.column_dimensions["B"].width = 24
-            ws.column_dimensions["C"].width = 14
+            ws.column_dimensions["B"].width = 32
+            ws.column_dimensions["C"].width = 36
+            ws.column_dimensions["D"].width = 20
+            ws.column_dimensions["E"].width = 22
+            ws.column_dimensions["F"].width = 12
+            ws.column_dimensions["G"].width = 8
+            ws.column_dimensions["H"].width = 12
         else:
             ws.cell(row=2, column=1, value="(no deals in scope this period)").font = Font(
                 italic=True, color="999999"
@@ -462,6 +537,41 @@ def build_director_excel(
         ws.cell(row=2, column=1, value="(no closed deals this quarter)").font = Font(
             italic=True, color="999999"
         )
+
+    # ── Forecast_Category ── pipeline by SF ForecastCategoryName for
+    # CFQ-closing Land+Expand. Matches slide 18 of legacy 2026-04-10 deck.
+    ws = wb["Forecast_Category"]
+    ws["A1"] = "Forecast Category breakdown — CFQ Land+Expand"
+    ws["A1"].font = Font(bold=True, size=12)
+    ws["A2"] = (
+        "Per SF ForecastCategoryName: Pipeline / Best Case / Commit / "
+        "Closed / Omitted. Commit is the floor; Best Case + Pipeline is upside."
+    )
+    ws["A2"].font = Font(italic=True, color="666666")
+    headers = ["Category", "# Opps", "ARR (EUR)"]
+    for col_idx, h in enumerate(headers, start=1):
+        ws.cell(row=4, column=col_idx, value=h).font = Font(bold=True)
+    fc = (snapshot or {}).get("forecast_category") or []
+    if fc:
+        for i, f in enumerate(fc, start=5):
+            ws.cell(row=i, column=1, value=f.get("category") or "(unset)")
+            ws.cell(row=i, column=2, value=f.get("num_opps") or 0)
+            ws.cell(row=i, column=3, value=_fmt_meur(f.get("arr_eur") or 0))
+        last = 4 + len(fc) + 1
+        ws.cell(row=last, column=1, value="TOTAL").font = Font(bold=True)
+        ws.cell(row=last, column=2, value=sum(f.get("num_opps") or 0 for f in fc)).font = Font(
+            bold=True
+        )
+        ws.cell(
+            row=last, column=3, value=_fmt_meur(sum(f.get("arr_eur") or 0 for f in fc))
+        ).font = Font(bold=True)
+        ws.column_dimensions["A"].width = 18
+        ws.column_dimensions["B"].width = 8
+        ws.column_dimensions["C"].width = 14
+    else:
+        ws.cell(
+            row=5, column=1, value="(no CFQ Land+Expand opps — ForecastCategoryName empty)"
+        ).font = Font(italic=True, color="999999")
 
     # ── Forecast_Backtest ──
     # Forward-rate per stage, derived from 4 quarters of OpportunityFieldHistory
@@ -768,24 +878,30 @@ def build_director_excel(
     ws = wb["At_Risk_Renewals"]
     ws["A1"] = "#"
     ws["B1"] = "Account"
-    ws["C1"] = "Stage"
-    ws["D1"] = "ACV"
-    ws["E1"] = "Risk"
-    for col in ("A1", "B1", "C1", "D1", "E1"):
+    ws["C1"] = "Owner"
+    ws["D1"] = "Stage"
+    ws["E1"] = "Close Date"
+    ws["F1"] = "ACV"
+    ws["G1"] = "Risk"
+    for col in ("A1", "B1", "C1", "D1", "E1", "F1", "G1"):
         ws[col].font = Font(bold=True)
     at_risk = (snapshot or {}).get("at_risk_renewals") or []
     if at_risk:
         for i, r in enumerate(at_risk, start=1):
             ws.cell(row=i + 1, column=1, value=i)
             ws.cell(row=i + 1, column=2, value=r.get("account") or "")
-            ws.cell(row=i + 1, column=3, value=r.get("stage") or "")
-            ws.cell(row=i + 1, column=4, value=_fmt_meur(r.get("acv_eur") or 0))
-            ws.cell(row=i + 1, column=5, value=r.get("risk_level") or "")
+            ws.cell(row=i + 1, column=3, value=r.get("owner") or "")
+            ws.cell(row=i + 1, column=4, value=r.get("stage") or "")
+            ws.cell(row=i + 1, column=5, value=r.get("close_date") or "")
+            ws.cell(row=i + 1, column=6, value=_fmt_meur(r.get("acv_eur") or 0))
+            ws.cell(row=i + 1, column=7, value=r.get("risk_level") or "")
         ws.column_dimensions["A"].width = 4
         ws.column_dimensions["B"].width = 36
-        ws.column_dimensions["C"].width = 18
-        ws.column_dimensions["D"].width = 12
-        ws.column_dimensions["E"].width = 14
+        ws.column_dimensions["C"].width = 22
+        ws.column_dimensions["D"].width = 18
+        ws.column_dimensions["E"].width = 12
+        ws.column_dimensions["F"].width = 12
+        ws.column_dimensions["G"].width = 14
     else:
         ws.cell(
             row=2,
@@ -1200,6 +1316,7 @@ def _apply_polish(wb: Workbook, envelope: dict) -> None:
         "Pipeline_Aging",
         "Weighted_Forecast",
         "Wins_Losses_QTD",
+        "Forecast_Category",
         "ARR_Roll",
         "Forecast_Backtest",
         "At_Risk_Renewals",
@@ -1218,7 +1335,12 @@ def _apply_polish(wb: Workbook, envelope: dict) -> None:
         # Freeze first row only on sheets where the data starts at row 2
         # (Discount_Analysis / Regional_Benchmarks / Region_Trend_8Q have
         # title + source rows above the data; freeze A5 instead).
-        if name in ("Discount_Analysis", "Regional_Benchmarks", "Region_Trend_8Q"):
+        if name in (
+            "Discount_Analysis",
+            "Regional_Benchmarks",
+            "Region_Trend_8Q",
+            "Forecast_Category",
+        ):
             ws.freeze_panes = "A5"
         else:
             ws.freeze_panes = "A2"

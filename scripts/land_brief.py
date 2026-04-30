@@ -184,8 +184,9 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
     # Also pull Account.BillingCountry + Risk for downstream sheets
     # (Territory_Performance + At_Risk_Renewals).
     detail_q = (
-        "SELECT Id, Type, StageName, CreatedDate, CloseDate, "
-        "Owner.Name, "
+        "SELECT Id, Name, Type, StageName, CreatedDate, CloseDate, "
+        "Stage_20_Approval__c, "
+        "Owner.Name, ForecastCategoryName, "
         "Account.Name, Account.BillingCountry, Account.Industry, "
         "Account.Risk_of_Potential_Termination__c, "
         "convertCurrency(APTS_Opportunity_ARR__c) arr_fx, "
@@ -250,11 +251,18 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
     ):
         target = top_deals_land if r.get("Type") == "Land" else top_deals_expand
         if len(target) < 10:
+            acct = r.get("Account") or {}
+            owner = r.get("Owner") or {}
             target.append(
                 {
                     "stage": r.get("StageName") or "",
                     "arr_eur": round(float(r.get("arr_fx") or 0), 2),
                     "id": r.get("Id"),
+                    "account": acct.get("Name") or "",
+                    "name": r.get("Name") or "",
+                    "owner": owner.get("Name") or "",
+                    "close_date": (r.get("CloseDate") or "")[:10],
+                    "created_date": (r.get("CreatedDate") or "")[:10],
                 }
             )
 
@@ -347,6 +355,8 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
             {
                 "stage": r.get("StageName") or "",
                 "account": acct.get("Name") or "(unknown)",
+                "owner": (r.get("Owner") or {}).get("Name") or "",
+                "close_date": (r.get("CloseDate") or "")[:10],
                 "acv_eur": round(float(r.get("acv_fx") or 0), 2),
                 "risk_level": acct.get("Risk_of_Potential_Termination__c") or "",
             }
@@ -512,14 +522,51 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
         reverse=True,
     )
 
+    # Pending_Commercial_Approval — Stage 3+ Land/Expand opps without
+    # Stage_20_Approval__c flag set. Per SimCorp Commercial Handbook:
+    # Land deals require Commercial Approval at Stage 3+; Expand deals
+    # at AER >= EUR 500k. We flag both for review.
+    pending_approval = []
+    for r in rows:
+        if r.get("Type") not in ("Land", "Expand"):
+            continue
+        stage_str = r.get("StageName") or ""
+        # Stage label format is "3 - Engagement", "4 - Shortlisted", ...
+        try:
+            stage_num = int(stage_str.split(" ")[0])
+        except (ValueError, IndexError):
+            continue
+        if stage_num < 3 or stage_num > 6:
+            continue
+        approved = r.get("Stage_20_Approval__c")
+        if approved:  # truthy means approved; None or False means pending
+            continue
+        arr_eur = float(r.get("arr_fx") or 0)
+        # Skip Expand deals below the EUR 500k threshold (handbook gate)
+        if r.get("Type") == "Expand" and arr_eur < 500_000:
+            continue
+        pending_approval.append(
+            {
+                "account": (r.get("Account") or {}).get("Name") or "(unknown)",
+                "name": r.get("Name") or "",
+                "owner": (r.get("Owner") or {}).get("Name") or "(unknown)",
+                "stage": stage_str,
+                "close_date": (r.get("CloseDate") or "")[:10],
+                "type": r.get("Type") or "",
+                "arr_eur": round(arr_eur, 2),
+            }
+        )
+    pending_approval.sort(key=lambda x: x["arr_eur"], reverse=True)
+
     # Open Land+Expand ARR beyond CFQ — context for the headline number.
     # Also serves as the seed for the formula-driven model's Data sheet
     # (combined with `rows`, this gives us all open L+E in scope, regardless
     # of CloseDate). Same column shape as the main detail_q so the two can
     # be concatenated into raw_opps below.
     beyond_q = (
-        "SELECT Id, Type, StageName, CreatedDate, CloseDate, "
-        "Owner.Name, "
+        "SELECT Id, Name, Type, StageName, CreatedDate, CloseDate, "
+        "Stage_20_Approval__c, "
+        "Owner.Name, ForecastCategoryName, "
         "Account.Name, Account.BillingCountry, Account.Industry, "
         "Account.Risk_of_Potential_Termination__c, "
         "convertCurrency(APTS_Opportunity_ARR__c) arr_fx, "
@@ -559,6 +606,22 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
 
     raw_opps = [_flat(r) for r in rows] + [_flat(r) for r in beyond_rows]
 
+    # Forecast category breakdown (Land+Expand, CFQ-closing) — matches
+    # slide 18 of legacy 2026-04-10 deck format. Categories per SF:
+    # Pipeline / Best Case / Commit / Closed / Omitted.
+    forecast_acc: dict[str, dict[str, float]] = {}
+    for r in rows:  # rows is CFQ-only L+E+R; we filter to L+E here
+        if r.get("Type") not in ("Land", "Expand"):
+            continue
+        cat = r.get("ForecastCategoryName") or "(unset)"
+        bucket = forecast_acc.setdefault(cat, {"num_opps": 0, "arr_eur": 0.0})
+        bucket["num_opps"] += 1
+        bucket["arr_eur"] += float(r.get("arr_fx") or 0)
+    forecast_category = [
+        {"category": cat, "num_opps": int(v["num_opps"]), "arr_eur": round(v["arr_eur"], 2)}
+        for cat, v in sorted(forecast_acc.items())
+    ]
+
     return {
         "by_type": by_type,
         "new_business_by_stage": new_business_by_stage,
@@ -574,6 +637,8 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
         "top_accounts": top_accounts,
         "pipeline_aging": pipeline_aging,
         "by_owner": by_owner,
+        "pending_commercial_approval": pending_approval,
+        "forecast_category": forecast_category,
         "totals": {
             "new_business_arr_open_this_quarter": round(
                 sum(t["arr"] for t in by_type if t["type"] in ("Land", "Expand")), 2
