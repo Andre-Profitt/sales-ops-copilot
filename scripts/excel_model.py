@@ -46,6 +46,18 @@ BRAND_SECONDARY = "1A1D31"
 BRAND_GRAY = "666666"
 BRAND_LIGHT_GRAY = "F2F2F2"
 
+# FAST/ICAEW-style color coding for cell roles. Matches the convention
+# used by Anthropic's official xlsx Agent Skill so stakeholders moving
+# between Claude-generated workbooks and ours see one auditability scheme:
+#   INPUT  (hardcoded value)     → blue
+#   LOCAL  (formula, same sheet) → black (default)
+#   XREF   (formula, other sheet) → green
+#   EXT    (formula, other workbook) → red  [never used here]
+INPUT_COLOR = "0070C0"  # blue — inputs / parameters / source data
+LOCAL_COLOR = "000000"  # black — formula referencing only own sheet
+XREF_COLOR = "00703C"  # dark green — formula crossing sheets
+EXT_COLOR = "C00000"  # dark red — formula crossing workbooks
+
 DATA_COLUMNS = [
     ("Id", "string"),
     ("Type", "string"),
@@ -182,6 +194,9 @@ def _build_parameters(wb: Workbook, period_start: date, period_end: date) -> Non
     for i, (name, value, desc) in enumerate(params, start=2):
         ws.cell(row=i, column=1, value=name).font = Font(bold=True)
         c = ws.cell(row=i, column=2, value=value)
+        # Inputs colored blue per FAST/ICAEW convention — every value cell
+        # in Parameters is a hardcoded input that drives the model.
+        c.font = Font(color=INPUT_COLOR, bold=True)
         if isinstance(value, date):
             c.number_format = "yyyy-mm-dd"
         elif isinstance(value, float):
@@ -202,11 +217,14 @@ def _build_stages(wb: Workbook) -> None:
     so excel_companion.STAGES_8 and this sheet can never drift."""
     ws = wb.create_sheet("Stages")
     _set_header(ws, 1, ["#", "StageName", "Description", "TypicalRole"])
+    # Stage reference is input-style (hardcoded values from the knowledge
+    # graph) — color blue so it's visually distinct from formula sheets.
+    input_font = Font(color=INPUT_COLOR)
     for i, s in enumerate(GRAPH.stages, start=2):
-        ws.cell(row=i, column=1, value=s.number)
-        ws.cell(row=i, column=2, value=f"{s.number} - {s.name}")
-        ws.cell(row=i, column=3, value=s.description)
-        ws.cell(row=i, column=4, value=s.typical_role or "")
+        ws.cell(row=i, column=1, value=s.number).font = input_font
+        ws.cell(row=i, column=2, value=f"{s.number} - {s.name}").font = input_font
+        ws.cell(row=i, column=3, value=s.description).font = input_font
+        ws.cell(row=i, column=4, value=s.typical_role or "").font = input_font
     ws.column_dimensions["A"].width = 4
     ws.column_dimensions["B"].width = 22
     ws.column_dimensions["C"].width = 80
@@ -221,10 +239,15 @@ def _build_data(wb: Workbook, raw_opps: list[dict]) -> None:
     headers = [c[0] for c in DATA_COLUMNS]
     _set_header(ws, 1, headers)
 
+    # Every Data cell is an INPUT (hardcoded source value) — blue per
+    # FAST/ICAEW convention. Stakeholders looking at any analytical sheet
+    # know that following a formula back here lands on hardcoded values.
+    input_font = Font(color=INPUT_COLOR)
     for row_idx, opp in enumerate(raw_opps, start=2):
         for col_idx, (col_name, col_type) in enumerate(DATA_COLUMNS, start=1):
             val = opp.get(col_name)
             cell = ws.cell(row=row_idx, column=col_idx, value=val if val != "" else None)
+            cell.font = input_font
             if col_type == "date" and isinstance(val, str) and len(val) >= 10:
                 # Excel-friendly date — let openpyxl coerce ISO strings.
                 try:
@@ -270,9 +293,15 @@ def _build_pipeline_total(wb: Workbook, period: str) -> None:
     ws = wb.create_sheet("Pipeline_Total")
     _set_header(ws, 1, ["KPI", "Value (EUR)", "Value (mEUR)", "Source formula"])
 
+    # All B/C cells are XREF formulas — they reference Data_* and
+    # Parameters named ranges (cross-sheet). Color green per convention.
+    xref_font = Font(color=XREF_COLOR, bold=True)
+    xref_font_normal = Font(color=XREF_COLOR)
+    note_font = Font(italic=True, color=BRAND_GRAY)
+
     # Row 2: CFQ closeable Land+Expand
     ws.cell(row=2, column=1, value=f"{period} closeable Land+Expand ARR").font = Font(bold=True)
-    ws.cell(
+    c = ws.cell(
         row=2,
         column=2,
         value=(
@@ -283,34 +312,42 @@ def _build_pipeline_total(wb: Workbook, period: str) -> None:
             'Data_CloseDate, ">="&period_start, '
             'Data_CloseDate, "<"&period_end)'
         ),
-    ).number_format = "#,##0"
-    ws.cell(row=2, column=3, value="=B2/eur_to_meur").number_format = "#,##0.0"
+    )
+    c.number_format = "#,##0"
+    c.font = xref_font
+    c2 = ws.cell(row=2, column=3, value="=B2/eur_to_meur")
+    c2.number_format = "#,##0.0"
+    c2.font = xref_font
     ws.cell(
         row=2,
         column=4,
         value="SUMIFS over Data: Type IN (Land,Expand) AND period_start ≤ CloseDate < period_end",
-    ).font = Font(italic=True, color=BRAND_GRAY)
+    ).font = note_font
 
     # Row 3: Beyond CFQ
     ws.cell(row=3, column=1, value=f"Open Land+Expand beyond {period}")
-    ws.cell(
+    c = ws.cell(
         row=3,
         column=2,
         value=(
             '=SUMIFS(Data_ARR_EUR, Data_Type, "Land", Data_CloseDate, ">="&period_end) '
             '+ SUMIFS(Data_ARR_EUR, Data_Type, "Expand", Data_CloseDate, ">="&period_end)'
         ),
-    ).number_format = "#,##0"
-    ws.cell(row=3, column=3, value="=B3/eur_to_meur").number_format = "#,##0.0"
+    )
+    c.number_format = "#,##0"
+    c.font = xref_font_normal
+    c2 = ws.cell(row=3, column=3, value="=B3/eur_to_meur")
+    c2.number_format = "#,##0.0"
+    c2.font = xref_font_normal
     ws.cell(
         row=3,
         column=4,
         value="Out-of-quarter pipe; context only, not in CFQ forecast",
-    ).font = Font(italic=True, color=BRAND_GRAY)
+    ).font = note_font
 
     # Row 4: Renewal ACV
     ws.cell(row=4, column=1, value=f"{period} renewal ACV").font = Font(bold=True)
-    ws.cell(
+    c = ws.cell(
         row=4,
         column=2,
         value=(
@@ -318,13 +355,17 @@ def _build_pipeline_total(wb: Workbook, period: str) -> None:
             'Data_CloseDate, ">="&period_start, '
             'Data_CloseDate, "<"&period_end)'
         ),
-    ).number_format = "#,##0"
-    ws.cell(row=4, column=3, value="=B4/eur_to_meur").number_format = "#,##0.0"
+    )
+    c.number_format = "#,##0"
+    c.font = xref_font
+    c2 = ws.cell(row=4, column=3, value="=B4/eur_to_meur")
+    c2.number_format = "#,##0.0"
+    c2.font = xref_font
     ws.cell(
         row=4,
         column=4,
         value="SUMIFS over Data: Type=Renewal AND period_start ≤ CloseDate < period_end",
-    ).font = Font(italic=True, color=BRAND_GRAY)
+    ).font = note_font
 
     ws.column_dimensions["A"].width = 38
     ws.column_dimensions["B"].width = 18
@@ -338,10 +379,14 @@ def _build_pipeline_by_stage(wb: Workbook, period: str) -> None:
     the Stages reference sheet, so changes there propagate automatically."""
     ws = wb.create_sheet("Pipeline_By_Stage")
     _set_header(ws, 1, [f"Stage ({period} closeable)", "ARR (EUR)", "ARR (mEUR)", "# Opps"])
-    for i, s in enumerate(GRAPH.stages, start=2):
-        # Stage label pulled from Stages sheet (Stages!B<i>).
-        ws.cell(row=i, column=1, value=f"=Stages!B{i}")
-        ws.cell(
+    # All per-stage cells are XREF (reference Stages + Data + Parameters
+    # named ranges). TOTAL row is a same-sheet SUM → LOCAL color.
+    xref_font = Font(color=XREF_COLOR)
+    local_bold = Font(color=LOCAL_COLOR, bold=True)
+    for i, _s in enumerate(GRAPH.stages, start=2):
+        # Stage label pulled from Stages sheet (Stages!B<i>) — cross-sheet.
+        ws.cell(row=i, column=1, value=f"=Stages!B{i}").font = xref_font
+        c = ws.cell(
             row=i,
             column=2,
             value=(
@@ -350,9 +395,13 @@ def _build_pipeline_by_stage(wb: Workbook, period: str) -> None:
                 f'+ SUMIFS(Data_ARR_EUR, Data_Type, "Expand", Data_StageName, Stages!B{i}, '
                 'Data_CloseDate, ">="&period_start, Data_CloseDate, "<"&period_end)'
             ),
-        ).number_format = "#,##0"
-        ws.cell(row=i, column=3, value=f"=B{i}/eur_to_meur").number_format = "#,##0.0"
-        ws.cell(
+        )
+        c.number_format = "#,##0"
+        c.font = xref_font
+        c2 = ws.cell(row=i, column=3, value=f"=B{i}/eur_to_meur")
+        c2.number_format = "#,##0.0"
+        c2.font = xref_font
+        c3 = ws.cell(
             row=i,
             column=4,
             value=(
@@ -362,15 +411,18 @@ def _build_pipeline_by_stage(wb: Workbook, period: str) -> None:
                 'Data_CloseDate, ">="&period_start, Data_CloseDate, "<"&period_end)'
             ),
         )
-    # Total row
+        c3.font = xref_font
+    # Total row — same-sheet sum → LOCAL color.
     last_stage_row = 1 + len(GRAPH.stages)
     total_row = last_stage_row + 1
-    ws.cell(row=total_row, column=1, value="TOTAL").font = Font(bold=True)
-    ws.cell(row=total_row, column=2, value=f"=SUM(B2:B{last_stage_row})").number_format = "#,##0"
-    ws.cell(row=total_row, column=2).font = Font(bold=True)
-    ws.cell(row=total_row, column=3, value=f"=B{total_row}/eur_to_meur").number_format = "#,##0.0"
-    ws.cell(row=total_row, column=3).font = Font(bold=True)
-    ws.cell(row=total_row, column=4, value=f"=SUM(D2:D{last_stage_row})").font = Font(bold=True)
+    ws.cell(row=total_row, column=1, value="TOTAL").font = local_bold
+    c = ws.cell(row=total_row, column=2, value=f"=SUM(B2:B{last_stage_row})")
+    c.number_format = "#,##0"
+    c.font = local_bold
+    c = ws.cell(row=total_row, column=3, value=f"=B{total_row}/eur_to_meur")
+    c.number_format = "#,##0.0"
+    c.font = local_bold
+    ws.cell(row=total_row, column=4, value=f"=SUM(D2:D{last_stage_row})").font = local_bold
 
     ws.column_dimensions["A"].width = 26
     ws.column_dimensions["B"].width = 16
@@ -393,12 +445,16 @@ def _build_pipeline_aging(wb: Workbook) -> None:
         ("366-730 days", 366, 730),
         ("> 730 days (zombie)", 731, 99999),
     ]
+    # Min/Max bucket bounds are inputs (blue); SUMPRODUCT formulas are XREF
+    # (they reference Data_* + the `today` named cell on Parameters).
+    input_font = Font(color=INPUT_COLOR)
+    xref_font = Font(color=XREF_COLOR)
     for i, (label, lo, hi) in enumerate(buckets, start=2):
         ws.cell(row=i, column=1, value=label)
-        ws.cell(row=i, column=2, value=lo)
-        ws.cell(row=i, column=3, value=hi)
+        ws.cell(row=i, column=2, value=lo).font = input_font
+        ws.cell(row=i, column=3, value=hi).font = input_font
         # ARR: SUMPRODUCT of Type IN (Land,Expand) AND age in [lo, hi]
-        ws.cell(
+        c = ws.cell(
             row=i,
             column=4,
             value=(
@@ -408,8 +464,10 @@ def _build_pipeline_aging(wb: Workbook) -> None:
                 f"*((today-Data_CreatedDate)<=C{i})"
                 "*Data_ARR_EUR)"
             ),
-        ).number_format = "#,##0"
-        ws.cell(
+        )
+        c.number_format = "#,##0"
+        c.font = xref_font
+        c2 = ws.cell(
             row=i,
             column=5,
             value=(
@@ -419,6 +477,7 @@ def _build_pipeline_aging(wb: Workbook) -> None:
                 f"*((today-Data_CreatedDate)<=C{i}))"
             ),
         )
+        c2.font = xref_font
 
     ws.column_dimensions["A"].width = 28
     ws.column_dimensions["B"].width = 8
@@ -444,19 +503,23 @@ def _build_by_owner(wb: Workbook, snapshot: dict | None) -> None:
         }
     )
 
+    # All formula cells reference Data_* — XREF (green).
+    xref_font = Font(color=XREF_COLOR)
     for i, owner in enumerate(owners, start=2):
         ws.cell(row=i, column=1, value=owner)
         # Quote owner with " for SUMIFS literal — escape any embedded quotes.
         owner_lit = owner.replace('"', '""')
-        ws.cell(
+        c = ws.cell(
             row=i,
             column=2,
             value=(
                 f'=SUMIFS(Data_ARR_EUR, Data_OwnerName, "{owner_lit}", Data_Type, "Land") '
                 f'+ SUMIFS(Data_ARR_EUR, Data_OwnerName, "{owner_lit}", Data_Type, "Expand")'
             ),
-        ).number_format = "#,##0"
-        ws.cell(
+        )
+        c.number_format = "#,##0"
+        c.font = xref_font
+        c2 = ws.cell(
             row=i,
             column=3,
             value=(
@@ -464,6 +527,7 @@ def _build_by_owner(wb: Workbook, snapshot: dict | None) -> None:
                 f'+ COUNTIFS(Data_OwnerName, "{owner_lit}", Data_Type, "Expand")'
             ),
         )
+        c2.font = xref_font
 
     ws.column_dimensions["A"].width = 32
     ws.column_dimensions["B"].width = 26
@@ -522,7 +586,28 @@ def _build_methodology(wb: Workbook) -> None:
         ws.row_dimensions[row].height = max(30, 15 * (1 + len(body) // 100))
         row += 2
 
-    ws.column_dimensions["A"].width = 110
+    # Color-coding key — FAST/ICAEW convention. Same scheme as Anthropic's
+    # official xlsx Agent Skill, so stakeholders moving between Claude-
+    # generated workbooks and ours see one auditability scheme.
+    ws.cell(row=row, column=1, value="Color-coding key").font = Font(bold=True, size=12)
+    row += 1
+    key_rows = [
+        (
+            "Blue",
+            INPUT_COLOR,
+            "Hardcoded input — Data sheet rows, Parameters cells, Stages reference",
+        ),
+        ("Black", LOCAL_COLOR, "Formula referencing only its own sheet (e.g., TOTAL row =SUM)"),
+        ("Green", XREF_COLOR, "Formula crossing sheets — references Data_*, Parameters, or Stages"),
+        ("Red", EXT_COLOR, "Formula referencing an external workbook — never used in this model"),
+    ]
+    for label, color, desc in key_rows:
+        ws.cell(row=row, column=1, value=label).font = Font(bold=True, color=color)
+        ws.cell(row=row, column=2, value=desc).alignment = Alignment(vertical="top")
+        row += 1
+
+    ws.column_dimensions["A"].width = 16
+    ws.column_dimensions["B"].width = 100
 
 
 def _apply_print_setup(wb: Workbook, director: dict, period: str) -> None:
