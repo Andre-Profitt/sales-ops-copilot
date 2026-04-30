@@ -107,27 +107,47 @@ def commercial_approval_gap_land() -> dict[str, Any]:
 
 
 def commercial_approval_gap_big() -> dict[str, Any]:
-    """Land+Expand at Stage 3+ with ARR ≥$500k and no Commercial Approval.
+    """Land+Expand at Stage 3+ with ARR ≥ EUR 500k and no Commercial Approval.
 
     Same truth-field correction as `commercial_approval_gap_land` — gate on
     `Approval_Status__c` picklist, not on the standalone boolean. Boolean-only
     predicate was flagging 104 opps / $141.8M ARR all with
     Approval_Status__c='No Approval Necessary' (verified 2026-04-28).
+
+    FX correctness (Codex review 2026-04-30): the EUR 500k threshold must be
+    applied AFTER convertCurrency() because SF WHERE clauses on currency
+    fields evaluate in the row's transactional currency. Pull all stage-
+    qualified rows with `convertCurrency(...)` in SELECT, then filter on
+    arr_fx >= 500_000 in Python. Mirrors the pattern used in
+    land_brief._pull_approval_gap_for_director.
     """
+    # Drop the >= 500_000 from the SOQL WHERE; apply the EUR threshold in Python.
     where = (
         f"IsClosed = false AND Type IN ('Land','Expand') AND {LATE_STAGE_LIKE} "
-        "AND APTS_Opportunity_ARR__c >= 500000 AND Stage_20_Approval__c = false "
+        "AND Stage_20_Approval__c = false "
         "AND Approval_Status__c IN ('Needs Approval','Awaiting Approval','Rejected') "
         f"{EXCLUDE_TEST_ARTIFACTS}{_ack_exclusion()}"
     )
-    agg = _agg(
-        "SELECT COUNT(Id) num, SUM(APTS_Opportunity_ARR__c) total_arr "
-        f"FROM Opportunity WHERE {where}"
+    samples_raw = _sample(
+        "SELECT Id, Name, StageName, "
+        "convertCurrency(APTS_Opportunity_ARR__c) arr_fx, "
+        "Owner.Name "
+        f"FROM Opportunity WHERE {where} ORDER BY APTS_Opportunity_ARR__c DESC NULLS LAST",
+        limit=200,  # pull a wider window so the post-FX filter has enough to sample from
     )
-    samples = _sample(
-        "SELECT Id, Name, StageName, APTS_Opportunity_ARR__c, Owner.Name "
-        f"FROM Opportunity WHERE {where} ORDER BY APTS_Opportunity_ARR__c DESC NULLS LAST"
-    )
+    # EUR-correct threshold filter
+    big = [r for r in samples_raw if float(r.get("arr_fx") or 0) >= 500_000]
+    samples = big[:5]
+    # Reshape samples to surface arr_fx as APTS_Opportunity_ARR__c so the
+    # downstream _format_samples helper still finds a value at the expected key.
+    for s in samples:
+        s["APTS_Opportunity_ARR__c"] = s.pop("arr_fx", 0)
+    agg = {
+        "num": len(big),
+        "total_arr": round(
+            sum(float(r.get("arr_fx") or r.get("APTS_Opportunity_ARR__c") or 0) for r in big), 2
+        ),
+    }
     return {
         "name": "Stage 3+ Land/Expand deals ≥$500k ARR without Commercial Approval",
         "severity": "critical",
@@ -563,12 +583,24 @@ SEVERITY_ORDER = {"critical": 0, "important": 1, "info": 2, "error": 99}
 def _flagged_union_where() -> str:
     """SOQL union WHERE that matches any open opp falling under at least one
     alert category. Shared by owner-concentration and account-concentration
-    rollups so they always use the same predicate as `pull_all_alerts`."""
+    rollups so they always use the same predicate as `pull_all_alerts`.
+
+    FX correctness (Codex review 2026-04-30): the previous version had a
+    raw `APTS_Opportunity_ARR__c >= 500000` filter inside the missing-
+    Commercial-Approval clause, which evaluated in transactional currency
+    (wrong for non-EUR books). Removed — the union now flags ALL no-
+    approval Stage-3+ Land+Expand opps regardless of size. Consumers that
+    want the EUR 500k size filter (e.g., `commercial_approval_gap_big`)
+    apply it after convertCurrency() in Python. Net effect: union flags
+    more opps; concentration rollups become slightly fuller. That is
+    arguably more correct anyway — the union is the "what's flagged"
+    surface, not the "what's material" surface.
+    """
     return (
         "IsClosed = false AND ("
-        # Missing Commercial Approval on big deals (gated by picklist)
+        # Missing Commercial Approval on Land+Expand at Stage 3+ — gated by
+        # picklist. Size filtering moved to consumer-side post-FX filter.
         f"  (Type IN ('Land','Expand') AND {LATE_STAGE_LIKE} "
-        "    AND APTS_Opportunity_ARR__c >= 500000 "
         "    AND Stage_20_Approval__c = false "
         "    AND Approval_Status__c IN ('Needs Approval','Awaiting Approval','Rejected')) "
         # Land deals at Stage 3+ with no approval (gated by picklist)

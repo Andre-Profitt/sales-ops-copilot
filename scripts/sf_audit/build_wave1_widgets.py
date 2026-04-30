@@ -85,6 +85,18 @@ def reports_spec() -> list[dict]:
                 ],
                 # Logic: closed=false AND type IN (Land,Expand) AND ARR>=1M AND
                 #        (IqScore<=4 OR Risk_Assessment_Level__c IN (...))
+                # FX caveat (Codex review 2026-04-30): SF report filters on
+                # currency fields evaluate in the row's transactional currency
+                # by default. The "EUR 1M" threshold below will under/over-
+                # include opps in non-EUR books. Two paths to fix when this
+                # report is next deployed:
+                #   1. SF admin sets the report's "Display Currencies Using"
+                #      to corporate (EUR), which makes filters compare
+                #      converted values too.
+                #   2. OR replace this filter column with a custom formula
+                #      field on Opportunity that exposes convertCurrency().
+                # Until then, treat the deployed report as approximate for
+                # non-EUR books.
                 "reportFilters": [
                     _filter("CLOSED", "equals", "0"),
                     _filter("TYPE", "equals", "Land,Expand"),
