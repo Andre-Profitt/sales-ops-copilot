@@ -54,8 +54,11 @@ def test_envelope_separates_arr_from_acv():
     assert "total_blended_pipeline" not in kpi_names
 
 
-def test_envelope_excludes_client_level_data():
-    """Per AI Code of Conduct: aggregate-only. No client account names in envelope."""
+def test_envelope_carries_named_per_deal_arrays():
+    """Per feedback_simcorp_enterprise_claude_per_deal_2026-04-30, the
+    envelope surfaces named per-deal arrays (top deals, pending approval,
+    at-risk renewals) for the LLM. Enterprise Claude contract covers
+    consent. Verify the three keys are present on the envelope."""
     from scripts.land_brief import build_trends_envelope
 
     sf_snapshot = json.loads((FIXTURES / "sample_director.json").read_text())
@@ -63,7 +66,9 @@ def test_envelope_excludes_client_level_data():
 
     env = build_trends_envelope(sf_snapshot, director, "2026-Q2")
 
-    assert "Account" not in env, "envelope must not include Account-level data"
+    for key in ("top_deals_named", "pending_commercial_approval_named", "at_risk_renewals_named"):
+        assert key in env, f"envelope missing per-deal array '{key}'"
+        assert isinstance(env[key], list), f"'{key}' must be a list"
 
 
 def test_highlights_derived_from_late_stage_concentration():

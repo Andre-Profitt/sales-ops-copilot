@@ -727,7 +727,14 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
 def build_trends_envelope(
     sf_snapshot: dict, director: dict, period: str, *, backtest_path: Optional[Path] = None
 ) -> dict:
-    """Produce the trends.json envelope. Aggregate-only — no client-level data."""
+    """Produce the trends.json envelope. Carries aggregates AND per-deal
+    context (named accounts, owners, amounts) — SimCorp's enterprise
+    Claude contract covers data residency + no-training + audit logs,
+    which satisfies the AI Code of Conduct §8 explicit-consent basis
+    for client-data processing. The downstream LLM (deck-generation
+    agent) is expected to reference accounts by name when it sharpens
+    the message; per-deal arrays are surfaced as 'top_deals_named',
+    'pending_commercial_approval_named', 'at_risk_renewals_named'."""
     totals = sf_snapshot.get("totals", {})
     new_arr = totals.get("new_business_arr_open_this_quarter", 0) or 0
     renewal_acv = totals.get("renewal_acv_open_this_quarter", 0) or 0
@@ -816,6 +823,14 @@ def build_trends_envelope(
             "director_inactive": len(kpis) == 2,
             "extraction_partial": False,
         },
+        # Per-deal arrays — allowed in the LLM-bound envelope per
+        # feedback_simcorp_enterprise_claude_per_deal_2026-04-30. The
+        # deck-generation agent can reference accounts/opportunities by
+        # name in narrative, action titles, and risk prose.
+        "top_deals_named": (sf_snapshot.get("top_deals_land") or [])
+        + (sf_snapshot.get("top_deals_expand") or []),
+        "pending_commercial_approval_named": sf_snapshot.get("pending_commercial_approval") or [],
+        "at_risk_renewals_named": sf_snapshot.get("at_risk_renewals") or [],
     }
 
 
