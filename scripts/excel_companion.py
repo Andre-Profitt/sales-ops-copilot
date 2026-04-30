@@ -3,6 +3,10 @@
 15 sheets. mEUR formatting, no em-dashes per project memory.
 Sheets 4-12 are scaffolded for future enrichment from forecast_backtest /
 snapshot_diff (Phase 1.5.A.4 + .5).
+
+Process facts (stages / gates / motions / metric caveats) are imported from
+the canonical knowledge graph at scripts/sales_process_graph.py — single
+source of truth used across this repo + brand-deck-agent-py.
 """
 
 from __future__ import annotations
@@ -13,6 +17,22 @@ from openpyxl import Workbook
 from openpyxl.formatting.rule import CellIsRule
 from openpyxl.styles import Font, PatternFill
 from openpyxl.worksheet.page import PageMargins
+
+from sales_process_graph import GRAPH
+
+
+def _stages_when_string(stages: tuple[int, ...]) -> str:
+    """Render a tuple of stage numbers as 'Stage 3-4' / 'Stage 4-6' / 'Throughout'."""
+    if not stages:
+        return ""
+    if len(stages) == len(GRAPH.stages):
+        return "Throughout"
+    sorted_s = sorted(stages)
+    if sorted_s == list(range(sorted_s[0], sorted_s[-1] + 1)):
+        return (
+            f"Stage {sorted_s[0]}-{sorted_s[-1]}" if len(sorted_s) > 1 else f"Stage {sorted_s[0]}"
+        )
+    return "Stage " + ",".join(str(n) for n in sorted_s)
 
 
 # SimCorp 2024 brand palette — verbatim from
@@ -233,82 +253,17 @@ NOTES_BLOCKS = [
 ]
 
 
-# 8-stage SimCorp sales process — verbatim from the Commercial Handbook
-# (~/.claude/intel/simcorp-sales-process-2026-04.md). Frozen here so each
-# director's xlsx ships with policy context attached, and so the agent
-# narrative in the deck can reference these by stage number consistently.
-STAGES_8 = [
-    ("1", "Prospecting", "Passive stage; BDRs work highest-engagement leads"),
-    (
-        "2",
-        "Discovery",
-        "Prospect active; BDR/Sales meetings; price guidance given while scoping",
-    ),
-    (
-        "3",
-        "Engagement",
-        "Sales Manager driving; due-diligence continues; PAIC assessment, decision-makers identified, competitive position established",
-    ),
-    (
-        "4",
-        "Shortlisted",
-        "Close plan validated with prospect; scope finalized for commercial negotiation; still in competition",
-    ),
-    (
-        "5",
-        "Preferred",
-        "Named preferred; no longer in competition; exit when full set of red-lining received",
-    ),
-    ("6", "Contracting", "Finalize legal review + price; agree terms + implementation"),
-    ("7", "Opt-out", "Won but with opt-out clause active; held in stage until clause expires"),
-    ("8", "Won", "Contract signed; INSfile generated; handover; transition to delivery"),
-]
+# 8-stage SimCorp sales process / 5 governance gates / 3 motions — derived
+# from the canonical knowledge graph at scripts/sales_process_graph.py.
+# DO NOT hand-edit these tuples — fix the graph and every consumer updates.
+# (Source-of-truth handbook: ~/.claude/intel/simcorp-sales-process-2026-04.md)
+STAGES_8 = [(str(s.number), s.name, s.description) for s in GRAPH.stages]
 
-# Governance gates from slide 7 of the Commercial Handbook
 GOVERNANCE_GATES = [
-    (
-        "Commercial Approval",
-        "LAND = ALL deals; AER >€500k for others",
-        "Stage 3-4",
-        "Go/No-Go on whether SimCorp engages; cost/resource assessment",
-    ),
-    (
-        "Margin Review",
-        "Each iteration of scope, discount, payment schedule",
-        "Stage 4-6",
-        "Before any price proposal to customer",
-    ),
-    (
-        "Deal Services Design",
-        "Early stage",
-        "Stage 3-4",
-        "Implementation costs, risks, timelines",
-    ),
-    ("Deal Review", "Final", "Stage 5-6", "Final review before final contracting"),
-    ("Due Diligence", "All services + contractual", "Throughout", "Continuous"),
+    (g.name, g.trigger, _stages_when_string(g.when_stages), g.purpose) for g in GRAPH.gates
 ]
 
-# Motion differences (Land vs Expand vs Renewal) — for the Process_Standards sheet
-MOTIONS = [
-    (
-        "LAND",
-        "New business",
-        "Full 8-stage process applies; Commercial Approval mandatory",
-        "APTS_Opportunity_ARR__c",
-    ),
-    (
-        "EXPAND",
-        "Existing customer growth",
-        'Same 8 stages but steps "may vary"; Commercial Approval triggers at AER >€500k',
-        "APTS_Opportunity_ARR__c",
-    ),
-    (
-        "RENEWAL",
-        "Re-up of existing contract",
-        "Different motion entirely; simpler workflow; field reported as ACV not ARR",
-        "APTS_Renewal_ACV__c",
-    ),
-]
+MOTIONS = [(m.name, m.description, m.process_notes, m.revenue_field) for m in GRAPH.motions]
 
 
 def build_director_excel(
