@@ -750,6 +750,7 @@ def _build_for_director(
     *,
     period: str,
     template_path: Path,
+    strict_template_contract: bool = False,
 ) -> Path:
     artifacts = _director_artifacts(period, director)
     _validate_inputs(artifacts)
@@ -776,9 +777,18 @@ def _build_for_director(
         model=model,
         legacy=legacy,
     )
+    entry_names = {entry["name"] for entry in entries}
     if resolved_template != template_path:
         backed_names = template_named_elements(resolved_template)
         entries = [entry for entry in entries if entry["name"] in backed_names]
+    elif strict_template_contract:
+        backed_names = template_named_elements(template_path)
+        missing_names = sorted(entry_names - backed_names)
+        if missing_names:
+            raise SystemExit(
+                f"Template is missing {len(missing_names)} expected named elements for "
+                f"{artifacts.name}: {', '.join(missing_names)}"
+            )
     return _write_ppttc(artifacts, template_path=resolved_template, entries=entries)
 
 
@@ -847,7 +857,12 @@ def main() -> int:
         directors = [_resolve_director(args.director)]
 
     outputs = [
-        _build_for_director(director, period=args.period, template_path=template_path)
+        _build_for_director(
+            director,
+            period=args.period,
+            template_path=template_path,
+            strict_template_contract=args.strict_template,
+        )
         for director in directors
     ]
     for out_path in outputs:

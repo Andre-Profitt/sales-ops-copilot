@@ -14,6 +14,7 @@ What is proven:
 
 - `scripts/build_ppttc.py` reads the new per-director workbook data and emits valid `.ppttc` JSON.
 - The official think-cell sample `.ppttc` opens successfully on this Mac.
+- A minimal `.ppttc` that references `assets/LAND_template.pptx` with empty `data` also opens successfully.
 - A plain director-specific `.pptx` with **no donor chart injection** opens in PowerPoint.
 - The current donor-chart-generated `*-template.pptx` is rejected by think-cell during real `.ppttc` import:
   - **`The .ppttc file is bad. The template failed to load.`**
@@ -21,7 +22,7 @@ What is proven:
   - a filtered `.ppttc` with only `S04_PipeMovement`
   - a filtered `.ppttc` with only `S04_PipeMovement`, `S05_PipelineByStage`, `S06_PipelineAging`
 
-So the remaining blocker is **not the data**, and **not the host think-cell install**.  
+So the remaining blocker is **not the data**, **not the host think-cell install**, and **not the base LAND deck itself**.  
 The blocker is the **generated template content / donor-chart injection path**.
 
 ## Important correction
@@ -111,7 +112,31 @@ Observed:
 
 - `LAND_template` opened as a presentation.
 
-### 3. A no-injection director template opens normally in PowerPoint
+### 3. The base LAND template also works as a bare `.ppttc` template substrate
+
+Diagnostic artifact:
+
+- `/tmp/land-empty.ppttc`
+
+Contents:
+
+```json
+[
+  {
+    "template": "/Users/test/code/apps/sales-ops-copilot/assets/LAND_template.pptx",
+    "data": []
+  }
+]
+```
+
+Observed:
+
+- think-cell opened it without a `Grant File Access` or `think-cell Message` error
+- PowerPoint ended up with `1` open presentation (`Presentation1`)
+
+This matters because it proves the base LAND deck is a valid `.ppttc` template substrate. The problem starts when we try to synthesize named think-cell elements programmatically.
+
+### 4. A no-injection director template opens normally in PowerPoint
 
 Diagnostic artifact:
 
@@ -123,7 +148,7 @@ Observed:
 
 This matters because it isolates the failure away from the general “clone deck + fill tables/text” path.
 
-### 4. The generated donor-chart template fails during real `.ppttc` import
+### 5. The generated donor-chart template fails during real `.ppttc` import
 
 Real test path:
 
@@ -140,7 +165,7 @@ Observed:
 The .ppttc file is bad. The template failed to load.
 ```
 
-### 5. Reduced subsets still fail
+### 6. Reduced subsets still fail
 
 I built filtered diagnostic `.ppttc` files against reduced generated templates:
 
@@ -290,6 +315,8 @@ Do not confuse those 12 with the intended full automation contract.
 ### Fastest path to green
 
 Stop trying to ship the donor-chart-generated template as production.
+
+Keep `assets/LAND_template.pptx` as the substrate. It already survives `.ppttc` creation.
 
 Instead:
 
