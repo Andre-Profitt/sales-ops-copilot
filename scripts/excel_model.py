@@ -2016,14 +2016,24 @@ def _build_sales_velocity(wb: Workbook) -> None:
         value="Open Land + Expand opp count (any CloseDate). Higher = bigger funnel.",
     ).font = note_font
 
-    # Row 3: win rate — over closed-CFQ outcomes.
-    ws.cell(row=3, column=1, value="Win rate (CFQ closed outcomes)").font = Font(bold=True)
+    # Row 3: win rate — Land+Expand-only over closed-CFQ outcomes. The
+    # rest of this KPI is L+E-specific (open count, avg deal size, cycle
+    # days), so the win-rate input must match. Including Renewal would
+    # mix two different motions with different denominators.
+    ws.cell(row=3, column=1, value="Win rate (CFQ Land+Expand closed)").font = Font(bold=True)
     c = ws.cell(
         row=3,
         column=2,
         value=(
-            "=IFERROR(COUNTIFS(ClosedCFQ_IsWon,TRUE)/"
-            "(COUNTIFS(ClosedCFQ_IsWon,TRUE)+COUNTIFS(ClosedCFQ_IsWon,FALSE)),0)"
+            "=IFERROR("
+            '(COUNTIFS(ClosedCFQ_IsWon,TRUE,ClosedCFQ_Type,"Land")'
+            '+COUNTIFS(ClosedCFQ_IsWon,TRUE,ClosedCFQ_Type,"Expand"))'
+            "/("
+            'COUNTIFS(ClosedCFQ_IsWon,TRUE,ClosedCFQ_Type,"Land")'
+            '+COUNTIFS(ClosedCFQ_IsWon,TRUE,ClosedCFQ_Type,"Expand")'
+            '+COUNTIFS(ClosedCFQ_IsWon,FALSE,ClosedCFQ_Type,"Land")'
+            '+COUNTIFS(ClosedCFQ_IsWon,FALSE,ClosedCFQ_Type,"Expand")'
+            "),0)"
         ),
     )
     c.font = xref_font
@@ -2031,7 +2041,7 @@ def _build_sales_velocity(wb: Workbook) -> None:
     ws.cell(
         row=3,
         column=3,
-        value="Won / (Won + Lost) over CFQ closed outcomes (Land + Expand + Renewal).",
+        value="Won / (Won+Lost) over CFQ Land+Expand closed only — Renewal excluded.",
     ).font = note_font
 
     # Row 4: avg deal size last 6mo — AVERAGE over ClosedWon6mo_ARR_EUR.

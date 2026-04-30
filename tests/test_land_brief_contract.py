@@ -27,7 +27,7 @@ def test_build_trends_envelope_minimum_fields():
 
     env = build_trends_envelope(sf_snapshot, director, period)
 
-    assert env["schema_version"] == "1.0"
+    assert env["schema_version"] == "2.0"
     assert env["director"]["name"] == "Adam Steinhouse"
     assert env["period"] == period
     assert env["currency"] == "EUR"
@@ -122,4 +122,4 @@ def test_envelope_validates_against_pydantic():
     env = derive_highlights_risks(build_trends_envelope(sf_snapshot, director, "2026-Q2"))
 
     parsed = TrendsEnvelope.model_validate(env)
-    assert parsed.schema_version == "1.0"
+    assert parsed.schema_version == "2.0"

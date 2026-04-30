@@ -898,20 +898,44 @@ def derive_highlights_risks(envelope: dict) -> dict:
 def _pull_zombie_for_director(where_clause: str) -> dict[str, Any]:
     """Open Land+Expand opps >730d old with no Task/Event activity in 60d.
 
-    SOQL `Id NOT IN (subquery)` pattern; FX-correct via per-record
-    convertCurrency.
+    Salesforce rejects `Id NOT IN (SELECT WhatId FROM Task ...)` semi-joins
+    with MALFORMED_QUERY ('Entity Task is not supported for semi join inner
+    selects'). Workaround: pull candidate opps first, then pull recent
+    Task+Event WhatIds separately, subtract in Python. FX-correct via per-
+    record convertCurrency.
     """
-    q = (
+    cand_q = (
         "SELECT Id, Owner.Name, "
         "convertCurrency(APTS_Opportunity_ARR__c) arr_fx "
         "FROM Opportunity "
         f"WHERE IsClosed = false AND {where_clause} "
         "AND Type IN ('Land','Expand') "
-        "AND CreatedDate <= LAST_N_DAYS:730 "
-        "AND Id NOT IN (SELECT WhatId FROM Task WHERE ActivityDate >= LAST_N_DAYS:60) "
-        "AND Id NOT IN (SELECT WhatId FROM Event WHERE ActivityDate >= LAST_N_DAYS:60)"
+        "AND CreatedDate <= LAST_N_DAYS:730"
     )
-    rows = _sf_query(q)
+    candidates = _sf_query(cand_q)
+    candidate_ids = [c.get("Id") for c in candidates if c.get("Id")]
+    if not candidate_ids:
+        return {"count": 0, "total_arr_eur": 0.0, "top_owner": None}
+
+    # Pull recent activities for THIS director's candidates only — bounded query.
+    active_ids: set[str] = set()
+    for activity_obj in ("Task", "Event"):
+        # SOQL IN list cap: SF ~ 4000 elements, but be conservative — chunk by 200.
+        for i in range(0, len(candidate_ids), 200):
+            chunk = candidate_ids[i : i + 200]
+            id_list = "(" + ",".join(f"'{x}'" for x in chunk) + ")"
+            try:
+                act = _sf_query(
+                    f"SELECT WhatId FROM {activity_obj} "
+                    f"WHERE WhatId IN {id_list} "
+                    "AND ActivityDate >= LAST_N_DAYS:60"
+                )
+                active_ids.update(r.get("WhatId") for r in act if r.get("WhatId"))
+            except Exception:
+                # Single-activity-type failure shouldn't kill the rule;
+                # continue with whatever we got.
+                continue
+    rows = [c for c in candidates if c.get("Id") not in active_ids]
     return {
         "count": len(rows),
         "total_arr_eur": round(sum(float(r.get("arr_fx") or 0) for r in rows), 2),
@@ -952,6 +976,13 @@ def _pull_coverage_gap_for_director(where_clause: str) -> dict[str, Any]:
 def _pull_approval_gap_for_director(where_clause: str) -> dict[str, Any]:
     """Stage 3+ Land+Expand opps >= EUR 500k without Commercial Approval
     (Stage_20_Approval__c = false).
+
+    The EUR 500k threshold is a EUR business rule from the Commercial
+    Handbook. SOQL's `APTS_Opportunity_ARR__c >= 500000` filter is in
+    the opp's transactional currency — wrong for non-EUR books (APAC,
+    UKI, Canada, MEA). Pull all stage-qualified rows with
+    convertCurrency() in SELECT, then apply the threshold in Python on
+    the EUR-converted value. Pattern matches pending_commercial_approval.
     """
     q = (
         "SELECT Id, Name, Owner.Name, "
@@ -959,11 +990,12 @@ def _pull_approval_gap_for_director(where_clause: str) -> dict[str, Any]:
         "FROM Opportunity "
         f"WHERE IsClosed = false AND {where_clause} "
         "AND Type IN ('Land','Expand') "
-        "AND APTS_Opportunity_ARR__c >= 500000 "
         "AND StageName IN ('3 - Engagement','4 - Shortlisted','5 - Preferred','6 - Contracting') "
         "AND (Stage_20_Approval__c = false OR Stage_20_Approval__c = null)"
     )
-    rows = _sf_query(q)
+    rows_all = _sf_query(q)
+    # EUR-correct threshold filter — apply on FX-converted arr_fx.
+    rows = [r for r in rows_all if float(r.get("arr_fx") or 0) >= 500_000]
     return {
         "count": len(rows),
         "total_arr_eur": round(sum(float(r.get("arr_fx") or 0) for r in rows), 2),
@@ -1015,23 +1047,41 @@ def _pull_simcorp_one_share_for_director(where_clause: str) -> dict[str, Any]:
 def _pull_activity_drought_for_director(where_clause: str) -> dict[str, Any]:
     """This-Q open Land+Expand opps with no Task/Event activity in last 30d.
 
+    Same SOQL-semi-join workaround as _pull_zombie_for_director: candidates-
+    first, then subtract Task+Event WhatIds in Python.
+
     Type-scoped to Land+Expand so the count and the ARR claim line up — a
     Renewal opp in this list would inflate the count while contributing
-    EUR 0 to the ARR sum (per the APTS_Opportunity_ARR__c formula that
-    zeros it out for Renewal sub-types). For Renewal activity drought,
-    add a separate rule that uses ACV.
+    EUR 0 to the ARR sum.
     """
-    q = (
+    cand_q = (
         "SELECT Id, "
         "convertCurrency(APTS_Opportunity_ARR__c) arr_fx "
         "FROM Opportunity "
         f"WHERE IsClosed = false AND {where_clause} "
         "AND Type IN ('Land','Expand') "
-        "AND CloseDate = THIS_QUARTER "
-        "AND Id NOT IN (SELECT WhatId FROM Task WHERE ActivityDate >= LAST_N_DAYS:30) "
-        "AND Id NOT IN (SELECT WhatId FROM Event WHERE ActivityDate >= LAST_N_DAYS:30)"
+        "AND CloseDate = THIS_QUARTER"
     )
-    rows = _sf_query(q)
+    candidates = _sf_query(cand_q)
+    candidate_ids = [c.get("Id") for c in candidates if c.get("Id")]
+    if not candidate_ids:
+        return {"count": 0, "total_arr_eur": 0.0}
+
+    active_ids: set[str] = set()
+    for activity_obj in ("Task", "Event"):
+        for i in range(0, len(candidate_ids), 200):
+            chunk = candidate_ids[i : i + 200]
+            id_list = "(" + ",".join(f"'{x}'" for x in chunk) + ")"
+            try:
+                act = _sf_query(
+                    f"SELECT WhatId FROM {activity_obj} "
+                    f"WHERE WhatId IN {id_list} "
+                    "AND ActivityDate >= LAST_N_DAYS:30"
+                )
+                active_ids.update(r.get("WhatId") for r in act if r.get("WhatId"))
+            except Exception:
+                continue
+    rows = [c for c in candidates if c.get("Id") not in active_ids]
     return {
         "count": len(rows),
         "total_arr_eur": round(sum(float(r.get("arr_fx") or 0) for r in rows), 2),
