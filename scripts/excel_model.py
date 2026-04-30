@@ -189,10 +189,13 @@ def _build_cover(wb: Workbook, director: dict, period: str, period_end: str) -> 
     ws["A6"] = f"Generated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}"
     ws["A6"].font = Font(name="Arial", size=11, color=BRAND_SECONDARY)
     ws["A8"] = (
-        "All KPIs on this workbook reference the Data sheet via Excel formulas. "
-        "Click any cell to inspect its computation. Period boundaries and rule "
-        "thresholds live in Parameters; stage labels live in Stages. "
-        "Aggregate-only per SimCorp AI Code of Conduct §8."
+        "Internal SimCorp Sales Director monthly pipeline review. "
+        "Per-deal context (named accounts, owners, amounts) flows directly "
+        "from Salesforce via the director's own access — no AI processing "
+        "of client data. All KPIs reference the Data sheet via Excel "
+        "formulas; click any cell to inspect its computation. Period "
+        "boundaries and rule thresholds live in Parameters; stage labels "
+        "live in Stages. Not for redistribution outside SimCorp."
     )
     ws["A8"].font = Font(name="Arial", size=10, italic=True, color=BRAND_GRAY)
     ws["A8"].alignment = Alignment(wrap_text=True)
@@ -1835,6 +1838,8 @@ def _apply_print_setup(wb: Workbook, director: dict, period: str) -> None:
                 ws.oddHeader.left.text = f"{d_name} | {period} | model"
                 ws.oddHeader.right.text = ws.title
             if ws.oddFooter is not None:
-                ws.oddFooter.center.text = "Aggregate-only per SimCorp AI Code of Conduct §8"
+                ws.oddFooter.center.text = (
+                    "Internal SimCorp use — Sales Director pipeline review · not for redistribution"
+                )
         except Exception:
             pass

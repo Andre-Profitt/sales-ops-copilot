@@ -225,8 +225,10 @@ NOTES_BLOCKS = [
         "Top_Deals_Land, Top_Deals_Expand sheets",
         "Top 10 open opps in director scope by FX-converted ARR",
         "Where most of your open pipe value sits.",
-        "Account names — anonymized to (stage, ARR) per AI Code of Conduct §8 to keep client-level data out "
-        "of any LLM-mediated pipeline. Owner.Name (employees) is fine.",
+        "Per-deal context (Account, Opportunity, Owner, Close, Age, ARR) is "
+        "internal-only — flows from Salesforce via the director's own access. "
+        "Not for redistribution outside SimCorp; not for external sharing or "
+        "AI processing.",
         "Use to prioritize 1:1 reviews with the owners of the top 5 deals; don't share externally.",
     ),
     (
@@ -317,7 +319,7 @@ def build_director_excel(
     ws["A3"] = f"Period end: {envelope['period_end']}"
     ws["A4"] = f"Generated: {datetime.now(timezone.utc).isoformat()}"
     ws["A5"] = f"Currency: {envelope.get('currency_format', 'mEUR')}"
-    ws["A7"] = "Aggregate-only per SimCorp AI Code of Conduct. No client-level data."
+    ws["A7"] = "Internal SimCorp Sales Director review · per-deal context, not for external sharing"
 
     # Pipeline_Total — period-aware labels so a small CFQ headline isn't read
     # as "no pipeline." We surface CFQ-closeable as the headline, then beyond-
@@ -1175,7 +1177,11 @@ def build_director_excel(
             "8-stage process",
             "Prospecting -> ... -> Won; stage names start with stage number",
         ),
-        ("AI Code of Conduct", "aggregate-only", "No client-level data flows through LLM"),
+        (
+            "AI Code of Conduct",
+            "no AI processing of client data",
+            "Per-deal context flows from SF → Excel via Python (no LLM). LLM-bound trends.json envelope is aggregate-only.",
+        ),
     ]
     for i, row in enumerate(method_rows, start=4):
         for j, val in enumerate(row, start=1):
@@ -1260,9 +1266,12 @@ def _apply_polish(wb: Workbook, envelope: dict) -> None:
     ws["A6"].font = Font(name="Arial", size=11, color=BRAND["secondary"])
     ws["A7"] = ""
     ws["A8"] = (
-        "Aggregate-only per SimCorp AI Code of Conduct §8 — no client-level data. "
-        "Proxy / derived metrics are flagged in their respective sheets and "
-        "documented in the Notes appendix."
+        "Internal SimCorp Sales Director monthly review · per-deal context "
+        "(named accounts, owners, amounts) sourced from Salesforce via the "
+        "director's own access. No AI processing of client data. Not for "
+        "redistribution outside SimCorp. Proxy / derived metrics are "
+        "flagged in their respective sheets and documented in the Notes "
+        "appendix."
     )
     ws["A8"].font = Font(name="Arial", size=10, italic=True, color="666666")
     ws["A8"].alignment = ws["A8"].alignment.copy(wrap_text=True)
@@ -1365,7 +1374,9 @@ def _apply_polish(wb: Workbook, envelope: dict) -> None:
             period = envelope.get("period") or ""
             ws.oddHeader.left.text = f"{d_name} | {period}"
             ws.oddHeader.right.text = ws.title
-            ws.oddFooter.center.text = "Aggregate-only per SimCorp AI Code of Conduct §8"
+            ws.oddFooter.center.text = (
+                "Internal SimCorp use — Sales Director pipeline review · not for redistribution"
+            )
             for el in (ws.oddHeader.left, ws.oddHeader.right, ws.oddFooter.center):
                 el.size = 9
                 el.color = "666666"
