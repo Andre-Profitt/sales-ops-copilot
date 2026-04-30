@@ -198,21 +198,22 @@ SLIDES: list[dict] = [
             "ball value to the Risk score column (0=empty, 4=full)."
         ),
     },
-    # 12. NRR + GRR (NEW)
+    # 12. GRR proxy (NEW) — actual sheet is GRR-proxy-only, NOT full NRR/churn/expansion
     {
         "layout": LAYOUT_TITLE_CONTENT,
-        "title": "NRR and GRR",
-        "subtitle": "Net + gross retention — {period} trailing-twelve-months",
+        "title": "GRR proxy",
+        "subtitle": "{period} renewal save rate — proxy from closed Renewal opps last 12mo",
         "placeholder": (
             "[think-cell TABLE WITH FORMATTING — datalinked]\n"
             "Source: model.xlsx\n"
-            "Range: Retention!A1:C5\n"
-            "  Cols: Metric / Value / Δ vs prior period\n"
-            "  Rows: NRR (TTM), GRR (TTM proxy), churn ACV, expansion ACV,\n"
-            "        net ACV change\n"
-            "CAVEAT (italic gray, footnote): GRR is a proxy — Phase 1\n"
-            "computes it from Renewal-stage outcomes only; Phase 2 will\n"
-            "join Asset records to capture true non-renewal churn."
+            "Range: Retention!A1:B4\n"
+            "  Cols: Metric / Value\n"
+            "  Rows: Won Renewal ACV (last 12mo), Lost Renewal ACV (last 12mo),\n"
+            "        GRR proxy %\n"
+            "Bind cell A5 separately as a footnote text element to surface\n"
+            "the PROXY caveat (auto-renewals excluded, etc.).\n"
+            "CAVEAT: this is GRR-proxy-only today. True NRR + churn ACV +\n"
+            "expansion ACV require Pipeline_Snapshot__c history — Phase 2."
         ),
     },
     # 13. Forecast Category breakdown (was 10)
@@ -272,11 +273,12 @@ SLIDES: list[dict] = [
             "[think-cell BAR chart — datalinked]\n"
             "Source: model.xlsx\n"
             "Range: Territory_Performance!A1:D<last>\n"
-            "  Cols: Country / # Opps / ARR (EUR) / % of book\n"
-            "  Sorted descending by ARR\n"
-            "X-axis = Country (col A), Y-axis = ARR (col C). Optional second\n"
-            "series: # Opps (col B) on a secondary axis. Annotate countries\n"
-            "where % of book (col D) > 25 percent — concentration flag."
+            "  Cols: # / Country / # Opps / Open ARR (EUR)\n"
+            "  Pre-sorted descending by ARR (Top-N seed)\n"
+            "X-axis = Country (col B), Y-axis = ARR (col D). Optional 2nd\n"
+            "series: # Opps (col C) on a secondary axis. % of book is NOT\n"
+            "in this sheet today — compute it as a deck-side derived field\n"
+            "(=ARR / Pipeline_Total!B2+B3) if needed."
         ),
     },
     # 18. QTD Wins + Losses (NEW)
@@ -288,10 +290,11 @@ SLIDES: list[dict] = [
             "[think-cell GROUPED COLUMN chart or table — datalinked]\n"
             "Source: model.xlsx\n"
             "Range: Wins_Losses_QTD!A1:D3\n"
-            "  Cols: Outcome / # Opps / ARR (EUR) / Avg cycle days\n"
-            "  Rows: Closed Won, Closed Lost\n"
+            "  Cols: Outcome / # / ARR (Land+Expand, EUR) / ACV (Renewal, EUR)\n"
+            "  Rows: Won, Lost\n"
             "Render as 2-row table OR grouped column (Won vs Lost). Highlight\n"
-            "Won row in brand-blue (#083EA7); Lost row in coral (#EF3E4A)."
+            "Won row in brand-blue (#083EA7); Lost row in coral (#EF3E4A).\n"
+            "Cycle days is on the Sales_Velocity slide, not here."
         ),
     },
     # 19. Velocity (was 13)
@@ -332,37 +335,41 @@ SLIDES: list[dict] = [
     # 22. Stage 3+ stale-activity (NEW)
     {
         "layout": LAYOUT_TITLE_CONTENT,
-        "title": "Stage 3+ stale activity",
-        "subtitle": "Open late-stage opps with no logged activity in 60d+",
+        "title": "Stage 3+ stale activity (CreatedDate proxy)",
+        "subtitle": "Open late-stage opps older than 60 days by CreatedDate",
         "placeholder": (
             "[think-cell BAR chart — datalinked]\n"
             "Source: model.xlsx\n"
             "Range: Stale_Activity!A1:C5\n"
-            "  Cols: Stage / # stale opps / ARR (EUR)\n"
+            "  Cols: Stage / # Stale opps / ARR (EUR)\n"
             "  Rows: Stage 3 / Stage 4 / Stage 5 / Stage 6 (header in row 1)\n"
-            "Bars (X-axis = Stage, Y-axis = ARR). Highlight bars where\n"
-            "# stale opps > 5 in coral (#EF3E4A) — director attention\n"
-            "trigger. Stale = no Task/Event in last 60 days."
+            "Bars: X-axis = Stage, Y-axis = ARR. Highlight bars where\n"
+            "# stale opps > 5 in coral (#EF3E4A).\n"
+            "CAVEAT: 'stale' is currently a CreatedDate-age proxy (>60d).\n"
+            "True LastActivityDate-based staleness needs Account.\n"
+            "LastActivityDate in tblData — Phase 3. Bind cell A7 separately\n"
+            "as a footnote to surface this caveat."
         ),
     },
     # 23. Sales Velocity (NEW Tier-A)
     {
         "layout": LAYOUT_TITLE_CONTENT,
         "title": "Sales velocity",
-        "subtitle": "(# opps × avg deal × win rate) ÷ cycle length — {period}",
+        "subtitle": "(# opps × win rate × avg deal) ÷ cycle days — {period}",
         "placeholder": (
             "[think-cell text + single-cell bindings]\n"
             "Source: model.xlsx\n"
-            "Range: Sales_Velocity!A1:C7\n"
-            "  Single-cell text bindings, one per component:\n"
-            "    Sales_Velocity!B2  →  # qualified opps\n"
-            "    Sales_Velocity!B3  →  avg deal size (EUR)\n"
-            "    Sales_Velocity!B4  →  win rate (%)\n"
-            "    Sales_Velocity!B5  →  avg sales cycle (days)\n"
-            "    Sales_Velocity!B6  →  velocity coefficient (EUR/day)\n"
-            "    Sales_Velocity!B7  →  Δ vs prior period\n"
-            "Render the 5 components as KPI tiles across the slide; the\n"
-            "velocity number sits center-large with the period delta below."
+            "Range: Sales_Velocity!A1:C6\n"
+            "  Single-cell text bindings, in formula order:\n"
+            "    Sales_Velocity!B2  →  # Open L+E opps\n"
+            "    Sales_Velocity!B3  →  Win rate (CFQ Land+Expand closed)\n"
+            "    Sales_Velocity!B4  →  Avg deal size (won, last 6mo, EUR)\n"
+            "    Sales_Velocity!B5  →  Avg cycle days (won, last 6mo)\n"
+            "    Sales_Velocity!B6  →  Velocity (EUR / day)\n"
+            "Render 4 component KPI tiles across the slide; B6 (velocity)\n"
+            "sits center-large. The 'Note' column on each row (col C) is the\n"
+            "stakeholder-facing methodology — bind as italic-gray footnote.\n"
+            "No Δ-vs-prior cell exists today; QoQ delta is a Phase 2 ask."
         ),
     },
     # 24. Account Expansion (NEW Tier-A)
@@ -373,12 +380,12 @@ SLIDES: list[dict] = [
         "placeholder": (
             "[think-cell TABLE WITH FORMATTING — datalinked]\n"
             "Source: model.xlsx\n"
-            "Range: Account_Expansion!A1:E16\n"
-            "  Cols: Account / Land ARR / Expand ARR / Renewal ACV / # motions\n"
+            "Range: Account_Expansion!A1:F16\n"
+            "  Cols: # / Account / Land ARR / Expand ARR / Renewal ACV / # Motions\n"
             "  Rows: Top-15 accounts by total open pipeline\n"
-            "Highlight rows where # motions = 3 in pale aqua (#DCEEF5) —\n"
+            "Highlight rows where # Motions (col F) = 3 in pale aqua (#DCEEF5) —\n"
             "these are full-stack expansion candidates. Conditional fill on\n"
-            "ARR cells: zero = light gray, > EUR 500k = brand-blue tint."
+            "ARR cells (cols C/D/E): zero = light gray, > EUR 500k = brand-blue tint."
         ),
     },
     # 25. Pipeline Creation Velocity (NEW Tier-A)
