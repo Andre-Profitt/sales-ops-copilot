@@ -1,9 +1,14 @@
 """Build the SimCorp-branded LAND-review template (.pptx).
 
-One-time generator. Output: `assets/LAND_template.pptx` — a 12-slide
+One-time generator. Output: `assets/LAND_template.pptx` — a 28-slide
 template using the official SimCorp_PPT_Template.pptx layouts. Each
 analytical slide carries a placeholder rectangle indicating exactly
 which think-cell chart type to insert and which xlsx range to bind to.
+
+Outline aligned with the canonical 20-slide LAND structure (locked,
+schema_version=2 — see brand-deck-agent-py/agent/land_system_prompt.py)
+plus three Tier-A insight slides (Sales Velocity, Account Expansion,
+Pipeline Creation Velocity).
 
 Per-month workflow once think-cell is installed:
   1. Open assets/LAND_template.pptx in PowerPoint
@@ -45,30 +50,49 @@ BRAND_ORANGE = RGBColor(0xFB, 0x9B, 0x2A)
 # Otherwise it shows a SimCorp-blue dashed rectangle with this caption inside —
 # tells the user exactly which think-cell chart + xlsx range to wire.
 LAYOUT_TITLE = 0  # Title 1 (cover)
+LAYOUT_DIVIDER_1 = 2  # Divider 1 (section break, text-only)
 LAYOUT_TITLE_CONTENT = 6  # Title and Content
 LAYOUT_TWO_CONTENT = 7  # 2 x content
+LAYOUT_TWO_CONTENT_GRAD = 10  # 2 x content w/ gradient line (exec summary)
 LAYOUT_BLANK = 24
 LAYOUT_END_DISCLAIMER = 31
 
 SLIDES: list[dict] = [
+    # 1. Cover
     {
         "layout": LAYOUT_TITLE,
         "title": "{director_name}",
         "subtitle": "{period} LAND review · {scope_label}",
         "placeholder": "",
     },
+    # 2. Exec Summary (NEW — 2-up content, gradient line)
     {
-        "layout": LAYOUT_TITLE_CONTENT,
-        "title": "Headline",
-        "subtitle": "{period} closeable / beyond / renewal — three numbers, one slide",
+        "layout": LAYOUT_TWO_CONTENT_GRAD,
+        "title": "Exec summary",
+        "subtitle": "Highlights and risks — {period}",
         "placeholder": (
-            "[think-cell text or 3 single-cell charts]\n"
-            "Bind to:\n"
-            "  Pipeline_Total!B2  →  closeable Land+Expand ARR\n"
-            "  Pipeline_Total!B3  →  open beyond {period}\n"
-            "  Pipeline_Total!B4  →  renewal ACV"
+            "[Exec summary — manual paste for Phase 1]\n"
+            "Source: state/<period>/<director>/trends.json\n"
+            "  highlights[] (each: claim + rule_id)\n"
+            "  risks[]      (each: claim + rule_id)\n"
+            "Phase 1: copy/paste from state/<period>/<director>/brief.md\n"
+            "  '## Highlights' bullets into the LEFT content column\n"
+            "  '## Risks' bullets into the RIGHT content column.\n"
+            "Phase 2: build a HighlightsSummary sheet in model.xlsx that\n"
+            "materializes the envelope arrays into bindable cells, then\n"
+            "wire two think-cell 'Text Linked to Excel' bindings here\n"
+            "(one per column) pointing at HighlightsSummary!A:A and\n"
+            "HighlightsSummary!B:B."
         ),
     },
+    # 3. Section divider — Pipeline (NEW)
+    {
+        "layout": LAYOUT_DIVIDER_1,
+        "title": "Pipeline",
+        "subtitle": "Open Land+Expand ARR · stage / aging / movement",
+        "placeholder": "",
+    },
+    # 4. Pipe-movement bridge (was 3)
     {
         "layout": LAYOUT_TITLE_CONTENT,
         "title": "Pipe-movement bridge",
@@ -83,6 +107,7 @@ SLIDES: list[dict] = [
             "decompose via OpportunityFieldHistory."
         ),
     },
+    # 5. Pipeline by stage (was 4)
     {
         "layout": LAYOUT_TITLE_CONTENT,
         "title": "Pipeline by stage",
@@ -95,6 +120,7 @@ SLIDES: list[dict] = [
             "Optional 2nd series: # Opps from Pipeline_By_Stage!D2:D9"
         ),
     },
+    # 6. Pipeline aging (was 5)
     {
         "layout": LAYOUT_TITLE_CONTENT,
         "title": "Pipeline aging",
@@ -107,6 +133,7 @@ SLIDES: list[dict] = [
             "Highlight zombie (>730d) bar in coral (#EF3E4A)"
         ),
     },
+    # 7. Top deals — Land (was 6)
     {
         "layout": LAYOUT_TITLE_CONTENT,
         "title": "Top deals — Land",
@@ -120,6 +147,7 @@ SLIDES: list[dict] = [
             "Highlight Stage 5+ rows in pale green; flag Age > 365d in coral."
         ),
     },
+    # 8. Top deals — Expand (was 7)
     {
         "layout": LAYOUT_TITLE_CONTENT,
         "title": "Top deals — Expand",
@@ -131,6 +159,7 @@ SLIDES: list[dict] = [
             "Same columns as Top deals — Land slide."
         ),
     },
+    # 9. Pending Commercial Approval (was 8)
     {
         "layout": LAYOUT_TITLE_CONTENT,
         "title": "Pending Commercial Approval",
@@ -146,6 +175,14 @@ SLIDES: list[dict] = [
             "next Commercial Approval committee."
         ),
     },
+    # 10. Section divider — Retention (NEW)
+    {
+        "layout": LAYOUT_DIVIDER_1,
+        "title": "Retention",
+        "subtitle": "Renewal book · NRR / GRR · forecast category",
+        "placeholder": "",
+    },
+    # 11. Renewal Pipeline (was 9)
     {
         "layout": LAYOUT_TITLE_CONTENT,
         "title": "Renewal Pipeline",
@@ -161,6 +198,24 @@ SLIDES: list[dict] = [
             "ball value to the Risk score column (0=empty, 4=full)."
         ),
     },
+    # 12. NRR + GRR (NEW)
+    {
+        "layout": LAYOUT_TITLE_CONTENT,
+        "title": "NRR and GRR",
+        "subtitle": "Net + gross retention — {period} trailing-twelve-months",
+        "placeholder": (
+            "[think-cell TABLE WITH FORMATTING — datalinked]\n"
+            "Source: model.xlsx\n"
+            "Range: Retention!A1:C5\n"
+            "  Cols: Metric / Value / Δ vs prior period\n"
+            "  Rows: NRR (TTM), GRR (TTM proxy), churn ACV, expansion ACV,\n"
+            "        net ACV change\n"
+            "CAVEAT (italic gray, footnote): GRR is a proxy — Phase 1\n"
+            "computes it from Renewal-stage outcomes only; Phase 2 will\n"
+            "join Asset records to capture true non-renewal churn."
+        ),
+    },
+    # 13. Forecast Category breakdown (was 10)
     {
         "layout": LAYOUT_TITLE_CONTENT,
         "title": "Forecast Category breakdown",
@@ -175,6 +230,14 @@ SLIDES: list[dict] = [
             "is the upside."
         ),
     },
+    # 14. Section divider — Territory (NEW)
+    {
+        "layout": LAYOUT_DIVIDER_1,
+        "title": "Territory",
+        "subtitle": "Owner / industry / geography mix",
+        "placeholder": "",
+    },
+    # 15. By owner (was 11)
     {
         "layout": LAYOUT_TITLE_CONTENT,
         "title": "By owner",
@@ -186,6 +249,7 @@ SLIDES: list[dict] = [
             "  X-axis  = ARR (col B)"
         ),
     },
+    # 16. Stage × Industry (was 12)
     {
         "layout": LAYOUT_TITLE_CONTENT,
         "title": "Stage × Industry",
@@ -199,6 +263,38 @@ SLIDES: list[dict] = [
             "appear visually larger, replacing the heat-map workaround."
         ),
     },
+    # 17. Per-territory pipeline mix (NEW)
+    {
+        "layout": LAYOUT_TITLE_CONTENT,
+        "title": "Per-territory pipeline mix",
+        "subtitle": "Open ARR by Account.BillingCountry within director scope",
+        "placeholder": (
+            "[think-cell BAR chart — datalinked]\n"
+            "Source: model.xlsx\n"
+            "Range: Territory_Performance!A1:D<last>\n"
+            "  Cols: Country / # Opps / ARR (EUR) / % of book\n"
+            "  Sorted descending by ARR\n"
+            "X-axis = Country (col A), Y-axis = ARR (col C). Optional second\n"
+            "series: # Opps (col B) on a secondary axis. Annotate countries\n"
+            "where % of book (col D) > 25 percent — concentration flag."
+        ),
+    },
+    # 18. QTD Wins + Losses (NEW)
+    {
+        "layout": LAYOUT_TITLE_CONTENT,
+        "title": "QTD wins and losses",
+        "subtitle": "Closed-won and closed-lost ARR — quarter-to-date",
+        "placeholder": (
+            "[think-cell GROUPED COLUMN chart or table — datalinked]\n"
+            "Source: model.xlsx\n"
+            "Range: Wins_Losses_QTD!A1:D3\n"
+            "  Cols: Outcome / # Opps / ARR (EUR) / Avg cycle days\n"
+            "  Rows: Closed Won, Closed Lost\n"
+            "Render as 2-row table OR grouped column (Won vs Lost). Highlight\n"
+            "Won row in brand-blue (#083EA7); Lost row in coral (#EF3E4A)."
+        ),
+    },
+    # 19. Velocity (was 13)
     {
         "layout": LAYOUT_TITLE_CONTENT,
         "title": "Velocity",
@@ -211,6 +307,14 @@ SLIDES: list[dict] = [
             "  Annotate stages where >180d count (col E) > 0"
         ),
     },
+    # 20. Section divider — Risks (NEW)
+    {
+        "layout": LAYOUT_DIVIDER_1,
+        "title": "Risks",
+        "subtitle": "Concentration · stale activity · velocity · expansion",
+        "placeholder": "",
+    },
+    # 21. Concentration risk (was 14)
     {
         "layout": LAYOUT_TITLE_CONTENT,
         "title": "Concentration risk",
@@ -225,6 +329,76 @@ SLIDES: list[dict] = [
             "Top-N column: Concentration!A12:C15 (Top 1/3/5/10 account share)"
         ),
     },
+    # 22. Stage 3+ stale-activity (NEW)
+    {
+        "layout": LAYOUT_TITLE_CONTENT,
+        "title": "Stage 3+ stale activity",
+        "subtitle": "Open late-stage opps with no logged activity in 60d+",
+        "placeholder": (
+            "[think-cell BAR chart — datalinked]\n"
+            "Source: model.xlsx\n"
+            "Range: Stale_Activity!A1:C5\n"
+            "  Cols: Stage / # stale opps / ARR (EUR)\n"
+            "  Rows: Stage 3 / Stage 4 / Stage 5 / Stage 6 (header in row 1)\n"
+            "Bars (X-axis = Stage, Y-axis = ARR). Highlight bars where\n"
+            "# stale opps > 5 in coral (#EF3E4A) — director attention\n"
+            "trigger. Stale = no Task/Event in last 60 days."
+        ),
+    },
+    # 23. Sales Velocity (NEW Tier-A)
+    {
+        "layout": LAYOUT_TITLE_CONTENT,
+        "title": "Sales velocity",
+        "subtitle": "(# opps × avg deal × win rate) ÷ cycle length — {period}",
+        "placeholder": (
+            "[think-cell text + single-cell bindings]\n"
+            "Source: model.xlsx\n"
+            "Range: Sales_Velocity!A1:C7\n"
+            "  Single-cell text bindings, one per component:\n"
+            "    Sales_Velocity!B2  →  # qualified opps\n"
+            "    Sales_Velocity!B3  →  avg deal size (EUR)\n"
+            "    Sales_Velocity!B4  →  win rate (%)\n"
+            "    Sales_Velocity!B5  →  avg sales cycle (days)\n"
+            "    Sales_Velocity!B6  →  velocity coefficient (EUR/day)\n"
+            "    Sales_Velocity!B7  →  Δ vs prior period\n"
+            "Render the 5 components as KPI tiles across the slide; the\n"
+            "velocity number sits center-large with the period delta below."
+        ),
+    },
+    # 24. Account Expansion (NEW Tier-A)
+    {
+        "layout": LAYOUT_TITLE_CONTENT,
+        "title": "Account expansion",
+        "subtitle": "Top-15 accounts × motions (Land / Expand / Renewal)",
+        "placeholder": (
+            "[think-cell TABLE WITH FORMATTING — datalinked]\n"
+            "Source: model.xlsx\n"
+            "Range: Account_Expansion!A1:E16\n"
+            "  Cols: Account / Land ARR / Expand ARR / Renewal ACV / # motions\n"
+            "  Rows: Top-15 accounts by total open pipeline\n"
+            "Highlight rows where # motions = 3 in pale aqua (#DCEEF5) —\n"
+            "these are full-stack expansion candidates. Conditional fill on\n"
+            "ARR cells: zero = light gray, > EUR 500k = brand-blue tint."
+        ),
+    },
+    # 25. Pipeline Creation Velocity (NEW Tier-A)
+    {
+        "layout": LAYOUT_TITLE_CONTENT,
+        "title": "Pipeline creation velocity",
+        "subtitle": "12-week rolling — # new opps and ARR added",
+        "placeholder": (
+            "[think-cell COMBO chart — bar + line, datalinked]\n"
+            "Source: model.xlsx\n"
+            "Range: Pipeline_Creation_Velocity!A1:C13\n"
+            "  Cols: Week-ending / # new opps / ARR added (EUR)\n"
+            "  Rows: 12 weekly buckets, oldest first\n"
+            "Bars (left axis)  = # new opps (col B)\n"
+            "Line (right axis) = ARR added (col C)\n"
+            "Annotate weeks where # new opps = 0 (creation drought) and\n"
+            "weeks where ARR added is in the top quartile of the window."
+        ),
+    },
+    # 26. Action items (was 15)
     {
         "layout": LAYOUT_TITLE_CONTENT,
         "title": "Action items",
@@ -236,6 +410,7 @@ SLIDES: list[dict] = [
             "Conditional fill on Priority col (HIGH=coral, MEDIUM=orange, LOW=gray)"
         ),
     },
+    # 27. Risks & outlook (was 16)
     {
         "layout": LAYOUT_TITLE_CONTENT,
         "title": "Risks & outlook",
@@ -246,6 +421,7 @@ SLIDES: list[dict] = [
             "Replace per director by copying brief.md ## Risks bullets."
         ),
     },
+    # 28. Closing (was 17)
     {
         "layout": LAYOUT_END_DISCLAIMER,
         "title": "Thank you",
