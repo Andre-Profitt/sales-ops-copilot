@@ -1,0 +1,135 @@
+{
+  "schema": "meeting-spine-slide-contract/v1",
+  "period": "2026-Q2",
+  "slide_count": 16,
+  "slides": [
+    {
+      "index": 1,
+      "purpose": "cover",
+      "expected_kind": "editorial_native",
+      "deliberate_rebuild": true,
+      "title_starts_with": "May 2026 LAND territory review"
+    },
+    {
+      "index": 2,
+      "purpose": "operating_summary",
+      "expected_kind": "editorial_native",
+      "deliberate_rebuild": true,
+      "title_starts_with": "May operating summary"
+    },
+    {
+      "index": 3,
+      "purpose": "q1_accountability",
+      "expected_kind": "native_ppt_table",
+      "deliberate_rebuild": true,
+      "expected_tables_min": 1,
+      "expected_tables_max": 2
+    },
+    {
+      "index": 4,
+      "purpose": "forecast_composition",
+      "expected_kind": "native_ppt_table",
+      "deliberate_rebuild": true,
+      "expected_tables_min": 1,
+      "expected_tables_max": 2
+    },
+    {
+      "index": 5,
+      "purpose": "close_inspection_map",
+      "expected_kind": "native_ppt_table",
+      "deliberate_rebuild": true,
+      "rebuild_reason": "QTR04 scatter blocked at donor grammar; native composite (table + EUR 1M reference line + May decision window decoration) is the safe lane",
+      "expected_tables_min": 1,
+      "expected_tables_max": 2,
+      "expected_decorative_shapes_min": 5,
+      "alternative_kinds": ["native_chart"],
+      "alternative_reason": "QTR04 scatter promotion candidate (currently blocked at donor grammar)"
+    },
+    {
+      "index": 6,
+      "purpose": "row_level_support",
+      "expected_kind": "table_image",
+      "expected_pictures_min": 1,
+      "expected_pictures_max": 2,
+      "alternative_kinds": ["native_chart"],
+      "alternative_reason": "QTR07 Mekko promotion candidate"
+    },
+    {
+      "index": 7,
+      "purpose": "renewal_watchlist",
+      "expected_kind": "native_ppt_table",
+      "deliberate_rebuild": true,
+      "rebuild_reason": "Gantt suppressed when renewal dates not materially distinct",
+      "expected_tables_min": 1,
+      "expected_tables_max": 2
+    },
+    {
+      "index": 8,
+      "purpose": "owner_rollup",
+      "expected_kind": "editorial_native",
+      "rebuild_reason": "owner ranking rendered as text grid"
+    },
+    {
+      "index": 9,
+      "purpose": "q2_readiness",
+      "expected_kind": "table_image",
+      "expected_pictures_min": 1,
+      "expected_pictures_max": 2
+    },
+    {
+      "index": 10,
+      "purpose": "land_expand_vs_renewal",
+      "expected_kind": "table_image",
+      "expected_pictures_min": 1,
+      "expected_pictures_max": 2
+    },
+    {
+      "index": 11,
+      "purpose": "all_open_exposure",
+      "expected_kind": "table_image",
+      "expected_pictures_min": 1,
+      "expected_pictures_max": 2
+    },
+    {
+      "index": 12,
+      "purpose": "regional_risk_spine",
+      "expected_kind": "table_image",
+      "expected_pictures_min": 1,
+      "expected_pictures_max": 2
+    },
+    {
+      "index": 13,
+      "purpose": "territory_plan",
+      "expected_kind": "table_image",
+      "expected_pictures_min": 1,
+      "expected_pictures_max": 2
+    },
+    {
+      "index": 14,
+      "purpose": "action_register",
+      "expected_kind": "native_ppt_table",
+      "deliberate_rebuild": true,
+      "expected_tables_min": 1,
+      "expected_tables_max": 2
+    },
+    {
+      "index": 15,
+      "purpose": "open_decisions",
+      "expected_kind": "table_image",
+      "expected_pictures_min": 1,
+      "expected_pictures_max": 2
+    },
+    {
+      "index": 16,
+      "purpose": "closing",
+      "expected_kind": "editorial_native",
+      "deliberate_rebuild": true
+    }
+  ],
+  "global_rules": {
+    "max_ole_objects_per_slide": 0,
+    "max_native_charts_unless_contract": 0,
+    "deliberate_native_rebuild_indices": [3, 4, 5, 7, 14],
+    "rebuild_reason_table_image_native_lane_blocked": "Native editable think-cell tables remain blocked. Use table-image lane until governed donor exists."
+  }
+}

@@ -95,7 +95,15 @@ def _linked_deck(period: str, slug: str) -> Path:
 
 
 def _meeting_spine(period: str, slug: str) -> Path:
-    return ROOT / "state" / period / slug / "factory" / "meeting-spine" / f"{slug}-LAND-{period}-meeting-spine.pptx"
+    return (
+        ROOT
+        / "state"
+        / period
+        / slug
+        / "factory"
+        / "meeting-spine"
+        / f"{slug}-LAND-{period}-meeting-spine.pptx"
+    )
 
 
 def _zip_ok(path: Path) -> bool:
@@ -116,7 +124,9 @@ def _deck_text(path: Path) -> str:
     )
 
 
-def _meeting_smoke_one(period: str, director: dict[str, Any], required: list[str], forbidden: list[str]) -> dict[str, Any]:
+def _meeting_smoke_one(
+    period: str, director: dict[str, Any], required: list[str], forbidden: list[str]
+) -> dict[str, Any]:
     slug = _slug(str(director["name"]))
     deck = _meeting_spine(period, slug)
     zip_ok = deck.exists() and _zip_ok(deck)
@@ -128,7 +138,9 @@ def _meeting_smoke_one(period: str, director: dict[str, Any], required: list[str
         text = _deck_text(deck)
     missing = [needle for needle in required if needle not in text]
     found_forbidden = [needle for needle in forbidden if needle in text]
-    status = "pass" if zip_ok and slide_count == 16 and not missing and not found_forbidden else "fail"
+    status = (
+        "pass" if zip_ok and slide_count == 16 and not missing and not found_forbidden else "fail"
+    )
     return {
         "director": str(director["name"]),
         "slug": slug,
@@ -174,7 +186,9 @@ def _write_meeting_smoke(
                 )
             )
     else:
-        results = [_meeting_smoke_one(period, director, required, forbidden) for director in directors]
+        results = [
+            _meeting_smoke_one(period, director, required, forbidden) for director in directors
+        ]
 
     output_dir.mkdir(parents=True, exist_ok=True)
     json_path = output_dir / "meeting_spine_smoke_report.json"
@@ -197,7 +211,9 @@ def _write_meeting_smoke(
     return json_path, md_path, payload["status"] == "pass"
 
 
-def _copy_review_package(period: str, package_dir: Path, *, directors: list[dict[str, Any]]) -> list[str]:
+def _copy_review_package(
+    period: str, package_dir: Path, *, directors: list[dict[str, Any]]
+) -> list[str]:
     package_dir.mkdir(parents=True, exist_ok=True)
     copied: list[str] = []
     for lock_file in package_dir.glob("~$*"):
@@ -214,13 +230,28 @@ def _copy_review_package(period: str, package_dir: Path, *, directors: list[dict
 
     report_paths = [
         ROOT / "state" / period / "__regional__" / "meeting_spine" / "meeting_spine_manifest.json",
-        ROOT / "state" / period / "__regional__" / "meeting_spine" / "meeting_spine_smoke_report.md",
+        ROOT
+        / "state"
+        / period
+        / "__regional__"
+        / "meeting_spine"
+        / "meeting_spine_smoke_report.md",
         ROOT / "state" / period / "__regional__" / "publish_gate" / "regional_publish_gate.md",
         ROOT / "state" / period / "__regional__" / "goal_audit" / "regional_deck_goal_audit.md",
         ROOT / "state" / period / "__regional__" / "template_contract_gate.md",
         ROOT / "state" / period / "__regional__" / "template_contract_gate.json",
-        ROOT / "state" / period / "__regional__" / "thinkcell_deck_blueprint" / "thinkcell_deck_factory_blueprint.md",
-        ROOT / "state" / period / "__regional__" / "thinkcell_visual_plan" / "thinkcell_visual_contract_plan.md",
+        ROOT
+        / "state"
+        / period
+        / "__regional__"
+        / "thinkcell_deck_blueprint"
+        / "thinkcell_deck_factory_blueprint.md",
+        ROOT
+        / "state"
+        / period
+        / "__regional__"
+        / "thinkcell_visual_plan"
+        / "thinkcell_visual_contract_plan.md",
         ROOT / "docs" / "thinkcell-corpus" / "deck-factory-blueprint.md",
         ROOT / "docs" / "thinkcell-corpus" / "deck-factory-visual-plan.md",
     ]
@@ -255,7 +286,9 @@ def _write_runbook_summary(run_dir: Path, manifest: dict[str, Any]) -> Path:
     return path
 
 
-def _copy_final_package_reports(period: str, package_dir: Path, run_dir: Path, summary_path: Path) -> None:
+def _copy_final_package_reports(
+    period: str, package_dir: Path, run_dir: Path, summary_path: Path
+) -> None:
     status_dir = ROOT / "state" / period / "__regional__" / "production_status"
     report_sources = [
         status_dir / "regional_production_status.md",
@@ -264,8 +297,20 @@ def _copy_final_package_reports(period: str, package_dir: Path, run_dir: Path, s
         run_dir / "review_package_validation.json",
         ROOT / "state" / period / "__regional__" / "template_contract_gate.md",
         ROOT / "state" / period / "__regional__" / "template_contract_gate.json",
-        ROOT / "state" / period / "__regional__" / "visual_gate" / "review_package" / "review_package_visual_gate.md",
-        ROOT / "state" / period / "__regional__" / "visual_gate" / "review_package" / "review_package_visual_gate.json",
+        ROOT
+        / "state"
+        / period
+        / "__regional__"
+        / "visual_gate"
+        / "review_package"
+        / "review_package_visual_gate.md",
+        ROOT
+        / "state"
+        / period
+        / "__regional__"
+        / "visual_gate"
+        / "review_package"
+        / "review_package_visual_gate.json",
         ROOT
         / "state"
         / period
@@ -329,7 +374,9 @@ def main() -> int:
         help="After local gates pass, validate the May SharePoint folder without moving or uploading files.",
     )
     parser.add_argument("--package-dir", type=Path, default=DEFAULT_DOWNLOADS_PACKAGE)
-    parser.add_argument("--jobs", type=int, default=1, help="Parallelize local per-director deck/audit stages.")
+    parser.add_argument(
+        "--jobs", type=int, default=1, help="Parallelize local per-director deck/audit stages."
+    )
     args = parser.parse_args()
     try:
         period_context = context_for_period(args.period)
@@ -397,7 +444,9 @@ def main() -> int:
             cmd.extend(["--director", str(directors[0]["name"])])
         else:
             cmd.append("--all-directors")
-        steps.append(_run_step("source_envelope_validation", cmd, run_dir=run_dir, plan_only=args.plan_only))
+        steps.append(
+            _run_step("source_envelope_validation", cmd, run_dir=run_dir, plan_only=args.plan_only)
+        )
 
     if rebuild_connected_factories and _can_continue(steps):
         cmd = [_python(), "scripts/build_connected_factory_workbook.py", "--period", args.period]
@@ -405,7 +454,9 @@ def main() -> int:
             cmd.extend(["--director", str(directors[0]["name"])])
         else:
             cmd.append("--all-directors")
-        steps.append(_run_step("connected_factory_rebuild", cmd, run_dir=run_dir, plan_only=args.plan_only))
+        steps.append(
+            _run_step("connected_factory_rebuild", cmd, run_dir=run_dir, plan_only=args.plan_only)
+        )
 
     if args.source_only:
         status = "planned" if args.plan_only else ("pass" if _can_continue(steps) else "fail")
@@ -453,9 +504,17 @@ def main() -> int:
                     _python(),
                     "scripts/run_template_contract_gate.py",
                     "--json-output",
-                    str(ROOT / "state" / args.period / "__regional__" / "template_contract_gate.json"),
+                    str(
+                        ROOT
+                        / "state"
+                        / args.period
+                        / "__regional__"
+                        / "template_contract_gate.json"
+                    ),
                     "--markdown-output",
-                    str(ROOT / "state" / args.period / "__regional__" / "template_contract_gate.md"),
+                    str(
+                        ROOT / "state" / args.period / "__regional__" / "template_contract_gate.md"
+                    ),
                 ],
                 run_dir=run_dir,
                 plan_only=args.plan_only,
@@ -466,7 +525,13 @@ def main() -> int:
         steps.append(
             _run_step(
                 "thinkcell_ppttc_validation",
-                [_python(), "scripts/run_ppttc_factory_validation.py", "--period", args.period, "--strict"],
+                [
+                    _python(),
+                    "scripts/run_ppttc_factory_validation.py",
+                    "--period",
+                    args.period,
+                    "--strict",
+                ],
                 run_dir=run_dir,
                 plan_only=args.plan_only,
             )
@@ -476,7 +541,12 @@ def main() -> int:
         steps.append(
             _run_step(
                 "thinkcell_deck_blueprint",
-                [_python(), "scripts/build_thinkcell_deck_factory_blueprint.py", "--period", args.period],
+                [
+                    _python(),
+                    "scripts/build_thinkcell_deck_factory_blueprint.py",
+                    "--period",
+                    args.period,
+                ],
                 run_dir=run_dir,
                 plan_only=args.plan_only,
             )
@@ -495,47 +565,88 @@ def main() -> int:
         ]
         if args.director_slug:
             cmd.extend(["--director-slug", args.director_slug])
-        steps.append(_run_step("full_table_image_refresh", cmd, run_dir=run_dir, plan_only=args.plan_only))
+        steps.append(
+            _run_step("full_table_image_refresh", cmd, run_dir=run_dir, plan_only=args.plan_only)
+        )
 
     if args.refresh_sparse_tables and _can_continue(steps):
-        cmd = [_python(), "scripts/refresh_sparse_table_images.py", "--period", args.period, "--host", args.host]
+        cmd = [
+            _python(),
+            "scripts/refresh_sparse_table_images.py",
+            "--period",
+            args.period,
+            "--host",
+            args.host,
+        ]
         if args.director_slug:
             cmd.extend(["--director-slug", args.director_slug])
-        steps.append(_run_step("sparse_table_refresh", cmd, run_dir=run_dir, plan_only=args.plan_only))
+        steps.append(
+            _run_step("sparse_table_refresh", cmd, run_dir=run_dir, plan_only=args.plan_only)
+        )
 
     if _can_continue(steps):
         cmd = [_python(), "scripts/build_regional_intelligence_specs.py", "--period", args.period]
         if args.director_slug:
             cmd.extend(["--director-slug", args.director_slug])
-        steps.append(_run_step("regional_intelligence_specs", cmd, run_dir=run_dir, plan_only=args.plan_only))
+        steps.append(
+            _run_step("regional_intelligence_specs", cmd, run_dir=run_dir, plan_only=args.plan_only)
+        )
 
     if _can_continue(steps):
-        cmd = [_python(), "scripts/build_thinkcell_visual_contract_plan.py", "--period", args.period]
+        cmd = [
+            _python(),
+            "scripts/build_thinkcell_visual_contract_plan.py",
+            "--period",
+            args.period,
+        ]
         if args.director_slug:
             cmd.extend(["--director-slug", args.director_slug])
         if args.jobs > 1:
             cmd.extend(["--jobs", str(args.jobs)])
-        steps.append(_run_step("thinkcell_visual_contract_plan", cmd, run_dir=run_dir, plan_only=args.plan_only))
+        steps.append(
+            _run_step(
+                "thinkcell_visual_contract_plan", cmd, run_dir=run_dir, plan_only=args.plan_only
+            )
+        )
 
     if _can_continue(steps):
-        cmd = [_python(), "scripts/build_ai_deck_builder_review_workbook.py", "--period", args.period]
+        cmd = [
+            _python(),
+            "scripts/build_ai_deck_builder_review_workbook.py",
+            "--period",
+            args.period,
+        ]
         if args.director_slug:
             cmd.extend(["--director-slug", args.director_slug])
-        steps.append(_run_step("ai_deck_builder_review_workbook", cmd, run_dir=run_dir, plan_only=args.plan_only))
+        steps.append(
+            _run_step(
+                "ai_deck_builder_review_workbook", cmd, run_dir=run_dir, plan_only=args.plan_only
+            )
+        )
 
     if _can_continue(steps):
         cmd = [_python(), "scripts/polish_regional_linked_deck_text.py", "--period", args.period]
         if args.director_slug:
             cmd.extend(["--director-slug", args.director_slug])
-        steps.append(_run_step("source_aware_text_polish", cmd, run_dir=run_dir, plan_only=args.plan_only))
+        steps.append(
+            _run_step("source_aware_text_polish", cmd, run_dir=run_dir, plan_only=args.plan_only)
+        )
 
     if _can_continue(steps):
-        cmd = [_python(), "scripts/fix_table_image_aspect_ratios.py", "--period", args.period, "--linked-decks"]
+        cmd = [
+            _python(),
+            "scripts/fix_table_image_aspect_ratios.py",
+            "--period",
+            args.period,
+            "--linked-decks",
+        ]
         if args.director_slug:
             cmd.extend(["--director-slug", args.director_slug])
         if args.jobs > 1:
             cmd.extend(["--jobs", str(args.jobs)])
-        steps.append(_run_step("table_image_aspect_polish", cmd, run_dir=run_dir, plan_only=args.plan_only))
+        steps.append(
+            _run_step("table_image_aspect_polish", cmd, run_dir=run_dir, plan_only=args.plan_only)
+        )
 
     if _can_continue(steps):
         cmd = [_python(), "scripts/build_regional_meeting_spine_decks.py", "--period", args.period]
@@ -543,7 +654,9 @@ def main() -> int:
             cmd.extend(["--director-slug", args.director_slug])
         if args.jobs > 1:
             cmd.extend(["--jobs", str(args.jobs)])
-        steps.append(_run_step("meeting_spine_build", cmd, run_dir=run_dir, plan_only=args.plan_only))
+        steps.append(
+            _run_step("meeting_spine_build", cmd, run_dir=run_dir, plan_only=args.plan_only)
+        )
 
     if _can_continue(steps):
         if args.plan_only:
@@ -589,8 +702,22 @@ def main() -> int:
     if _can_continue(steps):
         apac_slug = period_context.apac_strict_slug
         full = _linked_deck(args.period, apac_slug)
-        full_json = ROOT / "state" / args.period / apac_slug / "factory" / "jesper_apac_intel_coverage_current_full.json"
-        full_md = ROOT / "state" / args.period / apac_slug / "factory" / "jesper_apac_intel_coverage_current_full.md"
+        full_json = (
+            ROOT
+            / "state"
+            / args.period
+            / apac_slug
+            / "factory"
+            / "jesper_apac_intel_coverage_current_full.json"
+        )
+        full_md = (
+            ROOT
+            / "state"
+            / args.period
+            / apac_slug
+            / "factory"
+            / "jesper_apac_intel_coverage_current_full.md"
+        )
         steps.append(
             _run_step(
                 "apac_strict_intel_full",
@@ -611,8 +738,22 @@ def main() -> int:
     if _can_continue(steps):
         apac_slug = period_context.apac_strict_slug
         spine = _meeting_spine(args.period, apac_slug)
-        spine_json = ROOT / "state" / args.period / apac_slug / "factory" / "jesper_apac_intel_coverage_current_meeting_spine.json"
-        spine_md = ROOT / "state" / args.period / apac_slug / "factory" / "jesper_apac_intel_coverage_current_meeting_spine.md"
+        spine_json = (
+            ROOT
+            / "state"
+            / args.period
+            / apac_slug
+            / "factory"
+            / "jesper_apac_intel_coverage_current_meeting_spine.json"
+        )
+        spine_md = (
+            ROOT
+            / "state"
+            / args.period
+            / apac_slug
+            / "factory"
+            / "jesper_apac_intel_coverage_current_meeting_spine.md"
+        )
         steps.append(
             _run_step(
                 "apac_strict_intel_meeting_spine",
@@ -641,7 +782,9 @@ def main() -> int:
         ]
         if args.director_slug:
             goal_cmd.extend(["--director-slug", args.director_slug])
-        steps.append(_run_step("regional_goal_audit", goal_cmd, run_dir=run_dir, plan_only=args.plan_only))
+        steps.append(
+            _run_step("regional_goal_audit", goal_cmd, run_dir=run_dir, plan_only=args.plan_only)
+        )
 
     copied: list[str] = []
     if (not args.skip_package) and _can_continue(steps):
@@ -679,7 +822,9 @@ def main() -> int:
         )
 
     if (not args.skip_package) and _can_continue(steps):
-        visual_dir = ROOT / "state" / args.period / "__regional__" / "visual_gate" / "review_package"
+        visual_dir = (
+            ROOT / "state" / args.period / "__regional__" / "visual_gate" / "review_package"
+        )
         steps.append(
             _run_step(
                 "review_package_visual_gate",
@@ -701,7 +846,9 @@ def main() -> int:
         )
 
     if (not args.skip_package) and _can_continue(steps):
-        style_dir = ROOT / "state" / args.period / "__regional__" / "brand_style_gate" / "review_package"
+        style_dir = (
+            ROOT / "state" / args.period / "__regional__" / "brand_style_gate" / "review_package"
+        )
         steps.append(
             _run_step(
                 "review_package_brand_style_gate",
@@ -714,6 +861,28 @@ def main() -> int:
                     str(args.package_dir),
                     "--output-dir",
                     str(style_dir),
+                ],
+                run_dir=run_dir,
+                plan_only=args.plan_only,
+            )
+        )
+
+    if (not args.skip_package) and _can_continue(steps):
+        audit_dir = ROOT / "state" / args.period / "__regional__" / "meeting_spine_audit"
+        steps.append(
+            _run_step(
+                "meeting_spine_audit_gate",
+                [
+                    _python(),
+                    "scripts/run_meeting_spine_audit_gate.py",
+                    "--period",
+                    args.period,
+                    "--package-dir",
+                    str(args.package_dir),
+                    "--json-output",
+                    str(audit_dir / "meeting_spine_audit.json"),
+                    "--markdown-output",
+                    str(audit_dir / "meeting_spine_audit.md"),
                 ],
                 run_dir=run_dir,
                 plan_only=args.plan_only,
@@ -740,14 +909,24 @@ def main() -> int:
         steps.append(
             _run_step(
                 "sharepoint_upload",
-                [_python(), "scripts/upload_may_regional_assets_sharepoint.py", "--period", args.period],
+                [
+                    _python(),
+                    "scripts/upload_may_regional_assets_sharepoint.py",
+                    "--period",
+                    args.period,
+                ],
                 run_dir=run_dir,
                 plan_only=args.plan_only,
             )
         )
 
     if (args.sharepoint_publish or args.sharepoint_validate) and _can_continue(steps):
-        validate_cmd = [_python(), "scripts/validate_may_sharepoint_upload.py", "--period", args.period]
+        validate_cmd = [
+            _python(),
+            "scripts/validate_may_sharepoint_upload.py",
+            "--period",
+            args.period,
+        ]
         if args.sharepoint_publish:
             validate_cmd.append("--upload-manifest")
         steps.append(
@@ -791,7 +970,12 @@ def main() -> int:
                 StepResult(
                     name="production_status_report",
                     status="planned",
-                    command=[_python(), "scripts/report_regional_production_status.py", "--period", args.period],
+                    command=[
+                        _python(),
+                        "scripts/report_regional_production_status.py",
+                        "--period",
+                        args.period,
+                    ],
                 )
             )
             if args.sharepoint_publish:
@@ -799,7 +983,12 @@ def main() -> int:
                     StepResult(
                         name="sharepoint_evidence_upload",
                         status="planned",
-                        command=[_python(), "scripts/upload_may_sharepoint_evidence.py", "--period", args.period],
+                        command=[
+                            _python(),
+                            "scripts/upload_may_sharepoint_evidence.py",
+                            "--period",
+                            args.period,
+                        ],
                     )
                 )
                 steps.append(
@@ -829,9 +1018,16 @@ def main() -> int:
     if (not args.skip_package) and status == "pass":
         logs = run_dir / "logs"
         logs.mkdir(parents=True, exist_ok=True)
-        status_command = [_python(), "scripts/report_regional_production_status.py", "--period", args.period]
+        status_command = [
+            _python(),
+            "scripts/report_regional_production_status.py",
+            "--period",
+            args.period,
+        ]
         started = time.time()
-        result = subprocess.run(status_command, cwd=ROOT, text=True, capture_output=True, check=False)
+        result = subprocess.run(
+            status_command, cwd=ROOT, text=True, capture_output=True, check=False
+        )
         stdout_log = logs / "production_status_report.stdout.log"
         stderr_log = logs / "production_status_report.stderr.log"
         stdout_log.write_text(result.stdout, encoding="utf-8")
@@ -859,7 +1055,12 @@ def main() -> int:
                 steps.append(
                     _run_step(
                         "sharepoint_evidence_upload",
-                        [_python(), "scripts/upload_may_sharepoint_evidence.py", "--period", args.period],
+                        [
+                            _python(),
+                            "scripts/upload_may_sharepoint_evidence.py",
+                            "--period",
+                            args.period,
+                        ],
                         run_dir=run_dir,
                         plan_only=False,
                     )
@@ -885,7 +1086,9 @@ def main() -> int:
                 manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
                 summary_path = _write_runbook_summary(run_dir, manifest)
                 if status == "pass":
-                    _copy_final_package_reports(args.period, args.package_dir, run_dir, summary_path)
+                    _copy_final_package_reports(
+                        args.period, args.package_dir, run_dir, summary_path
+                    )
 
     print(f"manifest={manifest_path}")
     print(f"summary={summary_path}")
