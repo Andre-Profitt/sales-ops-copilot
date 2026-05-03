@@ -889,6 +889,26 @@ def main() -> int:
             )
         )
 
+    if _can_continue(steps):
+        promo_dir = ROOT / "state" / args.period / "__regional__" / "qtr07_mekko_promotion"
+        steps.append(
+            _run_step(
+                "qtr07_mekko_promotion_gate",
+                [
+                    _python(),
+                    "scripts/run_qtr07_mekko_promotion_gate.py",
+                    "--period",
+                    args.period,
+                    "--json-output",
+                    str(promo_dir / "qtr07_mekko_promotion_status.json"),
+                    "--markdown-output",
+                    str(promo_dir / "qtr07_mekko_promotion_status.md"),
+                ],
+                run_dir=run_dir,
+                plan_only=args.plan_only,
+            )
+        )
+
     if args.sharepoint_publish and _can_continue(steps):
         steps.append(
             _run_step(
