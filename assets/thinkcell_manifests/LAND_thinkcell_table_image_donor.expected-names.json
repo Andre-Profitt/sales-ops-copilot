@@ -1,0 +1,12 @@
+{
+  "schema": "thinkcell-ppttc-expected-names/v1",
+  "generated_at_utc": "2026-05-02T14:04:59+00:00",
+  "template_path": "/Users/test/code/apps/sales-ops-copilot/assets/LAND_thinkcell_table_image_donor.pptx",
+  "template_path_relative": "assets/LAND_thinkcell_table_image_donor.pptx",
+  "template_filename": "LAND_thinkcell_table_image_donor.pptx",
+  "template_sha256": "912ea88066e236f5633cc8b6fef0a2b969e4992b100ce63098f8c3d7283d9c34",
+  "expected_name_count": 1,
+  "expected_names": [
+    "ProbeTableImage"
+  ]
+}

@@ -76,10 +76,6 @@ DATA_COLUMNS = [
     ("RiskTermination", "string"),
     ("ARR_EUR", "number"),
     ("ACV_EUR", "number"),
-    # ForecastCategoryName is in the SOQL select in land_brief.py but is
-    # not yet surfaced by `_flat()` into raw_opps. Once surfaced, the
-    # Forecast_Category sheet here pivots over it via SUMIFS. Until then
-    # the column lands as None per row and the formulas resolve to 0.
     ("ForecastCategoryName", "string"),
 ]
 
@@ -1777,12 +1773,8 @@ def _build_forecast_category(wb: Workbook) -> None:
     Categories are SF system labels (Pipeline / Best Case / Commit / Closed
     / Omitted) plus an "(unset)" bucket for opps where the field is null.
     Each row's # Opps and ARR are SUMIFS over Data_* with Type IN (Land,
-    Expand) AND ForecastCategoryName = <category>. TOTAL is a same-sheet
-    SUM (LOCAL black).
-
-    TODO: ForecastCategoryName lands in raw_opps once land_brief.py's
-    `_flat()` surfaces it. Until then this sheet renders the categories
-    but every value resolves to 0 because the column is empty in Data.
+    Expand), CloseDate inside the period bounds, and ForecastCategoryName =
+    <category>. TOTAL is a same-sheet SUM (LOCAL black).
     """
     ws = wb.create_sheet("Forecast_Category")
     _set_header(ws, 1, ["Category", "# Opps", "ARR (EUR)"])
@@ -1803,8 +1795,10 @@ def _build_forecast_category(wb: Workbook) -> None:
             row=i,
             column=2,
             value=(
-                f'=COUNTIFS(Data_Type, "Land", Data_ForecastCategoryName, "{cat_lit}") '
-                f'+ COUNTIFS(Data_Type, "Expand", Data_ForecastCategoryName, "{cat_lit}")'
+                f'=COUNTIFS(Data_Type, "Land", Data_CloseDate, ">="&Parameters!$B$2, '
+                f'Data_CloseDate, "<"&Parameters!$B$3, Data_ForecastCategoryName, "{cat_lit}") '
+                f'+ COUNTIFS(Data_Type, "Expand", Data_CloseDate, ">="&Parameters!$B$2, '
+                f'Data_CloseDate, "<"&Parameters!$B$3, Data_ForecastCategoryName, "{cat_lit}")'
             ),
         )
         c.font = xref_font
@@ -1812,8 +1806,10 @@ def _build_forecast_category(wb: Workbook) -> None:
             row=i,
             column=3,
             value=(
-                f'=SUMIFS(Data_ARR_EUR, Data_Type, "Land", Data_ForecastCategoryName, "{cat_lit}") '
-                f'+ SUMIFS(Data_ARR_EUR, Data_Type, "Expand", Data_ForecastCategoryName, "{cat_lit}")'
+                f'=SUMIFS(Data_ARR_EUR, Data_Type, "Land", Data_CloseDate, ">="&Parameters!$B$2, '
+                f'Data_CloseDate, "<"&Parameters!$B$3, Data_ForecastCategoryName, "{cat_lit}") '
+                f'+ SUMIFS(Data_ARR_EUR, Data_Type, "Expand", Data_CloseDate, ">="&Parameters!$B$2, '
+                f'Data_CloseDate, "<"&Parameters!$B$3, Data_ForecastCategoryName, "{cat_lit}")'
             ),
         )
         c.font = xref_font

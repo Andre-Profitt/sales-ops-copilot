@@ -22,6 +22,7 @@ import json
 import pathlib
 import subprocess
 import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any, Optional
 
@@ -30,53 +31,27 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from _directors import canonical_directors
 from excel_companion import build_director_excel
 from excel_model import build_director_model  # noqa: F401  # formatter strips otherwise
+from period_context import default_snapshot_date, period_anchor as context_period_anchor, quarter_bounds
+from sales_director_row_filters import filter_internal_sales_records, is_internal_account_name
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 STATE_DIR = ROOT / "state"
 
 
 # Reproducibility anchor: every SOQL day-window literal in pull_director_snapshot
-# and the per-rule action helpers derives from `_period_bounds(period)` rather
-# than `dt.date.today()`. This means re-running `--period 2025-Q4` on April 30
-# 2026 reconstructs Q4-2025-anchored data, not today's snapshot. Mirrors
-# `scripts/excel_model.py:_period_bounds`. Defensive fallback: a non-quarter
-# period string returns (today, today) and emits a stderr warning rather than
-# crashing — keeps the daily cadence resilient to malformed `--period` args.
+# and the per-rule action helpers derives from `_period_bounds(period)` and the
+# explicit snapshot/as-of date rather than `dt.date.today()`.
 def _period_bounds(period: str) -> tuple[dt.date, dt.date]:
     """'2026-Q2' -> (2026-04-01, 2026-07-01). period_end is the FIRST day
-    of the quarter AFTER the requested one (exclusive bound). On a
-    malformed string, falls back to (today, today) and warns to stderr."""
-    try:
-        if "-Q" not in period:
-            raise ValueError(f"period missing '-Q' separator: {period!r}")
-        year_s, q_s = period.split("-Q")
-        qn = int(q_s)
-        if not (1 <= qn <= 4):
-            raise ValueError(f"quarter must be 1..4: {period!r}")
-        year = int(year_s)
-        start_month = (qn - 1) * 3 + 1
-        end_year = year + (1 if qn == 4 else 0)
-        end_month = (start_month + 3) if qn != 4 else 1
-        return dt.date(year, start_month, 1), dt.date(end_year, end_month, 1)
-    except Exception as e:
-        print(
-            f"  [WARN] _period_bounds: malformed period {period!r} ({e}); "
-            "falling back to (today, today)",
-            file=sys.stderr,
-        )
-        today = dt.date.today()
-        return today, today
+    of the quarter AFTER the requested one (exclusive bound)."""
+
+    return quarter_bounds(period)
 
 
-def _period_anchor(period: str) -> dt.date:
-    """Anchor date for SOQL day-window math (e.g., LAST_N_DAYS:730 →
-    `CreatedDate <= anchor - 730d`). For past or current quarters this
-    is `period_end`; for a future quarter the anchor is clamped to
-    tomorrow so we never reach into a date range SF cannot have data
-    for yet."""
-    _, period_end = _period_bounds(period)
-    today_plus_one = dt.date.today() + dt.timedelta(days=1)
-    return min(period_end, today_plus_one)
+def _period_anchor(period: str, *, as_of_date: dt.date | None = None) -> dt.date:
+    """Anchor date for rolling SOQL windows and aging buckets."""
+
+    return context_period_anchor(period, as_of_date=as_of_date)
 
 
 # Org-wide benchmark report IDs (verified live 2026-04-29)
@@ -194,7 +169,12 @@ def _sf_query(soql: str) -> list[dict[str, Any]]:
     return json.loads(p.stdout).get("result", {}).get("records", [])
 
 
-def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
+def pull_director_snapshot(
+    director: dict,
+    period: str,
+    *,
+    as_of_date: dt.date | None = None,
+) -> dict[str, Any]:
     """SF snapshot scoped to one director's territory.
 
     Filter mechanism is the per-director `where_clause` (Account.Region__c +
@@ -225,7 +205,7 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
     # ActivityDate window below derives from these — never `dt.date.today()`
     # — so reproducing a prior period reconstructs that period's snapshot.
     period_start, period_end = _period_bounds(period)
-    period_anchor = _period_anchor(period)
+    period_anchor = _period_anchor(period, as_of_date=as_of_date)
     period_clause = (
         f"CloseDate >= {period_start.isoformat()} AND CloseDate < {period_end.isoformat()}"
     )
@@ -238,7 +218,7 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
     detail_q = (
         "SELECT Id, Name, Type, StageName, CreatedDate, CloseDate, "
         "Stage_20_Approval__c, "
-        "Owner.Name, ForecastCategoryName, "
+        "Owner.Name, ForecastCategoryName, Probability, PushCount, LastActivityDate, NextStep, "
         "Account.Name, Account.BillingCountry, Account.Industry, "
         "Account.Risk_of_Potential_Termination__c, "
         "convertCurrency(APTS_Opportunity_ARR__c) arr_fx, "
@@ -247,7 +227,7 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
         f"WHERE IsClosed = false AND {period_clause} "
         f"AND {where_clause}"
     )
-    rows = _sf_query(detail_q)
+    rows = filter_internal_sales_records(_sf_query(detail_q))
 
     # Aggregate by Type
     by_type_acc: dict[str, dict[str, float]] = {}
@@ -315,6 +295,11 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
                     "owner": owner.get("Name") or "",
                     "close_date": (r.get("CloseDate") or "")[:10],
                     "created_date": (r.get("CreatedDate") or "")[:10],
+                    "forecast_category": r.get("ForecastCategoryName") or "",
+                    "probability": r.get("Probability") or 0,
+                    "push_count": r.get("PushCount") or 0,
+                    "last_activity_date": (r.get("LastActivityDate") or "")[:10],
+                    "next_step": r.get("NextStep") or "",
                 }
             )
 
@@ -331,7 +316,7 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
         f"AND {where_clause}"
     )
     try:
-        wl_rows = _sf_query(wl_q)
+        wl_rows = filter_internal_sales_records(_sf_query(wl_q))
     except Exception:
         wl_rows = []
     won_arr = round(
@@ -451,7 +436,7 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
         f"AND {where_clause}"
     )
     try:
-        comp_rows = _sf_query(comp_q)
+        comp_rows = filter_internal_sales_records(_sf_query(comp_q))
     except Exception:
         comp_rows = []
     comp_acc: dict[str, dict[str, float]] = {}
@@ -482,7 +467,7 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
         f"AND {where_clause}"
     )
     try:
-        ret_rows = _sf_query(ret_q)
+        ret_rows = filter_internal_sales_records(_sf_query(ret_q))
     except Exception:
         ret_rows = []
     won_acv = round(sum(float(r.get("acv_fx") or 0) for r in ret_rows if r.get("IsWon")), 2)
@@ -510,7 +495,7 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
         f"AND {where_clause}"
     )
     try:
-        roll_rows = _sf_query(roll_q)
+        roll_rows = filter_internal_sales_records(_sf_query(roll_q))
     except Exception:
         roll_rows = []
     roll_acc: dict[str, dict[str, float]] = {}
@@ -645,7 +630,7 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
     beyond_q = (
         "SELECT Id, Name, Type, StageName, CreatedDate, CloseDate, "
         "Stage_20_Approval__c, "
-        "Owner.Name, ForecastCategoryName, "
+        "Owner.Name, ForecastCategoryName, Probability, PushCount, LastActivityDate, NextStep, "
         "Account.Name, Account.BillingCountry, Account.Industry, "
         "Account.Risk_of_Potential_Termination__c, "
         "convertCurrency(APTS_Opportunity_ARR__c) arr_fx, "
@@ -656,7 +641,7 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
         f"AND {where_clause}"
     )
     try:
-        beyond_rows = _sf_query(beyond_q)
+        beyond_rows = filter_internal_sales_records(_sf_query(beyond_q))
     except Exception:
         beyond_rows = []
     beyond_cfq_arr = round(sum(float(r.get("arr_fx") or 0) for r in beyond_rows), 2)
@@ -670,6 +655,129 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
         if not s:
             return ""
         return " ".join(s.split())
+
+    def _short_text(value: Any, *, limit: int = 120) -> str:
+        text = _norm(str(value or ""))
+        if len(text) <= limit:
+            return text
+        return text[: limit - 1].rstrip() + "..."
+
+    def _int_value(value: Any) -> int:
+        try:
+            return int(float(value or 0))
+        except (TypeError, ValueError):
+            return 0
+
+    def _stage_number(stage: str) -> int | None:
+        try:
+            return int((stage or "").split(" ")[0])
+        except (IndexError, ValueError):
+            return None
+
+    def _last_activity_age_days(value: Any) -> int | None:
+        text = (str(value or "")[:10]).strip()
+        if not text:
+            return None
+        try:
+            return max(0, (period_anchor - dt.date.fromisoformat(text)).days)
+        except ValueError:
+            return None
+
+    def _readiness_flags(r: dict) -> list[str]:
+        flags: list[str] = []
+        last_age = _last_activity_age_days(r.get("LastActivityDate"))
+        if last_age is None:
+            flags.append("No activity date")
+        elif last_age >= 90:
+            flags.append("Silent 90d+")
+        elif last_age >= 60:
+            flags.append("Silent 60d+")
+
+        if not _norm(r.get("NextStep")):
+            flags.append("No next step")
+
+        push_count = _int_value(r.get("PushCount"))
+        if push_count >= 4:
+            flags.append(f"{push_count} pushes")
+
+        stage_num = _stage_number(r.get("StageName") or "")
+        arr_eur = float(r.get("arr_fx") or 0)
+        if (
+            r.get("Type") in ("Land", "Expand")
+            and stage_num is not None
+            and 3 <= stage_num <= 6
+            and not r.get("Stage_20_Approval__c")
+            and (r.get("Type") == "Land" or arr_eur >= 500_000)
+        ):
+            flags.append("Commercial approval gap")
+
+        if (r.get("ForecastCategoryName") or "").lower() == "omitted":
+            flags.append("Omitted forecast")
+
+        return flags or ["No obvious hygiene flag"]
+
+    q2_deal_readiness: list[dict[str, Any]] = []
+    for r in sorted(
+        [r for r in rows if r.get("Type") in ("Land", "Expand")],
+        key=lambda item: float(item.get("arr_fx") or 0),
+        reverse=True,
+    )[:12]:
+        acct = r.get("Account") or {}
+        owner = r.get("Owner") or {}
+        last_age = _last_activity_age_days(r.get("LastActivityDate"))
+        q2_deal_readiness.append(
+            {
+                "account": _norm(acct.get("Name")) or "(unknown)",
+                "name": _short_text(r.get("Name"), limit=90),
+                "owner": _norm(owner.get("Name")),
+                "type": r.get("Type") or "",
+                "stage": r.get("StageName") or "",
+                "close_date": (r.get("CloseDate") or "")[:10],
+                "arr_eur": round(float(r.get("arr_fx") or 0), 2),
+                "forecast_category": r.get("ForecastCategoryName") or "",
+                "probability": _int_value(r.get("Probability")),
+                "push_count": _int_value(r.get("PushCount")),
+                "last_activity_date": (r.get("LastActivityDate") or "")[:10],
+                "last_activity_age_days": last_age,
+                "readiness": "; ".join(_readiness_flags(r)[:3]),
+                "next_step": _short_text(r.get("NextStep"), limit=120),
+            }
+        )
+
+    fiscal_year = period_start.year
+    fy_start = dt.date(fiscal_year, 1, 1)
+    fy_end = dt.date(fiscal_year + 1, 1, 1)
+    fy_renewal_q = (
+        "SELECT Id, Name, Type, StageName, CreatedDate, CloseDate, "
+        "Owner.Name, Probability, Account.Name, Account.Risk_of_Potential_Termination__c, "
+        "convertCurrency(APTS_Renewal_ACV__c) acv_fx "
+        "FROM Opportunity "
+        "WHERE IsClosed = false AND Type = 'Renewal' "
+        f"AND CloseDate >= {fy_start.isoformat()} "
+        f"AND CloseDate < {fy_end.isoformat()} "
+        f"AND {where_clause} "
+        "ORDER BY CloseDate ASC"
+    )
+    try:
+        fy_renewal_rows = filter_internal_sales_records(_sf_query(fy_renewal_q))
+    except Exception:
+        fy_renewal_rows = []
+    fy26_renewals: list[dict[str, Any]] = []
+    for r in fy_renewal_rows[:15]:
+        acct = r.get("Account") or {}
+        owner = r.get("Owner") or {}
+        fy26_renewals.append(
+            {
+                "account": _norm(acct.get("Name")) or "(unknown)",
+                "name": _short_text(r.get("Name"), limit=90),
+                "owner": _norm(owner.get("Name")),
+                "stage": r.get("StageName") or "",
+                "close_date": (r.get("CloseDate") or "")[:10],
+                "acv_eur": round(float(r.get("acv_fx") or 0), 2),
+                "probability": _int_value(r.get("Probability")),
+                "risk_level": acct.get("Risk_of_Potential_Termination__c") or "",
+            }
+        )
 
     # raw_opps — flattened per-row dataset for the formula-driven model's
     # Data sheet. Combines CFQ rows (`rows`) and beyond-CFQ rows. Renewals
@@ -768,9 +876,11 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
         "renewals_by_stage": renewals_by_stage,
         "top_deals_land": top_deals_land,
         "top_deals_expand": top_deals_expand,
+        "q2_deal_readiness": q2_deal_readiness,
         "wins_losses_qtd": wins_losses_qtd,
         "territory_performance": territory_performance,
         "at_risk_renewals": at_risk_renewals,
+        "fy26_renewals": fy26_renewals,
         "competitive_pressure": competitive_pressure,
         "arr_roll": arr_roll,
         "retention": retention,
@@ -799,7 +909,12 @@ def pull_director_snapshot(director: dict, period: str) -> dict[str, Any]:
 
 
 def build_trends_envelope(
-    sf_snapshot: dict, director: dict, period: str, *, backtest_path: Optional[Path] = None
+    sf_snapshot: dict,
+    director: dict,
+    period: str,
+    *,
+    backtest_path: Optional[Path] = None,
+    snapshot_date: dt.date | None = None,
 ) -> dict:
     """Produce the trends.json envelope. Carries aggregates AND per-deal
     context (named accounts, owners, amounts) — SimCorp's enterprise
@@ -875,6 +990,7 @@ def build_trends_envelope(
                 }
             )
 
+    as_of_date = snapshot_date or default_snapshot_date(period)
     return {
         "schema_version": "2.0",
         "director": {
@@ -884,7 +1000,9 @@ def build_trends_envelope(
             "scope_label": director.get("scope_label", ""),
         },
         "period": period,
-        "period_end": dt.date.today().isoformat(),
+        # Backward-compatible schema field. Consumer expects `period_end`;
+        # operationally this is the Salesforce as-of/snapshot date.
+        "period_end": as_of_date.isoformat(),
         "currency": "EUR",
         "currency_format": "mEUR",
         "kpis": kpis,
@@ -905,6 +1023,8 @@ def build_trends_envelope(
         + (sf_snapshot.get("top_deals_expand") or []),
         "pending_commercial_approval_named": sf_snapshot.get("pending_commercial_approval") or [],
         "at_risk_renewals_named": sf_snapshot.get("at_risk_renewals") or [],
+        "q2_deal_readiness": sf_snapshot.get("q2_deal_readiness") or [],
+        "fy26_renewals": sf_snapshot.get("fy26_renewals") or [],
     }
 
 
@@ -979,7 +1099,7 @@ def _pull_zombie_for_director(where_clause: str, period_anchor: dt.date) -> dict
     zombie set.
     """
     cand_q = (
-        "SELECT Id, Owner.Name, "
+        "SELECT Id, Name, Owner.Name, Account.Name, "
         "convertCurrency(APTS_Opportunity_ARR__c) arr_fx "
         "FROM Opportunity "
         f"WHERE IsClosed = false AND {where_clause} "
@@ -988,7 +1108,7 @@ def _pull_zombie_for_director(where_clause: str, period_anchor: dt.date) -> dict
         # suffix for typed comparison; bare YYYY-MM-DD raises INVALID_FIELD.
         f"AND CreatedDate <= {(period_anchor - dt.timedelta(days=730)).isoformat()}T00:00:00Z"
     )
-    candidates = _sf_query(cand_q)
+    candidates = filter_internal_sales_records(_sf_query(cand_q))
     candidate_ids = [c.get("Id") for c in candidates if c.get("Id")]
     if not candidate_ids:
         return {"count": 0, "total_arr_eur": 0.0, "top_owner": None}
@@ -1047,7 +1167,7 @@ def _pull_coverage_gap_for_director(where_clause: str, period_anchor: dt.date) -
         ")"
     )
     try:
-        rows = _sf_query(q)
+        rows = [row for row in _sf_query(q) if not is_internal_account_name(row.get("Name"))]
         return {"count": len(rows), "sample_accounts": [r.get("Name") for r in rows[:3]]}
     except Exception:
         return {"count": 0, "sample_accounts": [], "_skipped": True}
@@ -1068,7 +1188,7 @@ def _pull_approval_gap_for_director(where_clause: str, period_anchor: dt.date) -
     """
     del period_anchor  # currently unused; kept for signature uniformity
     q = (
-        "SELECT Id, Name, Owner.Name, "
+        "SELECT Id, Name, Owner.Name, Account.Name, "
         "convertCurrency(APTS_Opportunity_ARR__c) arr_fx "
         "FROM Opportunity "
         f"WHERE IsClosed = false AND {where_clause} "
@@ -1076,7 +1196,7 @@ def _pull_approval_gap_for_director(where_clause: str, period_anchor: dt.date) -
         "AND StageName IN ('3 - Engagement','4 - Shortlisted','5 - Preferred','6 - Contracting') "
         "AND (Stage_20_Approval__c = false OR Stage_20_Approval__c = null)"
     )
-    rows_all = _sf_query(q)
+    rows_all = filter_internal_sales_records(_sf_query(q))
     # EUR-correct threshold filter — apply on FX-converted arr_fx.
     rows = [r for r in rows_all if float(r.get("arr_fx") or 0) >= 500_000]
     return {
@@ -1102,17 +1222,17 @@ def _pull_simcorp_one_share_for_director(
     del period_anchor  # currently unused; kept for signature uniformity
     # Total open L+E opps in director scope
     total_q = (
-        "SELECT COUNT(Id) n FROM Opportunity "
+        "SELECT Id, Name, Account.Name FROM Opportunity "
         f"WHERE IsClosed = false AND {where_clause} "
         "AND Type IN ('Land','Expand')"
     )
-    total = _sf_query(total_q)
-    total_count = int((total[0].get("n") if total else 0) or 0)
+    total = filter_internal_sales_records(_sf_query(total_q))
+    total_count = len(total)
 
     # Subset that has a 'Standard Platform' line item — uses IN-subquery
     # against OpportunityLineItem.
     sp_q = (
-        "SELECT Id FROM Opportunity "
+        "SELECT Id, Name, Account.Name FROM Opportunity "
         f"WHERE IsClosed = false AND {where_clause} "
         "AND Type IN ('Land','Expand') "
         "AND Id IN ("
@@ -1120,7 +1240,7 @@ def _pull_simcorp_one_share_for_director(
         "WHERE Product2.Name = 'Standard Platform'"
         ")"
     )
-    sp_rows = _sf_query(sp_q)
+    sp_rows = filter_internal_sales_records(_sf_query(sp_q))
     sp_count = len(sp_rows)
 
     pct = round(100.0 * sp_count / total_count, 1) if total_count else 0.0
@@ -1148,7 +1268,7 @@ def _pull_activity_drought_for_director(
     """
     period_start, period_end = _period_bounds(period)
     cand_q = (
-        "SELECT Id, "
+        "SELECT Id, Name, Account.Name, "
         "convertCurrency(APTS_Opportunity_ARR__c) arr_fx "
         "FROM Opportunity "
         f"WHERE IsClosed = false AND {where_clause} "
@@ -1156,7 +1276,7 @@ def _pull_activity_drought_for_director(
         f"AND CloseDate >= {period_start.isoformat()} "
         f"AND CloseDate < {period_end.isoformat()}"
     )
-    candidates = _sf_query(cand_q)
+    candidates = filter_internal_sales_records(_sf_query(cand_q))
     candidate_ids = [c.get("Id") for c in candidates if c.get("Id")]
     if not candidate_ids:
         return {"count": 0, "total_arr_eur": 0.0}
@@ -1218,9 +1338,9 @@ def pull_director_action_data(
     return out
 
 
-def _next_month_end_iso() -> str:
+def _next_month_end_iso(base_date: dt.date | None = None) -> str:
     """Default action-item due date — last day of next month."""
-    today = dt.date.today()
+    today = base_date or dt.date.today()
     if today.month == 12:
         nxt = dt.date(today.year + 1, 1, 1)
     else:
@@ -1246,7 +1366,11 @@ def derive_action_items(envelope: dict, action_data: dict) -> dict:
     """
     director = envelope["director"]
     owner = director["name"]
-    due = _next_month_end_iso()
+    try:
+        as_of_date = dt.date.fromisoformat(str(envelope.get("period_end") or ""))
+    except ValueError:
+        as_of_date = None
+    due = _next_month_end_iso(as_of_date)
     items: list[dict[str, Any]] = []
 
     # Rule 1: Zombie ARR exposure
@@ -1484,11 +1608,80 @@ def render_director_brief(envelope: dict) -> str:
     return "\n".join(lines)
 
 
+def _process_director(
+    director: dict[str, Any],
+    *,
+    period: str,
+    period_dir: pathlib.Path,
+    backtest_path: pathlib.Path,
+    benchmarks: dict[str, Any],
+    snapshot_date: dt.date,
+) -> dict[str, Any]:
+    out_dir = period_dir / str(director["name"]).replace(" ", "-")
+    out_dir.mkdir(exist_ok=True)
+    try:
+        print(f"→ {director['name']}: pulling SF snapshot...")
+        sf = pull_director_snapshot(director, period, as_of_date=snapshot_date)
+        envelope = build_trends_envelope(
+            sf,
+            director,
+            period,
+            backtest_path=backtest_path,
+            snapshot_date=snapshot_date,
+        )
+        envelope = derive_highlights_risks(envelope)
+        action_data = pull_director_action_data(
+            director,
+            period,
+            _period_anchor(period, as_of_date=snapshot_date),
+        )
+        envelope = derive_action_items(envelope, action_data)
+        (out_dir / "trends.json").write_text(json.dumps(envelope, indent=2))
+        (out_dir / "brief.md").write_text(render_director_brief(envelope))
+        backtest_data = json.loads(backtest_path.read_text()) if backtest_path.exists() else None
+        # Merge action_data (which has simcorp_one_share + others) into the
+        # snapshot dict so excel_companion can populate the SimCorp_One sheet.
+        sf_with_actions = {
+            **sf,
+            "simcorp_one": action_data.get("simcorp_one_share") or {},
+            "benchmarks": benchmarks,
+        }
+        build_director_excel(
+            envelope,
+            out_dir / "land.xlsx",
+            snapshot=sf_with_actions,
+            backtest=backtest_data,
+        )
+        # Formula-driven sibling — same envelope + snapshot, but with a
+        # canonical Data sheet and SUMIFS-based analytical sheets so a
+        # director / analyst can trace any KPI to its inputs.
+        build_director_model(
+            envelope,
+            out_dir / "land.model.xlsx",
+            snapshot=sf_with_actions,
+            backtest=backtest_data,
+        )
+        print(
+            f"  Wrote {out_dir / 'trends.json'} + brief.md + land.xlsx + land.model.xlsx "
+            f"({len(envelope.get('action_items') or [])} action items)"
+        )
+        return {"director": director["name"], "status": "pass", "out_dir": str(out_dir)}
+    except Exception as exc:
+        print(f"  ✗ {director['name']}: {exc}", file=sys.stderr)
+        return {"director": director["name"], "status": "fail", "error": str(exc)}
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--director", help="Single director name (e.g., 'Adam Steinhouse')")
     ap.add_argument("--all-directors", action="store_true", help="Run for all 9 MD-1 directors")
     ap.add_argument("--period", required=True, help="e.g., 2026-Q2")
+    ap.add_argument("--jobs", type=int, default=1, help="Parallelize per-director Salesforce/workbook builds.")
+    ap.add_argument(
+        "--snapshot-date",
+        help="Salesforce as-of date for reproducible aging/action windows (YYYY-MM-DD). "
+        "Defaults to the validated May 2026 snapshot date for 2026-Q2.",
+    )
     args = ap.parse_args()
 
     if not args.director and not args.all_directors:
@@ -1502,6 +1695,16 @@ def main() -> int:
     )
     if not directors:
         print(f"ERROR: no director matching {args.director!r}", file=sys.stderr)
+        return 1
+    try:
+        snapshot_date = (
+            dt.date.fromisoformat(args.snapshot_date)
+            if args.snapshot_date
+            else default_snapshot_date(args.period)
+        )
+        _period_bounds(args.period)
+    except ValueError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
         return 1
 
     STATE_DIR.mkdir(exist_ok=True)
@@ -1520,51 +1723,36 @@ def main() -> int:
         benchmarks = {}
 
     failures = []
-    for d in directors:
-        dn = d["name"].replace(" ", "-")
-        out_dir = period_dir / dn
-        out_dir.mkdir(exist_ok=True)
-        try:
-            print(f"→ {d['name']}: pulling SF snapshot...")
-            sf = pull_director_snapshot(d, args.period)
-            envelope = build_trends_envelope(sf, d, args.period, backtest_path=backtest_path)
-            envelope = derive_highlights_risks(envelope)
-            action_data = pull_director_action_data(d, args.period, _period_anchor(args.period))
-            envelope = derive_action_items(envelope, action_data)
-            (out_dir / "trends.json").write_text(json.dumps(envelope, indent=2))
-            (out_dir / "brief.md").write_text(render_director_brief(envelope))
-            backtest_data = (
-                json.loads(backtest_path.read_text()) if backtest_path.exists() else None
+    if args.jobs > 1 and len(directors) > 1:
+        with ThreadPoolExecutor(max_workers=min(args.jobs, len(directors))) as executor:
+            futures = [
+                executor.submit(
+                    _process_director,
+                    director,
+                    period=args.period,
+                    period_dir=period_dir,
+                    backtest_path=backtest_path,
+                    benchmarks=benchmarks,
+                    snapshot_date=snapshot_date,
+                )
+                for director in directors
+            ]
+            for future in as_completed(futures):
+                result = future.result()
+                if result["status"] != "pass":
+                    failures.append(result)
+    else:
+        for director in directors:
+            result = _process_director(
+                director,
+                period=args.period,
+                period_dir=period_dir,
+                backtest_path=backtest_path,
+                benchmarks=benchmarks,
+                snapshot_date=snapshot_date,
             )
-            # Merge action_data (which has simcorp_one_share + others) into the
-            # snapshot dict so excel_companion can populate the SimCorp_One sheet.
-            sf_with_actions = {
-                **sf,
-                "simcorp_one": action_data.get("simcorp_one_share") or {},
-                "benchmarks": benchmarks,
-            }
-            build_director_excel(
-                envelope,
-                out_dir / "land.xlsx",
-                snapshot=sf_with_actions,
-                backtest=backtest_data,
-            )
-            # Formula-driven sibling — same envelope + snapshot, but with a
-            # canonical Data sheet and SUMIFS-based analytical sheets so a
-            # director / analyst can trace any KPI to its inputs.
-            build_director_model(
-                envelope,
-                out_dir / "land.model.xlsx",
-                snapshot=sf_with_actions,
-                backtest=backtest_data,
-            )
-            print(
-                f"  Wrote {out_dir / 'trends.json'} + brief.md + land.xlsx + land.model.xlsx "
-                f"({len(envelope.get('action_items') or [])} action items)"
-            )
-        except Exception as e:
-            failures.append({"director": d["name"], "error": str(e)})
-            print(f"  ✗ {d['name']}: {e}", file=sys.stderr)
+            if result["status"] != "pass":
+                failures.append(result)
 
     if failures:
         print(f"\n{len(failures)} director(s) failed", file=sys.stderr)

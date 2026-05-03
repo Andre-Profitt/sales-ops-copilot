@@ -40,7 +40,13 @@ POLL_INTERVAL_S = 5
 POLL_TIMEOUT_S = 600  # 10 minutes
 
 
-def ensure_trends_json(director: str, period: str, *, skip_regen: bool) -> pathlib.Path:
+def ensure_trends_json(
+    director: str,
+    period: str,
+    *,
+    skip_regen: bool,
+    snapshot_date: str | None = None,
+) -> pathlib.Path:
     director_slug = director.replace(" ", "-")
     trends_path = STATE_DIR / period / director_slug / "trends.json"
 
@@ -52,15 +58,18 @@ def ensure_trends_json(director: str, period: str, *, skip_regen: bool) -> pathl
     venv_python = ROOT / ".venv" / "bin" / "python3"
     if not venv_python.exists():
         venv_python = pathlib.Path(sys.executable)
+    command = [
+        str(venv_python),
+        str(ROOT / "scripts" / "land_brief.py"),
+        "--director",
+        director,
+        "--period",
+        period,
+    ]
+    if snapshot_date:
+        command.extend(["--snapshot-date", snapshot_date])
     p = subprocess.run(
-        [
-            str(venv_python),
-            str(ROOT / "scripts" / "land_brief.py"),
-            "--director",
-            director,
-            "--period",
-            period,
-        ],
+        command,
         capture_output=True,
         text=True,
         check=False,
@@ -89,6 +98,13 @@ def post_envelope(endpoint: str, trends: dict) -> str:
     job_id = resp.json()["jobId"]
     print(f"  jobId: {job_id}")
     return job_id
+
+
+def validate_envelope(trends: dict) -> None:
+    sys.path.insert(0, str(ROOT / "scripts"))
+    from schema import TrendsEnvelope  # type: ignore[import-not-found]
+
+    TrendsEnvelope.model_validate(trends)
 
 
 def poll_until_done(endpoint: str, job_id: str) -> dict:
@@ -126,11 +142,28 @@ def download_pptx(download_url: str, out_path: pathlib.Path) -> None:
     print(f"  Wrote {out_path} ({len(resp.content):,} bytes)")
 
 
-def _generate_for_one(director: str, period: str, endpoint: str, *, skip_regen: bool) -> int:
+def _generate_for_one(
+    director: str,
+    period: str,
+    endpoint: str,
+    *,
+    skip_regen: bool,
+    snapshot_date: str | None = None,
+) -> int:
     """Generate a deck for one director. Returns 0 on success, non-zero on
     failure. Used both by the single-director CLI mode and by --all-directors."""
-    trends_path = ensure_trends_json(director, period, skip_regen=skip_regen)
+    trends_path = ensure_trends_json(
+        director,
+        period,
+        skip_regen=skip_regen,
+        snapshot_date=snapshot_date,
+    )
     trends = json.loads(trends_path.read_text())
+    validate_envelope(trends)
+
+    if endpoint == "__validate_only__":
+        print(f"  Envelope schema valid: {trends_path}")
+        return 0
 
     job_id = post_envelope(endpoint, trends)
     final = poll_until_done(endpoint, job_id)
@@ -173,6 +206,15 @@ def main() -> int:
         action="store_true",
         help="Reuse existing trends.json instead of re-running land_brief.py",
     )
+    ap.add_argument(
+        "--snapshot-date",
+        help="Pass a reproducible Salesforce as-of date to land_brief.py (YYYY-MM-DD).",
+    )
+    ap.add_argument(
+        "--validate-only",
+        action="store_true",
+        help="Regenerate/reuse trends.json and validate the envelope schema without POSTing to a deck endpoint.",
+    )
     args = ap.parse_args()
 
     if not args.director and not args.all_directors:
@@ -189,7 +231,13 @@ def main() -> int:
         failures = []
         for name in directors:
             try:
-                rc = _generate_for_one(name, args.period, args.endpoint, skip_regen=args.skip_regen)
+                rc = _generate_for_one(
+                    name,
+                    args.period,
+                    "__validate_only__" if args.validate_only else args.endpoint,
+                    skip_regen=args.skip_regen,
+                    snapshot_date=args.snapshot_date,
+                )
                 if rc != 0:
                     failures.append((name, f"return code {rc}"))
             except Exception as e:
@@ -204,10 +252,17 @@ def main() -> int:
             for name, err in failures:
                 print(f"  - {name}: {err}", file=sys.stderr)
             return 2
-        print(f"\n✓ {len(directors)} deck(s) generated for {args.period}")
+        noun = "envelope(s) validated" if args.validate_only else "deck(s) generated"
+        print(f"\n✓ {len(directors)} {noun} for {args.period}")
         return 0
 
-    return _generate_for_one(args.director, args.period, args.endpoint, skip_regen=args.skip_regen)
+    return _generate_for_one(
+        args.director,
+        args.period,
+        "__validate_only__" if args.validate_only else args.endpoint,
+        skip_regen=args.skip_regen,
+        snapshot_date=args.snapshot_date,
+    )
 
 
 if __name__ == "__main__":

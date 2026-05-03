@@ -1,0 +1,23 @@
+{
+  "schema": "director-facing-title-map/v1",
+  "period": "2026-Q2",
+  "deck_month": "May 2026",
+  "principle": "Slide titles should state the Sales Director decision or operating lens, not the worksheet name, chart type, or automation object.",
+  "replacements": {
+    "Exec summary": "May operating summary",
+    "By owner": "May pipeline by owner",
+    "May pipeline by owner": "Owner pipeline coverage",
+    "Per-territory pipeline mix": "Territory pipeline mix",
+    "Operating rhythm": "Weekly inspection rhythm",
+    "Weekly operating cadence for the director review.": "Weekly inspection rhythm for the director review.",
+    "May 1-15 operating cadence": "May 1-15 inspection sprint",
+    "First two-week director cadence for Q2: launch, inspect, clean, and reset the forecast.": "First two-week operating table: inspect named Q2 deals, clear approval gaps, and reset forecast evidence.",
+    "Action items": "Action register",
+    "What moved this quarter — opening + new − won − lost = closing": "Land+Expand unweighted ARR movement; Renewal ACV excluded",
+    "What moved this quarter - opening + new - won - lost = closing": "Land+Expand unweighted ARR movement; Renewal ACV excluded",
+    "Open Land+Expand ARR by rep within director scope": "Open Land+Expand unweighted ARR by rep within director scope",
+    "Open ARR by Account.BillingCountry within director scope": "Open Land+Expand unweighted ARR by country within director scope",
+    "2026-Q2 closeable Land+Expand ARR": "2026-Q2 closeable Land+Expand unweighted ARR",
+    "Open Land+Expand beyond 2026-Q2": "Open Land+Expand unweighted ARR beyond 2026-Q2"
+  }
+}

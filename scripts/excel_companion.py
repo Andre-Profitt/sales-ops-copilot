@@ -33,6 +33,7 @@ from openpyxl.formatting.rule import CellIsRule
 from openpyxl.styles import Font, PatternFill
 from openpyxl.worksheet.page import PageMargins
 
+from sales_director_row_filters import filter_internal_sales_records
 from sales_process_graph import GRAPH
 
 
@@ -89,6 +90,7 @@ SHEET_NAMES = [
     "Pipeline_By_Stage",
     "Action_Items",
     "Pending_Commercial_Approval",
+    "Q2_Readiness",
     "Top_Deals_Land",
     "Top_Deals_Expand",
     "Top_Accounts",
@@ -101,6 +103,7 @@ SHEET_NAMES = [
     "Retention",
     "Forecast_Backtest",
     "At_Risk_Renewals",
+    "FY26_Renewals",
     "Competitive_Pressure",
     "Territory_Performance",
     "SimCorp_One",
@@ -435,7 +438,7 @@ def build_director_excel(
     for col_idx, h in enumerate(headers, start=1):
         cell = ws.cell(row=3, column=col_idx, value=h)
         cell.font = Font(bold=True)
-    pending = (snapshot or {}).get("pending_commercial_approval") or []
+    pending = filter_internal_sales_records((snapshot or {}).get("pending_commercial_approval") or [])
     if pending:
         for i, p in enumerate(pending, start=1):
             ws.cell(row=i + 3, column=1, value=i)
@@ -456,6 +459,67 @@ def build_director_excel(
         ws.column_dimensions["H"].width = 12
     else:
         ws.cell(row=4, column=1, value="(no pending Land/Expand approvals)").font = Font(
+            italic=True, color="999999"
+        )
+
+    # ── Q2_Readiness ── current-quarter Land/Expand deal hygiene watchlist
+    ws = wb["Q2_Readiness"]
+    headers = [
+        "#",
+        "Account",
+        "Opportunity",
+        "Owner",
+        "Type",
+        "Stage",
+        "Close Date",
+        "ARR",
+        "Forecast",
+        "Prob",
+        "Push",
+        "Last Activity",
+        "Readiness",
+        "Next Step",
+    ]
+    for col_idx, header in enumerate(headers, start=1):
+        cell = ws.cell(row=1, column=col_idx, value=header)
+        cell.font = Font(bold=True)
+    readiness = filter_internal_sales_records((snapshot or {}).get("q2_deal_readiness") or [])
+    if readiness:
+        for i, row in enumerate(readiness, start=1):
+            ws.cell(row=i + 1, column=1, value=i)
+            ws.cell(row=i + 1, column=2, value=row.get("account") or "")
+            ws.cell(row=i + 1, column=3, value=row.get("name") or "")
+            ws.cell(row=i + 1, column=4, value=row.get("owner") or "")
+            ws.cell(row=i + 1, column=5, value=row.get("type") or "")
+            ws.cell(row=i + 1, column=6, value=row.get("stage") or "")
+            ws.cell(row=i + 1, column=7, value=row.get("close_date") or "")
+            ws.cell(row=i + 1, column=8, value=_fmt_meur(row.get("arr_eur") or 0))
+            ws.cell(row=i + 1, column=9, value=row.get("forecast_category") or "")
+            ws.cell(row=i + 1, column=10, value=row.get("probability") or 0)
+            ws.cell(row=i + 1, column=11, value=row.get("push_count") or 0)
+            ws.cell(row=i + 1, column=12, value=row.get("last_activity_date") or "")
+            ws.cell(row=i + 1, column=13, value=row.get("readiness") or "")
+            ws.cell(row=i + 1, column=14, value=row.get("next_step") or "")
+        widths = {
+            "A": 4,
+            "B": 30,
+            "C": 42,
+            "D": 20,
+            "E": 10,
+            "F": 20,
+            "G": 12,
+            "H": 12,
+            "I": 12,
+            "J": 8,
+            "K": 8,
+            "L": 14,
+            "M": 28,
+            "N": 56,
+        }
+        for col, width in widths.items():
+            ws.column_dimensions[col].width = width
+    else:
+        ws.cell(row=2, column=1, value="(no current-quarter Land/Expand readiness rows)").font = Font(
             italic=True, color="999999"
         )
 
@@ -482,7 +546,7 @@ def build_director_excel(
         for col_idx, header in enumerate(headers, start=1):
             cell = ws.cell(row=1, column=col_idx, value=header)
             cell.font = Font(bold=True)
-        deals = (snapshot or {}).get(source_key) or []
+        deals = filter_internal_sales_records((snapshot or {}).get(source_key) or [])
         if deals:
             for i, d_row in enumerate(deals, start=1):
                 created = d_row.get("created_date") or ""
@@ -608,7 +672,7 @@ def build_director_excel(
     ws["D1"] = "Open ARR"
     for col in ("A1", "B1", "C1", "D1"):
         ws[col].font = Font(bold=True)
-    accts = (snapshot or {}).get("top_accounts") or []
+    accts = filter_internal_sales_records((snapshot or {}).get("top_accounts") or [])
     if accts:
         for i, a in enumerate(accts, start=1):
             ws.cell(row=i + 1, column=1, value=i)
@@ -890,7 +954,7 @@ def build_director_excel(
     ws["H1"] = "Risk score (0-4)"
     for col in ("A1", "B1", "C1", "D1", "E1", "F1", "G1", "H1"):
         ws[col].font = Font(bold=True)
-    at_risk = (snapshot or {}).get("at_risk_renewals") or []
+    at_risk = filter_internal_sales_records((snapshot or {}).get("at_risk_renewals") or [])
     if at_risk:
         for i, r in enumerate(at_risk, start=1):
             ws.cell(row=i + 1, column=1, value=i)
@@ -916,6 +980,32 @@ def build_director_excel(
             column=1,
             value="(no Renewal opps with High/Very-High termination risk in scope)",
         ).font = Font(italic=True, color="999999")
+
+    # ── FY26_Renewals ── full current-year renewal watchlist, ACV-only
+    ws = wb["FY26_Renewals"]
+    headers = ["#", "Close Date", "Account", "Opportunity", "Owner", "Stage", "ACV", "Prob", "Risk"]
+    for col_idx, header in enumerate(headers, start=1):
+        cell = ws.cell(row=1, column=col_idx, value=header)
+        cell.font = Font(bold=True)
+    renewals = filter_internal_sales_records((snapshot or {}).get("fy26_renewals") or [])
+    if renewals:
+        for i, row in enumerate(renewals, start=1):
+            ws.cell(row=i + 1, column=1, value=i)
+            ws.cell(row=i + 1, column=2, value=row.get("close_date") or "")
+            ws.cell(row=i + 1, column=3, value=row.get("account") or "")
+            ws.cell(row=i + 1, column=4, value=row.get("name") or "")
+            ws.cell(row=i + 1, column=5, value=row.get("owner") or "")
+            ws.cell(row=i + 1, column=6, value=row.get("stage") or "")
+            ws.cell(row=i + 1, column=7, value=_fmt_meur(row.get("acv_eur") or 0))
+            ws.cell(row=i + 1, column=8, value=row.get("probability") or 0)
+            ws.cell(row=i + 1, column=9, value=row.get("risk_level") or "")
+        widths = {"A": 4, "B": 12, "C": 34, "D": 42, "E": 22, "F": 20, "G": 12, "H": 8, "I": 12}
+        for col, width in widths.items():
+            ws.column_dimensions[col].width = width
+    else:
+        ws.cell(row=2, column=1, value="(no open FY26 Renewal opportunities in scope)").font = Font(
+            italic=True, color="999999"
+        )
 
     # ── Competitive_Pressure ── closed-lost Land+Expand opps this quarter, by competitor
     ws = wb["Competitive_Pressure"]

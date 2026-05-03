@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tc_com_driver"
+version = "0.1.0"
+description = "pywin32 wrapper around think-cell's documented IDispatch surface (Windows-only)."
+readme = "CLAUDE.md"
+requires-python = ">=3.12"
+dependencies = [
+    # pywin32 is Windows-only; gated by environment marker so a Mac install
+    # of the parent venv doesn't try to pull it in.
+    "pywin32>=308 ; sys_platform == 'win32'",
+]
+
+classifiers = [
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Office/Business",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["tc_com_driver*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

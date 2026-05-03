@@ -1,0 +1,809 @@
+{
+  "schema": "sd-factory-render-lane-contract/v1",
+  "created_at": "2026-05-03",
+  "period": "2026-Q2",
+  "goal": {
+    "monthly_decks": 9,
+    "director_registry": "scripts/_directors.py",
+    "production_system": "sales-ops-copilot",
+    "research_system": "tc-aicore"
+  },
+  "decision": {
+    "factory_mode": "compute_and_bind",
+    "production_substrate": ".ppttc via ppttc.exe plus Excel COM table-image updates",
+    "llm_role": "GPT-5.5-preferred upstream planner and narrative generator; generated text must be evidence-grounded and cached before binding",
+    "tc_ai_role": "optional GPT-5.5-assisted ribbon refinement surface; not a monthly factory dependency unless accepted outputs are cached and gate-checked"
+  },
+  "global_gates": [
+    "explicit ARR/ACV separation",
+    "Type filter on every Type-bearing fact",
+    "headline currency via Salesforce report converted aggregates or audited converted workbook values",
+    "named-element contract validation before rendering",
+    "bound-package assertions after rendering",
+    "rendered-slide visual sanity",
+    "regional publish gate before leadership use"
+  ],
+  "lanes": {
+    "ppttc_text_binding": {
+      "production_allowed": true,
+      "description": "Deterministic text field binding into a manually named think-cell seed/template."
+    },
+    "ppttc_named_seed_native_chart": {
+      "production_allowed": true,
+      "description": "Named think-cell chart/table payload rendered by ppttc.exe. Requires pre-existing named elements and package proof."
+    },
+    "excel_com_table_image": {
+      "production_allowed": true,
+      "description": "Excel COM UpdateBatch/AddRangeImage table-image lane for table-shaped artifacts."
+    },
+    "powerpoint_com_merge": {
+      "production_allowed": true,
+      "description": "Controlled PowerPoint COM merge of proven bound components into branded LAND decks."
+    },
+    "python_ole_splice_fallback": {
+      "production_allowed": false,
+      "description": "Mac-side fallback/research lane. Useful for tc-aicore experiments, not production until it passes the same gates."
+    },
+    "llm_cached_upstream": {
+      "production_allowed": false,
+      "description": "Narrative/chart-class generation before binding. Never the rendering lane and never an uncached source of truth."
+    },
+    "gpt55_assisted_tc_ai_ribbon": {
+      "production_allowed": false,
+      "description": "Human-in-the-loop ribbon refinement where GPT-5.5 prepares prompts, critiques tc.ai output, and captures accepted wording back into the run artifact."
+    },
+    "tc_ai_interactive_only": {
+      "production_allowed": false,
+      "description": "think-cell AI ribbon workflow for one-off interactive use. Not reproducible enough for monthly production."
+    }
+  },
+  "monthly_slots": [
+    {
+      "slot_id": "S01_DirectorName",
+      "slide": 1,
+      "surface": "cover text",
+      "source": "DirectorArtifacts.name",
+      "primary_lane": "ppttc_text_binding",
+      "status": "contracted",
+      "fallback": "PowerPoint text token replacement",
+      "guardrail": "Must match production 9-director registry."
+    },
+    {
+      "slot_id": "S01_Period",
+      "slide": 1,
+      "surface": "cover text",
+      "source": "DirectorArtifacts.period",
+      "primary_lane": "ppttc_text_binding",
+      "status": "contracted",
+      "fallback": "PowerPoint text token replacement",
+      "guardrail": "Use explicit period label, never relative month text."
+    },
+    {
+      "slot_id": "S01_ScopeLabel",
+      "slide": 1,
+      "surface": "cover text",
+      "source": "DirectorArtifacts.scope_label",
+      "primary_lane": "ppttc_text_binding",
+      "status": "contracted",
+      "fallback": "PowerPoint text token replacement",
+      "guardrail": "Scope must match Salesforce owner/region filter."
+    },
+    {
+      "slot_id": "S02_ExecSummaryLeft",
+      "slide": 2,
+      "surface": "executive summary bullets",
+      "source": "cached brief highlights or AI summary after fact validation",
+      "primary_lane": "ppttc_text_binding",
+      "status": "contracted_ai_cached_required",
+      "fallback": "PowerPoint text splice from cached run artifact",
+      "guardrail": "No unsupported numbers, prior-period claims, or account names outside the fact pack."
+    },
+    {
+      "slot_id": "S02_ExecSummaryRight",
+      "slide": 2,
+      "surface": "executive summary risk bullets",
+      "source": "cached brief risks or AI summary after fact validation",
+      "primary_lane": "ppttc_text_binding",
+      "status": "contracted_ai_cached_required",
+      "fallback": "PowerPoint text splice from cached run artifact",
+      "guardrail": "No raw JSON, snake_case keys, or ARR/ACV blending."
+    },
+    {
+      "slot_id": "S04_PipeMovement",
+      "slide": 4,
+      "surface": "pipeline movement waterfall",
+      "source": "model Pipe_Movement!A2:B6",
+      "primary_lane": "ppttc_named_seed_native_chart",
+      "status": "l5_component_proven",
+      "component_proof": "QTR08_PipelineMovement_Waterfall",
+      "fallback": "movement table when prior snapshot is missing",
+      "guardrail": "ARR movement only; source requires prior snapshot/workbook, not live Salesforce alone."
+    },
+    {
+      "slot_id": "S05_PipelineByStage",
+      "slide": 5,
+      "surface": "pipeline by stage bar",
+      "source": "model Pipeline_By_Stage!A2:B9",
+      "primary_lane": "ppttc_named_seed_native_chart",
+      "status": "l5_component_proven",
+      "component_proof": "QTR01_StageMix_Bar",
+      "fallback": "table if fewer than two stages survive filters",
+      "guardrail": "ARR universe only: Type IN ('Land','Expand')."
+    },
+    {
+      "slot_id": "S06_PipelineAging",
+      "slide": 6,
+      "surface": "pipeline aging bar",
+      "source": "model Pipeline_Aging!A2:E7",
+      "primary_lane": "ppttc_named_seed_native_chart",
+      "status": "l5_component_proven",
+      "component_proof": "QTR13_PipelineAging_Bar",
+      "fallback": "table-image aging register",
+      "guardrail": "ARR universe only; stale and aging labels must be horizon-specific."
+    },
+    {
+      "slot_id": "S07_TopDealsLand",
+      "slide": 7,
+      "surface": "top Land deals table",
+      "source": "connected table-image workbook S07_TopDealsLand",
+      "primary_lane": "excel_com_table_image",
+      "status": "table_image_contract_defined",
+      "table_image_contract": "S07_TopDealsLand",
+      "fallback": "native PowerPoint table",
+      "guardrail": "Land ARR only; do not include Expand or Renewal rows."
+    },
+    {
+      "slot_id": "S08_TopDealsExpand",
+      "slide": 8,
+      "surface": "top Expand deals table",
+      "source": "connected table-image workbook S08_TopDealsExpand",
+      "primary_lane": "excel_com_table_image",
+      "status": "table_image_contract_defined",
+      "table_image_contract": "S08_TopDealsExpand",
+      "fallback": "native PowerPoint table",
+      "guardrail": "Expand ARR only; do not include Land or Renewal rows."
+    },
+    {
+      "slot_id": "S09_PendingCommercialApproval",
+      "slide": 9,
+      "surface": "commercial approval table",
+      "source": "legacy Pending_Commercial_Approval!A3:H...",
+      "primary_lane": "excel_com_table_image",
+      "status": "l5_component_proven",
+      "component_proof": "QTR11_CommercialApprovalGap_TableImage",
+      "fallback": "native PowerPoint table",
+      "guardrail": "Commercial Approval is a Land/Expand governance gate; do not apply to Renewal ACV."
+    },
+    {
+      "slot_id": "S11_RenewalPipeline",
+      "slide": 11,
+      "surface": "renewal pipeline table",
+      "source": "connected table-image workbook S11_RenewalPipeline",
+      "primary_lane": "excel_com_table_image",
+      "status": "table_image_contract_defined",
+      "table_image_contract": "S11_RenewalPipeline",
+      "fallback": "native PowerPoint table",
+      "guardrail": "Renewal ACV only; never combine with Land+Expand ARR."
+    },
+    {
+      "slot_id": "S12_GRRProxyFootnote",
+      "slide": 12,
+      "surface": "retention footnote",
+      "source": "model Retention!A5",
+      "primary_lane": "ppttc_text_binding",
+      "status": "contracted",
+      "fallback": "PowerPoint text splice",
+      "guardrail": "Label as proxy when GRR is not sourced from authoritative retention data."
+    },
+    {
+      "slot_id": "S12_GRRProxyTable",
+      "slide": 12,
+      "surface": "retention proxy table",
+      "source": "connected table-image workbook S12_GRRProxyTable",
+      "primary_lane": "excel_com_table_image",
+      "status": "table_image_contract_defined",
+      "table_image_contract": "S12_GRRProxyTable",
+      "fallback": "native PowerPoint table",
+      "guardrail": "Do not label proxy values as actual GRR."
+    },
+    {
+      "slot_id": "S13_ForecastCategory",
+      "slide": 13,
+      "surface": "forecast category bar",
+      "source": "model Forecast_Category!A1:C7",
+      "primary_lane": "ppttc_named_seed_native_chart",
+      "status": "l5_component_proven",
+      "component_proof": "QTR02_ForecastMix_Bar",
+      "fallback": "table-image register",
+      "guardrail": "ARR universe only; show omitted explicitly when present."
+    },
+    {
+      "slot_id": "S15_ByOwner",
+      "slide": 15,
+      "surface": "pipeline by owner bar",
+      "source": "model By_Owner!A2:B...",
+      "primary_lane": "ppttc_named_seed_native_chart",
+      "status": "l5_component_proven",
+      "component_proof": "QTR03_OwnerCoaching_Bar",
+      "fallback": "ranked owner table",
+      "guardrail": "Use converted EUR ARR and keep row counts separate from ARR sums."
+    },
+    {
+      "slot_id": "S16_StageByIndustry",
+      "slide": 16,
+      "surface": "stage by industry mekko",
+      "source": "model Pivots stage by industry block",
+      "primary_lane": "ppttc_named_seed_native_chart",
+      "status": "l5_component_proven",
+      "component_proof": "QTR07_StageIndustry_Mekko",
+      "fallback": "stacked bar or table-image matrix",
+      "guardrail": "ARR universe only; use only when cells are dense enough to read."
+    },
+    {
+      "slot_id": "S17_TerritoryPerformance",
+      "slide": 17,
+      "surface": "territory ranked bar",
+      "source": "model Territory_Performance",
+      "primary_lane": "ppttc_named_seed_native_chart",
+      "status": "l5_component_proven",
+      "component_proof": "QTR09_Geography_RankedBar",
+      "fallback": "map only for explicit geography story",
+      "guardrail": "ARR only; prefer ranked bars unless geographic spread is decision-relevant."
+    },
+    {
+      "slot_id": "S18_WinsLossesQTD",
+      "slide": 18,
+      "surface": "QTD wins and losses grouped column",
+      "source": "model Wins_Losses_QTD!A1:D3",
+      "primary_lane": "ppttc_named_seed_native_chart",
+      "status": "l5_component_proven",
+      "component_proof": "QTR14_WinsLossesQTD_GroupedColumn",
+      "fallback": "table-image wins/losses summary",
+      "guardrail": "ARR and Renewal ACV must be separate series with explicit labels."
+    },
+    {
+      "slot_id": "S19_Velocity",
+      "slide": 19,
+      "surface": "velocity chart",
+      "source": "model Velocity!A3:E10",
+      "primary_lane": "ppttc_named_seed_native_chart",
+      "status": "l5_component_proven",
+      "component_proof": "QTR15_Velocity_Bar",
+      "fallback": "single-cell velocity metrics on S23",
+      "guardrail": "Label whether the metric is median age, cycle time, or ARR/day."
+    },
+    {
+      "slot_id": "S21_ConcentrationRiskChart",
+      "slide": 21,
+      "surface": "concentration risk chart",
+      "source": "model Concentration!A11:C15",
+      "primary_lane": "ppttc_named_seed_native_chart",
+      "status": "l5_component_proven",
+      "component_proof": "QTR16_ConcentrationRisk_Stacked",
+      "fallback": "table-image concentration register",
+      "guardrail": "ARR only; do not mix Renewal ACV concentration into ARR exposure."
+    },
+    {
+      "slot_id": "S21_ConcentrationTable",
+      "slide": 21,
+      "surface": "concentration risk table",
+      "source": "connected table-image workbook S21_ConcentrationTable",
+      "primary_lane": "excel_com_table_image",
+      "status": "table_image_contract_defined",
+      "table_image_contract": "S21_ConcentrationTable",
+      "fallback": "native PowerPoint table",
+      "guardrail": "Largest-account text must tie to the same table rows."
+    },
+    {
+      "slot_id": "S21_LargestAccount",
+      "slide": 21,
+      "surface": "largest account text",
+      "source": "model Concentration!B5",
+      "primary_lane": "ppttc_text_binding",
+      "status": "contracted",
+      "fallback": "PowerPoint text splice",
+      "guardrail": "Must tie to concentration table."
+    },
+    {
+      "slot_id": "S21_LargestArr",
+      "slide": 21,
+      "surface": "largest account ARR text",
+      "source": "model Concentration!B6",
+      "primary_lane": "ppttc_text_binding",
+      "status": "contracted",
+      "fallback": "PowerPoint text splice",
+      "guardrail": "EUR ARR only."
+    },
+    {
+      "slot_id": "S21_LargestShare",
+      "slide": 21,
+      "surface": "largest account share text",
+      "source": "model Concentration!B7",
+      "primary_lane": "ppttc_text_binding",
+      "status": "contracted",
+      "fallback": "PowerPoint text splice",
+      "guardrail": "Share denominator must be ARR universe, not Renewal ACV."
+    },
+    {
+      "slot_id": "S21_ThresholdFlag",
+      "slide": 21,
+      "surface": "concentration threshold flag",
+      "source": "model Concentration!B8",
+      "primary_lane": "ppttc_text_binding",
+      "status": "contracted",
+      "fallback": "PowerPoint text splice",
+      "guardrail": "Flag must be computed from the same concentration basis."
+    },
+    {
+      "slot_id": "S22_StaleActivity",
+      "slide": 22,
+      "surface": "stale pipeline bar",
+      "source": "model Stale_Activity!A1:C5",
+      "primary_lane": "ppttc_named_seed_native_chart",
+      "status": "l5_component_proven",
+      "component_proof": "QTR12_StalePipeline_BarTable",
+      "fallback": "table-image only",
+      "guardrail": "ARR universe only; stale ARR is not Renewal ACV."
+    },
+    {
+      "slot_id": "S22_StaleActivityFootnote",
+      "slide": 22,
+      "surface": "stale activity footnote",
+      "source": "model Stale_Activity!A7",
+      "primary_lane": "ppttc_text_binding",
+      "status": "contracted",
+      "fallback": "PowerPoint text splice",
+      "guardrail": "Must state the stale activity horizon."
+    },
+    {
+      "slot_id": "S23_OpenOppsValue",
+      "slide": 23,
+      "surface": "sales velocity KPI value",
+      "source": "model Sales_Velocity!B2",
+      "primary_lane": "ppttc_text_binding",
+      "status": "contracted",
+      "fallback": "PowerPoint text splice",
+      "guardrail": "Open opportunity count must stay separate from ARR value."
+    },
+    {
+      "slot_id": "S23_OpenOppsNote",
+      "slide": 23,
+      "surface": "sales velocity KPI note",
+      "source": "model Sales_Velocity!C2",
+      "primary_lane": "ppttc_text_binding",
+      "status": "contracted",
+      "fallback": "PowerPoint text splice",
+      "guardrail": "Note must not introduce unsupported account claims."
+    },
+    {
+      "slot_id": "S23_WinRateValue",
+      "slide": 23,
+      "surface": "sales velocity KPI value",
+      "source": "model Sales_Velocity!B3",
+      "primary_lane": "ppttc_text_binding",
+      "status": "contracted",
+      "fallback": "PowerPoint text splice",
+      "guardrail": "Label QTD or trailing period explicitly."
+    },
+    {
+      "slot_id": "S23_WinRateNote",
+      "slide": 23,
+      "surface": "sales velocity KPI note",
+      "source": "model Sales_Velocity!C3",
+      "primary_lane": "ppttc_text_binding",
+      "status": "contracted",
+      "fallback": "PowerPoint text splice",
+      "guardrail": "Note must not blend won ARR and renewal ACV."
+    },
+    {
+      "slot_id": "S23_AvgDealSizeValue",
+      "slide": 23,
+      "surface": "sales velocity KPI value",
+      "source": "model Sales_Velocity!B4",
+      "primary_lane": "ppttc_text_binding",
+      "status": "contracted",
+      "fallback": "PowerPoint text splice",
+      "guardrail": "Use converted EUR amount and label the unit."
+    },
+    {
+      "slot_id": "S23_AvgDealSizeNote",
+      "slide": 23,
+      "surface": "sales velocity KPI note",
+      "source": "model Sales_Velocity!C4",
+      "primary_lane": "ppttc_text_binding",
+      "status": "contracted",
+      "fallback": "PowerPoint text splice",
+      "guardrail": "Note must state whether it covers Land+Expand only."
+    },
+    {
+      "slot_id": "S23_AvgCycleDaysValue",
+      "slide": 23,
+      "surface": "sales velocity KPI value",
+      "source": "model Sales_Velocity!B5",
+      "primary_lane": "ppttc_text_binding",
+      "status": "contracted",
+      "fallback": "PowerPoint text splice",
+      "guardrail": "Do not compare with prior period unless sourced."
+    },
+    {
+      "slot_id": "S23_AvgCycleDaysNote",
+      "slide": 23,
+      "surface": "sales velocity KPI note",
+      "source": "model Sales_Velocity!C5",
+      "primary_lane": "ppttc_text_binding",
+      "status": "contracted",
+      "fallback": "PowerPoint text splice",
+      "guardrail": "Note must match the stage/process horizon."
+    },
+    {
+      "slot_id": "S23_VelocityValue",
+      "slide": 23,
+      "surface": "sales velocity KPI value",
+      "source": "model Sales_Velocity!B6",
+      "primary_lane": "ppttc_text_binding",
+      "status": "contracted",
+      "fallback": "PowerPoint text splice",
+      "guardrail": "Label numerator and denominator; no unlabeled ARR/day claim."
+    },
+    {
+      "slot_id": "S23_VelocityNote",
+      "slide": 23,
+      "surface": "sales velocity KPI note",
+      "source": "model Sales_Velocity!C6",
+      "primary_lane": "ppttc_text_binding",
+      "status": "contracted",
+      "fallback": "PowerPoint text splice",
+      "guardrail": "Note must not introduce unsupported trend claims."
+    },
+    {
+      "slot_id": "S24_AccountExpansion",
+      "slide": 24,
+      "surface": "account expansion table",
+      "source": "connected table-image workbook S24_AccountExpansion",
+      "primary_lane": "excel_com_table_image",
+      "status": "table_image_contract_defined",
+      "table_image_contract": "S24_AccountExpansion",
+      "fallback": "native PowerPoint table",
+      "guardrail": "Expansion ARR only; account names must come from source rows."
+    },
+    {
+      "slot_id": "S25_PipelineCreationVelocity",
+      "slide": 25,
+      "surface": "pipeline creation velocity chart",
+      "source": "model Pipeline_Creation_Velocity!A1:C13",
+      "primary_lane": "ppttc_named_seed_native_chart",
+      "status": "l5_component_proven",
+      "component_proof": "QTR17_PipelineCreationVelocity_Bar",
+      "fallback": "table-image weekly creation trend",
+      "guardrail": "New ARR only; do not include Renewal ACV creation."
+    },
+    {
+      "slot_id": "S26_ActionItems",
+      "slide": 26,
+      "surface": "action items table",
+      "source": "trends-derived action register / connected table image workbook",
+      "primary_lane": "excel_com_table_image",
+      "status": "l5_component_proven",
+      "component_proof": "QTR10_ActionDecisionRegister_TableImage",
+      "fallback": "native PowerPoint table",
+      "guardrail": "Action text must be tied to validated facts, not free-form AI claims."
+    },
+    {
+      "slot_id": "S27_RisksOutlook",
+      "slide": 27,
+      "surface": "risks and outlook text",
+      "source": "cached brief risks/outlook",
+      "primary_lane": "ppttc_text_binding",
+      "status": "contracted_ai_cached_required",
+      "fallback": "PowerPoint text splice from cached run artifact",
+      "guardrail": "No unsupported forward-looking claims or invented named risks."
+    }
+  ],
+  "component_proofs": [
+    {
+      "contract": "QTR01_StageMix_Bar",
+      "source_slot": "S05_PipelineByStage",
+      "lane": "ppttc_named_seed_native_chart",
+      "status": "l5_proven",
+      "proof_path": "state/thinkcell_bridge/build_scaffold/2026-Q2/work/QTR01_StageMix_Bar/QTR01_StageMix_Bar-proof.json",
+      "production_note": "Component proof exists; final insertion still requires visual and publish gates."
+    },
+    {
+      "contract": "QTR02_ForecastMix_Bar",
+      "source_slot": "S13_ForecastCategory",
+      "lane": "ppttc_named_seed_native_chart",
+      "status": "l5_proven",
+      "proof_path": "state/thinkcell_bridge/build_scaffold/2026-Q2/work/QTR02_ForecastMix_Bar/QTR02_ForecastMix_Bar-proof.json",
+      "production_note": "Component proof exists; omitted-category labeling remains a publish-gate check."
+    },
+    {
+      "contract": "QTR03_OwnerCoaching_Bar",
+      "source_slot": "S15_ByOwner",
+      "lane": "ppttc_named_seed_native_chart",
+      "status": "l5_proven",
+      "proof_path": "state/thinkcell_bridge/build_scaffold/2026-Q2/work/QTR03_OwnerCoaching_Bar/QTR03_OwnerCoaching_Bar-proof.json",
+      "production_note": "Component proof exists; final insertion still requires visual and publish gates."
+    },
+    {
+      "contract": "QTR04_DealRisk_Scatter",
+      "source_slot": null,
+      "lane": "ppttc_named_seed_native_chart",
+      "status": "l5_proven",
+      "proof_path": "state/thinkcell_bridge/build_scaffold/2026-Q2/work/QTR04_DealRisk_Scatter/QTR04_DealRisk_Scatter-proof.json",
+      "production_note": "Pilot candidate only; do not universalize where probability or ARR has no spread."
+    },
+    {
+      "contract": "QTR05_FY26RenewalTimeline_Gantt",
+      "source_slot": null,
+      "lane": "ppttc_named_seed_native_chart",
+      "status": "l5_proven",
+      "proof_path": "state/thinkcell_bridge/build_scaffold/2026-Q2/work/QTR05_FY26RenewalTimeline_Gantt/QTR05_FY26RenewalTimeline_Gantt-proof.json",
+      "production_note": "Pilot candidate only; Renewal ACV lane."
+    },
+    {
+      "contract": "QTR06_Q2RenewalTimeline_Gantt",
+      "source_slot": null,
+      "lane": "ppttc_named_seed_native_chart",
+      "status": "l5_proven",
+      "proof_path": "state/thinkcell_bridge/build_scaffold/2026-Q2/work/QTR06_Q2RenewalTimeline_Gantt/QTR06_Q2RenewalTimeline_Gantt-proof.json",
+      "production_note": "Narrow-use renewal timeline; keep density/date-spread gate."
+    },
+    {
+      "contract": "QTR07_StageIndustry_Mekko",
+      "source_slot": "S16_StageByIndustry",
+      "lane": "ppttc_named_seed_native_chart",
+      "status": "l5_proven",
+      "proof_path": "state/thinkcell_bridge/build_scaffold/2026-Q2/work/QTR07_StageIndustry_Mekko/QTR07_StageIndustry_Mekko-proof.json",
+      "production_note": "Appendix/density-gated; not automatically a core slide."
+    },
+    {
+      "contract": "QTR08_PipelineMovement_Waterfall",
+      "source_slot": "S04_PipeMovement",
+      "lane": "ppttc_named_seed_native_chart",
+      "status": "l5_proven",
+      "proof_path": "state/thinkcell_bridge/build_scaffold/2026-Q2/work/QTR08_PipelineMovement_Waterfall/QTR08_PipelineMovement_Waterfall-proof.json",
+      "production_note": "Requires prior snapshot/workbook; not live-Salesforce-only."
+    },
+    {
+      "contract": "QTR09_Geography_RankedBar",
+      "source_slot": "S17_TerritoryPerformance",
+      "lane": "ppttc_named_seed_native_chart",
+      "status": "l5_proven",
+      "proof_path": "state/thinkcell_bridge/build_scaffold/2026-Q2/work/QTR09_Geography_RankedBar/QTR09_Geography_RankedBar-proof.json",
+      "production_note": "Ranked bar default; map only when geography itself is the story."
+    },
+    {
+      "contract": "QTR10_ActionDecisionRegister_TableImage",
+      "source_slot": "S26_ActionItems",
+      "lane": "excel_com_table_image",
+      "status": "l5_proven",
+      "proof_path": "state/thinkcell_bridge/build_scaffold/2026-Q2/work/QTR10_ActionDecisionRegister_TableImage/QTR10_ActionDecisionRegister_TableImage-proof.json",
+      "production_note": "Also proves support slot S27_DecisionChecklist."
+    },
+    {
+      "contract": "QTR11_CommercialApprovalGap_TableImage",
+      "source_slot": "S09_PendingCommercialApproval",
+      "lane": "excel_com_table_image",
+      "status": "l5_proven",
+      "proof_path": "state/thinkcell_bridge/build_scaffold/2026-Q2/work/QTR11_CommercialApprovalGap_TableImage/QTR11_CommercialApprovalGap_TableImage-proof.json",
+      "production_note": "Table-image lane for Commercial Approval gap."
+    },
+    {
+      "contract": "QTR12_StalePipeline_BarTable",
+      "source_slot": "S22_StaleActivity",
+      "lane": "ppttc_named_seed_native_chart",
+      "status": "l5_proven",
+      "proof_path": "state/thinkcell_bridge/build_scaffold/2026-Q2/work/QTR12_StalePipeline_BarTable/QTR12_StalePipeline_BarTable-proof.json",
+      "production_note": "Hybrid proof: native bar plus S22_NamedRiskTriage table image."
+    },
+    {
+      "contract": "QTR13_PipelineAging_Bar",
+      "source_slot": "S06_PipelineAging",
+      "lane": "ppttc_named_seed_native_chart",
+      "status": "l5_proven",
+      "proof_path": "state/thinkcell_bridge/build_scaffold/2026-Q2/work/QTR13_PipelineAging_Bar/QTR13_PipelineAging_Bar-proof.json",
+      "production_note": "Pipeline aging native bar proof passed for Jesper APAC."
+    },
+    {
+      "contract": "QTR14_WinsLossesQTD_GroupedColumn",
+      "source_slot": "S18_WinsLossesQTD",
+      "lane": "ppttc_named_seed_native_chart",
+      "status": "l5_proven",
+      "proof_path": "state/thinkcell_bridge/build_scaffold/2026-Q2/work/QTR14_WinsLossesQTD_GroupedColumn/QTR14_WinsLossesQTD_GroupedColumn-proof.json",
+      "production_note": "Wins/losses grouped column proof passed with ARR and Renewal ACV as separate series."
+    },
+    {
+      "contract": "QTR15_Velocity_Bar",
+      "source_slot": "S19_Velocity",
+      "lane": "ppttc_named_seed_native_chart",
+      "status": "l5_proven",
+      "proof_path": "state/thinkcell_bridge/build_scaffold/2026-Q2/work/QTR15_Velocity_Bar/QTR15_Velocity_Bar-proof.json",
+      "production_note": "Velocity native bar proof passed for median-age payload."
+    },
+    {
+      "contract": "QTR16_ConcentrationRisk_Stacked",
+      "source_slot": "S21_ConcentrationRiskChart",
+      "lane": "ppttc_named_seed_native_chart",
+      "status": "l5_proven",
+      "proof_path": "state/thinkcell_bridge/build_scaffold/2026-Q2/work/QTR16_ConcentrationRisk_Stacked/QTR16_ConcentrationRisk_Stacked-proof.json",
+      "production_note": "Concentration risk native stacked chart proof passed."
+    },
+    {
+      "contract": "QTR17_PipelineCreationVelocity_Bar",
+      "source_slot": "S25_PipelineCreationVelocity",
+      "lane": "ppttc_named_seed_native_chart",
+      "status": "l5_proven",
+      "proof_path": "state/thinkcell_bridge/build_scaffold/2026-Q2/work/QTR17_PipelineCreationVelocity_Bar/QTR17_PipelineCreationVelocity_Bar-proof.json",
+      "production_note": "Pipeline creation velocity native bar proof passed."
+    }
+  ],
+  "table_image_contracts": [
+    {
+      "slot_id": "S07_TopDealsLand",
+      "slide": 7,
+      "workbook_name": "S07_TopDealsLand",
+      "sheet": "TC_S07_TopDealsLand",
+      "range": "$A$1:$J$10",
+      "source_builder": "scripts/build_table_image_source_workbook.py",
+      "representative_workbook": "state/2026-Q2/Jesper-Tyrer/factory/connected/connected_factory_table_images.xlsx",
+      "proof_status": "l5_proven",
+      "proof_path": "state/thinkcell_bridge/build_scaffold/2026-Q2/work/TABLEIMAGE_MonthlySlots/TABLEIMAGE_MonthlySlots-proof.json",
+      "required_terms": ["Account", "Opportunity", "Land", "ARR"],
+      "min_width_in": 5.0,
+      "min_height_in": 1.0,
+      "guardrail": "Land ARR only; review rows must not include Renewal ACV."
+    },
+    {
+      "slot_id": "S08_TopDealsExpand",
+      "slide": 8,
+      "workbook_name": "S08_TopDealsExpand",
+      "sheet": "TC_S08_ClosePlan",
+      "range": "$A$1:$G$8",
+      "source_builder": "scripts/build_table_image_source_workbook.py",
+      "representative_workbook": "state/2026-Q2/Jesper-Tyrer/factory/connected/connected_factory_table_images.xlsx",
+      "proof_status": "l5_proven",
+      "proof_path": "state/thinkcell_bridge/build_scaffold/2026-Q2/work/TABLEIMAGE_MonthlySlots/TABLEIMAGE_MonthlySlots-proof.json",
+      "required_terms": ["Readiness", "ARR", "Pipeline"],
+      "min_width_in": 5.0,
+      "min_height_in": 1.0,
+      "guardrail": "Expand ARR only; close-plan rows must not import Renewal ACV."
+    },
+    {
+      "slot_id": "S09_PendingCommercialApproval",
+      "slide": 9,
+      "workbook_name": "S09_PendingCommercialApproval",
+      "sheet": "TC_S09_CommercialApproval",
+      "range": "$A$1:$H$2",
+      "source_builder": "scripts/build_table_image_source_workbook.py",
+      "representative_workbook": "state/2026-Q2/Jesper-Tyrer/factory/connected/connected_factory_table_images.xlsx",
+      "proof_status": "l5_proven",
+      "component_proof": "QTR11_CommercialApprovalGap_TableImage",
+      "required_terms": ["PT Bank Mandiri", "3 - Engagement", "Land", "0.5 mEUR"],
+      "min_width_in": 5.0,
+      "min_height_in": 0.8,
+      "guardrail": "Commercial Approval applies to Land/Expand governance, not Renewal ACV."
+    },
+    {
+      "slot_id": "S11_RenewalPipeline",
+      "slide": 11,
+      "workbook_name": "S11_RenewalPipeline",
+      "sheet": "TC_S11_Renewals",
+      "range": "$A$1:$I$4",
+      "source_builder": "scripts/build_table_image_source_workbook.py",
+      "representative_workbook": "state/2026-Q2/Jesper-Tyrer/factory/connected/connected_factory_table_images.xlsx",
+      "proof_status": "l5_proven",
+      "proof_path": "state/thinkcell_bridge/build_scaffold/2026-Q2/work/TABLEIMAGE_MonthlySlots/TABLEIMAGE_MonthlySlots-proof.json",
+      "required_terms": ["Close Date", "ACV Unweighted (EUR)", "Stage"],
+      "min_width_in": 5.0,
+      "min_height_in": 1.0,
+      "guardrail": "Renewal ACV only; never combine with Land+Expand ARR."
+    },
+    {
+      "slot_id": "S12_GRRProxyTable",
+      "slide": 12,
+      "workbook_name": "S12_GRRProxyTable",
+      "sheet": "TC_S12_RenewalRecon",
+      "range": "$A$1:$E$5",
+      "source_builder": "scripts/build_table_image_source_workbook.py",
+      "representative_workbook": "state/2026-Q2/Jesper-Tyrer/factory/connected/connected_factory_table_images.xlsx",
+      "proof_status": "l5_proven",
+      "proof_path": "state/thinkcell_bridge/build_scaffold/2026-Q2/work/TABLEIMAGE_MonthlySlots/TABLEIMAGE_MonthlySlots-proof.json",
+      "required_terms": ["FY26 open renewals", "ACV", "do not blend with ARR"],
+      "min_width_in": 5.0,
+      "min_height_in": 1.0,
+      "guardrail": "Proxy table must not be labeled as actual GRR."
+    },
+    {
+      "slot_id": "S21_ConcentrationTable",
+      "slide": 21,
+      "workbook_name": "S21_ConcentrationTable",
+      "sheet": "TC_S21_Concentration",
+      "range": "$A$1:$C$5",
+      "source_builder": "scripts/build_table_image_source_workbook.py",
+      "representative_workbook": "state/2026-Q2/Jesper-Tyrer/factory/connected/connected_factory_table_images.xlsx",
+      "proof_status": "l5_proven",
+      "proof_path": "state/thinkcell_bridge/build_scaffold/2026-Q2/work/TABLEIMAGE_MonthlySlots/TABLEIMAGE_MonthlySlots-proof.json",
+      "required_terms": ["Top 5 share", "Current Q2 closeable", "Land+Expand"],
+      "min_width_in": 4.0,
+      "min_height_in": 1.0,
+      "guardrail": "Concentration denominator must be Land+Expand ARR, not Renewal ACV."
+    },
+    {
+      "slot_id": "S22_NamedRiskTriage",
+      "slide": 22,
+      "workbook_name": "S22_NamedRiskTriage",
+      "sheet": "TC_S22_NamedRisk",
+      "range": "$A$1:$F$5",
+      "source_builder": "scripts/build_table_image_source_workbook.py",
+      "representative_workbook": "state/2026-Q2/Jesper-Tyrer/factory/connected/connected_factory_table_images.xlsx",
+      "proof_status": "l5_proven",
+      "component_proof": "QTR12_StalePipeline_BarTable",
+      "required_terms": ["Danantara", "Silent 90d+", "PT Bank Mandiri"],
+      "min_width_in": 5.0,
+      "min_height_in": 1.0,
+      "guardrail": "Named risk rows are fact-pack rows, not LLM-generated claims."
+    },
+    {
+      "slot_id": "S24_AccountExpansion",
+      "slide": 24,
+      "workbook_name": "S24_AccountExpansion",
+      "sheet": "TC_S24_MayPlan",
+      "range": "$A$1:$C$5",
+      "source_builder": "scripts/build_table_image_source_workbook.py",
+      "representative_workbook": "state/2026-Q2/Jesper-Tyrer/factory/connected/connected_factory_table_images.xlsx",
+      "proof_status": "l5_proven",
+      "proof_path": "state/thinkcell_bridge/build_scaffold/2026-Q2/work/TABLEIMAGE_MonthlySlots/TABLEIMAGE_MonthlySlots-proof.json",
+      "required_terms": ["May lane", "Land+Expand", "Keep ACV separate from ARR"],
+      "min_width_in": 5.0,
+      "min_height_in": 1.0,
+      "guardrail": "Expansion ARR and renewal ACV must remain visibly separate."
+    },
+    {
+      "slot_id": "S26_ActionItems",
+      "slide": 26,
+      "workbook_name": "S26_ActionItems",
+      "sheet": "TC_S26_ActionItems",
+      "range": "$A$1:$F$5",
+      "source_builder": "scripts/build_table_image_source_workbook.py",
+      "representative_workbook": "state/2026-Q2/Jesper-Tyrer/factory/connected/connected_factory_table_images.xlsx",
+      "proof_status": "l5_proven",
+      "component_proof": "QTR10_ActionDecisionRegister_TableImage",
+      "required_terms": ["Zombie ARR", "Approval Gap", "Jesper Tyrer"],
+      "min_width_in": 5.0,
+      "min_height_in": 1.0,
+      "guardrail": "Action rows must be tied to validated facts."
+    }
+  ],
+  "known_gaps": [
+    {
+      "id": "gap.registry.tc_aicore_8_vs_production_9",
+      "severity": "p0",
+      "status": "closed_2026-05-03",
+      "description": "tc-aicore now mirrors the production 9-director registry, including Mourad / MEA."
+    },
+    {
+      "id": "gap.table_image.unproven_monthly_tables",
+      "severity": "p1",
+      "status": "closed_2026-05-03",
+      "description": "S07, S08, S11, S12 table, S21 table, and S24 now have explicit AddRangeImage source-range contracts and a passing render-lane table-image proof."
+    },
+    {
+      "id": "gap.native_chart.unproven_monthly_charts",
+      "severity": "p1",
+      "status": "closed_2026-05-03",
+      "description": "S06, S18, S19, S21 chart, and S25 now have passing L5 native-chart component proofs."
+    },
+    {
+      "id": "gap.fact.slip_velocity_field_history",
+      "severity": "p1",
+      "status": "closed_2026-05-03",
+      "description": "tc-aicore now queries OpportunityFieldHistory CloseDate changes and S04 computes slipped ARR from in-quarter CloseDate moves out of period."
+    },
+    {
+      "id": "gap.ai.reproducibility",
+      "severity": "p1",
+      "status": "partial_tc_aicore_gate_2026-05-03",
+      "description": "tc-aicore now writes and validates a cached AI enrichment artifact before title/S02 splicing; sales-ops-copilot now emits an AI deck-builder review workbook in the production line; accepted GPT-5.5/ribbon text artifacts still need publish-gate enforcement."
+    }
+  ]
+}

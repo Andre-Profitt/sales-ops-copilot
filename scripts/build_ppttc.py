@@ -382,43 +382,109 @@ def _number_or_none(value: Any) -> float | None:
     return None
 
 
+def _stage_label(value: Any) -> str:
+    label = str(value or "")
+    if " - " in label:
+        number, name = label.split(" - ", 1)
+        return f"{number} {name}"
+    return label
+
+
+def _stage_name(value: Any) -> str:
+    label = str(value or "")
+    if " - " in label:
+        return label.split(" - ", 1)[1]
+    return label
+
+
+def _compact_stage_label(value: Any) -> str:
+    name = _stage_name(value)
+    return {
+        "Prospecting": "Prospect.",
+        "Discovery": "Discovery",
+        "Engagement": "Engage.",
+        "Shortlisted": "Shortlist",
+        "Preferred": "Preferred",
+        "Contracting": "Contract",
+        "Opt-out": "Opt-out",
+        "Won": "Won",
+    }.get(name, name)
+
+
+def _week_label(value: Any) -> str:
+    if isinstance(value, datetime):
+        return f"{value:%b} {value.day}"
+    if isinstance(value, date):
+        return f"{value:%b} {value.day}"
+    return str(value)
+
+
+def _eur_millions(value: Any) -> float:
+    return round(_number_or_zero(value) / 1_000_000, 1)
+
+
+def _eur_millions_for_k_scaled_donor(value: Any) -> float:
+    return round(_number_or_zero(value) / 1_000, 1)
+
+
+def _for_k_scaled_donor(value: Any) -> float:
+    return round(_number_or_zero(value) * 1_000, 1)
+
+
+def _eur_thousands(value: Any) -> float:
+    return round(_number_or_zero(value) / 1_000, 0)
+
+
+def _pipe_movement_label(label: Any) -> str:
+    text = str(label or "").strip()
+    return text.removeprefix("(+) ").removeprefix("(-) ")
+
+
+def _pipe_movement_value(label: Any, value: Any) -> float:
+    numeric = _number_or_zero(value)
+    if str(label or "").strip().startswith("(-)"):
+        numeric = -abs(numeric)
+    return _eur_millions(numeric)
+
+
 def _pipe_movement_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
     matrix = model.matrix("Pipe_Movement", "A2:B6")
-    categories = [row[0] for row in matrix if row[0] not in (None, "")]
-    values = [_number_or_zero(row[1]) for row in matrix if row[0] not in (None, "")]
-    return _chart_entry("S04_PipeMovement", categories=categories, series_rows=[("ARR (EUR)", values)])
+    rows = [(row[0], row[1]) for row in matrix if row[0] not in (None, "")]
+    categories = [_pipe_movement_label(label) for label, _ in rows]
+    values = [_pipe_movement_value(label, value) for label, value in rows]
+    return _chart_entry("S04_PipeMovement", categories=categories, series_rows=[("ARR (mEUR)", values)])
 
 
 def _pipeline_by_stage_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
     matrix = model.matrix("Pipeline_By_Stage", "A2:B9")
     categories = [row[0] for row in matrix if row[0] not in (None, "")]
-    values = [_number_or_zero(row[1]) for row in matrix if row[0] not in (None, "")]
+    values = [_eur_millions(row[1]) for row in matrix if row[0] not in (None, "")]
     return _chart_entry(
         "S05_PipelineByStage",
         categories=categories,
-        series_rows=[("Open ARR (EUR)", values)],
+        series_rows=[("Open ARR (mEUR)", values)],
     )
 
 
 def _pipeline_aging_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
     matrix = model.matrix("Pipeline_Aging", "A2:E7")
     categories = [row[0] for row in matrix if row[0] not in (None, "")]
-    values = [_number_or_zero(row[3]) for row in matrix if row[0] not in (None, "")]
+    values = [_eur_millions(row[3]) for row in matrix if row[0] not in (None, "")]
     return _chart_entry(
         "S06_PipelineAging",
         categories=categories,
-        series_rows=[("Open ARR (EUR)", values)],
+        series_rows=[("Open ARR (mEUR)", values)],
     )
 
 
 def _forecast_category_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
     matrix = _forecast_category_matrix(model)
     categories = [row[0] for row in matrix[1:] if row[0] not in (None, "")]
-    values = [_number_or_zero(row[2]) for row in matrix[1:] if row[0] not in (None, "")]
+    values = [_eur_millions_for_k_scaled_donor(row[2]) for row in matrix[1:] if row[0] not in (None, "")]
     return _chart_entry(
         "S13_ForecastCategory",
         categories=categories,
-        series_rows=[("ARR (EUR)", values)],
+        series_rows=[("ARR (mEUR)", values)],
     )
 
 
@@ -436,19 +502,65 @@ def _by_owner_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
     return _chart_entry(
         "S15_ByOwner",
         categories=[owner for owner, _ in rows],
-        series_rows=[("Open ARR (EUR)", [arr for _, arr in rows])],
+        series_rows=[("Open ARR (mEUR)", [_eur_millions(arr) for _, arr in rows])],
     )
 
 
 def _stage_by_industry_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
     matrix = model.matrix("Pivots", "A5:M13")
     headers = matrix[0]
-    categories = [row[0] for row in matrix[1:]]
-    series_rows: list[tuple[str, list[Any]]] = []
-    for col_idx, series_name in enumerate(headers[1:], start=1):
-        values = [_number_or_zero(row[col_idx]) for row in matrix[1:]]
+    industries = [str(header) for header in headers[1:] if header not in (None, "")]
+    data_rows = [
+        (str(row[0]), [_number_or_zero(value) for value in row[1 : 1 + len(industries)]])
+        for row in matrix[1:]
+        if row[0] not in (None, "")
+    ]
+    totals = [
+        (idx, sum(values[idx] for _, values in data_rows))
+        for idx in range(len(industries))
+    ]
+    top_indices = [
+        idx
+        for idx, total in sorted(totals, key=lambda item: item[1], reverse=True)
+        if total > 0
+    ][:5]
+    other_indices = [
+        idx
+        for idx, total in totals
+        if total > 0 and idx not in top_indices
+    ]
+    selected_indices = top_indices + ([-1] if other_indices else [])
+    categories = [
+        "Other" if idx == -1 else industries[idx]
+        for idx in selected_indices
+    ]
+    raw_series: list[tuple[str, list[Any]]] = []
+    for stage_name, row_values in data_rows:
+        values = [
+            _eur_millions(sum(row_values[i] for i in other_indices))
+            if idx == -1
+            else _eur_millions(row_values[idx])
+            for idx in selected_indices
+        ]
         if any(values):
-            series_rows.append((str(series_name), values))
+            raw_series.append((_stage_name(stage_name), values))
+    top_stage_names = {
+        name
+        for name, _ in sorted(
+            raw_series,
+            key=lambda item: sum(_number_or_zero(value) for value in item[1]),
+            reverse=True,
+        )[:3]
+    }
+    series_rows: list[tuple[str, list[Any]]] = []
+    other_values = [0.0 for _ in categories]
+    for name, values in raw_series:
+        if name in top_stage_names:
+            series_rows.append((name, values))
+        else:
+            other_values = [left + _number_or_zero(right) for left, right in zip(other_values, values)]
+    if any(other_values):
+        series_rows.append(("Other stages", [round(value, 1) for value in other_values]))
     return _chart_entry("S16_StageByIndustry", categories=categories, series_rows=series_rows)
 
 
@@ -465,44 +577,43 @@ def _territory_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
     return _chart_entry(
         "S17_TerritoryPerformance",
         categories=[country for country, _ in rows],
-        series_rows=[("Open ARR (EUR)", [arr for _, arr in rows])],
+        series_rows=[("Open ARR (mEUR)", [_eur_millions(arr) for _, arr in rows])],
     )
 
 
 def _wins_losses_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
     matrix = model.matrix("Wins_Losses_QTD", "A1:D3")
     categories = [row[0] for row in matrix[1:]]
-    arr = [_number_or_zero(row[2]) for row in matrix[1:]]
-    acv = [_number_or_zero(row[3]) for row in matrix[1:]]
+    arr = [_eur_millions_for_k_scaled_donor(row[2]) for row in matrix[1:]]
+    acv = [_eur_millions_for_k_scaled_donor(row[3]) for row in matrix[1:]]
     return _chart_entry(
         "S18_WinsLossesQTD",
         categories=categories,
         series_rows=[
-            ("ARR (Land+Expand, EUR)", arr),
-            ("ACV (Renewal, EUR)", acv),
+            ("ARR (Land+Expand, mEUR)", arr),
+            ("ACV (Renewal, mEUR)", acv),
         ],
     )
 
 
 def _velocity_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
     matrix = model.matrix("Velocity", "A3:E10")
-    categories = [row[0] for row in matrix]
-    line_values = [_number_or_none(row[2]) for row in matrix]
-    bar_values = [_number_or_zero(row[1]) for row in matrix]
+    categories = [_compact_stage_label(row[0]) for row in matrix]
+    values = [
+        value * 1_000 if value is not None else None
+        for value in (_number_or_none(row[2]) for row in matrix)
+    ]
     return _chart_entry(
         "S19_Velocity",
         categories=categories,
-        series_rows=[
-            ("Median age (days)", line_values),
-            ("# Open opps", bar_values),
-        ],
+        series_rows=[("Median age (days)", values)],
     )
 
 
 def _concentration_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
     matrix = model.matrix("Concentration", "A11:C15")
     categories = [row[0] for row in matrix[1:]]
-    shares = [_number_or_zero(row[2]) * 100 for row in matrix[1:]]
+    shares = [_for_k_scaled_donor(_number_or_zero(row[2]) * 100) for row in matrix[1:]]
     return _chart_entry(
         "S21_ConcentrationRiskChart",
         categories=categories,
@@ -513,26 +624,22 @@ def _concentration_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
 def _stale_activity_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
     matrix = model.matrix("Stale_Activity", "A1:C5")
     categories = [row[0] for row in matrix[1:]]
-    values = [_number_or_zero(row[2]) for row in matrix[1:]]
+    values = [_eur_millions(row[2]) for row in matrix[1:]]
     return _chart_entry(
         "S22_StaleActivity",
         categories=categories,
-        series_rows=[("ARR (EUR)", values)],
+        series_rows=[("ARR (mEUR)", values)],
     )
 
 
 def _pipeline_creation_velocity_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
     matrix = model.matrix("Pipeline_Creation_Velocity", "A1:C13")
-    categories = [row[0] for row in matrix[1:]]
-    arr_values = [_number_or_zero(row[2]) for row in matrix[1:]]
-    count_values = [_number_or_zero(row[1]) for row in matrix[1:]]
+    categories = [_week_label(row[0]) for row in matrix[1:]]
+    arr_values = [_eur_millions_for_k_scaled_donor(row[2]) for row in matrix[1:]]
     return _chart_entry(
         "S25_PipelineCreationVelocity",
         categories=categories,
-        series_rows=[
-            ("New ARR (EUR)", arr_values),
-            ("# New opps", count_values),
-        ],
+        series_rows=[("New ARR (mEUR)", arr_values)],
     )
 
 

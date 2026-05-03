@@ -1,0 +1,83 @@
+{
+  "schema": "thinkcell-template-selection/v1",
+  "period": "2026-Q2",
+  "deck_month": "May 2026",
+  "catalog_artifacts": {
+    "inventory_markdown": "state/thinkcell_bridge/template_catalog/thinkcell_template_catalog.md",
+    "inventory_json": "state/thinkcell_bridge/template_catalog/thinkcell_template_catalog.json",
+    "contact_sheet": "state/thinkcell_bridge/template_catalog/thinkcell_template_contact_sheet.png"
+  },
+  "hard_constraint": "Installed POTX templates are design and donor references only. The catalog scan found zero named m_strName automation payloads, so none is a drop-in ppttc template without manual think-cell naming.",
+  "selected_families": [
+    {
+      "family": "Bar, Column",
+      "template": "/Library/Application Support/Microsoft/think-cell/templates/think-cell Charts/Bar, Column/Bar, Column.potx",
+      "use_for": ["stage distribution", "forecast category", "owner ranking", "country or territory ranking", "stale activity", "pipeline creation bars"],
+      "deck_targets": ["S05", "S06", "S08", "S10", "S13", "S15", "S17", "S19", "S22", "S25"],
+      "status": "already seeded in native chart lane"
+    },
+    {
+      "family": "Waterfall",
+      "template": "/Library/Application Support/Microsoft/think-cell/templates/think-cell Charts/Waterfall/Waterfall.potx",
+      "use_for": ["opening to closing bridge", "won/lost movement", "slips and pulls", "net change explanation"],
+      "deck_targets": ["S04", "S05", "S18"],
+      "status": "already seeded, but movement signs must be audited every run"
+    },
+    {
+      "family": "Line, Area",
+      "template": "/Library/Application Support/Microsoft/think-cell/templates/think-cell Charts/Line, Area/Line, Area.potx",
+      "use_for": ["multi-week pipeline creation trend", "close-date movement trend", "Q1 to Q2 trajectory"],
+      "deck_targets": ["S19", "S25"],
+      "status": "not yet wired into current donor injection lane"
+    },
+    {
+      "family": "Scatter, Bubble",
+      "template": "/Library/Application Support/Microsoft/think-cell/templates/think-cell Charts/Scatter, Bubble/Scatter, Bubble.potx",
+      "use_for": ["deal inspection by ARR, probability, age, activity freshness", "concentration and risk outlier detection"],
+      "deck_targets": ["S09", "S21", "S22"],
+      "status": "recommended new chart lane"
+    },
+    {
+      "family": "Timeline, Gantt",
+      "template": "/Library/Application Support/Microsoft/think-cell/templates/think-cell Charts/Timeline, Gantt/Timeline, Gantt.potx",
+      "use_for": ["real close-plan milestones", "approval due dates", "renewal decision dates"],
+      "deck_targets": ["S12", "S13"],
+      "status": "conditional new chart lane; do not use for generic month-end action lists"
+    },
+    {
+      "family": "Mekko",
+      "template": "/Library/Application Support/Microsoft/think-cell/templates/think-cell Charts/Mekko/Mekko.potx",
+      "use_for": ["stage by industry mix only when both dimensions materially matter"],
+      "deck_targets": ["S16"],
+      "status": "already seeded; use sparingly"
+    },
+    {
+      "family": "Tables",
+      "template": "/Library/Application Support/Microsoft/think-cell/templates/Useful Elements/Tables/Tables.potx",
+      "use_for": ["dense named-deal tables after manual named table donor exists", "visual styling reference for current table-image lane"],
+      "deck_targets": ["S04", "S06", "S07", "S08", "S09", "S11", "S12", "S13", "S14", "S15", "S24", "S26", "S27"],
+      "status": "not safe as a live table lane until a manually named table donor is created"
+    },
+    {
+      "family": "Dashboards, Statistics",
+      "template": "/Library/Application Support/Microsoft/think-cell/templates/Dashboards, Statistics/Dashboards, Statistics.potx",
+      "use_for": ["executive KPI strip layout inspiration", "not a full-slide dashboard clone"],
+      "deck_targets": ["S02", "S23"],
+      "status": "visual reference only"
+    },
+    {
+      "family": "Callouts and Annotations",
+      "template": "/Library/Application Support/Microsoft/think-cell/templates/think-cell Charts/Annotations/Annotations.potx",
+      "use_for": ["one or two precise explanation labels on chart slides", "CAGR/difference arrows where mathematically valid"],
+      "deck_targets": ["S04", "S05", "S13", "S18", "S21", "S25"],
+      "status": "overlay/reference lane"
+    }
+  ],
+  "avoid_by_default": [
+    "Pie and doughnut charts except for simple 2-3 category share with labels",
+    "Funnels unless the deck is explicitly showing conversion through a funnel, not the SimCorp 8-stage process",
+    "Venn, cubes, pyramids, hand-drawn elements, quotes, and decorative symbols",
+    "Maps unless geography is the actual decision variable",
+    "Gauges, thermometers, and traffic lights for headline financial metrics"
+  ]
+}

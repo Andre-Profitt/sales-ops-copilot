@@ -105,6 +105,10 @@ def detect_motion(report_meta: dict, report_name: str) -> str:
     rmd = report_meta.get("reportMetadata") or {}
     rt = (rmd.get("reportType") or {}).get("type", "") or ""
     name = report_name.lower()
+    aggs = ",".join(rmd.get("aggregates") or [])
+    has_revenue_agg = "APTS_Opportunity_ARR__c" in aggs or "APTS_Renewal_ACV__c" in aggs
+    if rt == "OpportunityFieldAuditHistory" and not has_revenue_agg:
+        return "non_opp"
     # Non-opportunity report types
     if rt and "Opportunity" not in rt:
         non_opp_keywords = ("Account", "Lead", "Activity", "Task", "Event", "Case", "Asset")
@@ -123,7 +127,6 @@ def detect_motion(report_meta: dict, report_name: str) -> str:
             if any(x in val for x in ["Land", "Expand"]) and "Renewal" not in val:
                 return "arr"
     # 2. Authoritative: aggregate field
-    aggs = ",".join(rmd.get("aggregates") or [])
     if "APTS_Renewal_ACV__c" in aggs and "APTS_Opportunity_ARR__c" not in aggs:
         return "renewal"
     if "APTS_Opportunity_ARR__c" in aggs and "APTS_Renewal_ACV__c" not in aggs:
@@ -180,6 +183,36 @@ def has_correct_aggregate(report_meta: dict, motion: str) -> tuple[str, str]:
     rmd = report_meta.get("reportMetadata") or {}
     aggs = rmd.get("aggregates") or []
     aggs_str = ",".join(aggs)
+    custom_formula_names = set()
+    for formulas_key in ("customDetailFormula", "customSummaryFormula"):
+        formulas = rmd.get(formulas_key) or {}
+        if isinstance(formulas, dict):
+            custom_formula_names.update(formulas)
+    if custom_formula_names:
+        formula_aggs = {
+            agg.split("!", 1)[-1]
+            for agg in aggs
+            if agg != "RowCount" and agg.split("!", 1)[-1] in custom_formula_names
+        }
+        if formula_aggs and all(
+            agg == "RowCount" or agg.split("!", 1)[-1] in custom_formula_names for agg in aggs
+        ):
+            formula_text = json.dumps(
+                {
+                    "customDetailFormula": rmd.get("customDetailFormula"),
+                    "customSummaryFormula": rmd.get("customSummaryFormula"),
+                },
+                default=str,
+            )
+            arr_field = "APTS_Opportunity_ARR__c"
+            acv_field = "APTS_Renewal_ACV__c"
+            if arr_field in formula_text and acv_field in formula_text:
+                return "⚠", "custom formula blends ARR+ACV"
+            if motion == "arr" and acv_field in formula_text and arr_field not in formula_text:
+                return "✗", "ACV formula on Land/Expand"
+            if motion == "renewal" and arr_field in formula_text and acv_field not in formula_text:
+                return "✗", "ARR formula on Renewal"
+            return "✓", "custom formula aggregate"
     if "Overall_Adoption_Score__c" in aggs_str:
         return "n/a", "operational score aggregate"
     if "STAGE_DURATION" in aggs_str or "Number_of_Days_Since_Created__c" in aggs_str:
@@ -221,6 +254,10 @@ def has_pollution_filter(report_meta: dict) -> tuple[str, str]:
     rmd = report_meta.get("reportMetadata") or {}
     filters = rmd.get("reportFilters") or []
     rt = (rmd.get("reportType") or {}).get("type", "") or ""
+    aggs = ",".join(rmd.get("aggregates") or [])
+    has_revenue_agg = "APTS_Opportunity_ARR__c" in aggs or "APTS_Renewal_ACV__c" in aggs
+    if rt == "OpportunityFieldAuditHistory" and not has_revenue_agg:
+        return "n/a", "count-only field audit"
     if "Opportunity" not in rt and "Lead" not in rt and "Account" not in rt:
         return "n/a", "non-opportunity report"
     saw_owner = False
@@ -307,6 +344,10 @@ def has_data(execute_result: dict) -> tuple[str, str]:
     if grand_max > 0:
         # No detail rows but aggregates non-zero (summary/matrix report)
         return "✓", f"agg={grand_max:.0f}"
+    if "T!T" in fact_map and grand_aggs:
+        # Executed successfully with an explicit zero result. This is valid for
+        # exception-control tiles where no current breaches is the desired state.
+        return "✓", "0 current records"
     return "⚠", "0 rows, 0 aggregates"
 
 

@@ -32,6 +32,8 @@ from pptx.enum.shapes import MSO_SHAPE
 from pptx.enum.text import PP_ALIGN
 from pptx.util import Inches, Pt
 
+from scrub_stale_thinkcell_metadata import scrub_deck
+
 ROOT = Path(__file__).resolve().parent.parent
 SOURCE_TEMPLATE = Path.home() / "projects/brand-deck-agent-py/assets/SimCorp_PPT_Template.pptx"
 OUTPUT = ROOT / "assets/LAND_template.pptx"
@@ -557,8 +559,12 @@ def main() -> None:
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     prs.save(str(OUTPUT))
+    scrub_result = scrub_deck(OUTPUT)
+    if scrub_result.status != "pass":
+        raise SystemExit(f"template scrub failed: {scrub_result.residual_stale_tokens}")
     print(f"wrote: {OUTPUT}")
     print(f"slides: {len(prs.slides)}")
+    print(f"scrubbed_stale_thinkcell_tokens: {scrub_result.status}")
 
 
 if __name__ == "__main__":

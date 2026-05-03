@@ -12,3 +12,13 @@ eval/runs/*.json
 # uploaded, never in git.
 workforce/raw/
 workforce/state/
+
+# track:land-factory — local render scratch + Windows VM scratch
+_rendered/
+_windows_test/
+
+# Office tilde-locks and scrub temp files
+~$*.pptx
+~$*.xlsx
+*.scrub.tmp.pptx
+*.scrub.normalized.tmp.pptx

@@ -7,7 +7,7 @@ Source of truth is the consumer; bump in BOTH places when the contract
 changes. Keep field-by-field parity. Per
 `feedback_simcorp_enterprise_claude_per_deal_2026-04-30`, per-deal
 context (top_deals_named, pending_commercial_approval_named,
-at_risk_renewals_named) is allowed in the envelope.
+at_risk_renewals_named, q2_deal_readiness, fy26_renewals) is allowed in the envelope.
 """
 
 from __future__ import annotations
@@ -102,4 +102,6 @@ class TrendsEnvelope(BaseModel):
     top_deals_named: list[NamedDeal] = Field(default_factory=list)
     pending_commercial_approval_named: list[NamedDeal] = Field(default_factory=list)
     at_risk_renewals_named: list[NamedDeal] = Field(default_factory=list)
+    q2_deal_readiness: list[NamedDeal] = Field(default_factory=list)
+    fy26_renewals: list[NamedDeal] = Field(default_factory=list)
     action_items: list[ActionItem] = Field(default_factory=list)
