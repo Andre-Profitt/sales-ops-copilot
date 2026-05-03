@@ -55,6 +55,11 @@ TARGET_TABLE_IMAGE_NAMES = [
     "S27_DecisionChecklist",
 ]
 REQUIRED_TABLE_IMAGE_SLIDES = {4, 5, 6, 7, 8, 9, 11, 12, 13, 16, 18, 19, 21, 22, 23, 24, 25, 26, 27}
+# Slots that may legitimately ship as a native think-cell chart instead of a
+# table-image picture once promote_native_charts_to_linked_deck.py has run
+# against the linked deck. The publish gate accepts either form on these
+# slots — table-image for safety, native chart when L5 promotion has landed.
+NATIVE_CHART_PROMOTABLE_SLIDES = {4, 5, 6, 13, 16, 17, 18, 19, 21, 22, 25}
 DONOR_PLACEHOLDER_PATTERNS = [
     "Revenues, costs, totals",
     "[USD m]",
@@ -637,8 +642,24 @@ def _gate_director(
                 if any(shape.name == "Pic" for shape in slide.shapes)
             }
         )
+        native_chart_slides = sorted(
+            {
+                slide_idx
+                for slide_idx, slide in enumerate(prs.slides, start=1)
+                if any(getattr(shape, "has_chart", False) for shape in slide.shapes)
+            }
+        )
         metrics["table_image_pic_slides"] = pic_slides
-        missing_pic_slides = sorted(REQUIRED_TABLE_IMAGE_SLIDES - set(pic_slides))
+        metrics["native_chart_slides"] = native_chart_slides
+        # Promotable slots may ship as either a table-image picture OR a
+        # native think-cell chart (after promote_native_charts_to_linked_deck.py).
+        # Required-but-not-promotable slots must still be pictures.
+        strict_required = REQUIRED_TABLE_IMAGE_SLIDES - NATIVE_CHART_PROMOTABLE_SLIDES
+        promotable_required = REQUIRED_TABLE_IMAGE_SLIDES & NATIVE_CHART_PROMOTABLE_SLIDES
+        accepted_promotable = set(pic_slides) | set(native_chart_slides)
+        missing_strict = sorted(strict_required - set(pic_slides))
+        missing_promotable = sorted(promotable_required - accepted_promotable)
+        missing_pic_slides = sorted(set(missing_strict) | set(missing_promotable))
         if missing_pic_slides:
             blockers.append(
                 f"missing refreshed table-image picture on slide(s): {missing_pic_slides}"

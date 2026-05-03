@@ -69,34 +69,44 @@
       "index": 8,
       "purpose": "owner_rollup",
       "expected_kind": "editorial_native",
-      "rebuild_reason": "owner ranking rendered as text grid"
+      "alternative_kinds": ["native_chart", "table_image"],
+      "alternative_reason": "QTR03 OwnerCoaching native chart promotion (or original table-image fallback)",
+      "rebuild_reason": "owner ranking rendered as text grid OR native bar chart from QTR03 L5 proof"
     },
     {
       "index": 9,
       "purpose": "q2_readiness",
       "expected_kind": "table_image",
-      "expected_pictures_min": 1,
+      "alternative_kinds": ["native_chart"],
+      "alternative_reason": "QTR07 StageByIndustry Mekko native chart promotion",
+      "expected_pictures_min": 0,
       "expected_pictures_max": 2
     },
     {
       "index": 10,
       "purpose": "land_expand_vs_renewal",
       "expected_kind": "table_image",
-      "expected_pictures_min": 1,
+      "alternative_kinds": ["native_chart"],
+      "alternative_reason": "QTR14 WinsLossesQTD native chart promotion",
+      "expected_pictures_min": 0,
       "expected_pictures_max": 2
     },
     {
       "index": 11,
       "purpose": "all_open_exposure",
       "expected_kind": "table_image",
-      "expected_pictures_min": 1,
+      "alternative_kinds": ["native_chart"],
+      "alternative_reason": "QTR16 ConcentrationRisk native chart promotion",
+      "expected_pictures_min": 0,
       "expected_pictures_max": 2
     },
     {
       "index": 12,
       "purpose": "regional_risk_spine",
       "expected_kind": "table_image",
-      "expected_pictures_min": 1,
+      "alternative_kinds": ["native_chart"],
+      "alternative_reason": "QTR12 StalePipeline native chart promotion",
+      "expected_pictures_min": 0,
       "expected_pictures_max": 2
     },
     {

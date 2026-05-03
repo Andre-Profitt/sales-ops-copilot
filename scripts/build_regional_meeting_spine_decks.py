@@ -18,17 +18,18 @@ from _directors import canonical_directors
 from fix_table_image_aspect_ratios import fix_deck
 from meeting_spine_action_layer import enhance_meeting_spine_deck
 from period_context import DEFAULT_PERIOD, context_for_period
+from promote_native_charts_to_linked_deck import promote_for_spine
 from scrub_stale_thinkcell_metadata import scrub_deck
 
 
 ROOT = Path(__file__).resolve().parent.parent
 KEEP_SLIDES = [
-    1,   # Cover
-    2,   # May operating summary
-    4,   # Original targets / Q1 accountability
-    5,   # Forecast quality
-    7,   # May deal readiness
-    9,   # Commercial approval gaps
+    1,  # Cover
+    2,  # May operating summary
+    4,  # Original targets / Q1 accountability
+    5,  # Forecast quality
+    7,  # May deal readiness
+    9,  # Commercial approval gaps
     11,  # FY26 renewal watchlist
     15,  # Owner pipeline coverage
     16,  # Owner coaching focus
@@ -64,7 +65,9 @@ def _selected(director_slug: str | None) -> list[dict[str, Any]]:
     return [director for director in directors if _slug(str(director["name"])) == director_slug]
 
 
-def _merge_manifest_results(manifest_path: Path, results: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _merge_manifest_results(
+    manifest_path: Path, results: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
     if not manifest_path.exists():
         return results
     try:
@@ -74,7 +77,9 @@ def _merge_manifest_results(manifest_path: Path, results: list[dict[str, Any]]) 
     merged = {str(result.get("slug")): result for result in existing if result.get("slug")}
     for result in results:
         merged[str(result.get("slug"))] = result
-    order = {_slug(str(director["name"])): index for index, director in enumerate(canonical_directors())}
+    order = {
+        _slug(str(director["name"])): index for index, director in enumerate(canonical_directors())
+    }
     return sorted(merged.values(), key=lambda result: order.get(str(result.get("slug")), 999))
 
 
@@ -107,7 +112,9 @@ def _deck_text(prs: Presentation) -> str:
     )
 
 
-def _delete_slides_except(path: Path, keep_slides: list[int], *, required_text: list[str]) -> dict[str, Any]:
+def _delete_slides_except(
+    path: Path, keep_slides: list[int], *, required_text: list[str]
+) -> dict[str, Any]:
     prs = Presentation(path)
     original_count = len(prs.slides)
     keep_indexes = {slide_no - 1 for slide_no in keep_slides}
@@ -136,7 +143,9 @@ def _delete_slides_except(path: Path, keep_slides: list[int], *, required_text: 
         "kept_titles": kept_titles,
         "forbidden_found": forbidden_found,
         "required_missing": required_missing,
-        "status": "pass" if len(checked.slides) == len(keep_slides) and not forbidden_found and not required_missing else "fail",
+        "status": "pass"
+        if len(checked.slides) == len(keep_slides) and not forbidden_found and not required_missing
+        else "fail",
     }
 
 
@@ -152,6 +161,7 @@ def build_one(period: str, director: dict[str, Any], *, required_text: list[str]
     result = _delete_slides_except(output, KEEP_SLIDES, required_text=required_text)
     linked_action_result = enhance_meeting_spine_deck(period, slug, output)
     aspect_result = fix_deck(output)
+    native_chart_promotion = promote_for_spine(period, slug, output)
     stale_thinkcell_scrub = scrub_deck(output)
     if stale_thinkcell_scrub.status != "pass":
         result["status"] = "fail"
@@ -165,9 +175,18 @@ def build_one(period: str, director: dict[str, Any], *, required_text: list[str]
             "linked_action_layer": linked_action_result,
             "table_image_aspect_fixes": aspect_result["fix_count"],
             "stale_thinkcell_metadata_scrub": asdict(stale_thinkcell_scrub),
+            "native_chart_promotion": {
+                "status": native_chart_promotion.status,
+                "promoted_count": native_chart_promotion.promoted_count,
+                "skipped_count": native_chart_promotion.skipped_count,
+                "error_count": native_chart_promotion.error_count,
+                "contracts": [asdict(c) for c in native_chart_promotion.contracts],
+            },
         }
     )
-    (output_dir / "meeting_spine_manifest.json").write_text(json.dumps(result, indent=2, default=str) + "\n", encoding="utf-8")
+    (output_dir / "meeting_spine_manifest.json").write_text(
+        json.dumps(result, indent=2, default=str) + "\n", encoding="utf-8"
+    )
     return result
 
 
@@ -175,7 +194,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--period", default=DEFAULT_PERIOD)
     parser.add_argument("--director-slug")
-    parser.add_argument("--jobs", type=int, default=1, help="Parallel director builds for local file-only work.")
+    parser.add_argument(
+        "--jobs", type=int, default=1, help="Parallel director builds for local file-only work."
+    )
     args = parser.parse_args()
     try:
         period_context = context_for_period(args.period)
@@ -211,11 +232,15 @@ def main() -> int:
     output_dir = ROOT / "state" / args.period / "__regional__" / "meeting_spine"
     output_dir.mkdir(parents=True, exist_ok=True)
     manifest_path = output_dir / "meeting_spine_manifest.json"
-    manifest_results = _merge_manifest_results(manifest_path, results) if args.director_slug else results
+    manifest_results = (
+        _merge_manifest_results(manifest_path, results) if args.director_slug else results
+    )
     manifest = {
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
         "period": args.period,
-        "status": "pass" if all(result["status"] == "pass" for result in manifest_results) else "fail",
+        "status": "pass"
+        if all(result["status"] == "pass" for result in manifest_results)
+        else "fail",
         "results": manifest_results,
     }
     manifest_path.write_text(json.dumps(manifest, indent=2, default=str) + "\n", encoding="utf-8")
