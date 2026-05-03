@@ -1048,16 +1048,19 @@ def _build_cover_slide(
         fill=PANEL_AMBER,
     )
 
-    # Soft footer.
+    # Soft footer with kickoff + snapshot dates.
     _line(slide, 0.58, 6.05, 12.75, 6.05, RULE, 0.5)
     snapshot = trends.get("period_end") or trends.get("period") or period
+    from period_context import context_for_period
+
+    kickoff_long = context_for_period(period).kickoff_date_long
     _text(
         slide,
         0.58,
         6.16,
-        7.6,
+        7.8,
         0.18,
-        f"Snapshot: {snapshot} · {director_name} · {region} · MD-1 territory book",
+        f"Review kickoff: {kickoff_long} · Snapshot: {snapshot} · MD-1 territory book",
         5.6,
         color=MUTED,
     )
