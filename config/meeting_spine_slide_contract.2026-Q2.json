@@ -8,7 +8,9 @@
       "purpose": "cover",
       "expected_kind": "editorial_native",
       "deliberate_rebuild": true,
-      "title_starts_with": "May 2026 LAND territory review"
+      "title_starts_with": "SimCorp",
+      "expected_text_shapes_min": 15,
+      "rebuild_reason": "T4 cover redesign — NAVY brand strip + 3 headline KPI tiles (Open ARR, Renewal ACV, top alert deal). Director name + region scope rendered in title block."
     },
     {
       "index": 2,
