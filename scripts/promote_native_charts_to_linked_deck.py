@@ -122,12 +122,45 @@ SEED_PLACEHOLDER_REPLACEMENTS: tuple[tuple[str, str], ...] = (
 #   spine slot 10 ← linked slot 18 (QTR14 WinsLossesQTD)
 #   spine slot 11 ← linked slot 21 (QTR16 ConcentrationRisk)
 #   spine slot 12 ← linked slot 22 (QTR12 StalePipeline)
-SPINE_TARGET_MAPPING: tuple[tuple[str, int, int, str], ...] = (
-    ("QTR03_OwnerCoaching_Bar", 8, 15, "S15_ByOwner"),
-    ("QTR07_StageIndustry_Mekko", 9, 16, "S16_StageByIndustry"),
-    ("QTR14_WinsLossesQTD_GroupedColumn", 10, 18, "S18_WinsLossesQTD"),
-    ("QTR16_ConcentrationRisk_Stacked", 11, 21, "S21_ConcentrationRiskChart"),
-    ("QTR12_StalePipeline_BarTable", 12, 22, "S22_StaleActivity"),
+#
+# The 5th tuple element is the director-friendly visible title that overlays
+# the proof's generic seed title via the post-transplant title banner.
+SPINE_TARGET_MAPPING: tuple[tuple[str, int, int, str, str], ...] = (
+    (
+        "QTR03_OwnerCoaching_Bar",
+        8,
+        15,
+        "S15_ByOwner",
+        "Owner pipeline coverage — Land+Expand unweighted ARR (mEUR)",
+    ),
+    (
+        "QTR07_StageIndustry_Mekko",
+        9,
+        16,
+        "S16_StageByIndustry",
+        "Stage × Industry concentration — Land+Expand ARR composition",
+    ),
+    (
+        "QTR14_WinsLossesQTD_GroupedColumn",
+        10,
+        18,
+        "S18_WinsLossesQTD",
+        "Wins vs. losses QTD — Land+Expand ARR (mEUR)",
+    ),
+    (
+        "QTR16_ConcentrationRisk_Stacked",
+        11,
+        21,
+        "S21_ConcentrationRiskChart",
+        "Concentration risk — top-account share of total open Land+Expand ARR",
+    ),
+    (
+        "QTR12_StalePipeline_BarTable",
+        12,
+        22,
+        "S22_StaleActivity",
+        "Stale pipeline — Land+Expand ARR by stage with no recent activity",
+    ),
 )
 
 
@@ -357,6 +390,96 @@ def _extract_slide_narrative(spine_path: Path, slide_idx: int) -> str:
     return " ".join((node.text or "") for node in root.iter(f"{{{A_NS}}}t")).strip()
 
 
+def _append_title_banner(builder: PackageBuilder, slide_idx: int, title: str) -> None:
+    """Overlay a NAVY title banner on a transplanted slide.
+
+    Hides the proof's generic seed title (e.g., "Item comparison: Bar I",
+    "Structure, composition: Stacked 100% bar") behind a SimCorp NAVY bar
+    with the director-friendly contract title in WHITE Aptos. Mirrors the
+    cover slide's brand strip aesthetic.
+    """
+    if not title.strip():
+        return
+    import xml.etree.ElementTree as ET
+
+    P_NS = "http://schemas.openxmlformats.org/presentationml/2006/main"
+    A_NS = "http://schemas.openxmlformats.org/drawingml/2006/main"
+    R_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+    ET.register_namespace("", P_NS)
+    ET.register_namespace("a", A_NS)
+    ET.register_namespace("r", R_NS)
+
+    part = f"ppt/slides/slide{slide_idx}.xml"
+    if part not in builder.parts:
+        return
+    root = ET.fromstring(builder.parts[part])
+    sp_tree = root.find(f".//{{{P_NS}}}spTree")
+    if sp_tree is None:
+        return
+
+    existing_ids: list[int] = []
+    for el in sp_tree.iter():
+        nv_pr = el.find(f"{{{P_NS}}}nvSpPr/{{{P_NS}}}cNvPr")
+        if nv_pr is not None and nv_pr.get("id"):
+            try:
+                existing_ids.append(int(nv_pr.get("id") or 0))
+            except ValueError:
+                pass
+    next_id = (max(existing_ids) if existing_ids else 1100) + 1
+
+    safe_title = title.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+    # NAVY banner across the top, full slide width, 0.5" tall.
+    # Slide is 12192000 x 6858000 EMU at 13.33" x 7.5".
+    banner_xml = (
+        f'<p:sp xmlns:p="{P_NS}" xmlns:a="{A_NS}">'
+        f"<p:nvSpPr>"
+        f'<p:cNvPr id="{next_id}" name="ContractTitleBannerBar_{slide_idx}"/>'
+        f"<p:cNvSpPr/>"
+        f"<p:nvPr/>"
+        f"</p:nvSpPr>"
+        f"<p:spPr>"
+        f'<a:xfrm><a:off x="0" y="0"/><a:ext cx="12192000" cy="457200"/></a:xfrm>'
+        f'<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>'
+        f'<a:solidFill><a:srgbClr val="1A1D31"/></a:solidFill>'
+        f"<a:ln><a:noFill/></a:ln>"
+        f"</p:spPr>"
+        f"<p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:endParaRPr/></a:p></p:txBody>"
+        f"</p:sp>"
+    )
+    sp_tree.append(ET.fromstring(banner_xml))
+
+    # Title text on top of the banner.
+    title_xml = (
+        f'<p:sp xmlns:p="{P_NS}" xmlns:a="{A_NS}">'
+        f"<p:nvSpPr>"
+        f'<p:cNvPr id="{next_id + 1}" name="ContractTitleBannerText_{slide_idx}"/>'
+        f'<p:cNvSpPr txBox="1"/>'
+        f"<p:nvPr/>"
+        f"</p:nvSpPr>"
+        f"<p:spPr>"
+        f'<a:xfrm><a:off x="365760" y="91440"/><a:ext cx="11460480" cy="274320"/></a:xfrm>'
+        f'<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>'
+        f"<a:noFill/>"
+        f"</p:spPr>"
+        f"<p:txBody>"
+        f'<a:bodyPr anchor="ctr"/>'
+        f"<a:lstStyle/>"
+        f"<a:p>"
+        f'<a:r><a:rPr lang="en-US" sz="1400" b="1">'
+        f'<a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill>'
+        f'<a:latin typeface="Aptos"/>'
+        f"</a:rPr>"
+        f"<a:t>{safe_title}</a:t></a:r>"
+        f"</a:p>"
+        f"</p:txBody>"
+        f"</p:sp>"
+    )
+    sp_tree.append(ET.fromstring(title_xml))
+
+    builder.parts[part] = ET.tostring(root, encoding="utf-8", xml_declaration=True)
+
+
 def _append_offslide_narrative(builder: PackageBuilder, slide_idx: int, narrative: str) -> None:
     """Append a hidden text shape carrying narrative on a transplanted slide.
 
@@ -453,12 +576,12 @@ def promote_for_spine(period: str, director_slug: str, spine_path: Path) -> Prom
 
     # Snapshot pre-promotion narrative for each spine slot we plan to touch.
     pre_promotion_narrative: dict[int, str] = {}
-    for _, spine_slot, _, _ in SPINE_TARGET_MAPPING:
+    for _, spine_slot, _, _, _ in SPINE_TARGET_MAPPING:
         pre_promotion_narrative[spine_slot] = _extract_slide_narrative(spine_path, spine_slot)
 
     builder = PackageBuilder(spine_path)
 
-    for contract, spine_slot, donor_slot, named in SPINE_TARGET_MAPPING:
+    for contract, spine_slot, donor_slot, named, visible_title in SPINE_TARGET_MAPPING:
         proof_path = _bound_proof_for_contract(period, contract)
         if proof_path is None:
             promotions.append(
@@ -494,6 +617,7 @@ def promote_for_spine(period: str, director_slug: str, spine_path: Path) -> Prom
                 text_replacements=SEED_PLACEHOLDER_REPLACEMENTS,
             )
             builder.replace_slide_from_donor(spec)
+            _append_title_banner(builder, spine_slot, visible_title)
             _append_offslide_narrative(
                 builder, spine_slot, pre_promotion_narrative.get(spine_slot, "")
             )
