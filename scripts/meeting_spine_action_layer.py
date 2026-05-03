@@ -45,20 +45,13 @@ WHITE = RGBColor(0xFF, 0xFF, 0xFF)
 PALE_GRID = RGBColor(0xEA, 0xED, 0xF2)
 BRAND_FONT_NAME = "Aptos"
 BRAND_FONT_SIZES = (
-    5.5,
     6.0,
-    6.5,
     7.0,
     8.0,
-    8.5,
     9.0,
-    9.5,
     10.0,
-    10.5,
-    11.5,
     12.0,
     14.0,
-    15.0,
     16.0,
     18.0,
     24.0,
@@ -1128,7 +1121,15 @@ def _build_exec_summary_slide(
         fill=PANEL_TEAL,
     )
     _metric_tile(
-        slide, 6.10, 1.47, 2.58, "Pipeline upside", _meur(pipeline_arr), "Conversion risk.", PURPLE
+        slide,
+        6.10,
+        1.47,
+        2.58,
+        "Pipeline upside",
+        _meur(pipeline_arr),
+        "Conversion risk.",
+        BLUE,
+        fill=PANEL_BLUE,
     )
     _metric_tile(
         slide,
@@ -1435,7 +1436,7 @@ def _build_forecast_slide(
         "Pipeline ARR",
         _meur(pipeline_bucket["arr_eur"]),
         f"{int(pipeline_bucket['count'])} opps; {sum(1 for d in selected if d.forecast == 'Pipeline')} material named.",
-        PURPLE,
+        BLUE,
     )
     _tile(
         slide,
@@ -1584,7 +1585,7 @@ def _deal_table(
     for idx, col_width in enumerate([1.22, 1.07, 0.72, 0.70, 0.76, 2.22]):
         table.columns[idx].width = Inches(col_width)
     for col, header in enumerate(["Deal", "Owner", "ARR", "Close", "Fcst", "May ask"]):
-        _set_cell(table.cell(0, col), header, header=True, fill=PURPLE, size=6.5)
+        _set_cell(table.cell(0, col), header, header=True, fill=NAVY, size=6.5)
     for row_idx, deal in enumerate(deals, start=1):
         values = [
             _short_account(deal.account, deal.opportunity),
@@ -1855,6 +1856,168 @@ def _build_action_slide(prs: Presentation, period: str, slug: str, trends: dict[
     )
 
 
+def _build_closing_slide(
+    prs: Presentation,
+    period: str,
+    slug: str,
+    trends: dict[str, Any],
+) -> None:
+    """Render slide 16 as a director-specific operating-review close-out.
+
+    Replaces the generic ``Thank you`` shell with: NAVY brand strip,
+    operating-context wrap line, three close-out panels (decisions taken,
+    next review, sign-off), and a brand footer. Mirrors the cover slide's
+    aesthetic so the deck book-ends cleanly.
+    """
+    if len(prs.slides) < 16:
+        return
+    slide = prs.slides[15]
+    _remove_all_shapes(slide)
+
+    director_name = slug.replace("-", " ")
+    region = _director_scope_label(slug)
+    action_items = trends.get("action_items", []) or []
+    top_actions: list[str] = []
+    for item in action_items:
+        claim = str(item.get("claim") or "").strip()
+        if claim:
+            top_actions.append(_short(claim, 80))
+        if len(top_actions) >= 4:
+            break
+    while len(top_actions) < 3:
+        top_actions.append("Operating cadence remains the May review baseline.")
+
+    # NAVY brand strip across the top.
+    strip = slide.shapes.add_shape(
+        MSO_SHAPE.RECTANGLE, Inches(0), Inches(0), Inches(13.33), Inches(0.42)
+    )
+    strip.fill.solid()
+    strip.fill.fore_color.rgb = NAVY
+    strip.line.fill.background()
+    _text(
+        slide,
+        0.58,
+        0.10,
+        8.0,
+        0.20,
+        "SimCorp · Sales Operating Review",
+        7.0,
+        bold=True,
+        color=WHITE,
+    )
+    _text(
+        slide,
+        9.40,
+        0.10,
+        3.40,
+        0.20,
+        f"{period} · close-out",
+        7.0,
+        color=WHITE,
+        align=PP_ALIGN.RIGHT,
+    )
+
+    # Title block.
+    _text(slide, 0.58, 1.08, 9.0, 0.20, "May 2026 close-out", 9.0, bold=True, color=MUTED)
+    _text(
+        slide,
+        0.58,
+        1.40,
+        11.0,
+        0.62,
+        "Decisions taken and next review",
+        24.0,
+        bold=True,
+        color=NAVY,
+    )
+    _text(slide, 0.58, 2.10, 11.0, 0.30, f"{region} · {director_name}", 12.0, color=BLUE)
+
+    _line(slide, 0.58, 2.60, 12.75, 2.60, RULE, 0.8)
+
+    # Decisions taken panel — 3-4 bullets from action_items.
+    _soft_panel(slide, 0.58, 2.86, 8.20, 2.80, fill=PANEL)
+    _text(
+        slide,
+        0.78,
+        3.04,
+        7.80,
+        0.22,
+        "Decisions taken / queues activated this review",
+        10.0,
+        bold=True,
+        color=NAVY,
+    )
+    for idx, action_text in enumerate(top_actions):
+        bullet_top = 3.42 + idx * 0.46
+        # Square bullet marker.
+        marker = slide.shapes.add_shape(
+            MSO_SHAPE.RECTANGLE, Inches(0.86), Inches(bullet_top + 0.07), Inches(0.07), Inches(0.07)
+        )
+        marker.fill.solid()
+        marker.fill.fore_color.rgb = TEAL
+        marker.line.fill.background()
+        _text(slide, 1.04, bullet_top, 7.50, 0.36, action_text, 7.0, color=NAVY)
+
+    # Next review panel.
+    _soft_panel(slide, 8.94, 2.86, 3.81, 1.30, fill=PANEL_BLUE)
+    _text(slide, 9.10, 3.02, 3.55, 0.18, "NEXT REVIEW", 6.5, bold=True, color=MUTED)
+    _text(slide, 9.10, 3.24, 3.55, 0.34, "Q3 pre-cycle", 14.0, bold=True, color=NAVY)
+    _text(
+        slide,
+        9.10,
+        3.62,
+        3.55,
+        0.36,
+        "First Friday in July, regional cadence call.",
+        7.0,
+        color=MUTED,
+    )
+
+    # Sign-off panel.
+    _soft_panel(slide, 8.94, 4.30, 3.81, 1.36, fill=PANEL)
+    _text(slide, 9.10, 4.46, 3.55, 0.18, "SIGN-OFF", 6.5, bold=True, color=MUTED)
+    _text(slide, 9.10, 4.68, 3.55, 0.30, director_name, 12.0, bold=True, color=NAVY)
+    _text(slide, 9.10, 4.98, 3.55, 0.18, region, 7.0, color=BLUE)
+    _text(
+        slide,
+        9.10,
+        5.20,
+        3.55,
+        0.32,
+        "ARR/ACV separation honoured · multi-currency normalised to EUR.",
+        6.0,
+        color=MUTED,
+    )
+
+    # Bottom rule + footer.
+    _line(slide, 0.58, 6.05, 12.75, 6.05, RULE, 0.5)
+    snapshot = trends.get("period_end") or trends.get("period") or period
+    from period_context import context_for_period
+
+    kickoff_long = context_for_period(period).kickoff_date_long
+    _text(
+        slide,
+        0.58,
+        6.16,
+        7.6,
+        0.18,
+        f"Review held: {kickoff_long} · Snapshot: {snapshot}",
+        5.6,
+        color=MUTED,
+    )
+    _text(
+        slide,
+        9.10,
+        6.16,
+        3.65,
+        0.18,
+        "Source: Salesforce — Sales Director Monthly cadence",
+        5.6,
+        color=MUTED,
+        align=PP_ALIGN.RIGHT,
+    )
+
+
 def enhance_meeting_spine_deck(period: str, slug: str, deck_path: Path) -> dict[str, Any]:
     trends = _load_trends(period, slug)
     original = _original_intel(period, slug)
@@ -1872,13 +2035,14 @@ def enhance_meeting_spine_deck(period: str, slug: str, deck_path: Path) -> dict[
     _build_q2_slide(prs, deals, selected)
     _build_renewal_slide(prs, trends, original)
     _build_action_slide(prs, period, slug, trends)
+    _build_closing_slide(prs, period, slug, trends)
     _normalize_deck_text_style(prs)
     prs.save(deck_path)
     return {
         "schema": "meeting-spine-action-layer/v1",
         "presentation_profile": "gtm_operating_review",
         "polish_principle": "decision-proof visuals only; no decorative chart variety",
-        "rebuilt_slides": [1, 2, 3, 4, 5, 7, 14],
+        "rebuilt_slides": [1, 2, 3, 4, 5, 7, 14, 16],
         "selected_deals": [asdict(deal) for deal in selected],
         "report_links": REPORT_LINKS,
     }

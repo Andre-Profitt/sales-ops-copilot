@@ -18,27 +18,20 @@ from period_context import DEFAULT_PERIOD, context_for_period
 ROOT = Path(__file__).resolve().parent.parent
 APPROVED_FONT_NAMES = {"Aptos", "Arial"}
 APPROVED_FONT_SIZES_PT = {
-    5.5,
     6.0,
-    6.5,
     7.0,
     8.0,
-    8.5,
     9.0,
-    9.5,
     10.0,
-    10.5,
-    11.5,
     12.0,
     14.0,
-    15.0,
     16.0,
     18.0,
     24.0,
 }
-MIN_FONT_PT = 5.5
-MAX_DISTINCT_FONT_SIZES = 18
-MAX_SLIDE_FONT_SIZES = 9
+MIN_FONT_PT = 6.0
+MAX_DISTINCT_FONT_SIZES = 11
+MAX_SLIDE_FONT_SIZES = 7
 FONT_SIZE_TOLERANCE = 0.05
 ROUNDED_GEOMETRY_TOKENS = (
     "roundRect",
@@ -196,7 +189,9 @@ def _scan_text_style(prs: Presentation) -> tuple[Counter[str], Counter[str], lis
         sizes = ", ".join(f"{size}pt={count}" for size, count in sorted(off_scale.items()))
         findings.append(f"off-scale explicit font sizes: {sizes}")
     if len(font_sizes) > MAX_DISTINCT_FONT_SIZES:
-        warnings.append(f"deck uses {len(font_sizes)} explicit font sizes; target <= {MAX_DISTINCT_FONT_SIZES}")
+        warnings.append(
+            f"deck uses {len(font_sizes)} explicit font sizes; target <= {MAX_DISTINCT_FONT_SIZES}"
+        )
     noisy_slides = [
         f"slide {slide_idx}={len(sizes)}"
         for slide_idx, sizes in sorted(slide_sizes.items())
@@ -280,7 +275,11 @@ def inspect_deck(path: Path) -> DeckBrandStyleResult:
 
 def run_brand_style_gate(period: str, package_dir: Path, output_dir: Path) -> dict[str, object]:
     context = context_for_period(period)
-    decks = sorted(path for path in package_dir.glob(context.meeting_spine_pattern) if not path.name.startswith("~$"))
+    decks = sorted(
+        path
+        for path in package_dir.glob(context.meeting_spine_pattern)
+        if not path.name.startswith("~$")
+    )
     results = [inspect_deck(deck) for deck in decks]
     if not decks:
         status = "fail"
@@ -358,9 +357,18 @@ def main() -> int:
     context = context_for_period(args.period)
     package_dir = (args.package_dir or context.review_package_dir).expanduser().resolve()
     output_dir = (
-        args.output_dir
-        or ROOT / "state" / context.period / "__regional__" / "brand_style_gate" / "review_package"
-    ).expanduser().resolve()
+        (
+            args.output_dir
+            or ROOT
+            / "state"
+            / context.period
+            / "__regional__"
+            / "brand_style_gate"
+            / "review_package"
+        )
+        .expanduser()
+        .resolve()
+    )
     payload = run_brand_style_gate(context.period, package_dir, output_dir)
     json_output = args.json_output or output_dir / "review_package_brand_style_gate.json"
     markdown_output = args.markdown_output or output_dir / "review_package_brand_style_gate.md"
