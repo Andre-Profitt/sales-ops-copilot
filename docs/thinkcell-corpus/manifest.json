@@ -1,0 +1,321 @@
+{
+  "schema": "thinkcell-corpus-manifest/v1",
+  "date": "2026-05-03",
+  "tracked_docs": [
+    "docs/thinkcell-corpus/README.md",
+    "docs/thinkcell-corpus/HANDOFF.md",
+    "docs/thinkcell-corpus/HANDOFF_SLIDE_BUILD_2026-05-02.md",
+    "docs/thinkcell-corpus/INFRA_CAPABILITY_PLAN_2026-05-02.md",
+    "docs/thinkcell-corpus/TEMPLATE_INTELLIGENCE_DB_2026-05-03.md",
+    "docs/thinkcell-corpus/thinkcell_infra_capability_map.json",
+    "docs/thinkcell-corpus/template-family-map.md",
+    "docs/thinkcell-corpus/simcorp-application-matrix.md",
+    "docs/thinkcell-corpus/automation-contract.md",
+    "docs/thinkcell-corpus/quarter-deck-salesforce-test-2026-q2.md",
+    "docs/thinkcell-corpus/programmatic-lab.md",
+    "docs/thinkcell-corpus/vm-api-probe.md",
+    "docs/thinkcell-corpus/automation-api-surface.md",
+    "docs/thinkcell-corpus/automation-api-source-map.md",
+    "docs/thinkcell-corpus/unblock-matrix.md",
+    "docs/thinkcell-corpus/hidden-surface-probe.md",
+    "docs/thinkcell-corpus/com-registry-probe.md",
+    "docs/thinkcell-corpus/interactive-ui-path-probe.md",
+    "docs/thinkcell-corpus/github-surface-scan.md",
+    "docs/thinkcell-corpus/graph-rag.md",
+    "docs/thinkcell-corpus/workplan.md",
+    "docs/thinkcell-corpus/build-scaffold.md",
+    "docs/thinkcell-corpus/json-data-automation-hub.md",
+    "docs/thinkcell-corpus/ppttc-validator.md"
+  ],
+  "ppttc_validator": {
+    "schema": "thinkcell-ppttc-validator/v1",
+    "doc": "docs/thinkcell-corpus/ppttc-validator.md",
+    "module": "scripts/validate_ppttc.py",
+    "tests": "tests/test_validate_ppttc.py",
+    "exit_codes": {
+      "0": "no errors (warnings may be present)",
+      "2": "structural or strict-mode errors",
+      "3": "warnings only, with --warnings-as-errors"
+    },
+    "structural_checks": [
+      "top_level_array_non_empty",
+      "template_object_has_string_template_and_array_data",
+      "entry_has_string_name_and_array_table",
+      "row_is_array",
+      "cell_is_null_or_known_tagged_object",
+      "no_duplicate_name_within_template"
+    ],
+    "manifest_drift_default_severity": "warning",
+    "strict_promotes_drift_to": "error"
+  },
+  "infra_capability_plan": {
+    "schema": "simcorp-thinkcell-infra-capability-map/v1",
+    "doc": "docs/thinkcell-corpus/INFRA_CAPABILITY_PLAN_2026-05-02.md",
+    "json": "docs/thinkcell-corpus/thinkcell_infra_capability_map.json",
+    "visual_plan_json": "state/2026-Q2/__regional__/thinkcell_visual_plan/thinkcell_visual_contract_plan.json",
+    "build_scaffold_json": "state/thinkcell_bridge/build_scaffold/2026-Q2/thinkcell_build_scaffold.json",
+    "latest_insertion_pilot_manifest": "state/2026-Q2/__regional__/thinkcell_insertion_pilot/20260501-213522Z-claude-writer-pilot/manifest.json",
+    "statuses": [
+      "production",
+      "supported_host",
+      "observed_uninvoked",
+      "proof_candidate",
+      "optional_proof_candidate",
+      "research_only",
+      "blocked",
+      "not_found"
+    ],
+    "initial_generation_entrypoint": "scripts/run_initial_deck_generation.py",
+    "builder_rule": "resolve through capability/artifact/promotion gates; render native think-cell through tcrender; never draw fake think-cell substitutes with python-pptx"
+  },
+  "template_intelligence_db": {
+    "schema": "simcorp-thinkcell-template-intelligence/v1",
+    "doc": "docs/thinkcell-corpus/TEMPLATE_INTELLIGENCE_DB_2026-05-03.md",
+    "builder": "scripts/build_thinkcell_template_intelligence_db.py",
+    "tests": "tests/test_thinkcell_template_intelligence_db.py",
+    "sqlite": "state/thinkcell_bridge/template_intelligence/2026-Q2/thinkcell_template_intelligence.sqlite",
+    "report_json": "state/thinkcell_bridge/template_intelligence/2026-Q2/thinkcell_template_intelligence_report.json",
+    "report_markdown": "state/thinkcell_bridge/template_intelligence/2026-Q2/thinkcell_template_intelligence_report.md",
+    "joined_sources": [
+      "state/thinkcell_bridge/template_catalog/thinkcell_template_catalog.json",
+      "config/thinkcell_template_selection.may_2026.json",
+      "docs/thinkcell-corpus/thinkcell_infra_capability_map.json",
+      "state/thinkcell_bridge/build_scaffold/2026-Q2/thinkcell_build_scaffold.json",
+      "state/2026-Q2/__regional__/thinkcell_visual_plan/thinkcell_visual_contract_plan.json",
+      "state/2026-Q2/__regional__/thinkcell_insertion_pilot/*/manifest.json"
+    ],
+    "current_verdict": "QTR04 and QTR05 candidates exist but are held because candidate PPTX audits found stock template residue; production spine should keep safe fallbacks until clean candidates and promotion records exist."
+  },
+  "json_automation_hub": {
+    "schema": "thinkcell-json-automation-hub/v1",
+    "doc": "docs/thinkcell-corpus/json-data-automation-hub.md",
+    "machine_index": "state/thinkcell_bridge/json_automation/knowledge_hub.json",
+    "official_source_url": "https://www.think-cell.com/en/resources/manual/jsondataautomation",
+    "vm_api_probe_doc": "docs/thinkcell-corpus/vm-api-probe.md",
+    "automation_api_surface_doc": "docs/thinkcell-corpus/automation-api-surface.md",
+    "latest_programmatic_lab_json": "state/thinkcell_bridge/programmatic_lab/20260501-190411/thinkcell_programmatic_lab.json",
+    "latest_writer_pilot_manifest": "state/2026-Q2/__regional__/thinkcell_insertion_pilot/20260501-213522Z-claude-writer-pilot/manifest.json",
+    "anchor_proofs": {
+      "QTR04_DealRisk_Scatter_ppttc": "state/thinkcell_bridge/build_scaffold/2026-Q2/work/QTR04_DealRisk_Scatter/QTR04_DealRisk_Scatter-stock-donor-2026-Q2.ppttc",
+      "QTR05_FY26RenewalTimeline_Gantt_ppttc": "state/thinkcell_bridge/build_scaffold/2026-Q2/work/QTR05_FY26RenewalTimeline_Gantt/QTR05_FY26RenewalTimeline_Gantt-stock-donor-2026-Q2.ppttc"
+    }
+  },
+  "automation_api_surface": {
+    "schema": "thinkcell-automation-api-surface/v2",
+    "doc": "docs/thinkcell-corpus/automation-api-surface.md",
+    "source_map_doc": "docs/thinkcell-corpus/automation-api-source-map.md",
+    "manual_urls": {
+      "api": "https://www.think-cell.com/en/resources/manual/api",
+      "introduction_automation": "https://www.think-cell.com/en/resources/manual/introductionautomation",
+      "excel_data_automation": "https://www.think-cell.com/en/resources/manual/exceldataautomation",
+      "excel_data_links": "https://www.think-cell.com/en/resources/manual/exceldatalinks",
+      "json_data_automation": "https://www.think-cell.com/en/resources/manual/jsondataautomation",
+      "style_files": "https://www.think-cell.com/en/resources/manual/style-files",
+      "import_mekko_graphics": "https://www.think-cell.com/en/resources/manual/import-mekko-graphics"
+    },
+    "probe_script": "scripts/thinkcell_programmatic_probe.ps1",
+    "lab_driver": "scripts/thinkcell_programmatic_lab.py",
+    "verdict_statuses": [
+      "proven",
+      "observed_uninvoked",
+      "blocked",
+      "not_found"
+    ],
+    "source_map_statuses": [
+      "production",
+      "proof_candidate",
+      "reference_only",
+      "blocked",
+      "not_applicable"
+    ]
+  },
+  "unblock_matrix": {
+    "schema": "thinkcell-unblock-matrix/v1",
+    "doc": "docs/thinkcell-corpus/unblock-matrix.md",
+    "json": "state/thinkcell_bridge/unblock/20260501/thinkcell_unblock_matrix.json",
+    "latest_programmatic_lab_json": "state/thinkcell_bridge/programmatic_lab/20260501-190411/thinkcell_programmatic_lab.json",
+    "statuses": [
+      "unblocked",
+      "factory_unblocked_by_donors",
+      "optional_proof_candidate",
+      "blocked",
+      "hard_blocked",
+      "not_found"
+    ]
+  },
+  "hidden_surface_probe": {
+    "schema": "simcorp-thinkcell-hidden-surface-probe/v1",
+    "doc": "docs/thinkcell-corpus/hidden-surface-probe.md",
+    "latest_json": "state/thinkcell_bridge/hidden_surface/20260501-195238/thinkcell_hidden_surface_probe.json",
+    "latest_ui_entrypoint_json": "state/thinkcell_bridge/hidden_surface/20260501-195408/thinkcell_ui_entrypoint_probe.json",
+    "latest_dynamic_trace_json": "state/thinkcell_bridge/dynamic_trace/20260501-200951/thinkcell_ui_dynamic_trace.json",
+    "latest_dynamic_trace_csv": "state/thinkcell_bridge/dynamic_trace/20260501-200951/thinkcell_ui_dynamic_trace_events.csv",
+    "probe_script": "scripts/probe_thinkcell_hidden_surface.ps1",
+    "runner": "scripts/run_thinkcell_hidden_surface_probe.py",
+    "constructor_like_found": []
+  },
+  "com_registry_probe": {
+    "schema": "simcorp-thinkcell-com-registry-probe/v1",
+    "doc": "docs/thinkcell-corpus/com-registry-probe.md",
+    "latest_json": "state/thinkcell_bridge/com_registry/20260501-201912/thinkcell_com_registry_probe.json",
+    "latest_oleviewdotnet_json": "state/thinkcell_bridge/oleviewdotnet/20260501-202858/thinkcell_oleviewdotnet_probe.json",
+    "latest_procmon_report_json": "state/thinkcell_bridge/procmon/20260501-203436/thinkcell_procmon_report.json",
+    "latest_procmon_summary_json": "state/thinkcell_bridge/procmon/20260501-203436/thinkcell_procmon.filtered.summary.json",
+    "latest_procmon_filtered_csv": "state/thinkcell_bridge/procmon/20260501-203436/thinkcell_procmon.filtered.csv",
+    "probe_script": "scripts/probe_thinkcell_com_registry.ps1",
+    "oleviewdotnet_probe_script": "scripts/probe_thinkcell_oleviewdotnet.ps1",
+    "procmon_script": "scripts/procmon_thinkcell_trace.ps1",
+    "runner": "scripts/run_thinkcell_com_registry_probe.py",
+    "oleviewdotnet_runner": "scripts/run_thinkcell_oleviewdotnet_probe.py",
+    "procmon_runner": "scripts/run_thinkcell_procmon_trace.py",
+    "procmon_summary_script": "scripts/analyze_thinkcell_procmon_trace.py",
+    "primary_clsid": "{D52B1FA2-1EF8-4035-9DA6-8AD0F40267A1}",
+    "inproc_server32": "C:\\Program Files (x86)\\think-cell\\arm64\\tcaddin.dll",
+    "registered_typelib": false,
+    "registered_chart_factory_clsid": false,
+    "oleviewdotnet_version": "v1.11",
+    "procmon_powerpoint_thinkcell_rows": 801,
+    "procmon_powerpoint_thinkcell_name_not_found_rows": 236
+  },
+  "interactive_ui_path_probe": {
+    "schema": "simcorp-thinkcell-interactive-ui-path-probe/v1",
+    "doc": "docs/thinkcell-corpus/interactive-ui-path-probe.md",
+    "latest_interactive_com_ui_json": "state/thinkcell_bridge/interactive_com_ui/20260501-205357/thinkcell_interactive_com_ui.json",
+    "latest_interactive_com_ui_deck": "state/thinkcell_bridge/interactive_com_ui/20260501-205357/interactive-com-ui-probe.pptx",
+    "latest_interactive_com_ui_screenshot": "state/thinkcell_bridge/interactive_com_ui/20260501-205357/after_start_table_insertion_then_click.png",
+    "latest_interactive_ui_inventory_json": "state/thinkcell_bridge/interactive_ui/20260501-204435/thinkcell_interactive_ui_path.json",
+    "latest_mouse_gallery_json": "state/thinkcell_bridge/mouse_gallery/20260501-210014/thinkcell_mouse_gallery_path.json",
+    "interactive_com_ui_script": "scripts/probe_thinkcell_interactive_com_ui.ps1",
+    "interactive_com_ui_runner": "scripts/run_thinkcell_interactive_com_ui_probe.py",
+    "interactive_ui_script": "scripts/probe_thinkcell_interactive_ui_path.ps1",
+    "interactive_ui_runner": "scripts/run_thinkcell_interactive_ui_path_probe.py",
+    "mouse_gallery_script": "scripts/probe_thinkcell_mouse_gallery_path.ps1",
+    "mouse_gallery_runner": "scripts/run_thinkcell_mouse_gallery_path_probe.py",
+    "start_table_insertion_plus_click_created_csmartgrid": true,
+    "created_shape_count": 7,
+    "created_payload_has_m_strName": false,
+    "show_chart_gallery_created_chart": false
+  },
+  "github_surface_scan": {
+    "schema": "simcorp-thinkcell-github-surface-scan/v1",
+    "doc": "docs/thinkcell-corpus/github-surface-scan.md",
+    "official_org": "https://github.com/think-cell",
+    "official_org_public_repos": 17,
+    "official_automation_repo_found": false,
+    "third_party_repos": [
+      "https://github.com/Philistino/ThinkcellBuilder",
+      "https://github.com/duarteocarmo/think-cell",
+      "https://github.com/ZoeDekraker/think-cell-chart-update"
+    ],
+    "factory_verdict": "reference_patterns_only",
+    "recommended_adoptions": [
+      "typed_ppttc_builder_facade",
+      "named_element_preflight",
+      "no_silent_ignore_render_gate",
+      "dataframe_or_range_helpers",
+      "canonical_ppttc_unit_fixtures"
+    ]
+  },
+  "runtime_machine_index": "state/thinkcell_bridge/knowledge_corpus/simcorp_thinkcell_corpus.json",
+  "deep_dive_powerpoint": "state/thinkcell_bridge/deep_corpus/SimCorp_ThinkCell_Template_Corpus_Deep_Dive.pptx",
+  "deep_dive_machine_index": "state/thinkcell_bridge/deep_corpus/thinkcell_deep_corpus.json",
+  "programmatic_lab": {
+    "script": "scripts/thinkcell_programmatic_lab.py",
+    "windows_probe": "scripts/thinkcell_programmatic_probe.ps1",
+    "latest_report": "state/thinkcell_bridge/programmatic_lab/20260501-190411/thinkcell_programmatic_lab.md",
+    "latest_json": "state/thinkcell_bridge/programmatic_lab/20260501-190411/thinkcell_programmatic_lab.json",
+    "latest_bound_seed_deck": "state/thinkcell_bridge/programmatic_lab/20260501-190411/ppttc_bridge/Jesper-Tyrer-seed-bound.pptx",
+    "latest_all_director_report": "state/thinkcell_bridge/programmatic_lab/20260501-154302/thinkcell_programmatic_lab.md",
+    "latest_all_director_json": "state/thinkcell_bridge/programmatic_lab/20260501-154302/thinkcell_programmatic_lab.json"
+  },
+  "quarter_seed_bank": {
+    "script": "scripts/build_thinkcell_quarter_seed_spec.py",
+    "spec_markdown": "state/thinkcell_bridge/quarter_seed_bank/2026-Q2/quarter_seed_bank_spec.md",
+    "spec_json": "state/thinkcell_bridge/quarter_seed_bank/2026-Q2/quarter_seed_bank_spec.json",
+    "contract_count": 12
+  },
+  "slide_level_corpus": {
+    "script": "scripts/extract_thinkcell_slide_corpus.py",
+    "markdown": "state/thinkcell_bridge/slide_corpus/thinkcell_slide_corpus.md",
+    "json": "state/thinkcell_bridge/slide_corpus/thinkcell_slide_corpus.json",
+    "csv": "state/thinkcell_bridge/slide_corpus/thinkcell_slide_index.csv",
+    "slide_count": 497,
+    "readable_thinkcellxml_parts": 278,
+    "nameable_donor_candidate_slides": 51
+  },
+  "knowledge_graph": {
+    "build_script": "scripts/build_thinkcell_knowledge_graph.py",
+    "query_script": "scripts/query_thinkcell_knowledge_graph.py",
+    "manifest": "state/thinkcell_bridge/knowledge_graph/thinkcell_kg_manifest.json",
+    "nodes_jsonl": "state/thinkcell_bridge/knowledge_graph/thinkcell_kg_nodes.jsonl",
+    "edges_jsonl": "state/thinkcell_bridge/knowledge_graph/thinkcell_kg_edges.jsonl",
+    "rag_index": "state/thinkcell_bridge/knowledge_graph/thinkcell_graph_rag_index.json",
+    "summary": "state/thinkcell_bridge/knowledge_graph/thinkcell_kg.md",
+    "node_count": 753,
+    "edge_count": 4099,
+    "rag_document_count": 598
+  },
+  "build_scaffold": {
+    "script": "scripts/build_thinkcell_build_scaffold.py",
+    "proof_script": "scripts/prove_thinkcell_build_scaffold_contract.py",
+    "native_chart_proof_script": "scripts/prove_thinkcell_native_chart_contract.py",
+    "stock_donor_proof_script": "scripts/prove_thinkcell_stock_donor_contract.py",
+    "hybrid_proof_script": "scripts/prove_thinkcell_hybrid_contract.py",
+    "markdown": "state/thinkcell_bridge/build_scaffold/2026-Q2/thinkcell_build_scaffold.md",
+    "json": "state/thinkcell_bridge/build_scaffold/2026-Q2/thinkcell_build_scaffold.json",
+    "contracts_dir": "state/thinkcell_bridge/build_scaffold/2026-Q2/contracts",
+    "l5_proofs": [
+      "state/thinkcell_bridge/build_scaffold/2026-Q2/work/QTR01_StageMix_Bar/QTR01_StageMix_Bar-proof.json",
+      "state/thinkcell_bridge/build_scaffold/2026-Q2/work/QTR02_ForecastMix_Bar/QTR02_ForecastMix_Bar-proof.json",
+      "state/thinkcell_bridge/build_scaffold/2026-Q2/work/QTR03_OwnerCoaching_Bar/QTR03_OwnerCoaching_Bar-proof.json",
+      "state/thinkcell_bridge/build_scaffold/2026-Q2/work/QTR04_DealRisk_Scatter/QTR04_DealRisk_Scatter-proof.json",
+      "state/thinkcell_bridge/build_scaffold/2026-Q2/work/QTR05_FY26RenewalTimeline_Gantt/QTR05_FY26RenewalTimeline_Gantt-proof.json",
+      "state/thinkcell_bridge/build_scaffold/2026-Q2/work/QTR06_Q2RenewalTimeline_Gantt/QTR06_Q2RenewalTimeline_Gantt-proof.json",
+      "state/thinkcell_bridge/build_scaffold/2026-Q2/work/QTR07_StageIndustry_Mekko/QTR07_StageIndustry_Mekko-proof.json",
+      "state/thinkcell_bridge/build_scaffold/2026-Q2/work/QTR08_PipelineMovement_Waterfall/QTR08_PipelineMovement_Waterfall-proof.json",
+      "state/thinkcell_bridge/build_scaffold/2026-Q2/work/QTR09_Geography_RankedBar/QTR09_Geography_RankedBar-proof.json",
+      "state/thinkcell_bridge/build_scaffold/2026-Q2/work/QTR10_ActionDecisionRegister_TableImage/QTR10_ActionDecisionRegister_TableImage-proof.json",
+      "state/thinkcell_bridge/build_scaffold/2026-Q2/work/QTR11_CommercialApprovalGap_TableImage/QTR11_CommercialApprovalGap_TableImage-proof.json",
+      "state/thinkcell_bridge/build_scaffold/2026-Q2/work/QTR12_StalePipeline_BarTable/QTR12_StalePipeline_BarTable-proof.json"
+    ],
+    "levels": [
+      "L0 Runtime Surface",
+      "L1 Salesforce Fit Gate",
+      "L2 Template Family",
+      "L3 Slide Donor",
+      "L4 Named Seed Contract",
+      "L5 Binding Proof"
+    ]
+  },
+  "raw_inventory": {
+    "markdown": "state/thinkcell_bridge/template_catalog/thinkcell_template_catalog.md",
+    "json": "state/thinkcell_bridge/template_catalog/thinkcell_template_catalog.json",
+    "contact_sheet": "state/thinkcell_bridge/template_catalog/thinkcell_template_contact_sheet.png"
+  },
+  "core_findings": {
+    "stock_templates": 62,
+    "stock_slides": 497,
+    "stock_chart_refs": 69,
+    "stock_ole_parts": 337,
+    "stock_named_m_strName_payloads": 0,
+    "stock_templates_direct_ppttc_ready": false,
+    "simcorp_land_seed_named_elements": 42,
+    "native_thinkcell_tables": "blocked",
+    "table_image_lane": "proven_through_excel_com_addrangeimage"
+  },
+  "highest_fit_families": [
+    "Bar, Column",
+    "Waterfall",
+    "Scatter, Bubble",
+    "Timeline, Gantt",
+    "Tables",
+    "Dashboards, Statistics",
+    "Annotations"
+  ],
+  "avoid_by_default": [
+    "Funnels for SimCorp 8-stage sales process",
+    "Pie/doughnut for complex pipeline mix",
+    "Gauges, thermometers, and traffic lights for headline financials",
+    "Decorative Venn, cubes, pyramids, hand-drawn elements, ratings, and quotes"
+  ]
+}

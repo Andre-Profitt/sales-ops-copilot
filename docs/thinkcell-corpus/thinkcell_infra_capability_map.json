@@ -1,0 +1,284 @@
+{
+  "schema": "simcorp-thinkcell-infra-capability-map/v1",
+  "date": "2026-05-02",
+  "doc": "docs/thinkcell-corpus/INFRA_CAPABILITY_PLAN_2026-05-02.md",
+  "sources": {
+    "automation_api_surface_doc": "docs/thinkcell-corpus/automation-api-surface.md",
+    "automation_contract_doc": "docs/thinkcell-corpus/automation-contract.md",
+    "json_automation_hub_doc": "docs/thinkcell-corpus/json-data-automation-hub.md",
+    "vm_api_probe_doc": "docs/thinkcell-corpus/vm-api-probe.md",
+    "build_scaffold_doc": "docs/thinkcell-corpus/build-scaffold.md",
+    "visual_plan_json": "state/2026-Q2/__regional__/thinkcell_visual_plan/thinkcell_visual_contract_plan.json",
+    "build_scaffold_json": "state/thinkcell_bridge/build_scaffold/2026-Q2/thinkcell_build_scaffold.json",
+    "latest_runtime_probe_json": "state/thinkcell_bridge/programmatic_lab/20260501-190411/thinkcell_programmatic_lab.json",
+    "latest_insertion_pilot_manifest": "state/2026-Q2/__regional__/thinkcell_insertion_pilot/20260501-213522Z-claude-writer-pilot/manifest.json"
+  },
+  "status_vocab": [
+    "production",
+    "supported_host",
+    "observed_uninvoked",
+    "proof_candidate",
+    "optional_proof_candidate",
+    "research_only",
+    "blocked",
+    "not_found"
+  ],
+  "capabilities": [
+    {
+      "id": "python_orchestration",
+      "status": "production",
+      "entrypoints": [
+        "scripts/build_thinkcell_visual_contract_plan.py",
+        "scripts/build_thinkcell_build_scaffold.py",
+        "scripts/run_thinkcell_windows_bridge.py",
+        "scripts/run_thinkcell_insertion_pilot.py",
+        "scripts/build_regional_meeting_spine_decks.py"
+      ],
+      "production_rule": "Own graph, visual-plan, proof resolution, Windows bridge orchestration, and deck assembly. Do not synthesize fake think-cell charts."
+    },
+    {
+      "id": "tcrender",
+      "status": "production",
+      "entrypoints": [
+        "libs/tcrender/tcrender/render.py",
+        "tcrender.TcRenderClient.render",
+        "scripts/build_ppttc_demo.py"
+      ],
+      "production_rule": "Default Mac-side render client for .ppttc to .pptx through VM ppttc.exe. New sales-ops factory code should call this instead of ad hoc bridge wrappers."
+    },
+    {
+      "id": "ppttc_windows_bridge",
+      "status": "production",
+      "entrypoints": [
+        "scripts/run_thinkcell_windows_bridge.py",
+        "scripts/thinkcell_windows_bridge.ps1",
+        "C:\\Program Files (x86)\\think-cell\\ppttc.exe"
+      ],
+      "production_rule": "Use for named native think-cell chart and automation text updates against proven donor or seed PPTX files."
+    },
+    {
+      "id": "tc_com_driver",
+      "status": "production",
+      "entrypoints": [
+        "libs/tc_com_driver",
+        "ThinkCellClient.connect",
+        "UpdateBatch"
+      ],
+      "production_rule": "Use as the wrapped vendor COM surface for PowerPoint and Excel think-cell automation, especially UpdateBatch and diagnostics."
+    },
+    {
+      "id": "excel_com_updatebatch",
+      "status": "production",
+      "entrypoints": [
+        "tcXlAddIn.CreateUpdate",
+        "tcUpdate.AddRangeData",
+        "tcUpdate.AddRangeImage",
+        "tcUpdate.Send"
+      ],
+      "production_rule": "Use AddRangeImage for table-image lanes and AddRangeData only when a named target already exists."
+    },
+    {
+      "id": "tcxml",
+      "status": "production",
+      "entrypoints": [
+        "libs/tcxml",
+        "extract_thinkcell_streams",
+        "parse_thinkcell_xml",
+        "serialize_thinkcell_xml"
+      ],
+      "production_rule": "Use for think-cellXML inspection, contract proofing, and guardrails. Do not make direct CFB authoring the primary path until packaging is complete."
+    },
+    {
+      "id": "vba_macro_host",
+      "status": "supported_host",
+      "entrypoints": [
+        "Application.COMAddIns(\"thinkcell.addin\").Object"
+      ],
+      "production_rule": "Valid host for the same late-bound COM calls; useful for operator macros and probes, not a separate lane."
+    },
+    {
+      "id": "csharp_dotnet_interop_host",
+      "status": "supported_host",
+      "entrypoints": [
+        "scripts/generate_thinkcell_csharp_interop.py",
+        "Microsoft Office type libraries",
+        "dynamic tcXlAddIn",
+        "dynamic tcPpAddIn"
+      ],
+      "production_rule": "Candidate host for a durable Windows worker after the Python bridge contract is stable."
+    },
+    {
+      "id": "tc_toolkit_aicore",
+      "status": "optional_proof_candidate",
+      "entrypoints": [
+        "/Users/test/code/labs/tc_toolkit/tc_toolkit/aicore.py",
+        "AICoreClient",
+        "Socket.IO over WSS"
+      ],
+      "production_rule": "Optional upstream enrichment for action titles, research, and chart suggestions. Do not use as a blocking source for SimCorp financial facts or ARR/ACV metrics."
+    },
+    {
+      "id": "powerpoint_com_step3",
+      "status": "observed_uninvoked",
+      "entrypoints": [
+        "tcPpAddIn.PresentationFromTemplateStep3",
+        "tcPpAddIn.UpdateChartStep3",
+        "tcPpAddIn.UpdateBatchStep3"
+      ],
+      "production_rule": "Do not call directly from the factory until a method-specific proof lane exists; ppttc.exe wraps the stable path today."
+    },
+    {
+      "id": "named_donor_seed_patching",
+      "status": "production",
+      "entrypoints": [
+        "scripts/ppttc_template.py",
+        "scripts/thinkcell_cfb.py",
+        "scripts/prove_thinkcell_stock_donor_contract.py",
+        "scripts/prove_thinkcell_native_chart_contract.py"
+      ],
+      "production_rule": "Convert stock donor material into named SimCorp update surfaces only with binding proof and render evidence."
+    },
+    {
+      "id": "table_image_donor",
+      "status": "production",
+      "entrypoints": [
+        "assets/LAND_thinkcell_table_image_donor.pptx",
+        "state/thinkcell_bridge/table_image_donors",
+        "Excel COM AddRangeImage"
+      ],
+      "production_rule": "Use for dense table-shaped artifacts. Treat output as linked table image, not native editable think-cell table."
+    },
+    {
+      "id": "style_api",
+      "status": "proof_candidate",
+      "entrypoints": [
+        "tcPpAddIn.LoadStyle",
+        "tcPpAddIn.LoadStyleForRegion",
+        "tcPpAddIn.GetStyleName",
+        "tcPpAddIn.RemoveStyles"
+      ],
+      "production_rule": "Runtime-proven on transient decks; needs SimCorp brand-style decision record before production use."
+    },
+    {
+      "id": "excel_presentation_from_template",
+      "status": "proof_candidate",
+      "entrypoints": [
+        "tcXlAddIn.PresentationFromTemplate"
+      ],
+      "production_rule": "Consider only if a future SimCorp seed is fully Excel-linked. Current native chart lane uses ppttc.exe."
+    },
+    {
+      "id": "tcserver_http",
+      "status": "optional_proof_candidate",
+      "entrypoints": [
+        "C:\\Program Files (x86)\\think-cell\\tcserver.exe"
+      ],
+      "production_rule": "Do not start/register unattended. Promote only after explicit server-mode architecture decision."
+    },
+    {
+      "id": "interactive_start_table_insertion",
+      "status": "research_only",
+      "entrypoints": [
+        "tcPpAddIn.StartTableInsertion",
+        "scripts/run_thinkcell_interactive_com_ui_probe.py"
+      ],
+      "production_rule": "Positive for creating unnamed CSmartGrid objects; not bindable or production-safe until naming and update proof passes."
+    },
+    {
+      "id": "native_editable_thinkcell_tables",
+      "status": "blocked",
+      "entrypoints": [
+        "CSmartGrid",
+        "CContainerSE"
+      ],
+      "production_rule": "Blocked until a clean named native table donor binds without repair prompts. Use table-image lane."
+    },
+    {
+      "id": "direct_arbitrary_chart_creation",
+      "status": "not_found",
+      "entrypoints": [],
+      "production_rule": "No public CreateChart or InsertChart COM method found. Use donor or seed objects."
+    },
+    {
+      "id": "deep_reverse_engineering",
+      "status": "research_only",
+      "entrypoints": [
+        "state/thinkcell_bridge/ghidra_decompile",
+        "scripts/frida_handlers",
+        "state/thinkcell_bridge/typeinfo",
+        "state/thinkcell_bridge/phase12_auth_capture"
+      ],
+      "production_rule": "Discovery only unless converted into a named proof lane with render and package assertions."
+    }
+  ],
+  "contract_lane_policy": {
+    "native_chart_contracts": {
+      "allowed_capabilities": [
+        "tcrender",
+        "ppttc_windows_bridge",
+        "named_donor_seed_patching",
+        "python_orchestration"
+      ],
+      "forbidden_capabilities": [
+        "direct_arbitrary_chart_creation",
+        "python_pptx_chart_substitution"
+      ]
+    },
+    "table_contracts": {
+      "allowed_capabilities": [
+        "tc_com_driver",
+        "excel_com_updatebatch",
+        "table_image_donor",
+        "python_orchestration"
+      ],
+      "forbidden_capabilities": [
+        "native_editable_thinkcell_tables"
+      ]
+    },
+    "candidate_contracts": {
+      "requires_promotion_decision_record": true,
+      "default_publishable": false
+    }
+  },
+  "builder_contract": {
+    "current_builder": "scripts/build_regional_meeting_spine_decks.py",
+    "current_action_layer": "scripts/meeting_spine_action_layer.py",
+    "initial_generation_entrypoint": "scripts/run_initial_deck_generation.py",
+    "required_new_layer": "capability and artifact resolver before candidate promotion",
+    "promotion_decision_path_template": "state/{period}/{director_slug}/factory/meeting-spine/thinkcell_promotion_decisions.json",
+    "no_fake_chart_rule": "Do not draw scatter, Gantt, waterfall, Mekko, ranked bar, or table-image substitutes with python-pptx when a think-cell contract exists."
+  },
+  "jesper_pilot": {
+    "period": "2026-Q2",
+    "director_slug": "Jesper-Tyrer",
+    "include_contracts": [
+      "QTR04_DealRisk_Scatter",
+      "QTR05_FY26RenewalTimeline_Gantt"
+    ],
+    "candidate_hold_contracts": [
+      "QTR08_PipelineMovement_Waterfall",
+      "QTR09_Geography_RankedBar"
+    ],
+    "suppress_contracts": [
+      "QTR06_Q2RenewalTimeline_Gantt",
+      "QTR07_StageIndustry_Mekko"
+    ],
+    "candidate_manifest": "state/2026-Q2/__regional__/thinkcell_insertion_pilot/20260501-213522Z-claude-writer-pilot/manifest.json",
+    "publishable": false,
+    "next_gate": "render side-by-side evidence and write promotion decision record before builder insertion"
+  },
+  "hard_business_rules": {
+    "arr": {
+      "field": "APTS_Opportunity_ARR__c",
+      "type_filter": "Type IN ('Land','Expand')",
+      "currency_rule": "converted EUR report aggregate only for leadership figures"
+    },
+    "renewal_acv": {
+      "field": "APTS_Renewal_ACV__c",
+      "type_filter": "Type = 'Renewal'",
+      "currency_rule": "converted EUR report aggregate only for leadership figures"
+    },
+    "never_blend_arr_and_acv": true,
+    "commercial_approval_field": "Stage_20_Approval__c"
+  }
+}

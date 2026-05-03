@@ -36,7 +36,7 @@ For each slide with a placeholder rectangle:
 4. PowerPoint activates; click on the empty slide to place the chart
 5. For single-cell text bindings (slide 2 + slide 23): cursor in PPT text frame → **Insert → think-cell → Elements → Text Linked to Excel**
 
-Order doesn't matter — pick whichever is easiest first. Recommended: slides 2 → 4 → 5 → 12 → 23 (the formula-driven ones from the model) before slides 7/8/9/11/14 (named-account tables from legacy).
+Order doesn't matter — pick whichever is easiest first. Recommended: slides 2 → 4 → 5 → 12 → 13 → 23 (the formula-driven ones from the model) before slides 7/8/9/11/26 (legacy tables).
 
 ## Slide-to-binding cheat sheet
 
@@ -52,7 +52,7 @@ Order doesn't matter — pick whichever is easiest first. Recommended: slides 2 
 | 9 Pending Commercial Approval | **legacy** | Pending_Commercial_Approval!A3:H...                   | Table                                   |
 | 11 Renewal Pipeline           | **legacy** | At_Risk_Renewals!A1:H...                              | Table + Harvey balls                    |
 | 12 GRR proxy                  | model      | Retention!A1:B4 + A5 footnote                         | Table                                   |
-| 13 Forecast Category          | **legacy** | Forecast_Category!A4:C...                             | Column or table                         |
+| 13 Forecast Category          | model      | Forecast_Category!A1:C7                               | Column or table                         |
 | 15 By owner                   | model      | By_Owner!A2:B...                                      | Horizontal bar                          |
 | 16 Stage × Industry           | model      | Pivots Stage × Industry block                         | **Mekko** (variable-width 100%-stacked) |
 | 17 Per-territory              | model      | Territory_Performance!A1:D...                         | Bar (X=col B, Y=col D)                  |
@@ -67,7 +67,7 @@ Order doesn't matter — pick whichever is easiest first. Recommended: slides 2 
 | 27 Risks & outlook            | n/a        | manual paste from `brief.md` ## Risks                 | text                                    |
 | 28 Closing                    | n/a        | static disclaimer — no binding                        | text                                    |
 
-**The 6 named-account "legacy" slides (7/8/9/11/13/26) bind to `land.xlsx`. The other 18 analytical slides bind to `land.model.xlsx`.**
+**The 5 legacy-source slides (7/8/9/11/26) bind to `land.xlsx`. Slide 13 and the other model-driven analytical slides bind to `land.model.xlsx`.**
 
 ## Visual QA — known high-risk slides
 

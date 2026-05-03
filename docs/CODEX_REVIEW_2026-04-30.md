@@ -10,6 +10,17 @@ Post-review live probes against Salesforce changed one important conclusion:
 - `APTS_Renewal_ACV__c` is also **not** stored in EUR at the record level. Example: renewal `ATP - Renewal 2026 EMIR` carries `CurrencyIsoCode=DKK`, `APTS_Renewal_ACV__c=1,479,431`, `convertCurrency(...)=198,022.60`.
 - However, on the live probes I ran in this org on `2026-04-30`, `SUM(APTS_Opportunity_ARR__c)` and `SUM(APTS_Renewal_ACV__c)` matched the EUR-converted totals, not the raw transactional-currency sums. So the broad claim "headline SOQL SUM is definitely FX-wrong" is **not supported by current evidence in this org**.
 - The remaining live FX bug is still real in **filter logic**, not headline summation: `WHERE APTS_Opportunity_ARR__c >= 500000` misclassifies non-EUR Expand deals against a EUR-denominated approval threshold, and `convertCurrency(...)` cannot be used in the `WHERE` clause.
+- That aggregate behavior contradicts the project memory `feedback_sf_multi_currency_aggregation`. I did **not** find a persisted EUR shadow field or sibling converted object in live metadata, so the most likely explanation is org-specific aggregate conversion behavior. The safest pattern remains explicit per-row `convertCurrency(...)` in `SELECT` plus Python thresholding/summing, because it is observable and portable across org/report surfaces.
+
+## Focused re-audit of live Salesforce surfaces
+
+- `scripts/land_brief.py` no longer carries a live raw-currency approval-threshold filter. `_pull_approval_gap_for_director()` now selects `convertCurrency(APTS_Opportunity_ARR__c) arr_fx` and applies the `EUR 500k` gate in Python.
+- Two remaining live runtime raw-threshold clauses still exist in `scripts/alerts.py`: `commercial_approval_gap_big()` and `_flagged_union_where()` both encode `APTS_Opportunity_ARR__c >= 500000`.
+- Live preprod validation on `2026-04-30` showed the exact `alerts.py` approval-status bucket is empty today (`0` rows), so there is no current alert-count distortion in that one bucket. But the broader non-EUR stage-qualified no-approval Land+Expand population is not empty (`312` rows), and a raw `>= 500000` filter would falsely include `42` opps and falsely exclude `1`.
+- I found no runtime SOQL use of `Opportunity.Amount` or `Account.Annual_Revenue__c` anywhere under `scripts/` or `force-app/`.
+- The only annual-revenue field in scope is `User.Annual_Revenue_Goal__c` inside dashboard/report builder metadata. Those paths mostly use `.CONVERT` correctly; the `greaterThan 0` filter is not FX-sensitive in the same way as the approval thresholds.
+- `force-app/` does not add another runtime SOQL surface here; it contains analytic snapshot metadata and `Pipeline_Snapshot__c` field definitions. The snapshot metadata explicitly states that FX settlement happens upstream in the source report aggregates.
+- One residual metadata-only threshold risk remains in `scripts/sf_audit/build_wave1_widgets.py`, which still builds a report filter on raw `Opportunity.APTS_Opportunity_ARR__c >= 1000000`. That is a report-definition concern, not the same class as the live SOQL bug in `alerts.py`.
 
 ## Findings
 
@@ -32,12 +43,12 @@ Post-review live probes against Salesforce changed one important conclusion:
   Also mark skipped rules explicitly in the envelope/brief or fail the run if a rule cannot execute.
 - **Evidence:** the Salesforce-backed Jesper smoke run succeeded only with warnings, and direct query replay reproduced the `MALFORMED_QUERY`.
 
-### High — the Commercial Approval action rule is FX-incorrect for non-EUR books
+### High — raw-currency approval-threshold logic still survives in `alerts.py` and one report-builder path
 
-- **Refs:** `scripts/land_brief.py:952-970`
-- **What is wrong:** `_pull_approval_gap_for_director()` filters on `APTS_Opportunity_ARR__c >= 500000` in SOQL, then sums `convertCurrency(APTS_Opportunity_ARR__c)` after the fact. The threshold is a EUR business rule, but the filter is applied in each opportunity's transactional currency.
-- **Why it matters:** APAC, UKI, Canada, MEA, Nordics, and other non-EUR books can over- or under-include Expand deals around the `EUR 500k` gate. That makes the action queue policy-incorrect even though the monetary totals are FX-correct.
-- **Suggested fix:** query the stage-qualified population with `convertCurrency(APTS_Opportunity_ARR__c) arr_fx` and apply the `>= 500000` threshold in Python on `arr_fx`, matching the safer pattern already used in `pending_commercial_approval`.
+- **Refs:** `scripts/alerts.py:109-138`, `scripts/alerts.py:563-580`, `scripts/sf_audit/build_wave1_widgets.py:80-101`
+- **What is wrong:** `scripts/land_brief.py` is now fixed, but `commercial_approval_gap_big()` and `_flagged_union_where()` still encode `APTS_Opportunity_ARR__c >= 500000` in live SOQL. Separately, `build_wave1_widgets.py` still emits a dashboard report filter on raw `Opportunity.APTS_Opportunity_ARR__c >= 1000000` instead of a converted field/safe post-filtering pattern.
+- **Why it matters:** the `EUR 500k` / `EUR 1M` business rules are denominated in EUR, while the raw field is evaluated in transactional currency. On `2026-04-30`, the exact `alerts.py` approval-status bucket happened to be empty in preprod, but the broader stage-qualified non-EUR no-approval population was not: `312` rows, with `42` false inclusions and `1` false exclusion under a raw `>= 500000` threshold. So the logic is still wrong even if one current bucket is latent today.
+- **Suggested fix:** keep the new `land_brief.py` pattern as canonical: pull stage-qualified rows with `convertCurrency(...)` in `SELECT`, then apply the EUR threshold in Python. Review report/dashboard builders for the same threshold assumption and avoid raw-currency filters where the policy rule is EUR-denominated.
 
 ### High — `Sales_Velocity` mixes Renewal outcomes into the win-rate input while the rest of the KPI is Land+Expand-specific
 
@@ -99,7 +110,7 @@ The right move is:
 
 1. Fix the local schema mirror/tests to the real v2 envelope and make the round-trip gate green again.
 2. Replace the invalid Task/Event semi-join rules and fail loud if an action rule is skipped.
-3. Make the Commercial Approval threshold FX-correct by evaluating the `EUR 500k` rule on converted values.
+3. Remove the remaining raw-currency approval-threshold logic from `alerts.py` and review report builders for the same EUR-threshold assumption.
 4. Reconcile `build_land_template.py` + `docs/THINKCELL_SETUP.md` against the actual workbook ranges and metric semantics.
 5. Plumb `--period` into every SOQL date window and remove `date.today()` from any sheet meant to be historically reproducible.
 6. Fix `Sales_Velocity` so every component is Land+Expand-only.
