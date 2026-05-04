@@ -36,7 +36,17 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 SCRIPTS = REPO_ROOT / "scripts"
 VALIDATOR = SCRIPTS / "validate_xlsx_strict.py"
 DIFF = SCRIPTS / "diff_oxml.py"
-VM_PS1 = SCRIPTS / "vm" / "roundtrip_excel.ps1"
+
+# Two oracle paths for gate-2:
+#  - "openxmlsdk": DocumentFormat.OpenXml SDK (headless, default — no Excel needed)
+#  - "excel":     Excel COM via Workbooks.Open (only works in interactive Session 1)
+ORACLE_OPENXMLSDK = "openxmlsdk"
+ORACLE_EXCEL = "excel"
+VM_PS1_BY_ORACLE = {
+    ORACLE_OPENXMLSDK: SCRIPTS / "vm" / "roundtrip_xlsx_openxmlsdk.ps1",
+    ORACLE_EXCEL: SCRIPTS / "vm" / "roundtrip_excel.ps1",
+}
+VM_INSTALL_PS1 = SCRIPTS / "vm" / "install_openxml.ps1"
 
 DEFAULT_HOST = "Windows-VM"
 VM_REMOTE_DIR = r"C:\share\xlsx_canary"
@@ -144,14 +154,54 @@ def _scp(src: str, dst: str) -> subprocess.CompletedProcess:
     )
 
 
+def _ensure_openxml_installed(host: str, vm_remote_dir: str) -> tuple[bool, str]:
+    """Idempotent install of DocumentFormat.OpenXml 2.20.0 on the VM.
+
+    Returns (ok, summary). Skips work if a marker file is already present.
+    """
+    marker = f"{vm_remote_dir}/.openxml_installed_2_20_0"
+    check = _ssh(host, f"powershell -NoProfile -Command \"Test-Path -LiteralPath '{marker}'\"")
+    if (check.stdout or "").strip().lower() == "true":
+        return True, "openxml already installed"
+
+    install_remote = f"{vm_remote_dir}\\install_openxml.ps1"
+    r = _scp(str(VM_INSTALL_PS1), f"{host}:{install_remote}")
+    if r.returncode != 0:
+        return False, f"scp install_openxml.ps1 failed: {r.stderr.strip()[:200]}"
+    r = _ssh(
+        host,
+        f'powershell -NoProfile -ExecutionPolicy Bypass -File "{install_remote}"',
+    )
+    if r.returncode != 0:
+        return False, f"install_openxml.ps1 exited {r.returncode}: {(r.stderr or r.stdout)[-200:]}"
+    # Drop the marker so subsequent runs skip the install
+    _ssh(
+        host,
+        f"powershell -NoProfile -Command \"New-Item -ItemType File -Path '{marker}' -Force | Out-Null\"",
+    )
+    return True, "openxml installed"
+
+
 def gate2_roundtrip(
-    host: str, input_path: Path, vm_remote_dir: str
+    host: str,
+    input_path: Path,
+    vm_remote_dir: str,
+    oracle: str = ORACLE_OPENXMLSDK,
 ) -> tuple[GateResult, Path | None]:
     """Ferry input to VM, run the PowerShell canary, ferry back roundtrip + JSON.
 
     Returns (GateResult, local_path_to_roundtrip_xlsx_or_None).
     """
     t0 = time.monotonic()
+    ps1_path = VM_PS1_BY_ORACLE.get(oracle)
+    if ps1_path is None or not ps1_path.exists():
+        return GateResult(
+            "gate2.roundtrip",
+            ok=False,
+            fatal=True,
+            summary=f"unknown oracle {oracle!r} or ps1 missing: {ps1_path}",
+            duration_s=time.monotonic() - t0,
+        ), None
 
     # Ensure VM dir exists
     mkdir_cmd = (
@@ -169,8 +219,20 @@ def gate2_roundtrip(
             duration_s=time.monotonic() - t0,
         ), None
 
+    # For openxmlsdk oracle: ensure DocumentFormat.OpenXml is installed once
+    if oracle == ORACLE_OPENXMLSDK:
+        ok, msg = _ensure_openxml_installed(host, vm_remote_dir)
+        if not ok:
+            return GateResult(
+                "gate2.roundtrip",
+                ok=False,
+                fatal=True,
+                summary=f"openxml install: {msg}",
+                duration_s=time.monotonic() - t0,
+            ), None
+
     remote_xlsx = f"{vm_remote_dir}\\{input_path.name}"
-    remote_ps1 = f"{vm_remote_dir}\\roundtrip_excel.ps1"
+    remote_ps1 = f"{vm_remote_dir}\\{ps1_path.name}"
     remote_json = f"{vm_remote_dir}\\{input_path.stem}.canary.json"
 
     # Ferry inputs
@@ -180,16 +242,16 @@ def gate2_roundtrip(
             "gate2.roundtrip",
             ok=False,
             fatal=True,
-            summary=f"scp xlsx → VM failed: {r.stderr.strip()[:200]}",
+            summary=f"scp xlsx -> VM failed: {r.stderr.strip()[:200]}",
             duration_s=time.monotonic() - t0,
         ), None
-    r = _scp(str(VM_PS1), f"{host}:{remote_ps1}")
+    r = _scp(str(ps1_path), f"{host}:{remote_ps1}")
     if r.returncode != 0:
         return GateResult(
             "gate2.roundtrip",
             ok=False,
             fatal=True,
-            summary=f"scp ps1 → VM failed: {r.stderr.strip()[:200]}",
+            summary=f"scp ps1 -> VM failed: {r.stderr.strip()[:200]}",
             duration_s=time.monotonic() - t0,
         ), None
 
@@ -248,26 +310,39 @@ def gate2_roundtrip(
             payload={"raw": json_local.read_text(encoding="utf-8-sig")[:500]},
         ), None
 
-    # Ferry roundtrip xlsx back if it exists
+    # Ferry roundtrip xlsx back if it exists (Excel oracle only — OpenXml SDK
+    # oracle does not produce a roundtrip artifact).
     roundtrip_local: Path | None = None
     if canary.get("ok") and canary.get("output_path"):
-        # output_path is a Windows path; just use the basename next to the input
         rt_basename = Path(canary["output_path"].replace("\\", "/")).name
         rt_remote = f"{vm_remote_dir}\\{rt_basename}"
         rt_local = input_path.with_name(rt_basename)
         r3 = _scp(f"{host}:{rt_remote}", str(rt_local))
-        if r3.returncode == 0 and rt_local.exists():
+        if r3.returncode == 0 and rt_local.exists() and rt_local.stat().st_size > 0:
             roundtrip_local = rt_local
 
-    cl = canary.get("corrupt_load")
-    cl_name = canary.get("corrupt_load_name")
-    repair_log = canary.get("repair_log")
-    ok = bool(canary.get("ok")) and cl == 0
-    summary_bits = [f"corrupt_load={cl}({cl_name})"]
-    if repair_log:
-        summary_bits.append("repair_log_present")
+    # Build summary based on which oracle ran. Both shapes share `ok` + `error`.
+    summary_bits: list[str] = []
+    if oracle == ORACLE_OPENXMLSDK:
+        validation_count = canary.get("validation_count", 0)
+        summary_bits.append(f"openxmlsdk={'parsed' if canary.get('ok') else 'FAIL'}")
+        summary_bits.append(f"validation_errors={validation_count}")
+        summary_bits.append(f"defined_names={canary.get('defined_name_count', 0)}")
+        summary_bits.append(f"sheets={canary.get('sheet_count', 0)}")
+        # Pass criterion: file parsed cleanly via the SDK reader. The
+        # validator findings are surfaced as info, not pass/fail, because
+        # OpenXml 2.20 validator has known false-positive patterns (e.g.
+        # CT_Font child elements) that are not actual repair triggers.
+        ok = bool(canary.get("ok"))
+    else:  # excel oracle
+        cl = canary.get("corrupt_load")
+        cl_name = canary.get("corrupt_load_name")
+        if canary.get("repair_log"):
+            summary_bits.append("repair_log_present")
+        summary_bits.append(f"corrupt_load={cl}({cl_name})")
+        ok = bool(canary.get("ok")) and cl == 0
     if canary.get("error"):
-        summary_bits.append(f"error={canary['error'][:80]}")
+        summary_bits.append(f"error={str(canary['error'])[:80]}")
     summary = " ".join(summary_bits)
 
     return GateResult(
@@ -328,18 +403,20 @@ def render_markdown(report: CanaryReport) -> str:
             for f in warns[:10]:
                 lines.append(f"  - warn `{f['rule']}` — {f['message']}")
         elif g.name == "gate2.roundtrip" and isinstance(g.payload, dict):
-            for k in (
-                "corrupt_load",
-                "corrupt_load_name",
-                "bytes_in",
-                "bytes_out",
-                "open_seconds",
-                "save_seconds",
-                "error",
-            ):
+            shared_keys = ("bytes_in", "bytes_out", "open_seconds", "error")
+            sdk_keys = (
+                "validation_count",
+                "defined_name_count",
+                "sheet_count",
+                "ole_object_count",
+                "validate_seconds",
+            )
+            excel_keys = ("corrupt_load", "corrupt_load_name", "save_seconds")
+            for k in shared_keys + sdk_keys + excel_keys:
                 v = g.payload.get(k)
                 if v is not None:
                     lines.append(f"  - {k}: `{v}`")
+            # Excel oracle: repair log
             rl = g.payload.get("repair_log")
             if rl:
                 lines.append("  - repair_log:")
@@ -347,6 +424,19 @@ def render_markdown(report: CanaryReport) -> str:
                 for ln in str(rl).splitlines()[:30]:
                     lines.append(f"    {ln}")
                 lines.append("    ```")
+            # OpenXml SDK oracle: top validation findings
+            errs = g.payload.get("validation_errors") or []
+            if errs:
+                lines.append(f"  - validation_errors (first 10 of {len(errs)}):")
+                for e in errs[:10]:
+                    sev = e.get("severity", "?")
+                    eid = e.get("id", "?")
+                    desc = (e.get("description") or "")[:180]
+                    related = e.get("related_node") or ""
+                    if related:
+                        desc = f"{desc}  [node={related}]"
+                    part = e.get("part") or ""
+                    lines.append(f"    - `[{sev}] {eid}` {desc} ({part})")
         elif g.name == "gate3.diff" and isinstance(g.payload, dict):
             for pd in (g.payload.get("part_diffs") or [])[:5]:
                 lines.append(f"  - part `{pd['part']}`")
@@ -376,6 +466,15 @@ def main(argv: list[str] | None = None) -> int:
     )
     p.add_argument("--report", type=Path, default=None, help="write a markdown report to this path")
     p.add_argument("--json", action="store_true", help="emit JSON instead of text")
+    p.add_argument(
+        "--oracle",
+        choices=[ORACLE_OPENXMLSDK, ORACLE_EXCEL],
+        default=ORACLE_OPENXMLSDK,
+        help=(
+            "gate-2 oracle: openxmlsdk (default, headless via DocumentFormat.OpenXml) "
+            "or excel (Excel COM, requires interactive Session 1)"
+        ),
+    )
     args = p.parse_args(argv)
 
     if not args.input.exists():
@@ -408,7 +507,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0 if report.all_ok else 1
 
     # Gate 2 + 3
-    g2, roundtrip_path = gate2_roundtrip(args.host, args.input, args.remote_dir)
+    g2, roundtrip_path = gate2_roundtrip(args.host, args.input, args.remote_dir, oracle=args.oracle)
     report.gate_results.append(g2)
     if g2.fatal:
         if not args.json:
