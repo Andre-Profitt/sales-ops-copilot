@@ -611,6 +611,14 @@ slides:
           source: sales_velocity.composite,
           evidence: exact_text,
         }
+      - {
+          name: S23_Source,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: source_notes.S23,
+          evidence: exact_text,
+        }
   - slide_id: S24
     purpose: account_expansion
     elements:
