@@ -289,6 +289,41 @@ def _remove_all_shapes(slide: Any) -> None:
         shape.element.getparent().remove(shape.element)
 
 
+def _white_background(slide: Any) -> None:
+    """Strip the slide layout's decorative gradient picture and cover with WHITE.
+
+    The LAND_template's "Title 1" / "Divider 1" / End-slide layouts each
+    embed a full-slide PICTURE shape carrying a rainbow showcase gradient.
+    That picture is at LAYOUT level — slide-level white rectangles render
+    underneath it visually because PowerPoint composites the layout's
+    decorative pictures above the slide background and below slide
+    content, and full-slide layout pictures still bleed through.
+
+    The reliable fix is to switch the slide's layout reference to the
+    "Blank" layout (layout 24 in the LAND_template) which has no
+    decorative pictures, then drop a WHITE rectangle as the first
+    slide-level shape so the cover/closing renders against pure white.
+    """
+    prs = slide.part.package.presentation_part.presentation
+    blank_layout = next(
+        (layout for layout in prs.slide_layouts if layout.name == "Blank"),
+        None,
+    )
+    if blank_layout is not None:
+        # Repoint the slide's layout relationship to the blank layout so the
+        # gradient PICTURE on the original layout is no longer composited
+        # behind our content.
+        for rel in list(slide.part.rels.values()):
+            if rel.reltype.endswith("/slideLayout"):
+                rel._target = blank_layout.part
+    rect = slide.shapes.add_shape(
+        MSO_SHAPE.RECTANGLE, Inches(0), Inches(0), Inches(13.33), Inches(7.5)
+    )
+    rect.fill.solid()
+    rect.fill.fore_color.rgb = WHITE
+    rect.line.fill.background()
+
+
 def _text(
     slide: Any,
     left: float,
@@ -939,6 +974,7 @@ def _build_cover_slide(
     """
     slide = prs.slides[0]
     _remove_all_shapes(slide)
+    _white_background(slide)
 
     director_name = slug.replace("-", " ")
     region = _director_scope_label(slug)
@@ -1873,6 +1909,7 @@ def _build_closing_slide(
         return
     slide = prs.slides[15]
     _remove_all_shapes(slide)
+    _white_background(slide)
 
     director_name = slug.replace("-", " ")
     region = _director_scope_label(slug)
@@ -2028,21 +2065,23 @@ def enhance_meeting_spine_deck(period: str, slug: str, deck_path: Path) -> dict[
         raise ValueError(
             f"deck has {len(prs.slides)} slides; expected meeting spine with at least 14"
         )
-    _build_cover_slide(prs, period, slug, trends, deals)
+    # Slides 1 (cover) and 16 (closing) deliberately preserved from the
+    # SimCorp LAND template — no custom KPI tiles, no decision register,
+    # no NAVY brand strip. Per Andre's 2026-05-03 directive: the template
+    # is the official brand pattern, do not inject.
     _build_exec_summary_slide(prs, period, slug, trends, original)
     _build_q1_slide(prs, trends, original)
     _build_forecast_slide(prs, period, slug, trends, deals, selected, original)
     _build_q2_slide(prs, deals, selected)
     _build_renewal_slide(prs, trends, original)
     _build_action_slide(prs, period, slug, trends)
-    _build_closing_slide(prs, period, slug, trends)
     _normalize_deck_text_style(prs)
     prs.save(deck_path)
     return {
         "schema": "meeting-spine-action-layer/v1",
         "presentation_profile": "gtm_operating_review",
         "polish_principle": "decision-proof visuals only; no decorative chart variety",
-        "rebuilt_slides": [1, 2, 3, 4, 5, 7, 14, 16],
+        "rebuilt_slides": [2, 3, 4, 5, 7, 14],
         "selected_deals": [asdict(deal) for deal in selected],
         "report_links": REPORT_LINKS,
     }

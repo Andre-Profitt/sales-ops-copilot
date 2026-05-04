@@ -43,6 +43,30 @@ Wire `tcrender.TcRenderClient` into Mac sales-ops scripts and call `.render(pptt
 
 ## Headline findings (cumulative)
 
+### Production routes (disambiguation)
+
+Two libs ship in this repo against think-cell. They are NOT interchangeable —
+pick the right one or the factory will break in subtle ways.
+
+- `libs/tcrender/` — **PRODUCTION ROUTE** for the LAND deck factory. Mac-side
+  wrapper around `ppttc.exe <input.ppttc> -o <output.pptx>` (think-cell's
+  documented headless render CLI) executed on the Windows VM over SSH. The
+  9-director SD-monthly cadence runs through this lib end-to-end at ~3s per
+  deck. Pairs with `scripts/build_ppttc.py` (input emitter) and
+  `scripts/build_ppttc_demo.py` (canonical invocation sample). No PowerPoint
+  UI, no COM, vendor-sanctioned.
+- `libs/tc_com_driver/` — **UTILITY / RESEARCH ROUTE**. pywin32 wrapper
+  around the 25 documented think-cell COM dispatch methods (19 PpAddIn +
+  3 XlAddIn + 3 UpdateBatch). Use for bespoke chart updates
+  (`UpdateBatch.AddRangeData`), interactive PowerPoint sessions,
+  `PresentationFromTemplate` flows, and COM probes against the live add-in.
+  Smoke-verified on the VM but NOT the bulk-render path. Not deprecated —
+  it covers a different use case.
+
+Rule of thumb: if you're rendering a `.ppttc` to a bound `.pptx` in batch,
+use `tcrender`. If you're driving an open PowerPoint instance method-by-method
+or doing one-off COM probes, use `tc_com_driver`.
+
 ### COM dispatch surface (closed)
 
 - 25 think-cell methods total (19 PpAddIn + 3 XlAddIn + 3 UpdateBatch)
@@ -298,6 +322,14 @@ Knowledge graph: 9 new `Documentation` nodes (one per HTML file) wired to existi
 - ✅ Public PPTTC templates 2–5 downloaded + analyzed → 4 templates fetched, `think-cellXML` streams extracted from every `oleObject*.bin`, chart-class lists captured (per `factory_api_candidates/20260502-075230/factory_api_candidates.json` `public_templates[]`)
 - ⚠️ ~~tcserver/ppttc/tcasr binary route scan → those binaries are NOT installed~~ — **RETRACTED 2026-05-02**: the binaries ARE installed at `C:\Program Files (x86)\think-cell\` (verified via `scripts/probe_ppttc_exe_location.ps1`). Specifically: `ppttc.exe` (1.56MB), `tcserver.exe` (5.85MB), `tcasr.exe` (520KB), plus `tcgmail/tcindex/tcmail/tcnatmsg/tcperf` and `ppttc\ppttc-schema.json`. The earlier `factory_api_candidates.json` scan failed due to scp shell-quoting on the path with parentheses, NOT actual absence. **The headless render path is via `ppttc.exe input.ppttc -o output.pptx` — verified working from Mac→SSH→Session 0** (exit 0, populated 8.9MB .pptx output, byte-size match against Andre's reference `Jesper-Tyrer-LAND-2026-Q2-output.pptx`). File association: `.ppttc → ppttchdl.exe %1`.
 - ✅ **ppttc.exe headless render verified end-to-end** — `scripts/run_ppttc_cli.ps1` SSH-fires `ppttc.exe demo.ppttc -o output.pptx` from Session 0 with NO PowerPoint visible required. Output: 28-slide deck, .ppttc-bound text fields populated on slides 13/15/18/23/24 (think-cell named elements), some slides retain Jinja-style placeholders (`{period}`, `{director_name}`, `{scope_label}`) that need separate text-substitution pre-pass in caller's pipeline (think-cell only renders its own named bindings, not arbitrary placeholder syntax). This is the documented headless render path (per `official-en-jsondataautomation.html §sect_jsoncreatepresentation`). Replaces the broken `Presentations.Open(.ppttc)` approach we tried earlier.
+- ✅ **2026-05-03 polish-to-ship batch** — Tier 1 of `SHIP_PLAN.md`:
+  - **Wired template found**: `assets/LAND_thinkcell_seed.pptx` has 21/32 bindings already wired (12 charts, 308 tags). The default `assets/LAND_template.pptx` was an empty shell; the pipeline had been pointed at the wrong template. Re-rendering Jesper against the wired template now produces 13 oleObject charts + 2 slides containing "Jesper Tyrer" + real EUR values (was 0 before).
+  - **F-01 / F-02 critical numeric bugs fixed inline** in `scripts/build_ppttc.py`: `_eur_millions_for_k_scaled_donor` divided by 1_000 (gave kEUR labeled mEUR — 1000× wrong); `_for_k_scaled_donor` multiplied by 1_000 (gave 11600 for 11.6%); `_velocity_chart_entry` multiplied days by 1_000 (gave 1,344,000 days for Shortlist). Affected 5 of 42 bindings: S18_WinsLossesQTD, S19_Velocity, S21_ConcentrationRiskChart, S25_PipelineCreationVelocity. Live values now sane (S18 Won ARR = 1.6 mEUR, S21 Top 10 share = 57.8%, S25 Feb 16 = 1.7 mEUR). Audit subagent flagged via `scripts/test_build_ppttc.py` (24 tests) + `_validate_ppttc_shape` validator wired into `_write_ppttc`. 13 other audit findings (silent fallbacks, hardcoded ranges, etc.) tracked at `state/thinkcell_bridge/build_ppttc_audit/`.
+  - **`tcrender` lib gained two production-grade modules**: `template_prep` (Jinja-style `{director_name}` substitution before ppttc.exe; slide 1 cover now shows the right director's name + period + scope) and `verify` (binding-evidence match-ratio gate; refuses to silently ship empty decks). 46 tests pass (was 13). Wired into `TcRenderClient.render(prep_jinja=True, verify=True)` defaults.
+  - **All 4 directors re-shipped** against wired template + post-bug-fix .ppttc: 9.4MB outputs each, 6.5-7.7s render time, 13 charts each, director-specific data confirmed in slides.
+  - **Production routes pinned**: `libs/tcrender` is the production deck-render path; `libs/tc_com_driver` is utility/research only. CLAUDE.mds updated, MASTER_STATE annotated.
+  - **Production status doc**: `docs/thinkcell-corpus/SHIP_PLAN.md` is the canonical work-tracker for the LAND deck factory; `TEMPLATE_WIRING_CHECKLIST.md` is Andre's interactive task list (11 chart anchors still need to be added in PowerPoint mini-toolbar).
+  - **Tier 3 in flight**: archival, monthly diff, quality gate, factory CLI being scaffolded by parallel subagent.
 - ✅ `schemas.think-cell.com/api*` POST probes → all 9 paths/content-types return 404 (per `factory_api_candidates.json` `schemas_api_post[].status: 404`)
 - ✅ **DPAPI baseline cracked + structural** — `aiauthentication.bin` decrypted to `[uint32 LE length][url-encoded payload]` (125 bytes total). 5 fields (`expires`, `licensekeyid`, `userhalfmonths`, `quota`, `hash`). Token rotates ~daily (~12-hour validity at the 2026-05-02T13:07Z snapshot). `hash` is 22 base64 chars = 16 bytes (ambiguous: MD5 or truncated-128 HMAC-SHA256; both algos verified present in binary). Per `state/thinkcell_bridge/dpapi_baseline/20260502-090715/aiauthentication.parsed.json`.
 - ✅ **Canto OAuth probe** — three endpoints characterized (`oauth.canto.com/oauth/api/oauth2/{authorize,tenant/,token}`). Canto uses non-standard param name `app_id` not `client_id`; `400 invalid_request "Wrong app_id value"` returned for empty/bogus auth. Tenant endpoint requires refresh token (auth-protected, not public lookup). No `.well-known/oauth-authorization-server` or `/openid-configuration` (404s). think-cell's own `app_id` value is **NOT** present in tcaddin.dll (only the 3 endpoint URLs are; verified via byte-window scan around all 5 "canto" occurrences in the binary, 2 of which were false positives in i18n strings). Conclusion: `app_id` is fetched at runtime or the entire OAuth flow is server-proxied (matching the existing `unsplash.appcom` "real OAuth proxy" pattern). Per `state/thinkcell_bridge/canto_oauth_probe/20260502-091707/results.json`.

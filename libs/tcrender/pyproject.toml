@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tcrender"
-version = "0.1.0"
+version = "0.2.0"
 description = "Mac-side wrapper around think-cell ppttc.exe headless render path (SSH-driven)."
 readme = "CLAUDE.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = ["lxml>=5.0", "matplotlib>=3.7", "python-pptx>=1.0"]
 
 classifiers = [
     "Programming Language :: Python :: 3.12",

@@ -2,6 +2,21 @@
 
 Python wrapper around think-cell's documented COM dispatch surface.
 
+## Production usage
+
+`tc_com_driver` is the COM-dispatch utility surface — use it for bespoke chart
+updates (`UpdateBatch.AddRangeData`, `IXlMacroInterface.PresentationFromTemplate`,
+etc.), interactive PowerPoint sessions, and research probes against the live
+add-in.
+
+For the LAND deck factory pipeline (`.ppttc` -> bound `.pptx`), use
+`libs/tcrender` instead — it's the documented vendor-sanctioned headless
+render path (`ppttc.exe <input.ppttc> -o <output.pptx>`) and is what the
+9-director SD-monthly cadence runs through.
+
+This lib is utility-not-production: keep it for COM-only flows and one-off
+operations. The API documented below is unchanged.
+
 ## What this is
 
 A `pywin32`-based client that drives think-cell's add-in from Python on a

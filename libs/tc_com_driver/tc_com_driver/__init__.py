@@ -1,4 +1,10 @@
-"""tc_com_driver — pywin32 wrapper around think-cell's documented COM surface.
+"""tc_com_driver - pywin32 wrapper around think-cell's documented COM surface.
+
+Utility / research surface; not the production deck-render path. For the
+LAND deck factory pipeline (.ppttc -> bound .pptx), see libs/tcrender, which
+wraps the documented `ppttc.exe` headless CLI. Use this lib for bespoke
+COM-only flows: UpdateBatch.AddRangeData, PresentationFromTemplate,
+interactive PowerPoint sessions, and COM probes.
 
 Public API:
     - `ThinkCellClient` — context-managed entry point. Finds PowerPoint,

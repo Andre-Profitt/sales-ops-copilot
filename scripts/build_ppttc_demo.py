@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """End-to-end .ppttc -> .pptx demo via the documented `ppttc.exe` headless path.
 
+This is the canonical sample for invoking the production pipeline
+(build_ppttc.py output -> tcrender). Use it as the reference when wiring
+new cadence scripts into the LAND deck factory.
+
 A `.ppttc` is a JSON file shaped as `[{"template": "<.pptx path>", "data": [...]}]`
 where each entry under `data` names a think-cell element on the template and
 provides a `table` of cell values. think-cell ships a CLI binary

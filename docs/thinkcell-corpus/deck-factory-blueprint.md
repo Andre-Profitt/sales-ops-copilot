@@ -1,7 +1,7 @@
 # Sales Director think-cell Deck Factory Blueprint
 
 Period: `2026-Q2`
-Generated: `2026-05-03T17:39:29+00:00`
+Generated: `2026-05-03T19:05:58+00:00`
 
 ## Operating Decision
 
@@ -65,4 +65,4 @@ Use think-cell as a controlled update layer, not a runtime chart factory. Charts
 - `template_selection`: `/Users/test/code/apps/sales-ops-copilot/config/thinkcell_template_selection.may_2026.json`
 - `work_queue`: `/Users/test/code/apps/sales-ops-copilot/state/thinkcell_bridge/build_scaffold/2026-Q2/work_queue.json`
 - `graph_manifest`: `/Users/test/code/apps/sales-ops-copilot/state/thinkcell_bridge/knowledge_graph/thinkcell_kg_manifest.json`
-- `ppttc_validation`: `/Users/test/code/apps/sales-ops-copilot/state/2026-Q2/__regional__/ppttc_validation/20260503-173929Z/ppttc_factory_validation.json`
+- `ppttc_validation`: `/Users/test/code/apps/sales-ops-copilot/state/2026-Q2/__regional__/ppttc_validation/20260503-190558Z/ppttc_factory_validation.json`

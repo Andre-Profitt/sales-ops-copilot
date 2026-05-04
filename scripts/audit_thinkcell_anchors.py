@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 """Audit per-slide think-cell anchor wiring — gate-5 of the deck-factory harness.
 
-Companion to:
-  - validate_pptx_strict.py        (lint)
-  - inventory_pptx_thinkcell.py    (count + map)
-  - diff_oxml.py
-  - visual_review_pptx.py          (vision)
-  - vm/roundtrip_pptx_openxmlsdk.ps1 (SDK validation)
+Companion to validate_pptx_strict.py (lint), inventory_pptx_thinkcell.py
+(count + map), diff_oxml.py, visual_review_pptx.py (vision), and
+vm/roundtrip_pptx_openxmlsdk.ps1 (SDK validation).
 
 Where the inventory tool reports *what* anchors exist and *which* slide they
 sit on, this auditor verifies every anchor is *internally consistent* after
@@ -19,16 +16,7 @@ The motivating bug: the SDK pptx oracle surfaced lowercase GUIDs in
 ECMA-376 §A.2 requires brace-wrapped uppercase hex; lowercase is the
 class of drift that triggers PowerPoint's open-repair-close pass.
 
-Usage:
-    python3 scripts/audit_thinkcell_anchors.py path/to/seed.pptx
-    python3 scripts/audit_thinkcell_anchors.py --json path/to/seed.pptx
-    python3 scripts/audit_thinkcell_anchors.py --quiet path/to/seed.pptx
-
-Exit codes:
-    0   all checks pass
-    1   fail-level findings
-    2   warn-level findings only
-    3   could not open the pptx
+Exit codes:  0 clean / 1 fail-level / 2 warn-only / 3 could-not-open.
 """
 
 from __future__ import annotations
@@ -58,22 +46,15 @@ NS = {"p": NS_P, "a": NS_A, "r": NS_R, "pr": NS_PKG}
 REL_OLE = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/oleObject"
 REL_CHART = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart"
 
-EMU_PER_INCH = 914400
 DEFAULT_SLIDE_W_EMU = 12192000
 DEFAULT_SLIDE_H_EMU = 6858000
 
 SLIDE_PART_RE = re.compile(r"^ppt/slides/slide(\d+)\.xml$")
-SLIDE_RELS_RE = re.compile(r"^ppt/slides/_rels/slide(\d+)\.xml\.rels$")
 OLE_PART_RE = re.compile(r"^ppt/embeddings/(oleObject\d+\.bin)$")
 CHART_PART_RE = re.compile(r"^ppt/charts/(chart\d+\.xml)$")
 OLE_TARGET_RE = re.compile(r"embeddings/(oleObject\d+\.bin)$")
 CHART_TARGET_RE = re.compile(r"charts/(chart\d+\.xml)$")
-BINDING_SLIDE_RE = re.compile(r"^S(\d+)_")
-
 GUID_UPPER_RE = re.compile(r"^\{[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}\}$")
-GUID_ANY_RE = re.compile(
-    r"^\{[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}\}$"
-)
 
 THINKCELL_CNVPR_NAME = "think-cell data - do not delete"
 THINKCELL_PROGID = "TCLayout.ActiveDocument.1"
@@ -82,9 +63,14 @@ DEFAULT_MANIFEST_PATH = (
     "state/thinkcell_bridge/excel_named_ranges/20260504T000502Z/binding_to_range_manifest.json"
 )
 
-SEVERITY_FAIL = "fail"
-SEVERITY_WARN = "warn"
-SEVERITY_INFO = "info"
+SEV_FAIL, SEV_WARN, SEV_INFO = "fail", "warn", "info"
+SEV_RANK = {SEV_FAIL: 3, SEV_WARN: 2, SEV_INFO: 1}
+
+FIX_UPPERCASE_GUID = (
+    "uppercase the GUID per ECMA-376 §A.2: "
+    "{[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}}. "
+    "lowercase IDs trigger PowerPoint's repair pass."
+)
 
 
 @dataclass
@@ -114,6 +100,11 @@ class SlideUnit:
         d["findings"] = [f.to_dict() for f in self.findings]
         return d
 
+    def emit(
+        self, rule: str, severity: str, location: str, message: str, fix_hint: str = ""
+    ) -> None:
+        self.findings.append(Finding(rule, severity, location, message, fix_hint))
+
 
 @dataclass
 class AuditReport:
@@ -131,9 +122,7 @@ class AuditReport:
         }
 
     def all_findings(self) -> list[Finding]:
-        out: list[Finding] = []
-        for u in self.slide_units:
-            out.extend(u.findings)
+        out: list[Finding] = [f for u in self.slide_units for f in u.findings]
         out.extend(self.extra_findings)
         return out
 
@@ -149,59 +138,49 @@ def _detect_repo_root(pptx_path: Path) -> Path:
     return pptx_path.resolve().parent
 
 
-def _load_manifest(repo_root: Path, override_path: Path | None) -> set[str]:
-    """Return the set of binding names from the manifest. JSON snapshot
-    preferred; falls back to importing _BINDING_TO_RANGE_MANIFEST from
-    scripts/add_chart_binding_named_ranges.py.
+def _load_manifest_names(repo_root: Path, override_path: Path | None) -> set[str]:
+    """Binding names from the manifest. JSON snapshot preferred; fall back to
+    importing _BINDING_TO_RANGE_MANIFEST from add_chart_binding_named_ranges.py.
     """
     if override_path is not None:
         with override_path.open() as f:
-            data = json.load(f)
-        return {b.get("name", "") for b in data.get("bindings", []) if b.get("name")}
-
+            return {b.get("name", "") for b in json.load(f).get("bindings", []) if b.get("name")}
     json_path = repo_root / DEFAULT_MANIFEST_PATH
     if json_path.is_file():
         with json_path.open() as f:
-            data = json.load(f)
-        names = {b.get("name", "") for b in data.get("bindings", []) if b.get("name")}
+            names = {b.get("name", "") for b in json.load(f).get("bindings", []) if b.get("name")}
         if names:
             return names
-
     py_path = repo_root / "scripts" / "add_chart_binding_named_ranges.py"
     if not py_path.is_file():
         return set()
     spec_globals: dict[str, Any] = {"__name__": "_audit_loader", "__file__": str(py_path)}
     src = py_path.read_text()
-    cut_marker = "\ndef "
-    cut_at = src.find(cut_marker, src.find("_BINDING_TO_RANGE_MANIFEST"))
-    src_to_exec = src[: cut_at if cut_at >= 0 else len(src)]
-    exec(compile(src_to_exec, str(py_path), "exec"), spec_globals)
+    cut = src.find("\ndef ", src.find("_BINDING_TO_RANGE_MANIFEST"))
+    exec(compile(src[: cut if cut >= 0 else len(src)], str(py_path), "exec"), spec_globals)
     raw = spec_globals.get("_BINDING_TO_RANGE_MANIFEST", [])
     return {b.get("name", "") for b in raw if b.get("name")}
 
 
 def _read_slide_size(zf: zipfile.ZipFile) -> tuple[int, int]:
     try:
-        xml = zf.read("ppt/presentation.xml")
-    except KeyError:
+        root = etree.fromstring(zf.read("ppt/presentation.xml"))
+    except (KeyError, etree.XMLSyntaxError):
+        return (DEFAULT_SLIDE_W_EMU, DEFAULT_SLIDE_H_EMU)
+    sld = root.find("p:sldSz", NS)
+    if sld is None:
         return (DEFAULT_SLIDE_W_EMU, DEFAULT_SLIDE_H_EMU)
     try:
-        root = etree.fromstring(xml)
-    except etree.XMLSyntaxError:
-        return (DEFAULT_SLIDE_W_EMU, DEFAULT_SLIDE_H_EMU)
-    sld_sz = root.find("p:sldSz", NS)
-    if sld_sz is None:
-        return (DEFAULT_SLIDE_W_EMU, DEFAULT_SLIDE_H_EMU)
-    try:
-        cx = int(sld_sz.get("cx") or DEFAULT_SLIDE_W_EMU)
-        cy = int(sld_sz.get("cy") or DEFAULT_SLIDE_H_EMU)
+        return (
+            int(sld.get("cx") or DEFAULT_SLIDE_W_EMU),
+            int(sld.get("cy") or DEFAULT_SLIDE_H_EMU),
+        )
     except ValueError:
         return (DEFAULT_SLIDE_W_EMU, DEFAULT_SLIDE_H_EMU)
-    return (cx, cy)
 
 
 def _parse_slide_rels(rels_xml: bytes) -> dict[str, dict[str, str]]:
-    """Return {rId: {type, target_filename}} for ole and chart relationships."""
+    """{rId: {type, target_filename}} for ole + chart relationships."""
     try:
         root = etree.fromstring(rels_xml)
     except etree.XMLSyntaxError:
@@ -229,11 +208,9 @@ class _SlideShapeMeta:
 
 
 def _parse_slide_shapes(slide_xml: bytes) -> _SlideShapeMeta:
-    """Walk a slide once: find every <p:oleObj> reference and every <a:fld id="...">.
-
-    For ole references we capture the enclosing graphicFrame's xfrm/ext for
-    on-canvas check and the graphicFrame's cNvPr name + the oleObj progId for
-    cNvPr-name conformance.
+    """Walk a slide once: capture <p:oleObj> refs (de-duped per graphicFrame —
+    mc:Choice + mc:Fallback wrap two siblings under one frame) and every
+    <a:fld id>.
     """
     meta = _SlideShapeMeta()
     try:
@@ -241,11 +218,25 @@ def _parse_slide_shapes(slide_xml: bytes) -> _SlideShapeMeta:
     except etree.XMLSyntaxError:
         return meta
 
-    seen_gf_for_rid: dict[str, set[int]] = {}
+    seen_gf: dict[str, set[int]] = {}
     for ole in root.iter("{%s}oleObj" % NS_P):
         rid = ole.get("{%s}id" % NS_R) or ""
         if not rid:
             continue
+        gf = None
+        cur = ole
+        for _ in range(8):
+            cur = cur.getparent()
+            if cur is None:
+                break
+            if cur.tag == "{%s}graphicFrame" % NS_P:
+                gf = cur
+                break
+        if gf is not None:
+            key = id(gf)
+            if key in seen_gf.get(rid, set()):
+                continue
+            seen_gf.setdefault(rid, set()).add(key)
         info: dict[str, Any] = {
             "prog_id": ole.get("progId"),
             "oleobj_name": ole.get("name"),
@@ -254,23 +245,7 @@ def _parse_slide_shapes(slide_xml: bytes) -> _SlideShapeMeta:
             "pos_emu": None,
             "size_emu": None,
         }
-        parent = ole
-        gf = None
-        for _ in range(8):
-            parent = parent.getparent()
-            if parent is None:
-                break
-            if parent.tag == "{%s}graphicFrame" % NS_P:
-                gf = parent
-                break
-        # WHY: mc:AlternateContent wraps two p:oleObj siblings (Choice + Fallback)
-        # under the SAME graphicFrame. Counting raw <p:oleObj> elements would
-        # double-count every legit anchor. De-dupe by graphicFrame identity.
         if gf is not None:
-            gf_key = id(gf)
-            if gf_key in seen_gf_for_rid.get(rid, set()):
-                continue
-            seen_gf_for_rid.setdefault(rid, set()).add(gf_key)
             cnv = gf.find("p:nvGraphicFramePr/p:cNvPr", NS)
             if cnv is not None:
                 info["cnvpr_name"] = cnv.get("name")
@@ -279,38 +254,19 @@ def _parse_slide_shapes(slide_xml: bytes) -> _SlideShapeMeta:
             if xfm is not None:
                 off = xfm.find("a:off", NS)
                 ext = xfm.find("a:ext", NS)
-                if off is not None:
-                    try:
+                try:
+                    if off is not None:
                         info["pos_emu"] = (int(off.get("x") or 0), int(off.get("y") or 0))
-                    except ValueError:
-                        pass
-                if ext is not None:
-                    try:
+                    if ext is not None:
                         info["size_emu"] = (int(ext.get("cx") or 0), int(ext.get("cy") or 0))
-                    except ValueError:
-                        pass
-        # WHY: cNvPr is on the graphicFrame; also check the embedding pic
-        # (nvPicPr/cNvPr) inside mc:Fallback for the canonical think-cell name.
-        if not info["cnvpr_name"]:
-            anc = ole
-            for _ in range(6):
-                anc = anc.getparent()
-                if anc is None:
-                    break
-            if anc is not None:
-                pic_cnv = (
-                    anc.find(".//p:pic/p:nvPicPr/p:cNvPr", NS) if hasattr(anc, "find") else None
-                )
-                if pic_cnv is not None:
-                    info["cnvpr_name"] = pic_cnv.get("name")
+                except ValueError:
+                    pass
         meta.ole_refs.setdefault(rid, []).append(info)
 
     for fld in root.iter("{%s}fld" % NS_A):
         fid = fld.get("id") or ""
-        if not fid:
-            continue
-        meta.fld_ids.append((fid, "slide-body"))
-
+        if fid:
+            meta.fld_ids.append((fid, "slide-body"))
     return meta
 
 
@@ -319,12 +275,7 @@ def _collect_chart_fld_ids(chart_xml: bytes) -> list[str]:
         root = etree.fromstring(chart_xml)
     except etree.XMLSyntaxError:
         return []
-    out: list[str] = []
-    for fld in root.iter("{%s}fld" % NS_A):
-        fid = fld.get("id") or ""
-        if fid:
-            out.append(fid)
-    return out
+    return [fld.get("id") or "" for fld in root.iter("{%s}fld" % NS_A) if fld.get("id")]
 
 
 def _on_canvas(
@@ -336,14 +287,12 @@ def _on_canvas(
     cx, cy = size
     if x < 0 or y < 0:
         return False, f"negative offset x={x} y={y}"
-    if x + cx > canvas_w or y + cy > canvas_h:
-        return False, (
-            f"frame extends past canvas: x+cx={x + cx} > {canvas_w}"
-            if x + cx > canvas_w
-            else f"y+cy={y + cy} > {canvas_h}"
-        )
     if cx <= 0 or cy <= 0:
         return False, f"non-positive extent cx={cx} cy={cy}"
+    if x + cx > canvas_w:
+        return False, f"frame extends past canvas: x+cx={x + cx} > {canvas_w}"
+    if y + cy > canvas_h:
+        return False, f"frame extends past canvas: y+cy={y + cy} > {canvas_h}"
     return True, "ok"
 
 
@@ -353,54 +302,36 @@ def _short_guid_list(ids: list[str], cap: int = 3) -> str:
 
 def audit(pptx_path: Path, manifest_override: Path | None) -> AuditReport:
     repo_root = _detect_repo_root(pptx_path)
-    manifest_names = _load_manifest(repo_root, manifest_override)
-
+    manifest_names = _load_manifest_names(repo_root, manifest_override)
     report = AuditReport(pptx=str(pptx_path))
 
     with zipfile.ZipFile(pptx_path) as z:
         names = z.namelist()
         canvas_w, canvas_h = _read_slide_size(z)
-
         ole_parts = {m.group(1): n for n in names for m in [OLE_PART_RE.match(n)] if m}
         chart_parts = {m.group(1): n for n in names for m in [CHART_PART_RE.match(n)] if m}
-
-        ole_parts_used: set[str] = set()
-        chart_parts_used: set[str] = set()
-
         slide_nums = sorted(int(m.group(1)) for n in names for m in [SLIDE_PART_RE.match(n)] if m)
 
+        ole_used: set[str] = set()
         for slide_num in slide_nums:
             slide_part = f"ppt/slides/slide{slide_num}.xml"
             rels_part = f"ppt/slides/_rels/slide{slide_num}.xml.rels"
             if slide_part not in names or rels_part not in names:
                 continue
-
-            slide_xml = z.read(slide_part)
-            rels_xml = z.read(rels_part)
-            rels = _parse_slide_rels(rels_xml)
-
+            rels = _parse_slide_rels(z.read(rels_part))
             ole_rels = {rid: r["target"] for rid, r in rels.items() if r["type"] == "ole"}
             chart_rels = {rid: r["target"] for rid, r in rels.items() if r["type"] == "chart"}
             if not ole_rels:
                 continue
-
-            shape_meta = _parse_slide_shapes(slide_xml)
+            shape_meta = _parse_slide_shapes(z.read(slide_part))
 
             for rid, ole_filename in ole_rels.items():
-                ole_parts_used.add(ole_filename)
-                # Pair with a chart on the same slide. When multiple, take
-                # the first deterministically — anchors generally pair 1:1.
+                ole_used.add(ole_filename)
                 chart_filename = next(iter(chart_rels.values()), None)
-                if chart_filename:
-                    chart_parts_used.add(chart_filename)
-
-                slide_n_str = f"{slide_num:02d}"
-                expected_binding_prefix = f"S{slide_n_str}_"
+                expected_prefix = f"S{slide_num:02d}_"
                 slide_binding = next(
-                    (n for n in manifest_names if n.startswith(expected_binding_prefix)),
-                    None,
+                    (n for n in sorted(manifest_names) if n.startswith(expected_prefix)), None
                 )
-
                 unit = SlideUnit(
                     slide_num=slide_num,
                     slide_part=slide_part,
@@ -409,82 +340,75 @@ def audit(pptx_path: Path, manifest_override: Path | None) -> AuditReport:
                     binding=slide_binding,
                     binding_resolved=slide_binding is not None,
                 )
-
                 _check_anchor_has_chart_pair(unit, chart_rels, ole_filename)
                 _check_anchor_referenced_once(unit, shape_meta, rid, ole_filename)
                 _check_anchor_position_on_canvas(unit, shape_meta, rid, canvas_w, canvas_h)
-                _check_anchor_binding_recoverable(unit, manifest_names, expected_binding_prefix)
+                _check_anchor_binding_recoverable(unit, manifest_names, expected_prefix)
                 _check_anchor_cnvpr_name(unit, shape_meta, rid)
 
                 chart_fld_ids: list[str] = []
                 if chart_filename and chart_filename in chart_parts:
-                    chart_xml = z.read(chart_parts[chart_filename])
-                    chart_fld_ids = _collect_chart_fld_ids(chart_xml)
+                    chart_fld_ids = _collect_chart_fld_ids(z.read(chart_parts[chart_filename]))
                     _check_chart_fld_ids_unique(unit, chart_fld_ids, chart_filename)
                     for fid in chart_fld_ids:
                         shape_meta.fld_ids.append((fid, f"chart:{chart_filename}"))
 
                 _check_chart_fld_ids_uppercase(unit, shape_meta.fld_ids, chart_filename)
                 _check_slide_fld_ids_unique(unit, shape_meta.fld_ids)
-
                 report.slide_units.append(unit)
 
+        # Slides with no anchor but with lowercase fld IDs (e.g. seed slides 26/27).
         for slide_num in slide_nums:
             if any(u.slide_num == slide_num for u in report.slide_units):
                 continue
             slide_part = f"ppt/slides/slide{slide_num}.xml"
             if slide_part not in names:
                 continue
-            slide_xml = z.read(slide_part)
-            extra_meta = _parse_slide_shapes(slide_xml)
-            if not extra_meta.fld_ids:
+            extra = _parse_slide_shapes(z.read(slide_part))
+            if not extra.fld_ids:
                 continue
-            bad = [fid for fid, _src in extra_meta.fld_ids if not GUID_UPPER_RE.match(fid)]
+            bad = [fid for fid, _src in extra.fld_ids if not GUID_UPPER_RE.match(fid)]
             if bad:
                 report.extra_findings.append(
                     Finding(
                         rule="chart.fld-ids-uppercase",
-                        severity=SEVERITY_FAIL,
+                        severity=SEV_FAIL,
                         location=f"slide {slide_num} (no anchor)",
                         message=(
-                            f"{len(bad)} of {len(extra_meta.fld_ids)} fld ids violate uppercase "
+                            f"{len(bad)} of {len(extra.fld_ids)} fld ids violate uppercase "
                             f"GUID pattern: {_short_guid_list(bad)}"
                         ),
-                        fix_hint=(
-                            "uppercase the GUID per ECMA-376 §A.2: "
-                            "{[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}}. "
-                            "lowercase IDs trigger PowerPoint's repair pass."
-                        ),
+                        fix_hint=FIX_UPPERCASE_GUID,
                     )
                 )
 
         for ole_part in sorted(ole_parts):
-            if ole_part not in ole_parts_used:
+            if ole_part not in ole_used:
                 report.extra_findings.append(
                     Finding(
                         rule="anchor.has-chart-pair",
-                        severity=SEVERITY_FAIL,
+                        severity=SEV_FAIL,
                         location=f"ppt/embeddings/{ole_part}",
                         message=f"oleObject {ole_part} is not referenced by any slide rels (orphan)",
                         fix_hint="remove the orphan part or wire it to a slide via _rels.",
                     )
                 )
 
-    counts = {SEVERITY_FAIL: 0, SEVERITY_WARN: 0, SEVERITY_INFO: 0}
+    counts = {SEV_FAIL: 0, SEV_WARN: 0, SEV_INFO: 0}
     by_rule: dict[str, int] = {}
     for f in report.all_findings():
         counts[f.severity] = counts.get(f.severity, 0) + 1
         by_rule[f.rule] = by_rule.get(f.rule, 0) + 1
     report.summary = {
         "anchors_audited": len(report.slide_units),
-        "ole_parts_total": len(ole_parts) if "ole_parts" in locals() else 0,
-        "chart_parts_total": len(chart_parts) if "chart_parts" in locals() else 0,
-        "slides_total": len(slide_nums) if "slide_nums" in locals() else 0,
-        "fail": counts[SEVERITY_FAIL],
-        "warn": counts[SEVERITY_WARN],
-        "info": counts[SEVERITY_INFO],
+        "ole_parts_total": len(ole_parts),
+        "chart_parts_total": len(chart_parts),
+        "slides_total": len(slide_nums),
+        "fail": counts[SEV_FAIL],
+        "warn": counts[SEV_WARN],
+        "info": counts[SEV_INFO],
         "by_rule": by_rule,
-        "canvas_emu": [canvas_w, canvas_h] if "canvas_w" in locals() else None,
+        "canvas_emu": [canvas_w, canvas_h],
     }
     return report
 
@@ -492,63 +416,43 @@ def audit(pptx_path: Path, manifest_override: Path | None) -> AuditReport:
 def _check_anchor_has_chart_pair(
     unit: SlideUnit, chart_rels: dict[str, str], ole_filename: str
 ) -> None:
+    loc = f"slide {unit.slide_num} :: {ole_filename}"
     if not chart_rels:
-        unit.findings.append(
-            Finding(
-                rule="anchor.has-chart-pair",
-                severity=SEVERITY_FAIL,
-                location=f"slide {unit.slide_num} :: {ole_filename}",
-                message="oleObject anchor has no paired chart{i}.xml part referenced from this slide",
-                fix_hint="add a relationship of type .../relationships/chart pointing at "
-                "ppt/charts/chartN.xml in the slide's _rels.",
-            )
+        unit.emit(
+            "anchor.has-chart-pair",
+            SEV_FAIL,
+            loc,
+            "oleObject anchor has no paired chart{i}.xml part referenced from this slide",
+            "add a relationship of type .../relationships/chart pointing at "
+            "ppt/charts/chartN.xml in the slide's _rels.",
         )
-        return
-    unit.findings.append(
-        Finding(
-            rule="anchor.has-chart-pair",
-            severity=SEVERITY_INFO,
-            location=f"slide {unit.slide_num} :: {ole_filename}",
-            message=f"paired with {unit.chart_part}",
-        )
-    )
+    else:
+        unit.emit("anchor.has-chart-pair", SEV_INFO, loc, f"paired with {unit.chart_part}")
 
 
 def _check_anchor_referenced_once(
     unit: SlideUnit, shape_meta: _SlideShapeMeta, rid: str, ole_filename: str
 ) -> None:
-    refs = shape_meta.ole_refs.get(rid, [])
-    n = len(refs)
+    loc = f"slide {unit.slide_num} :: {ole_filename}"
+    n = len(shape_meta.ole_refs.get(rid, []))
     if n == 0:
-        unit.findings.append(
-            Finding(
-                rule="anchor.referenced-once",
-                severity=SEVERITY_FAIL,
-                location=f"slide {unit.slide_num} :: {ole_filename}",
-                message=f"rId {rid} declares oleObject but no <p:oleObj> on the slide references it",
-                fix_hint="ensure a graphicFrame/AlternateContent/Choice/oleObj exists with r:id="
-                + rid,
-            )
+        unit.emit(
+            "anchor.referenced-once",
+            SEV_FAIL,
+            loc,
+            f"rId {rid} declares oleObject but no <p:oleObj> on the slide references it",
+            f"ensure a graphicFrame/AlternateContent/Choice/oleObj exists with r:id={rid}",
         )
     elif n > 1:
-        unit.findings.append(
-            Finding(
-                rule="anchor.referenced-once",
-                severity=SEVERITY_FAIL,
-                location=f"slide {unit.slide_num} :: {ole_filename}",
-                message=f"oleObject rId {rid} is referenced {n} times on the slide",
-                fix_hint="deduplicate p:oleObj references; one ole anchor must have exactly one shape.",
-            )
+        unit.emit(
+            "anchor.referenced-once",
+            SEV_FAIL,
+            loc,
+            f"oleObject rId {rid} is referenced {n} times on the slide",
+            "deduplicate p:oleObj references; one ole anchor must have exactly one shape.",
         )
     else:
-        unit.findings.append(
-            Finding(
-                rule="anchor.referenced-once",
-                severity=SEVERITY_INFO,
-                location=f"slide {unit.slide_num} :: {ole_filename}",
-                message="oleObject referenced exactly once",
-            )
-        )
+        unit.emit("anchor.referenced-once", SEV_INFO, loc, "oleObject referenced exactly once")
 
 
 def _check_anchor_position_on_canvas(
@@ -558,70 +462,50 @@ def _check_anchor_position_on_canvas(
     if not refs:
         return
     info = refs[0]
+    loc = f"slide {unit.slide_num} :: {unit.ole_part}"
     ok, why = _on_canvas(info.get("pos_emu"), info.get("size_emu"), canvas_w, canvas_h)
     if ok:
-        unit.findings.append(
-            Finding(
-                rule="anchor.position-on-canvas",
-                severity=SEVERITY_INFO,
-                location=f"slide {unit.slide_num} :: {unit.ole_part}",
-                message="anchor inside canvas",
-            )
-        )
+        unit.emit("anchor.position-on-canvas", SEV_INFO, loc, "anchor inside canvas")
     else:
-        unit.findings.append(
-            Finding(
-                rule="anchor.position-on-canvas",
-                severity=SEVERITY_WARN,
-                location=f"slide {unit.slide_num} :: {unit.ole_part}",
-                message=f"anchor off-canvas: {why} (canvas {canvas_w}x{canvas_h} EMU)",
-                fix_hint="adjust p:graphicFrame/p:xfrm/a:off + a:ext so the frame fits inside p:sldSz.",
-            )
+        unit.emit(
+            "anchor.position-on-canvas",
+            SEV_WARN,
+            loc,
+            f"anchor off-canvas: {why} (canvas {canvas_w}x{canvas_h} EMU)",
+            "adjust p:graphicFrame/p:xfrm/a:off + a:ext so the frame fits inside p:sldSz.",
         )
 
 
 def _check_anchor_binding_recoverable(
     unit: SlideUnit, manifest_names: set[str], expected_prefix: str
 ) -> None:
+    loc = f"slide {unit.slide_num} :: {unit.ole_part}"
     if not manifest_names:
-        unit.findings.append(
-            Finding(
-                rule="anchor.binding-recoverable",
-                severity=SEVERITY_INFO,
-                location=f"slide {unit.slide_num} :: {unit.ole_part}",
-                message="manifest unavailable; skipping binding lookup",
-            )
+        unit.emit(
+            "anchor.binding-recoverable",
+            SEV_INFO,
+            loc,
+            "manifest unavailable; skipping binding lookup",
         )
         return
     matches = sorted(n for n in manifest_names if n.startswith(expected_prefix))
     if not matches:
-        unit.findings.append(
-            Finding(
-                rule="anchor.binding-recoverable",
-                severity=SEVERITY_INFO,
-                location=f"slide {unit.slide_num} :: {unit.ole_part}",
-                message=f"no manifest binding starts with {expected_prefix}",
-                fix_hint="confirm slide number convention; rename binding or correct the slide layout.",
-            )
+        unit.emit(
+            "anchor.binding-recoverable",
+            SEV_INFO,
+            loc,
+            f"no manifest binding starts with {expected_prefix}",
+            "confirm slide number convention; rename binding or correct the slide layout.",
         )
     elif len(matches) > 1:
-        unit.findings.append(
-            Finding(
-                rule="anchor.binding-recoverable",
-                severity=SEVERITY_INFO,
-                location=f"slide {unit.slide_num} :: {unit.ole_part}",
-                message=f"multiple manifest bindings match {expected_prefix}: {matches}",
-            )
+        unit.emit(
+            "anchor.binding-recoverable",
+            SEV_INFO,
+            loc,
+            f"multiple manifest bindings match {expected_prefix}: {matches}",
         )
     else:
-        unit.findings.append(
-            Finding(
-                rule="anchor.binding-recoverable",
-                severity=SEVERITY_INFO,
-                location=f"slide {unit.slide_num} :: {unit.ole_part}",
-                message=f"binding {matches[0]} resolves",
-            )
-        )
+        unit.emit("anchor.binding-recoverable", SEV_INFO, loc, f"binding {matches[0]} resolves")
 
 
 def _check_anchor_cnvpr_name(unit: SlideUnit, shape_meta: _SlideShapeMeta, rid: str) -> None:
@@ -629,30 +513,18 @@ def _check_anchor_cnvpr_name(unit: SlideUnit, shape_meta: _SlideShapeMeta, rid: 
     if not refs:
         return
     info = refs[0]
-    cnvpr_name = info.get("cnvpr_name") or ""
-    prog_id = info.get("prog_id") or ""
-    if cnvpr_name == THINKCELL_CNVPR_NAME and prog_id == THINKCELL_PROGID:
-        unit.findings.append(
-            Finding(
-                rule="anchor.cnvpr-name-consistent",
-                severity=SEVERITY_INFO,
-                location=f"slide {unit.slide_num} :: {unit.ole_part}",
-                message=f"cNvPr={cnvpr_name!r} progId={prog_id!r}",
-            )
-        )
+    name, prog = info.get("cnvpr_name") or "", info.get("prog_id") or ""
+    loc = f"slide {unit.slide_num} :: {unit.ole_part}"
+    if name == THINKCELL_CNVPR_NAME and prog == THINKCELL_PROGID:
+        unit.emit("anchor.cnvpr-name-consistent", SEV_INFO, loc, f"cNvPr={name!r} progId={prog!r}")
     else:
-        unit.findings.append(
-            Finding(
-                rule="anchor.cnvpr-name-consistent",
-                severity=SEVERITY_INFO,
-                location=f"slide {unit.slide_num} :: {unit.ole_part}",
-                message=(
-                    f"unusual think-cell anchor metadata: "
-                    f"cNvPr={cnvpr_name!r} progId={prog_id!r} "
-                    f"(expected name={THINKCELL_CNVPR_NAME!r} progId={THINKCELL_PROGID!r})"
-                ),
-                fix_hint="manual review; non-conforming anchors usually mean a non-think-cell ole part.",
-            )
+        unit.emit(
+            "anchor.cnvpr-name-consistent",
+            SEV_INFO,
+            loc,
+            f"unusual think-cell anchor metadata: cNvPr={name!r} progId={prog!r} "
+            f"(expected name={THINKCELL_CNVPR_NAME!r} progId={THINKCELL_PROGID!r})",
+            "manual review; non-conforming anchors usually mean a non-think-cell ole part.",
         )
 
 
@@ -661,40 +533,27 @@ def _check_chart_fld_ids_uppercase(
 ) -> None:
     if not fld_ids:
         return
-    bad: list[tuple[str, str]] = [
-        (fid, src) for fid, src in fld_ids if not GUID_UPPER_RE.match(fid)
-    ]
+    bad = [(fid, src) for fid, src in fld_ids if not GUID_UPPER_RE.match(fid)]
     target = f"slide {unit.slide_num}" + (f" / chart {chart_filename}" if chart_filename else "")
     if not bad:
-        unit.findings.append(
-            Finding(
-                rule="chart.fld-ids-uppercase",
-                severity=SEVERITY_INFO,
-                location=target,
-                message=f"all {len(fld_ids)} fld ids match ECMA-376 §A.2 uppercase pattern",
-            )
+        unit.emit(
+            "chart.fld-ids-uppercase",
+            SEV_INFO,
+            target,
+            f"all {len(fld_ids)} fld ids match ECMA-376 §A.2 uppercase pattern",
         )
         return
-    bad_ids = [fid for fid, _src in bad]
-    src_breakdown: dict[str, int] = {}
+    breakdown: dict[str, int] = {}
     for _fid, src in bad:
-        src_breakdown[src] = src_breakdown.get(src, 0) + 1
-    src_summary = ", ".join(f"{s}={n}" for s, n in sorted(src_breakdown.items()))
-    unit.findings.append(
-        Finding(
-            rule="chart.fld-ids-uppercase",
-            severity=SEVERITY_FAIL,
-            location=target,
-            message=(
-                f"{len(bad)} of {len(fld_ids)} fld ids violate uppercase GUID pattern "
-                f"({src_summary}): {_short_guid_list(bad_ids)}"
-            ),
-            fix_hint=(
-                "uppercase the GUID per ECMA-376 §A.2: "
-                "{[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}}. "
-                "lowercase IDs trigger PowerPoint's repair pass."
-            ),
-        )
+        breakdown[src] = breakdown.get(src, 0) + 1
+    unit.emit(
+        "chart.fld-ids-uppercase",
+        SEV_FAIL,
+        target,
+        f"{len(bad)} of {len(fld_ids)} fld ids violate uppercase GUID pattern "
+        f"({', '.join(f'{s}={n}' for s, n in sorted(breakdown.items()))}): "
+        f"{_short_guid_list([fid for fid, _ in bad])}",
+        FIX_UPPERCASE_GUID,
     )
 
 
@@ -707,25 +566,17 @@ def _check_chart_fld_ids_unique(
     for fid in chart_fld_ids:
         seen[fid] = seen.get(fid, 0) + 1
     dups = sorted(fid for fid, n in seen.items() if n > 1)
+    loc = f"chart {chart_filename}"
     if not dups:
-        unit.findings.append(
-            Finding(
-                rule="chart.fld-ids-unique",
-                severity=SEVERITY_INFO,
-                location=f"chart {chart_filename}",
-                message=f"all {len(chart_fld_ids)} fld ids unique",
-            )
+        unit.emit("chart.fld-ids-unique", SEV_INFO, loc, f"all {len(chart_fld_ids)} fld ids unique")
+    else:
+        unit.emit(
+            "chart.fld-ids-unique",
+            SEV_FAIL,
+            loc,
+            f"duplicate fld ids in chart: {_short_guid_list(dups)}",
+            "regenerate or remap fld ids so each is unique within the chart part.",
         )
-        return
-    unit.findings.append(
-        Finding(
-            rule="chart.fld-ids-unique",
-            severity=SEVERITY_FAIL,
-            location=f"chart {chart_filename}",
-            message=f"duplicate fld ids in chart: {_short_guid_list(dups)}",
-            fix_hint="regenerate or remap fld ids so each is unique within the chart part.",
-        )
-    )
 
 
 def _check_slide_fld_ids_unique(unit: SlideUnit, fld_ids: list[tuple[str, str]]) -> None:
@@ -735,121 +586,99 @@ def _check_slide_fld_ids_unique(unit: SlideUnit, fld_ids: list[tuple[str, str]])
     for fid, src in fld_ids:
         by_id.setdefault(fid, []).append(src)
     dups = {fid: srcs for fid, srcs in by_id.items() if len(srcs) > 1}
+    loc = f"slide {unit.slide_num}"
     if not dups:
-        unit.findings.append(
-            Finding(
-                rule="slide.fld-ids-unique-within-slide",
-                severity=SEVERITY_INFO,
-                location=f"slide {unit.slide_num}",
-                message=f"all {len(fld_ids)} fld ids unique across slide+chart",
-            )
+        unit.emit(
+            "slide.fld-ids-unique-within-slide",
+            SEV_INFO,
+            loc,
+            f"all {len(fld_ids)} fld ids unique across slide+chart",
         )
-        return
-    samples = sorted(dups.keys())
-    unit.findings.append(
-        Finding(
-            rule="slide.fld-ids-unique-within-slide",
-            severity=SEVERITY_FAIL,
-            location=f"slide {unit.slide_num}",
-            message=(
-                f"{len(dups)} duplicate fld id(s) across slide+chart: {_short_guid_list(samples)}"
-            ),
-            fix_hint="duplicate IDs cause think-cell to substitute the wrong field; remap one side.",
+    else:
+        unit.emit(
+            "slide.fld-ids-unique-within-slide",
+            SEV_FAIL,
+            loc,
+            f"{len(dups)} duplicate fld id(s) across slide+chart: {_short_guid_list(sorted(dups))}",
+            "duplicate IDs cause think-cell to substitute the wrong field; remap one side.",
         )
-    )
 
 
-def _glyph(severity: str, passed: bool) -> str:
-    if passed:
-        return "PASS"
-    return {"fail": "FAIL", "warn": "WARN", "info": "info"}.get(severity, "?")
+_RULES_PER_UNIT = (
+    "anchor.has-chart-pair",
+    "anchor.referenced-once",
+    "anchor.position-on-canvas",
+    "anchor.binding-recoverable",
+    "chart.fld-ids-uppercase",
+    "chart.fld-ids-unique",
+    "slide.fld-ids-unique-within-slide",
+    "anchor.cnvpr-name-consistent",
+)
 
 
 def render_text(report: AuditReport, quiet: bool) -> str:
-    lines: list[str] = []
-    pptx_name = Path(report.pptx).name
     s = report.summary
-    lines.append(
-        f"== {pptx_name}  oleObjects={s.get('ole_parts_total', 0)}  "
-        f"charts={s.get('chart_parts_total', 0)}  slides={s.get('slides_total', 0)}"
-    )
-    lines.append("")
-
-    rules_per_unit = [
-        "anchor.has-chart-pair",
-        "anchor.referenced-once",
-        "anchor.position-on-canvas",
-        "anchor.binding-recoverable",
-        "chart.fld-ids-uppercase",
-        "chart.fld-ids-unique",
-        "slide.fld-ids-unique-within-slide",
-        "anchor.cnvpr-name-consistent",
+    lines: list[str] = [
+        f"== {Path(report.pptx).name}  oleObjects={s.get('ole_parts_total', 0)}  "
+        f"charts={s.get('chart_parts_total', 0)}  slides={s.get('slides_total', 0)}",
+        "",
     ]
-
     for unit in report.slide_units:
-        unit_has_failure = any(f.severity == SEVERITY_FAIL for f in unit.findings)
-        if quiet and not unit_has_failure:
+        unit_failed = any(f.severity == SEV_FAIL for f in unit.findings)
+        if quiet and not unit_failed:
             continue
-        binding_label = unit.binding or "?"
         lines.append(
-            f"SLIDE {unit.slide_num:>2}   binding={binding_label:<24}  "
+            f"SLIDE {unit.slide_num:>2}   binding={unit.binding or '?':<24}  "
             f"oleObject={unit.ole_part}  chart={unit.chart_part or '?'}"
         )
         by_rule: dict[str, list[Finding]] = {}
         for f in unit.findings:
             by_rule.setdefault(f.rule, []).append(f)
-        for rule in rules_per_unit:
-            findings_for_rule = by_rule.get(rule, [])
-            if not findings_for_rule:
+        for rule in _RULES_PER_UNIT:
+            findings = by_rule.get(rule, [])
+            if not findings:
                 continue
-            top = max(
-                findings_for_rule,
-                key=lambda f: {SEVERITY_FAIL: 3, SEVERITY_WARN: 2, SEVERITY_INFO: 1}.get(
-                    f.severity, 0
-                ),
-            )
-            passed = top.severity == SEVERITY_INFO
+            top = max(findings, key=lambda f: SEV_RANK.get(f.severity, 0))
+            passed = top.severity == SEV_INFO
             if quiet and passed:
                 continue
             mark = "[OK]  " if passed else f"[{top.severity.upper()}]"
             lines.append(f"  {mark} {rule}  {top.message}")
         lines.append("")
-
     if report.extra_findings:
         lines.append("EXTRA:")
         for f in report.extra_findings:
             lines.append(f"  [{f.severity.upper()}] {f.rule}  {f.location}  {f.message}")
         lines.append("")
-
     lines.append("SUMMARY")
     lines.append(
         f"  fail={s.get('fail', 0)}  warn={s.get('warn', 0)}  info={s.get('info', 0)}  "
         f"anchors_audited={s.get('anchors_audited', 0)}"
     )
-    if s.get("by_rule"):
-        failed_rules = {
-            rule: cnt
-            for rule, cnt in s["by_rule"].items()
-            if cnt
-            and any(f.severity != SEVERITY_INFO and f.rule == rule for f in report.all_findings())
-        }
-        if failed_rules:
-            joined = "  ".join(f"{r}={c}" for r, c in sorted(failed_rules.items()))
-            lines.append(f"  rules with non-info findings: {joined}")
+    failed_rules = {
+        r: c
+        for r, c in s.get("by_rule", {}).items()
+        if any(f.rule == r and f.severity != SEV_INFO for f in report.all_findings())
+    }
+    if failed_rules:
+        lines.append(
+            "  rules with non-info findings: "
+            + "  ".join(f"{r}={c}" for r, c in sorted(failed_rules.items()))
+        )
     return "\n".join(lines)
 
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(
-        description="Audit per-slide think-cell anchor wiring in a .pptx — gate-5 of the "
-        "deck-factory harness.",
+        description="Audit per-slide think-cell anchor wiring in a .pptx — gate-5.",
     )
     p.add_argument("pptx", type=Path)
     p.add_argument(
         "--manifest",
         type=Path,
         default=None,
-        help=f"Override path to a binding_to_range_manifest.json. Default: <repo>/{DEFAULT_MANIFEST_PATH}",
+        help=f"Override path to a binding_to_range_manifest.json. "
+        f"Default: <repo>/{DEFAULT_MANIFEST_PATH}",
     )
     p.add_argument("--json", action="store_true", help="Emit JSON instead of text.")
     p.add_argument(
@@ -862,7 +691,6 @@ def main(argv: list[str] | None = None) -> int:
     if not args.pptx.is_file():
         sys.stderr.write(f"not a file: {args.pptx}\n")
         return 3
-
     try:
         report = audit(args.pptx, args.manifest)
     except (zipfile.BadZipFile, OSError) as e:
@@ -870,17 +698,13 @@ def main(argv: list[str] | None = None) -> int:
         return 3
 
     if args.json:
-        sys.stdout.write(json.dumps(report.to_dict(), indent=2))
-        sys.stdout.write("\n")
+        sys.stdout.write(json.dumps(report.to_dict(), indent=2) + "\n")
     else:
-        sys.stdout.write(render_text(report, args.quiet))
-        sys.stdout.write("\n")
+        sys.stdout.write(render_text(report, args.quiet) + "\n")
 
-    fails = report.summary.get("fail", 0)
-    warns = report.summary.get("warn", 0)
-    if fails:
+    if report.summary.get("fail", 0):
         return 1
-    if warns:
+    if report.summary.get("warn", 0):
         return 2
     return 0
 

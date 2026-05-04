@@ -48,7 +48,8 @@ def test_public_api_imports_clean() -> None:
     assert hasattr(tcrender, "RenderResult")
     assert hasattr(tcrender, "ValidationResult")
     assert hasattr(tcrender, "RenderError")
-    assert tcrender.__version__ == "0.1.0"
+    # Track 3 bumped to 0.3.0 (archive + quality wired into client).
+    assert tcrender.__version__ >= "0.2.0"
 
 
 def test_render_result_is_frozen(tmp_path: Path) -> None:
@@ -188,6 +189,8 @@ def test_live_render_jesper_fixture(tmp_path: Path) -> None:
         - exit_code == 0
         - ferried output exists, > 8 MiB, and is a valid zip
         - elapsed_seconds reported
+        - rendered .pptx contains "Jesper Tyrer", "2026-Q2", "APAC" --
+          the cover-slide Jinja placeholders must resolve via prep_jinja.
     """
     from tcrender import TcRenderClient
 
@@ -209,3 +212,10 @@ def test_live_render_jesper_fixture(tmp_path: Path) -> None:
     )
     assert zipfile.is_zipfile(out_path), "ferried output is not a valid .pptx"
     assert result.elapsed_seconds > 0
+
+    # Cover-slide Jinja placeholders must have been substituted.
+    with zipfile.ZipFile(out_path, "r") as zf:
+        slide1 = zf.read("ppt/slides/slide1.xml").decode("utf-8")
+    assert "Jesper Tyrer" in slide1, "director_name placeholder did not resolve"
+    assert "2026-Q2" in slide1, "period placeholder did not resolve"
+    assert "APAC" in slide1, "scope_label placeholder did not resolve"
