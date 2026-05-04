@@ -69,10 +69,10 @@ DEFAULT_STYLE = ROOT / "assets/SimCorp-thinkcell-style.xml"
 # (per PR 1 of docs/plans/2026-05-04-land-review-factory-rebuild.md): both
 # scripts are sibling CLIs and a shared helper is YAGNI for two call sites.
 LEGACY_SEED_MARKERS = (
-    "LAND_thinkcell_seed",
+    "LAND_thinkcell_seed_polished",
+    "LAND_thinkcell_seed_charts",
     "/legacy/",
     "Patrick-Gaughan-LAND",
-    "_polished",
     "pre-stripdev",
     "pre-jinja-cleanup",
 )

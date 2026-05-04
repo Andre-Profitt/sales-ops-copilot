@@ -50,16 +50,17 @@ from typing import Any
 # side effects out of the module (so pytest can import this file freely).
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCRIPTS_DIR = REPO_ROOT / "scripts"
-DEFAULT_TEMPLATE = (
-    REPO_ROOT / "assets" / "templates" / "land_review_full_28" / "LAND_review_full_28.tcseed.pptx"
-)
+DEFAULT_TEMPLATE = REPO_ROOT / "assets" / "LAND_thinkcell_seed.pptx"
 DEFAULT_PERIOD = "2026-Q2"
 
+# Variants that are NOT the canonical programmatic seed. The bare
+# `LAND_thinkcell_seed.pptx` IS the working seed used by
+# scripts/thinkcell_programmatic_lab.py — do NOT mark it legacy.
 LEGACY_SEED_MARKERS = (
-    "LAND_thinkcell_seed",
+    "LAND_thinkcell_seed_polished",
+    "LAND_thinkcell_seed_charts",
     "/legacy/",
     "Patrick-Gaughan-LAND",
-    "_polished",
     "pre-stripdev",
     "pre-jinja-cleanup",
 )

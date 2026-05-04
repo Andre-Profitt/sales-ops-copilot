@@ -519,6 +519,12 @@ def _ppttc_path(period: str, director_slug: str) -> Path:
 
 
 def _build_ppttc(period: str, directors: list[dict[str, Any]]) -> LabCheck:
+    # The strict-template path expects all 42 seed-aligned bindings (the
+    # canonical SEED_TEMPLATE contract). The new registry-driven path (PR 6
+    # of the rebuild plan) only emits names present in the binding registry
+    # AND resolvable from director context — fewer than 42 today. Use the
+    # legacy hard-coded bindings here so the lab's strict-build matches the
+    # seed contract.
     if len(directors) == len(canonical_directors()):
         command = [
             _python(),
@@ -529,6 +535,7 @@ def _build_ppttc(period: str, directors: list[dict[str, Any]]) -> LabCheck:
             "--template",
             str(SEED_TEMPLATE),
             "--strict-template",
+            "--legacy-bindings",
         ]
     else:
         command = [
@@ -541,6 +548,7 @@ def _build_ppttc(period: str, directors: list[dict[str, Any]]) -> LabCheck:
             "--template",
             str(SEED_TEMPLATE),
             "--strict-template",
+            "--legacy-bindings",
         ]
     result = _run(command, timeout=300)
     details: dict[str, Any] = {

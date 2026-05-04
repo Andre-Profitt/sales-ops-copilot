@@ -20,8 +20,9 @@ def _run_factory(*args: str) -> subprocess.CompletedProcess[str]:
 
 
 def test_factory_refuses_legacy_seed_without_override() -> None:
-    legacy = REPO / "assets" / "LAND_thinkcell_seed.pptx"
-    assert legacy.exists(), "fixture: legacy seed must exist on disk for this test"
+    """Polished/charts/strip-backup variants are off-limits without override."""
+    legacy = REPO / "assets" / "LAND_thinkcell_seed_polished.pptx"
+    assert legacy.exists(), "fixture: legacy polished seed must exist on disk for this test"
 
     proc = _run_factory(
         "--period",
@@ -39,7 +40,8 @@ def test_factory_refuses_legacy_seed_without_override() -> None:
 
 
 def test_factory_accepts_legacy_seed_with_override() -> None:
-    legacy = REPO / "assets" / "LAND_thinkcell_seed.pptx"
+    """Forensic-only override unlocks polished/etc. variants."""
+    legacy = REPO / "assets" / "LAND_thinkcell_seed_polished.pptx"
     proc = _run_factory(
         "--period",
         "2026-Q2",
@@ -54,8 +56,24 @@ def test_factory_accepts_legacy_seed_with_override() -> None:
     assert proc.returncode == 0, proc.stdout + proc.stderr
 
 
-def test_factory_default_points_at_tcseed() -> None:
+def test_factory_default_points_at_canonical_seed() -> None:
+    """Default template is the canonical programmatic seed (used by thinkcell_programmatic_lab.py)."""
     proc = _run_factory("--print-default-template")
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "land_review_full_28" in proc.stdout
-    assert "tcseed.pptx" in proc.stdout
+    assert "LAND_thinkcell_seed.pptx" in proc.stdout
+
+
+def test_factory_accepts_canonical_seed_no_override() -> None:
+    """Canonical seed is NOT in LEGACY_SEED_MARKERS; no --allow-legacy-seed needed."""
+    canonical = REPO / "assets" / "LAND_thinkcell_seed.pptx"
+    assert canonical.exists()
+    proc = _run_factory(
+        "--period",
+        "2026-Q2",
+        "--directors",
+        "Patrick-Gaughan",
+        "--template",
+        str(canonical),
+        "--dry-run",
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
