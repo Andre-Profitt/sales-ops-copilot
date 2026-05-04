@@ -273,11 +273,27 @@ def _check_title_no_text_fill(
             )
 
 
+def _is_thinkcell_shape(sp: etree._Element) -> bool:
+    """Think-cell tcfield/anchor shapes are intentionally placed off-canvas as
+    a hiding mechanism. Detect by cNvPr name or by the presence of <a:fld>.
+    """
+    cnv = sp.find(".//p:cNvPr", NS)
+    if cnv is not None:
+        n = (cnv.get("name") or "").lower()
+        if "think-cell" in n or "tclayout" in n or n.startswith("tcfield"):
+            return True
+    return sp.find(".//a:fld", NS) is not None
+
+
 def _check_off_canvas(
     name: str, root: etree._Element, rep: Report, slide_w: int, slide_h: int
 ) -> None:
-    """Shapes positioned wholly off-canvas → ghost shapes."""
+    """Shapes positioned wholly off-canvas → ghost shapes. Think-cell anchors
+    are intentionally off-canvas — exempt them.
+    """
     for sp in root.findall(".//p:sp", NS) + root.findall(".//p:pic", NS):
+        if _is_thinkcell_shape(sp):
+            continue
         xfrm = sp.find(".//a:xfrm", NS)
         if xfrm is None:
             continue
@@ -292,8 +308,6 @@ def _check_off_canvas(
             cy = int(ext.get("cy", "0"))
         except ValueError:
             continue
-        # Off-canvas if STARTS strictly past the edge. Shapes anchored at
-        # exact slide_h (brand bars at bottom) are intentional, not bugs.
         if x > slide_w or y > slide_h:
             rep.add(
                 "warn",

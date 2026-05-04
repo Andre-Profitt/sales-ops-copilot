@@ -387,12 +387,14 @@ def _classify_run_for_color(
 def _apply_color_sweep(
     root: etree._Element, theme: dict[str, str], rep: DebtReport, slide_h: int = 6858000
 ) -> None:
-    """Add explicit srgbClr to runs that inherit theme defaults."""
+    """Add explicit srgbClr to runs that inherit theme defaults.
+    Walks both <a:r> runs and <a:fld> tcfields — both can have rPr/solidFill.
+    """
     spTree = root.find(".//p:spTree", NS)
     if spTree is None:
         return
     for sp in spTree.findall(".//p:sp", NS):
-        for r in sp.findall(".//a:r", NS):
+        for r in sp.findall(".//a:r", NS) + sp.findall(".//a:fld", NS):
             color = _classify_run_for_color(sp, r, theme, slide_h)
             if color is None:
                 continue
@@ -446,6 +448,7 @@ def dedebt(input_path: Path, output_path: Path) -> DebtReport:
             continue
         preserve = sp_name in SLIDE1_PRESERVE or sp_name.endswith(SLIDE_CLOSING_HINTS)
         _strip_orphans_offcanvas_leaks(root, layout_keys, slide_w, slide_h, rep, sp_name, preserve)
+        _uppercase_fld_ids(root, rep)
         _apply_color_sweep(root, theme, rep, slide_h)
         contents[sp_name] = _serialize(root)
 
