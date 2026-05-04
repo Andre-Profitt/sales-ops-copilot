@@ -1,0 +1,212 @@
+deck_family: land_review_full_28
+brand: simcorp
+primary_template: assets/templates/land_review_full_28/LAND_review_full_28.tcseed.pptx
+version: v1
+rules:
+  every_analytic_slide_requires:
+    - S##_Title
+    - S##_Source
+  hard_fail_if:
+    - missing_required_named_element
+    - duplicate_required_name_unless_explicit_reuse
+    - visible_dev_instruction_text
+    - lorem_ipsum
+    - off_canvas_artifacts
+    - arr_acv_blending
+    - unlabeled_currency_or_unit
+lanes:
+  ppttc_chart: real Think-Cell chart named with AddRangeData Name; data supplied through .ppttc
+  ppttc_text: automation text field named with AddRangeData Name; text supplied through .ppttc
+  excel_table_image: image/table placeholder named with AddRangeImage Name; data supplied through Excel UpdateBatch
+  static: no dynamic binding
+slides:
+  - slide_id: S01
+    name: Cover
+    layout: canonical_cover
+    elements:
+      - {name: S01_DirectorName, kind: automation_text, lane: ppttc_text, required: true, source: deck_plan.director_name}
+      - {name: S01_Period, kind: automation_text, lane: ppttc_text, required: true, source: deck_plan.period_label}
+      - {name: S01_ScopeLabel, kind: automation_text, lane: ppttc_text, required: true, source: deck_plan.scope_label}
+  - slide_id: S02
+    name: Exec summary
+    layout: narrative_two_column
+    elements:
+      - {name: S02_Title, kind: automation_text, lane: ppttc_text, required: true, source: insight_titles.S02}
+      - {name: S02_ExecSummaryLeft, kind: automation_text, lane: ppttc_text, required: true, source: brief.exec_summary_left}
+      - {name: S02_ExecSummaryRight, kind: automation_text, lane: ppttc_text, required: true, source: brief.exec_summary_right}
+      - {name: S02_Source, kind: automation_text, lane: ppttc_text, required: true, source: source_notes.S02}
+  - slide_id: S03
+    name: Pipeline divider
+    layout: section_divider
+    elements: []
+  - slide_id: S04
+    name: Pipe movement
+    layout: analytic_one_chart
+    elements:
+      - {name: S04_Title, kind: automation_text, lane: ppttc_text, required: true, source: insight_titles.S04}
+      - {name: S04_PipeMovement, kind: thinkcell_chart, chart_type: waterfall, lane: ppttc_chart, required: true, source: workbook.named_ranges.S04_PipeMovement}
+      - {name: S04_Source, kind: automation_text, lane: ppttc_text, required: true, source: source_notes.S04}
+  - slide_id: S05
+    name: Pipeline by stage
+    layout: analytic_one_chart
+    elements:
+      - {name: S05_Title, kind: automation_text, lane: ppttc_text, required: true, source: insight_titles.S05}
+      - {name: S05_PipelineByStage, kind: thinkcell_chart, chart_type: horizontal_bar, lane: ppttc_chart, required: true, source: workbook.named_ranges.S05_PipelineByStage}
+      - {name: S05_Source, kind: automation_text, lane: ppttc_text, required: true, source: source_notes.S05}
+  - slide_id: S06
+    name: Pipeline aging
+    layout: analytic_one_chart
+    elements:
+      - {name: S06_Title, kind: automation_text, lane: ppttc_text, required: true, source: insight_titles.S06}
+      - {name: S06_PipelineAging, kind: thinkcell_chart, chart_type: horizontal_bar, lane: ppttc_chart, required: true, source: workbook.named_ranges.S06_PipelineAging}
+      - {name: S06_Source, kind: automation_text, lane: ppttc_text, required: true, source: source_notes.S06}
+  - slide_id: S07
+    name: Top deals Land
+    layout: table_image
+    elements:
+      - {name: S07_Title, kind: automation_text, lane: ppttc_text, required: true, source: insight_titles.S07}
+      - {name: S07_TopDealsLand_Image, kind: table_image, lane: excel_table_image, required: true, source: workbook.named_ranges.S07_TopDealsLand}
+      - {name: S07_Source, kind: automation_text, lane: ppttc_text, required: true, source: source_notes.S07}
+  - slide_id: S08
+    name: Top deals Expand
+    layout: table_image
+    elements:
+      - {name: S08_Title, kind: automation_text, lane: ppttc_text, required: true, source: insight_titles.S08}
+      - {name: S08_TopDealsExpand_Image, kind: table_image, lane: excel_table_image, required: true, source: workbook.named_ranges.S08_TopDealsExpand}
+      - {name: S08_Source, kind: automation_text, lane: ppttc_text, required: true, source: source_notes.S08}
+  - slide_id: S09
+    name: Pending Commercial Approval
+    layout: table_image
+    elements:
+      - {name: S09_Title, kind: automation_text, lane: ppttc_text, required: true, source: insight_titles.S09}
+      - {name: S09_PendingCommercialApproval_Image, kind: table_image, lane: excel_table_image, required: true, source: workbook.named_ranges.S09_PendingCommercialApproval}
+      - {name: S09_Source, kind: automation_text, lane: ppttc_text, required: true, source: source_notes.S09}
+  - slide_id: S10
+    name: Retention divider
+    layout: section_divider
+    elements: []
+  - slide_id: S11
+    name: Renewal pipeline
+    layout: table_image
+    elements:
+      - {name: S11_Title, kind: automation_text, lane: ppttc_text, required: true, source: insight_titles.S11}
+      - {name: S11_RenewalPipeline_Image, kind: table_image, lane: excel_table_image, required: true, source: workbook.named_ranges.S11_RenewalPipeline}
+      - {name: S11_Source, kind: automation_text, lane: ppttc_text, required: true, source: source_notes.S11}
+  - slide_id: S12
+    name: GRR proxy
+    layout: table_plus_note
+    elements:
+      - {name: S12_Title, kind: automation_text, lane: ppttc_text, required: true, source: insight_titles.S12}
+      - {name: S12_GRRProxyTable_Image, kind: table_image, lane: excel_table_image, required: true, source: workbook.named_ranges.S12_GRRProxyTable}
+      - {name: S12_GRRProxyFootnote, kind: automation_text, lane: ppttc_text, required: true, source: footnotes.S12}
+      - {name: S12_Source, kind: automation_text, lane: ppttc_text, required: true, source: source_notes.S12}
+  - slide_id: S13
+    name: Forecast category
+    layout: analytic_one_chart
+    elements:
+      - {name: S13_Title, kind: automation_text, lane: ppttc_text, required: true, source: insight_titles.S13}
+      - {name: S13_ForecastCategory, kind: thinkcell_chart, chart_type: clustered_column, lane: ppttc_chart, required: true, source: workbook.named_ranges.S13_ForecastCategory}
+      - {name: S13_Source, kind: automation_text, lane: ppttc_text, required: true, source: source_notes.S13}
+  - slide_id: S14
+    name: Territory divider
+    layout: section_divider
+    elements: []
+  - slide_id: S15
+    name: By owner
+    layout: analytic_one_chart
+    elements:
+      - {name: S15_Title, kind: automation_text, lane: ppttc_text, required: true, source: insight_titles.S15}
+      - {name: S15_ByOwner, kind: thinkcell_chart, chart_type: horizontal_bar, lane: ppttc_chart, required: true, source: workbook.named_ranges.S15_ByOwner}
+      - {name: S15_Source, kind: automation_text, lane: ppttc_text, required: true, source: source_notes.S15}
+  - slide_id: S16
+    name: Stage by industry
+    layout: analytic_one_chart
+    elements:
+      - {name: S16_Title, kind: automation_text, lane: ppttc_text, required: true, source: insight_titles.S16}
+      - {name: S16_StageByIndustry, kind: thinkcell_chart, chart_type: stacked_100_bar, lane: ppttc_chart, required: true, source: workbook.named_ranges.S16_StageByIndustry}
+      - {name: S16_Source, kind: automation_text, lane: ppttc_text, required: true, source: source_notes.S16}
+  - slide_id: S17
+    name: Territory performance
+    layout: analytic_one_chart
+    elements:
+      - {name: S17_Title, kind: automation_text, lane: ppttc_text, required: true, source: insight_titles.S17}
+      - {name: S17_TerritoryPerformance, kind: thinkcell_chart, chart_type: bar, lane: ppttc_chart, required: true, source: workbook.named_ranges.S17_TerritoryPerformance}
+      - {name: S17_Source, kind: automation_text, lane: ppttc_text, required: true, source: source_notes.S17}
+  - slide_id: S18
+    name: Wins Losses QTD
+    layout: analytic_one_chart
+    elements:
+      - {name: S18_Title, kind: automation_text, lane: ppttc_text, required: true, source: insight_titles.S18}
+      - {name: S18_WinsLossesQTD, kind: thinkcell_chart, chart_type: clustered_column, lane: ppttc_chart, required: true, source: workbook.named_ranges.S18_WinsLossesQTD}
+      - {name: S18_Source, kind: automation_text, lane: ppttc_text, required: true, source: source_notes.S18}
+  - slide_id: S19
+    name: Velocity
+    layout: analytic_one_chart
+    elements:
+      - {name: S19_Title, kind: automation_text, lane: ppttc_text, required: true, source: insight_titles.S19}
+      - {name: S19_Velocity, kind: thinkcell_chart, chart_type: horizontal_bar, lane: ppttc_chart, required: true, source: workbook.named_ranges.S19_Velocity}
+      - {name: S19_Source, kind: automation_text, lane: ppttc_text, required: true, source: source_notes.S19}
+  - slide_id: S20
+    name: Risks divider
+    layout: section_divider
+    elements: []
+  - slide_id: S21
+    name: Concentration risk
+    layout: chart_plus_table
+    elements:
+      - {name: S21_Title, kind: automation_text, lane: ppttc_text, required: true, source: insight_titles.S21}
+      - {name: S21_ConcentrationRiskChart, kind: thinkcell_chart, chart_type: line_or_column, lane: ppttc_chart, required: true, source: workbook.named_ranges.S21_ConcentrationRiskChart}
+      - {name: S21_ConcentrationTable_Image, kind: table_image, lane: excel_table_image, required: true, source: workbook.named_ranges.S21_ConcentrationTable}
+      - {name: S21_LargestAccount, kind: automation_text, lane: ppttc_text, required: true, source: kpis.largest_account}
+      - {name: S21_Source, kind: automation_text, lane: ppttc_text, required: true, source: source_notes.S21}
+  - slide_id: S22
+    name: Stale activity
+    layout: analytic_one_chart
+    elements:
+      - {name: S22_Title, kind: automation_text, lane: ppttc_text, required: true, source: insight_titles.S22}
+      - {name: S22_StaleActivity, kind: thinkcell_chart, chart_type: horizontal_bar, lane: ppttc_chart, required: true, source: workbook.named_ranges.S22_StaleActivity}
+      - {name: S22_StaleActivityFootnote, kind: automation_text, lane: ppttc_text, required: false, source: footnotes.S22}
+      - {name: S22_Source, kind: automation_text, lane: ppttc_text, required: true, source: source_notes.S22}
+  - slide_id: S23
+    name: Sales velocity formula
+    layout: scalar_cards_formula
+    elements:
+      - {name: S23_Title, kind: automation_text, lane: ppttc_text, required: true, source: insight_titles.S23}
+      - {name: S23_NumOpps, kind: automation_text, lane: ppttc_text, required: true, source: kpis.sales_velocity.num_opps}
+      - {name: S23_WinRate, kind: automation_text, lane: ppttc_text, required: true, source: kpis.sales_velocity.win_rate}
+      - {name: S23_AvgDealSize, kind: automation_text, lane: ppttc_text, required: true, source: kpis.sales_velocity.avg_deal_size}
+      - {name: S23_CycleLength, kind: automation_text, lane: ppttc_text, required: true, source: kpis.sales_velocity.cycle_length}
+      - {name: S23_SalesVelocity, kind: automation_text, lane: ppttc_text, required: true, source: kpis.sales_velocity.composite}
+      - {name: S23_Source, kind: automation_text, lane: ppttc_text, required: true, source: source_notes.S23}
+  - slide_id: S24
+    name: Account expansion
+    layout: table_image
+    elements:
+      - {name: S24_Title, kind: automation_text, lane: ppttc_text, required: true, source: insight_titles.S24}
+      - {name: S24_AccountExpansion_Image, kind: table_image, lane: excel_table_image, required: true, source: workbook.named_ranges.S24_AccountExpansion}
+      - {name: S24_Source, kind: automation_text, lane: ppttc_text, required: true, source: source_notes.S24}
+  - slide_id: S25
+    name: Pipeline creation velocity
+    layout: analytic_one_chart
+    elements:
+      - {name: S25_Title, kind: automation_text, lane: ppttc_text, required: true, source: insight_titles.S25}
+      - {name: S25_PipelineCreationVelocity, kind: thinkcell_chart, chart_type: line, lane: ppttc_chart, required: true, source: workbook.named_ranges.S25_PipelineCreationVelocity}
+      - {name: S25_Source, kind: automation_text, lane: ppttc_text, required: true, source: source_notes.S25}
+  - slide_id: S26
+    name: Action items
+    layout: table_image
+    elements:
+      - {name: S26_Title, kind: automation_text, lane: ppttc_text, required: true, source: insight_titles.S26}
+      - {name: S26_ActionItems_Image, kind: table_image, lane: excel_table_image, required: true, source: workbook.named_ranges.S26_ActionItems}
+      - {name: S26_Source, kind: automation_text, lane: ppttc_text, required: true, source: source_notes.S26}
+  - slide_id: S27
+    name: Risks and outlook
+    layout: narrative_bullets
+    elements:
+      - {name: S27_Title, kind: automation_text, lane: ppttc_text, required: true, source: insight_titles.S27}
+      - {name: S27_RisksOutlook, kind: automation_text, lane: ppttc_text, required: true, source: brief.risks_outlook}
+      - {name: S27_Source, kind: automation_text, lane: ppttc_text, required: true, source: source_notes.S27}
+  - slide_id: S28
+    name: Closing
+    layout: canonical_closing
+    elements: []
