@@ -1,6 +1,6 @@
 #requires -Version 5.1
 <#
-roundtrip_powerpoint.ps1 — gate-2 partner canary for .pptx (PowerPoint COM oracle).
+roundtrip_powerpoint.ps1 - gate-2 partner canary for .pptx (PowerPoint COM oracle).
 
 Mirrors roundtrip_excel.ps1 but for PresentationML. Catches the class of
 hidden-corruption bugs that strict XML validation cannot see: cases where
@@ -130,7 +130,7 @@ try {
     $result.open_seconds = [math]::Round($sw.Elapsed.TotalSeconds, 3)
     $result.slide_count = $pres.Slides.Count
 
-    # SaveCopyAs is the safe path — no overwrite of the input.
+    # SaveCopyAs is the safe path - no overwrite of the input.
     $sw.Restart()
     $pres.SaveCopyAs($absOut, $ppSaveAsOpenXMLPresentation)
     $sw.Stop()

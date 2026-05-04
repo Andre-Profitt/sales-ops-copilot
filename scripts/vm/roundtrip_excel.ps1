@@ -1,13 +1,13 @@
 #requires -Version 5.1
 <#
-roundtrip_excel.ps1 — gate-2 round-trip canary for the deck-factory harness.
+roundtrip_excel.ps1 - gate-2 round-trip canary for the deck-factory harness.
 
 What it does:
   1. Opens an .xlsx file via Excel COM with explicit CorruptLoad=xlNormalLoad (0).
   2. Reads back the actual CorruptLoad state Excel decided to use:
         0 = xlNormalLoad   (Excel was happy)
-        1 = xlRepairFile   (Excel ran the repair pass — RED FLAG)
-        2 = xlExtractData  (Excel could not even repair — extract-only mode)
+        1 = xlRepairFile   (Excel ran the repair pass - RED FLAG)
+        2 = xlExtractData  (Excel could not even repair - extract-only mode)
   3. Saves the open workbook to a sibling .roundtrip.xlsx WITHOUT changes.
   4. Closes Excel cleanly.
   5. Emits a single JSON object on stdout with the canary findings.
@@ -133,7 +133,7 @@ try {
         [Type]::Missing,   # Converter
         $false,            # AddToMru
         [Type]::Missing,   # Local
-        $xlNormalLoad      # CorruptLoad — explicit so we can read it back
+        $xlNormalLoad      # CorruptLoad - explicit so we can read it back
     )
     $sw.Stop()
     $result.open_seconds = [math]::Round($sw.Elapsed.TotalSeconds, 3)
@@ -145,7 +145,7 @@ try {
     try {
         $result.corrupt_load = [int]$wb.CorruptLoad
     } catch {
-        # CorruptLoad may not be exposed on older builds — assume normal
+        # CorruptLoad may not be exposed on older builds - assume normal
         $result.corrupt_load = $xlNormalLoad
     }
     $result.corrupt_load_name = $corruptName[$result.corrupt_load]
@@ -165,7 +165,7 @@ try {
     }
 
     # SaveCopyAs preserves the workbook's open state and writes a fresh copy
-    # — that is exactly what we want: bytes Excel chose to emit for this
+    # - that is exactly what we want: bytes Excel chose to emit for this
     # logical content, with no user-driven edits.
     $sw.Restart()
     $wb.SaveCopyAs($absOut)

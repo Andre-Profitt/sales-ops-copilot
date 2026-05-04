@@ -1,6 +1,6 @@
 #requires -Version 5.1
 <#
-regen_oxml_corpus.ps1 — Excel-COM-emitted reference corpus for cross-producer
+regen_oxml_corpus.ps1 - Excel-COM-emitted reference corpus for cross-producer
 xlsx diffing.
 
 Mirrors scripts/regen_oxml_corpus.py (which emits the openpyxl side). For each
@@ -81,14 +81,14 @@ try {
     $excel.DisplayAlerts = $false
     $excel.AskToUpdateLinks = $false
 
-    # 1. minimal — no defined names
+    # 1. minimal - no defined names
     Log "minimal"
     $wb = Initialize-MinimalWorkbook $excel
     $p = Join-Path $OutDir 'excelwin_minimal.xlsx'
     Save-And-Close $wb $p
     $results += [pscustomobject]@{ tag='minimal'; path=$p; bytes=(Get-Item $p).Length }
 
-    # 2. one_definedname — one global name
+    # 2. one_definedname - one global name
     Log "one_definedname"
     $wb = Initialize-MinimalWorkbook $excel
     $wb.Names.Add('Total', "='Data'!`$B`$1:`$B`$2")
@@ -96,7 +96,7 @@ try {
     Save-And-Close $wb $p
     $results += [pscustomobject]@{ tag='one_definedname'; path=$p; bytes=(Get-Item $p).Length }
 
-    # 3. localsheet_dn — local-to-sheet-0 name (worksheet-scoped Name)
+    # 3. localsheet_dn - local-to-sheet-0 name (worksheet-scoped Name)
     Log "localsheet_dn"
     $wb = Initialize-MinimalWorkbook $excel
     $ws = $wb.Sheets.Item(1)
@@ -106,7 +106,7 @@ try {
     Save-And-Close $wb $p
     $results += [pscustomobject]@{ tag='localsheet_dn'; path=$p; bytes=(Get-Item $p).Length }
 
-    # 4. hidden_dn — invisible name
+    # 4. hidden_dn - invisible name
     Log "hidden_dn"
     $wb = Initialize-MinimalWorkbook $excel
     $n = $wb.Names.Add('HiddenTotal', "='Data'!`$B`$1:`$B`$2")
@@ -115,7 +115,7 @@ try {
     Save-And-Close $wb $p
     $results += [pscustomobject]@{ tag='hidden_dn'; path=$p; bytes=(Get-Item $p).Length }
 
-    # 5. multi_dn — 5 names exercising case-insensitive ordering
+    # 5. multi_dn - 5 names exercising case-insensitive ordering
     Log "multi_dn"
     $wb = Initialize-MinimalWorkbook $excel
     # Insertion order intentionally NOT alphabetical so we can see whether

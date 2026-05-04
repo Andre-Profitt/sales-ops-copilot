@@ -127,7 +127,21 @@ def _ssh(host: str, *args: str, capture: bool = True) -> subprocess.CompletedPro
 
 
 def _scp(src: str, dst: str) -> subprocess.CompletedProcess:
-    return subprocess.run(["scp", "-q", src, dst], capture_output=True, text=True, check=False)
+    # Windows OpenSSH scp parses backslashes inconsistently; forward slashes
+    # are accepted on both ends. Only convert the Windows-host portion.
+    def fwd(p: str) -> str:
+        if ":" in p and not p.startswith("/"):
+            host, _, path = p.partition(":")
+            if "\\" in path:
+                return f"{host}:{path.replace(chr(92), '/')}"
+        return p
+
+    return subprocess.run(
+        ["scp", "-q", fwd(src), fwd(dst)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
 
 
 def gate2_roundtrip(
@@ -188,21 +202,42 @@ def gate2_roundtrip(
     )
     r = _ssh(host, run_cmd)
 
-    # Ferry JSON back
+    # Ferry JSON back. Windows OpenSSH sometimes returns before PowerShell
+    # has finished flushing its file writes; retry briefly to absorb the race.
     json_local = Path(tempfile.gettempdir()) / f"{input_path.stem}.canary.json"
-    r2 = _scp(f"{host}:{remote_json}", str(json_local))
-    if r2.returncode != 0 or not json_local.exists():
+    if json_local.exists():
+        json_local.unlink()
+    r2 = None
+    for attempt in range(8):
+        r2 = _scp(f"{host}:{remote_json}", str(json_local))
+        if r2.returncode == 0 and json_local.exists() and json_local.stat().st_size > 0:
+            break
+        time.sleep(0.5 * (attempt + 1))
+    if (
+        r2 is None
+        or r2.returncode != 0
+        or not json_local.exists()
+        or json_local.stat().st_size == 0
+    ):
         return GateResult(
             "gate2.roundtrip",
             ok=False,
             fatal=True,
-            summary=f"scp canary json ← VM failed: {r2.stderr.strip()[:200]}",
+            summary=(
+                f"scp canary json from VM failed after retries: "
+                f"{(r2.stderr if r2 else '<no run>').strip()[:200]}"
+            ),
             duration_s=time.monotonic() - t0,
-            payload={"ps_stdout": r.stdout[-500:], "ps_stderr": r.stderr[-500:]},
+            payload={
+                "ps_stdout": (r.stdout or "")[-1000:],
+                "ps_stderr": (r.stderr or "")[-1000:],
+                "ps_returncode": r.returncode,
+            },
         ), None
 
     try:
-        canary = json.loads(json_local.read_text())
+        # PowerShell Set-Content -Encoding UTF8 prepends a BOM
+        canary = json.loads(json_local.read_text(encoding="utf-8-sig"))
     except json.JSONDecodeError as e:
         return GateResult(
             "gate2.roundtrip",
@@ -210,7 +245,7 @@ def gate2_roundtrip(
             fatal=True,
             summary=f"canary json unparseable: {e}",
             duration_s=time.monotonic() - t0,
-            payload={"raw": json_local.read_text()[:500]},
+            payload={"raw": json_local.read_text(encoding="utf-8-sig")[:500]},
         ), None
 
     # Ferry roundtrip xlsx back if it exists
