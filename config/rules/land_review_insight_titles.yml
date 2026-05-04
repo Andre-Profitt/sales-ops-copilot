@@ -1,0 +1,56 @@
+schema: salesops/insight-title-rules/v1
+deck_family: land_review_full_28
+defaults:
+  S02: "Executive summary"
+  S04: "Pipeline movement this quarter"
+  S05: "Pipeline by stage"
+  S06: "Pipeline aging"
+  S07: "Top open Land deals"
+  S08: "Top open Expand deals"
+  S09: "Pending Commercial Approval"
+  S11: "At-risk renewals"
+  S12: "GRR proxy"
+  S13: "Forecast category mix"
+  S15: "ARR by owner"
+  S16: "Stage by industry"
+  S17: "Territory performance"
+  S18: "Wins and losses QTD"
+  S19: "Stage velocity"
+  S21: "Concentration risk"
+  S22: "Stale activity"
+  S23: "Sales velocity formula"
+  S24: "Account expansion"
+  S25: "Pipeline creation velocity"
+  S26: "Action items"
+  S27: "Risks and outlook"
+rules:
+  S05:
+    - id: late_stage_gap
+      when: "stage_5_plus_arr_share is not None and stage_5_plus_arr_share < 0.10"
+      severity: high
+      title: "Late-stage coverage is thin: Stage 5+ is only {stage_5_plus_arr_share:.1%} of open ARR"
+      evidence: [stage_5_plus_arr, total_open_arr]
+  S13:
+    - id: omitted_overweight
+      when: "omitted_arr_share is not None and omitted_arr_share > 0.50"
+      severity: high
+      title: "Forecast hygiene is weak: {omitted_arr_share:.1%} of open ARR is Omitted"
+      evidence: [omitted_arr, total_open_arr]
+  S06:
+    - id: aged_pipe
+      when: "aged_365_plus_share is not None and aged_365_plus_share > 0.40"
+      severity: medium
+      title: "Aged pipeline is inflating coverage: {aged_365_plus_share:.0%} of ARR is older than 365 days"
+      evidence: [aged_365_plus_arr, total_open_arr]
+  S21:
+    - id: top_n_concentration
+      when: "top_3_arr_share is not None and top_3_arr_share > 0.60"
+      severity: high
+      title: "Top-3 accounts drive {top_3_arr_share:.0%} of pipeline — concentration risk"
+      evidence: [top_3_arr, total_open_arr]
+  S09:
+    - id: approval_backlog
+      when: "pending_approval_count is not None and pending_approval_count >= 3"
+      severity: high
+      title: "{pending_approval_count} Land+Expand deals at Stage 4+ pending Commercial Approval"
+      evidence: [pending_approval_count]
