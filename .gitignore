@@ -2,7 +2,10 @@
 __pycache__/
 *.pyc
 reports/
-state/
+state/*
+!state/atlas/
+state/atlas/*
+!state/atlas/manifest.json
 .env
 eval/runs/*.json
 !eval/runs/.gitkeep
