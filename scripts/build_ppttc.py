@@ -1492,7 +1492,8 @@ def _build_ppttc_from_registry(
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """Returns (ppttc_data_array, evidence_bindings).
 
-    For ppttc_text: emit a {"name": ..., "table": [[{"v": str(value)}]]} entry.
+    For ppttc_text: emit a {"name": ..., "table": [[{"string": str(value)}]]} entry
+    via _text_entry — Think-Cell's .ppttc cells use the {"string": ...} key, not {"v": ...}.
     For ppttc_chart: emit a {"name": ..., "table": value} where value is 2D.
     For excel_table_image: defer to refresh script — record evidence only.
     For static: skip emission, record evidence as 'static'.
@@ -1541,7 +1542,7 @@ def _build_ppttc_from_registry(
                 evidence.append({**base_evidence, "status": "absent"})
                 continue
             if lane == "ppttc_text":
-                data_items.append({"name": name, "table": [[{"v": str(value)}]]})
+                data_items.append(_text_entry(name, str(value)))
                 evidence.append({**base_evidence, "status": "bound", "expected_text": str(value)})
             elif lane == "ppttc_chart":
                 if isinstance(value, list):

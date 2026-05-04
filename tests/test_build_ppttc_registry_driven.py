@@ -98,6 +98,20 @@ def test_emits_evidence_manifest_with_synthetic_template(tmp_path: Path) -> None
             f"required registry binding {name} missing from evidence manifest"
         )
 
+    # Regression: ppttc_text cells must use Think-Cell's {"string": ...} shape,
+    # not {"v": ...}. ppttc.exe silently ignores unknown cell keys, which would
+    # produce a deck with empty bindings.
+    text_data_items = [
+        d
+        for d in payload[0]["data"]
+        if d["name"].endswith(("DirectorName", "Period", "ScopeLabel"))
+    ]
+    assert text_data_items, "expected at least one cover-text data item"
+    for item in text_data_items:
+        cell = item["table"][0][0]
+        assert "string" in cell, f"{item['name']}: cell must use 'string' key, got {cell!r}"
+        assert "v" not in cell, f"{item['name']}: 'v' key is wrong shape — ppttc.exe will ignore"
+
 
 def test_rejects_invalid_registry(tmp_path: Path) -> None:
     """Registry with bogus schema causes the script to fail."""
