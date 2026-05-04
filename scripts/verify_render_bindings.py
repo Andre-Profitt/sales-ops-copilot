@@ -22,7 +22,7 @@ from pathlib import Path
 from pptx import Presentation
 
 
-def _slide_texts(prs: Presentation) -> dict[int, str]:
+def _slide_texts(prs) -> dict[int, str]:
     out: dict[int, str] = {}
     for i, slide in enumerate(prs.slides, 1):
         chunks: list[str] = []
@@ -33,7 +33,7 @@ def _slide_texts(prs: Presentation) -> dict[int, str]:
     return out
 
 
-def _slide_picture_count(prs: Presentation) -> dict[int, int]:
+def _slide_picture_count(prs) -> dict[int, int]:
     """Count picture-like shapes per slide; used as evidence for table_image bindings."""
     out: dict[int, int] = {}
     for i, slide in enumerate(prs.slides, 1):
