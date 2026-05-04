@@ -10,7 +10,9 @@ Rule semantics:
   - First rule whose `when` evaluates truthy wins.
   - If no rule fires, fall back to defaults[slide_id].
   - Title strings use Python format: title.format(**metrics).
-  - `when` is restricted-eval with metrics as namespace plus None-safe access.
+  - `when` predicates are evaluated by simpleeval — no builtins, no
+    attribute access, just comparisons + arithmetic on the metric
+    namespace. Missing metric names resolve to None via NameNotDefined.
 """
 
 from __future__ import annotations
@@ -21,19 +23,17 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from simpleeval import NameNotDefined, SimpleEval
 
 
 def _safe_eval(expr: str, ns: dict[str, Any]) -> bool:
-    """Evaluate `when` expression in a restricted namespace."""
-
-    class _NoneDict(dict):
-        def __missing__(self, key: str) -> None:  # type: ignore[override]
-            del key
-            return None
-
-    safe_ns = _NoneDict(ns)
+    """Evaluate `when` expression with simpleeval (smaller blast radius than eval)."""
+    s = SimpleEval(names=ns)
     try:
-        return bool(eval(expr, {"__builtins__": {}}, safe_ns))
+        return bool(s.eval(expr))
+    except NameNotDefined:
+        # Missing metric names are treated as None (rule simply doesn't fire).
+        return False
     except Exception:
         return False
 

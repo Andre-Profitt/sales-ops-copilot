@@ -22,3 +22,4 @@ formulas>=1.3.4
 # jsonschema — used by scripts/validate_thinkcell_binding_registry.py to
 # enforce the binding-registry contract.
 jsonschema>=4.0.0
+simpleeval>=0.9.13
