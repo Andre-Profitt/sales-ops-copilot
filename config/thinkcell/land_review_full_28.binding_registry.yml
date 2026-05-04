@@ -9,169 +9,716 @@ rules:
   title_rule: "Every analytic slide requires an evidence-backed insight title."
   source_rule: "Every analytic slide requires a source note."
 lanes:
-  ppttc: "think-cell JSON automation using AddRangeData names and automation text fields"
-  excel_updatebatch_image: "think-cell Excel COM UpdateBatch AddRangeImage for table-shaped artifacts"
+  ppttc_chart: "real Think-Cell chart named with AddRangeData; data via .ppttc"
+  ppttc_text: "automation text field named with AddRangeData; text via .ppttc"
+  excel_table_image: "image placeholder named with AddRangeImage; refreshed via Excel UpdateBatch"
   static: "branded template-only; no dynamic binding"
 slides:
   - slide_id: S01
     purpose: cover
     elements:
-      - {name: S01_DirectorName, kind: text, lane: ppttc, required: true, source: director.name, evidence: exact_text}
-      - {name: S01_Period, kind: text, lane: ppttc, required: true, source: period.label, evidence: exact_text}
-      - {name: S01_ScopeLabel, kind: text, lane: ppttc, required: true, source: director.scope_label, evidence: exact_text}
+      - {
+          name: S01_DirectorName,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: director.name,
+          evidence: exact_text,
+        }
+      - {
+          name: S01_Period,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: period.label,
+          evidence: exact_text,
+        }
+      - {
+          name: S01_ScopeLabel,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: director.scope_label,
+          evidence: exact_text,
+        }
   - slide_id: S02
     purpose: exec_summary
     elements:
-      - {name: S02_Title, kind: text, lane: ppttc, required: true, source: insight_titles.S02, evidence: exact_text}
-      - {name: S02_ExecSummaryLeft, kind: text, lane: ppttc, required: true, source: brief.exec_summary.left, evidence: sampled_text}
-      - {name: S02_ExecSummaryRight, kind: text, lane: ppttc, required: true, source: brief.exec_summary.right, evidence: sampled_text}
-      - {name: S02_Source, kind: text, lane: ppttc, required: true, source: source_notes.S02, evidence: exact_text}
+      - {
+          name: S02_Title,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: insight_titles.S02,
+          evidence: exact_text,
+        }
+      - {
+          name: S02_ExecSummaryLeft,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: brief.exec_summary.left,
+          evidence: sampled_text,
+        }
+      - {
+          name: S02_ExecSummaryRight,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: brief.exec_summary.right,
+          evidence: sampled_text,
+        }
+      - {
+          name: S02_Source,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: source_notes.S02,
+          evidence: exact_text,
+        }
   - slide_id: S03
     purpose: pipeline_divider
     elements:
-      - {name: S03_Title, kind: text, lane: ppttc, required: true, source: literal.Pipeline, evidence: exact_text}
+      - {
+          name: S03_Title,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: literal.Pipeline,
+          evidence: exact_text,
+        }
   - slide_id: S04
     purpose: pipe_movement
     elements:
-      - {name: S04_Title, kind: text, lane: ppttc, required: true, source: insight_titles.S04, evidence: exact_text}
-      - {name: S04_PipeMovement, kind: waterfall_chart, lane: ppttc, required: true, source: model.named_range.S04_PipeMovement, evidence: category_labels}
-      - {name: S04_Source, kind: text, lane: ppttc, required: true, source: source_notes.S04, evidence: exact_text}
+      - {
+          name: S04_Title,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: insight_titles.S04,
+          evidence: exact_text,
+        }
+      - {
+          name: S04_PipeMovement,
+          kind: waterfall_chart,
+          lane: ppttc_chart,
+          required: true,
+          source: model.named_range.S04_PipeMovement,
+          evidence: category_labels,
+        }
+      - {
+          name: S04_Source,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: source_notes.S04,
+          evidence: exact_text,
+        }
   - slide_id: S05
     purpose: pipeline_by_stage
     elements:
-      - {name: S05_Title, kind: text, lane: ppttc, required: true, source: insight_titles.S05, evidence: exact_text}
-      - {name: S05_PipelineByStage, kind: bar_chart, lane: ppttc, required: true, source: model.named_range.S05_PipelineByStage, evidence: category_labels}
-      - {name: S05_Source, kind: text, lane: ppttc, required: true, source: source_notes.S05, evidence: exact_text}
+      - {
+          name: S05_Title,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: insight_titles.S05,
+          evidence: exact_text,
+        }
+      - {
+          name: S05_PipelineByStage,
+          kind: bar_chart,
+          lane: ppttc_chart,
+          required: true,
+          source: model.named_range.S05_PipelineByStage,
+          evidence: category_labels,
+        }
+      - {
+          name: S05_Source,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: source_notes.S05,
+          evidence: exact_text,
+        }
   - slide_id: S06
     purpose: pipeline_aging
     elements:
-      - {name: S06_Title, kind: text, lane: ppttc, required: true, source: insight_titles.S06, evidence: exact_text}
-      - {name: S06_PipelineAging, kind: bar_chart, lane: ppttc, required: true, source: model.named_range.S06_PipelineAging, evidence: category_labels}
-      - {name: S06_Source, kind: text, lane: ppttc, required: true, source: source_notes.S06, evidence: exact_text}
+      - {
+          name: S06_Title,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: insight_titles.S06,
+          evidence: exact_text,
+        }
+      - {
+          name: S06_PipelineAging,
+          kind: bar_chart,
+          lane: ppttc_chart,
+          required: true,
+          source: model.named_range.S06_PipelineAging,
+          evidence: category_labels,
+        }
+      - {
+          name: S06_Source,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: source_notes.S06,
+          evidence: exact_text,
+        }
   - slide_id: S07
     purpose: top_deals_land
     elements:
-      - {name: S07_Title, kind: text, lane: ppttc, required: true, source: insight_titles.S07, evidence: exact_text}
-      - {name: S07_TopDealsLand_IMG, kind: table_image, lane: excel_updatebatch_image, required: true, source: workbook.range.Top_Deals_Land!A1:H11, evidence: picture_on_slide}
-      - {name: S07_Source, kind: text, lane: ppttc, required: true, source: source_notes.S07, evidence: exact_text}
+      - {
+          name: S07_Title,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: insight_titles.S07,
+          evidence: exact_text,
+        }
+      - {
+          name: S07_TopDealsLand_Image,
+          kind: table_image,
+          lane: excel_table_image,
+          required: true,
+          source: workbook.range.Top_Deals_Land!A1:H11,
+          evidence: picture_on_slide,
+        }
+      - {
+          name: S07_Source,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: source_notes.S07,
+          evidence: exact_text,
+        }
   - slide_id: S08
     purpose: top_deals_expand
     elements:
-      - {name: S08_Title, kind: text, lane: ppttc, required: true, source: insight_titles.S08, evidence: exact_text}
-      - {name: S08_TopDealsExpand_IMG, kind: table_image, lane: excel_updatebatch_image, required: true, source: workbook.range.Top_Deals_Expand!A1:H11, evidence: picture_on_slide}
-      - {name: S08_Source, kind: text, lane: ppttc, required: true, source: source_notes.S08, evidence: exact_text}
+      - {
+          name: S08_Title,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: insight_titles.S08,
+          evidence: exact_text,
+        }
+      - {
+          name: S08_TopDealsExpand_Image,
+          kind: table_image,
+          lane: excel_table_image,
+          required: true,
+          source: workbook.range.Top_Deals_Expand!A1:H11,
+          evidence: picture_on_slide,
+        }
+      - {
+          name: S08_Source,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: source_notes.S08,
+          evidence: exact_text,
+        }
   - slide_id: S09
     purpose: pending_commercial_approval
     elements:
-      - {name: S09_Title, kind: text, lane: ppttc, required: true, source: insight_titles.S09, evidence: exact_text}
-      - {name: S09_PendingCommercialApproval_IMG, kind: table_image, lane: excel_updatebatch_image, required: true, source: workbook.range.Pending_Commercial_Approval, evidence: picture_on_slide}
-      - {name: S09_Source, kind: text, lane: ppttc, required: true, source: source_notes.S09, evidence: exact_text}
+      - {
+          name: S09_Title,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: insight_titles.S09,
+          evidence: exact_text,
+        }
+      - {
+          name: S09_PendingCommercialApproval_Image,
+          kind: table_image,
+          lane: excel_table_image,
+          required: true,
+          source: workbook.range.Pending_Commercial_Approval,
+          evidence: picture_on_slide,
+        }
+      - {
+          name: S09_Source,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: source_notes.S09,
+          evidence: exact_text,
+        }
   - slide_id: S10
     purpose: retention_divider
     elements:
-      - {name: S10_Title, kind: text, lane: ppttc, required: true, source: literal.Retention, evidence: exact_text}
+      - {
+          name: S10_Title,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: literal.Retention,
+          evidence: exact_text,
+        }
   - slide_id: S11
     purpose: renewal_pipeline
     elements:
-      - {name: S11_Title, kind: text, lane: ppttc, required: true, source: insight_titles.S11, evidence: exact_text}
-      - {name: S11_RenewalPipeline_IMG, kind: table_image, lane: excel_updatebatch_image, required: true, source: workbook.range.At_Risk_Renewals, evidence: picture_on_slide}
-      - {name: S11_Source, kind: text, lane: ppttc, required: true, source: source_notes.S11, evidence: exact_text}
+      - {
+          name: S11_Title,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: insight_titles.S11,
+          evidence: exact_text,
+        }
+      - {
+          name: S11_RenewalPipeline_Image,
+          kind: table_image,
+          lane: excel_table_image,
+          required: true,
+          source: workbook.range.At_Risk_Renewals,
+          evidence: picture_on_slide,
+        }
+      - {
+          name: S11_Source,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: source_notes.S11,
+          evidence: exact_text,
+        }
   - slide_id: S12
     purpose: grr_proxy
     elements:
-      - {name: S12_Title, kind: text, lane: ppttc, required: true, source: insight_titles.S12, evidence: exact_text}
-      - {name: S12_GRRProxyTable_IMG, kind: table_image, lane: excel_updatebatch_image, required: true, source: workbook.range.Retention!A1:B4, evidence: picture_on_slide}
-      - {name: S12_GRRProxyFootnote, kind: text, lane: ppttc, required: true, source: source_notes.S12_footnote, evidence: exact_text}
+      - {
+          name: S12_Title,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: insight_titles.S12,
+          evidence: exact_text,
+        }
+      - {
+          name: S12_GRRProxyTable_Image,
+          kind: table_image,
+          lane: excel_table_image,
+          required: true,
+          source: workbook.range.Retention!A1:B4,
+          evidence: picture_on_slide,
+        }
+      - {
+          name: S12_GRRProxyFootnote,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: source_notes.S12_footnote,
+          evidence: exact_text,
+        }
   - slide_id: S13
     purpose: forecast_category
     elements:
-      - {name: S13_Title, kind: text, lane: ppttc, required: true, source: insight_titles.S13, evidence: exact_text}
-      - {name: S13_ForecastCategory, kind: column_chart, lane: ppttc, required: true, source: model.named_range.S13_ForecastCategory, evidence: category_labels}
-      - {name: S13_Source, kind: text, lane: ppttc, required: true, source: source_notes.S13, evidence: exact_text}
+      - {
+          name: S13_Title,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: insight_titles.S13,
+          evidence: exact_text,
+        }
+      - {
+          name: S13_ForecastCategory,
+          kind: column_chart,
+          lane: ppttc_chart,
+          required: true,
+          source: model.named_range.S13_ForecastCategory,
+          evidence: category_labels,
+        }
+      - {
+          name: S13_Source,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: source_notes.S13,
+          evidence: exact_text,
+        }
   - slide_id: S14
     purpose: territory_divider
     elements:
-      - {name: S14_Title, kind: text, lane: ppttc, required: true, source: literal.Territory, evidence: exact_text}
+      - {
+          name: S14_Title,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: literal.Territory,
+          evidence: exact_text,
+        }
   - slide_id: S15
     purpose: by_owner
     elements:
-      - {name: S15_Title, kind: text, lane: ppttc, required: true, source: insight_titles.S15, evidence: exact_text}
-      - {name: S15_ByOwner, kind: bar_chart, lane: ppttc, required: true, source: model.named_range.S15_ByOwner, evidence: category_labels}
-      - {name: S15_Source, kind: text, lane: ppttc, required: true, source: source_notes.S15, evidence: exact_text}
+      - {
+          name: S15_Title,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: insight_titles.S15,
+          evidence: exact_text,
+        }
+      - {
+          name: S15_ByOwner,
+          kind: bar_chart,
+          lane: ppttc_chart,
+          required: true,
+          source: model.named_range.S15_ByOwner,
+          evidence: category_labels,
+        }
+      - {
+          name: S15_Source,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: source_notes.S15,
+          evidence: exact_text,
+        }
   - slide_id: S16
     purpose: stage_by_industry
     elements:
-      - {name: S16_Title, kind: text, lane: ppttc, required: true, source: insight_titles.S16, evidence: exact_text}
-      - {name: S16_StageByIndustry, kind: stacked_bar_chart, lane: ppttc, required: true, source: model.named_range.S16_StageByIndustry, evidence: category_labels}
-      - {name: S16_Source, kind: text, lane: ppttc, required: true, source: source_notes.S16, evidence: exact_text}
+      - {
+          name: S16_Title,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: insight_titles.S16,
+          evidence: exact_text,
+        }
+      - {
+          name: S16_StageByIndustry,
+          kind: stacked_bar_chart,
+          lane: ppttc_chart,
+          required: true,
+          source: model.named_range.S16_StageByIndustry,
+          evidence: category_labels,
+        }
+      - {
+          name: S16_Source,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: source_notes.S16,
+          evidence: exact_text,
+        }
   - slide_id: S17
     purpose: territory_performance
     elements:
-      - {name: S17_Title, kind: text, lane: ppttc, required: true, source: insight_titles.S17, evidence: exact_text}
-      - {name: S17_TerritoryPerformance, kind: bar_chart, lane: ppttc, required: true, source: model.named_range.S17_TerritoryPerformance, evidence: category_labels}
-      - {name: S17_Source, kind: text, lane: ppttc, required: true, source: source_notes.S17, evidence: exact_text}
+      - {
+          name: S17_Title,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: insight_titles.S17,
+          evidence: exact_text,
+        }
+      - {
+          name: S17_TerritoryPerformance,
+          kind: bar_chart,
+          lane: ppttc_chart,
+          required: true,
+          source: model.named_range.S17_TerritoryPerformance,
+          evidence: category_labels,
+        }
+      - {
+          name: S17_Source,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: source_notes.S17,
+          evidence: exact_text,
+        }
   - slide_id: S18
     purpose: wins_losses_qtd
     elements:
-      - {name: S18_Title, kind: text, lane: ppttc, required: true, source: insight_titles.S18, evidence: exact_text}
-      - {name: S18_WinsLossesQTD, kind: column_chart, lane: ppttc, required: true, source: model.named_range.S18_WinsLossesQTD, evidence: category_labels}
-      - {name: S18_Source, kind: text, lane: ppttc, required: true, source: source_notes.S18, evidence: exact_text}
+      - {
+          name: S18_Title,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: insight_titles.S18,
+          evidence: exact_text,
+        }
+      - {
+          name: S18_WinsLossesQTD,
+          kind: column_chart,
+          lane: ppttc_chart,
+          required: true,
+          source: model.named_range.S18_WinsLossesQTD,
+          evidence: category_labels,
+        }
+      - {
+          name: S18_Source,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: source_notes.S18,
+          evidence: exact_text,
+        }
   - slide_id: S19
     purpose: velocity
     elements:
-      - {name: S19_Title, kind: text, lane: ppttc, required: true, source: insight_titles.S19, evidence: exact_text}
-      - {name: S19_Velocity, kind: column_chart, lane: ppttc, required: true, source: model.named_range.S19_Velocity, evidence: category_labels}
-      - {name: S19_Source, kind: text, lane: ppttc, required: true, source: source_notes.S19, evidence: exact_text}
+      - {
+          name: S19_Title,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: insight_titles.S19,
+          evidence: exact_text,
+        }
+      - {
+          name: S19_Velocity,
+          kind: column_chart,
+          lane: ppttc_chart,
+          required: true,
+          source: model.named_range.S19_Velocity,
+          evidence: category_labels,
+        }
+      - {
+          name: S19_Source,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: source_notes.S19,
+          evidence: exact_text,
+        }
   - slide_id: S20
     purpose: risks_divider
     elements:
-      - {name: S20_Title, kind: text, lane: ppttc, required: true, source: literal.Risks, evidence: exact_text}
+      - {
+          name: S20_Title,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: literal.Risks,
+          evidence: exact_text,
+        }
   - slide_id: S21
     purpose: concentration_risk
     elements:
-      - {name: S21_Title, kind: text, lane: ppttc, required: true, source: insight_titles.S21, evidence: exact_text}
-      - {name: S21_ConcentrationRiskChart, kind: column_chart, lane: ppttc, required: true, source: model.named_range.S21_ConcentrationRiskChart, evidence: category_labels}
-      - {name: S21_ConcentrationTable_IMG, kind: table_image, lane: excel_updatebatch_image, required: true, source: workbook.range.Concentration, evidence: picture_on_slide}
-      - {name: S21_Source, kind: text, lane: ppttc, required: true, source: source_notes.S21, evidence: exact_text}
+      - {
+          name: S21_Title,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: insight_titles.S21,
+          evidence: exact_text,
+        }
+      - {
+          name: S21_ConcentrationRiskChart,
+          kind: column_chart,
+          lane: ppttc_chart,
+          required: true,
+          source: model.named_range.S21_ConcentrationRiskChart,
+          evidence: category_labels,
+        }
+      - {
+          name: S21_ConcentrationTable_Image,
+          kind: table_image,
+          lane: excel_table_image,
+          required: true,
+          source: workbook.range.Concentration,
+          evidence: picture_on_slide,
+        }
+      - {
+          name: S21_Source,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: source_notes.S21,
+          evidence: exact_text,
+        }
   - slide_id: S22
     purpose: stale_activity
     elements:
-      - {name: S22_Title, kind: text, lane: ppttc, required: true, source: insight_titles.S22, evidence: exact_text}
-      - {name: S22_StaleActivity, kind: bar_chart, lane: ppttc, required: true, source: model.named_range.S22_StaleActivity, evidence: category_labels}
-      - {name: S22_Source, kind: text, lane: ppttc, required: true, source: source_notes.S22, evidence: exact_text}
+      - {
+          name: S22_Title,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: insight_titles.S22,
+          evidence: exact_text,
+        }
+      - {
+          name: S22_StaleActivity,
+          kind: bar_chart,
+          lane: ppttc_chart,
+          required: true,
+          source: model.named_range.S22_StaleActivity,
+          evidence: category_labels,
+        }
+      - {
+          name: S22_Source,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: source_notes.S22,
+          evidence: exact_text,
+        }
   - slide_id: S23
     purpose: sales_velocity_formula
     elements:
-      - {name: S23_Title, kind: text, lane: ppttc, required: true, source: insight_titles.S23, evidence: exact_text}
-      - {name: S23_OppCount, kind: text, lane: ppttc, required: true, source: sales_velocity.opp_count, evidence: exact_text}
-      - {name: S23_WinRate, kind: text, lane: ppttc, required: true, source: sales_velocity.win_rate, evidence: exact_text}
-      - {name: S23_AvgDealSize, kind: text, lane: ppttc, required: true, source: sales_velocity.avg_deal_size, evidence: exact_text}
-      - {name: S23_CycleLength, kind: text, lane: ppttc, required: true, source: sales_velocity.cycle_length, evidence: exact_text}
-      - {name: S23_SalesVelocity, kind: text, lane: ppttc, required: true, source: sales_velocity.composite, evidence: exact_text}
+      - {
+          name: S23_Title,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: insight_titles.S23,
+          evidence: exact_text,
+        }
+      - {
+          name: S23_OppCount,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: sales_velocity.opp_count,
+          evidence: exact_text,
+        }
+      - {
+          name: S23_WinRate,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: sales_velocity.win_rate,
+          evidence: exact_text,
+        }
+      - {
+          name: S23_AvgDealSize,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: sales_velocity.avg_deal_size,
+          evidence: exact_text,
+        }
+      - {
+          name: S23_CycleLength,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: sales_velocity.cycle_length,
+          evidence: exact_text,
+        }
+      - {
+          name: S23_SalesVelocity,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: sales_velocity.composite,
+          evidence: exact_text,
+        }
   - slide_id: S24
     purpose: account_expansion
     elements:
-      - {name: S24_Title, kind: text, lane: ppttc, required: true, source: insight_titles.S24, evidence: exact_text}
-      - {name: S24_AccountExpansion_IMG, kind: table_image, lane: excel_updatebatch_image, required: true, source: workbook.range.Account_Expansion!A1:F16, evidence: picture_on_slide}
-      - {name: S24_Source, kind: text, lane: ppttc, required: true, source: source_notes.S24, evidence: exact_text}
+      - {
+          name: S24_Title,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: insight_titles.S24,
+          evidence: exact_text,
+        }
+      - {
+          name: S24_AccountExpansion_Image,
+          kind: table_image,
+          lane: excel_table_image,
+          required: true,
+          source: workbook.range.Account_Expansion!A1:F16,
+          evidence: picture_on_slide,
+        }
+      - {
+          name: S24_Source,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: source_notes.S24,
+          evidence: exact_text,
+        }
   - slide_id: S25
     purpose: pipeline_creation_velocity
     elements:
-      - {name: S25_Title, kind: text, lane: ppttc, required: true, source: insight_titles.S25, evidence: exact_text}
-      - {name: S25_PipelineCreationVelocity, kind: line_chart, lane: ppttc, required: true, source: model.named_range.S25_PipelineCreationVelocity, evidence: category_labels}
-      - {name: S25_Source, kind: text, lane: ppttc, required: true, source: source_notes.S25, evidence: exact_text}
+      - {
+          name: S25_Title,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: insight_titles.S25,
+          evidence: exact_text,
+        }
+      - {
+          name: S25_PipelineCreationVelocity,
+          kind: line_chart,
+          lane: ppttc_chart,
+          required: true,
+          source: model.named_range.S25_PipelineCreationVelocity,
+          evidence: category_labels,
+        }
+      - {
+          name: S25_Source,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: source_notes.S25,
+          evidence: exact_text,
+        }
   - slide_id: S26
     purpose: action_items
     elements:
-      - {name: S26_Title, kind: text, lane: ppttc, required: true, source: insight_titles.S26, evidence: exact_text}
-      - {name: S26_ActionItems_IMG, kind: table_image, lane: excel_updatebatch_image, required: true, source: trends.action_items, evidence: picture_on_slide}
-      - {name: S26_Source, kind: text, lane: ppttc, required: true, source: source_notes.S26, evidence: exact_text}
+      - {
+          name: S26_Title,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: insight_titles.S26,
+          evidence: exact_text,
+        }
+      - {
+          name: S26_ActionItems_Image,
+          kind: table_image,
+          lane: excel_table_image,
+          required: true,
+          source: trends.action_items,
+          evidence: picture_on_slide,
+        }
+      - {
+          name: S26_Source,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: source_notes.S26,
+          evidence: exact_text,
+        }
   - slide_id: S27
     purpose: risks_outlook
     elements:
-      - {name: S27_Title, kind: text, lane: ppttc, required: true, source: insight_titles.S27, evidence: exact_text}
-      - {name: S27_RisksOutlook, kind: text, lane: ppttc, required: true, source: brief.risks, evidence: sampled_text}
-      - {name: S27_Source, kind: text, lane: ppttc, required: true, source: source_notes.S27, evidence: exact_text}
+      - {
+          name: S27_Title,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: insight_titles.S27,
+          evidence: exact_text,
+        }
+      - {
+          name: S27_RisksOutlook,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: brief.risks,
+          evidence: sampled_text,
+        }
+      - {
+          name: S27_Source,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: source_notes.S27,
+          evidence: exact_text,
+        }
   - slide_id: S28
     purpose: closing
     elements: []
