@@ -51,10 +51,9 @@ RANGE_RULES: list[dict[str, Any]] = [
             "winslossesqtd",
             "pipelinecreationvelocity",
             "renewalpipeline",
-            "topdealsland",
-            "topdealsexpand",
             "concentration",
             "accountexpansion",
+            "forecastcategory",
         ],
         "kind": "currency_meur",
         "min": -50.0,
@@ -62,18 +61,24 @@ RANGE_RULES: list[dict[str, Any]] = [
         "warn_min": -10.0,
         "warn_max": 500.0,
     },
-    # Days metrics
+    # Days metrics. Stuck enterprise deals legitimately exceed 5 years;
+    # cap absolute at 10y. Warn over 2y as still notable.
     {
         "match": ["velocity", "stale", "drought", "age_days", "zombie"],
         "kind": "days",
         "min": 0,
-        "max": 1825,  # 5 years absolute max
+        "max": 3650,
         "warn_min": 0,
         "warn_max": 730,
     },
-    # Percentages stored as decimal fractions
+    # Percentages stored as decimal fractions. Notes:
+    # - "forecastcategory" is currency (mEUR), not percent — keep it out of
+    #   this list (it's matched by currency_meur).
+    # - "grrproxy" is heterogeneous (S12 has currency rows AND % rows in the
+    #   same table). Heterogeneous bindings are deliberately skipped from
+    #   classification — they need bespoke validation.
     {
-        "match": ["forecastcategory", "winrate", "conversionrate", "_pct", "_proxy"],
+        "match": ["winrate", "conversionrate", "_pct"],
         "kind": "percent_fraction",
         "min": -2.0,
         "max": 2.0,

@@ -1,5 +1,11 @@
 """Build per-director think-cell `.ppttc` files for LAND monthly.
 
+Emits .ppttc files. Hand the output to libs/tcrender for the headless
+render step (Mac -> SSH -> VM ppttc.exe -> ferry-back). Do NOT use
+libs/tc_com_driver for production rendering — that lib is the COM-dispatch
+utility surface for bespoke UpdateBatch / interactive flows, not the
+factory bulk-render path.
+
 The emitted JSON follows think-cell's official JSON automation format:
 top-level ARRAY -> one template object -> `data[]` entries with `name`
 and `table`.
@@ -72,6 +78,40 @@ class DirectorArtifacts:
     brief_path: Path
 
 
+class NamedRangeError(KeyError):
+    """Raised when a workbook-scoped named range cannot be resolved.
+
+    Subclasses KeyError so existing `except KeyError` blocks still
+    catch it, but is distinct enough for callers to handle it
+    specifically when they want to.
+    """
+
+
+def _resolve_named_destination(workbook: Any, name: str) -> tuple[str, str]:
+    """Resolve a workbook-scoped defined-name to (sheet, range) strings.
+
+    Raises NamedRangeError if the name is not defined or has more than
+    one destination (we do not currently support union/non-contiguous
+    named ranges).
+    """
+    if name not in workbook.defined_names:
+        raise NamedRangeError(
+            f"Named range '{name}' not defined in workbook. "
+            "Run `scripts/add_chart_binding_named_ranges.py` to migrate."
+        )
+    defn = workbook.defined_names[name]
+    destinations = list(defn.destinations)
+    if len(destinations) != 1:
+        raise NamedRangeError(
+            f"Named range '{name}' has {len(destinations)} destinations; "
+            "only single-destination named ranges are supported."
+        )
+    sheet, ref = destinations[0]
+    # Strip absolute-anchor `$` characters so callers can feed the result
+    # straight into openpyxl's range_boundaries() helper.
+    return sheet, ref.replace("$", "")
+
+
 class ModelWorkbook:
     """Workbook reader that resolves formula cells through the formulas lib."""
 
@@ -111,6 +151,33 @@ class ModelWorkbook:
                 row.append(self.cell_value(sheet_name, coord))
             rows.append(row)
         return rows
+
+    def named_range(self, name: str) -> list[list[Any]]:
+        """Read a workbook-scoped named range and return its matrix.
+
+        Resolves the defined name -> (sheet, range), then delegates to
+        :meth:`matrix`. Raises :class:`NamedRangeError` if the name is
+        not defined or is non-contiguous. The returned matrix is
+        identical to a manual ``matrix(sheet, range)`` call for the
+        same destination.
+        """
+        sheet, ref = _resolve_named_destination(self.workbook, name)
+        return self.matrix(sheet, ref)
+
+    def named_cell(self, name: str) -> Any:
+        """Read a workbook-scoped single-cell named range.
+
+        Convenience for the Parameters / Concentration / Sales_Velocity
+        single-cell bindings. Raises :class:`NamedRangeError` if the
+        name is not defined or points at a multi-cell range.
+        """
+        sheet, ref = _resolve_named_destination(self.workbook, name)
+        if ":" in ref:
+            raise NamedRangeError(
+                f"Named range '{name}' points at a multi-cell range '{ref}'; "
+                "use `named_range()` for matrices."
+            )
+        return self.cell_value(sheet, ref)
 
 
 class LiteralWorkbook:
@@ -230,13 +297,7 @@ def _extract_action_item_claims(trends: dict[str, Any], *, limit: int | None = N
 
 
 def _strip_markdown_inline(text: str) -> str:
-    return (
-        text.replace("**", "")
-        .replace("__", "")
-        .replace("`", "")
-        .replace("_", "")
-        .strip()
-    )
+    return text.replace("**", "").replace("__", "").replace("`", "").replace("_", "").strip()
 
 
 def _format_bullets(items: list[str], *, fallback: str) -> str:
@@ -306,6 +367,61 @@ def _chart_entry(
     return _table_entry(name, table)
 
 
+def _scale_eur_to_meur(rows: list[list[Any]]) -> list[list[Any]]:
+    """Idempotent EUR -> mEUR scaler. Handles two table shapes:
+
+      - Header-column shape: row 0 has '(EUR)' in column header text.
+        S24_AccountExpansion: "Land ARR (EUR)" / "Expand ARR (EUR)" / etc.
+
+      - Label-value shape: column 0 has '(EUR)' in row label text.
+        S21_ConcentrationTable: "Largest open L+E deal — ARR (EUR)" with
+        the value in column B.
+
+    Catches the F-01/F-02 class (raw EUR shipped as mEUR) — verified by
+    scripts/validate_numeric_sanity.py.
+    """
+    if not rows:
+        return rows
+    eur_cols: set[int] = set()
+    if rows[0]:
+        for i, h in enumerate(rows[0]):
+            if isinstance(h, str) and "(EUR)" in h:
+                eur_cols.add(i)
+    eur_label_rows: set[int] = set()
+    for r_idx, row in enumerate(rows):
+        if not row:
+            continue
+        label = row[0] if isinstance(row[0], str) else ""
+        # "(EUR)" is the explicit marker; "ACV" / "ARR" are convention markers
+        # (the deck factory always denominates these in EUR).
+        if "(EUR)" in label or " ACV " in f" {label} " or " ARR " in f" {label} ":
+            eur_label_rows.add(r_idx)
+    if not eur_cols and not eur_label_rows:
+        return rows
+
+    def _scale(v: Any) -> Any:
+        if isinstance(v, bool):
+            return v
+        if isinstance(v, (int, float)):
+            return round(v / 1_000_000, 2)
+        return v
+
+    out: list[list[Any]] = []
+    for r_idx, row in enumerate(rows):
+        new = list(row) if row else []
+        for c in eur_cols:
+            if r_idx > 0 and c < len(new):
+                new[c] = _scale(new[c])
+        if r_idx in eur_label_rows:
+            for c in range(1, len(new)):
+                new[c] = _scale(new[c])
+        out.append(new)
+    return out
+
+
+_scale_eur_columns_to_meur = _scale_eur_to_meur
+
+
 def _last_nonempty_row(
     workbook: LiteralWorkbook | ModelWorkbook,
     sheet_name: str,
@@ -363,7 +479,10 @@ def _territory_bar_matrix(model: ModelWorkbook) -> list[list[Any]]:
 
 
 def _forecast_category_matrix(model: ModelWorkbook) -> list[list[Any]]:
-    return model.matrix("Forecast_Category", "A1:C7")
+    # F-06 refactor: read by Excel named range so a Forecast_Category
+    # layout shift won't silently corrupt S13. See
+    # `state/thinkcell_bridge/excel_named_ranges/.../binding_to_range_manifest.json`.
+    return model.named_range("S13_ForecastCategory")
 
 
 def _number_or_zero(value: Any) -> float:
@@ -424,11 +543,19 @@ def _eur_millions(value: Any) -> float:
 
 
 def _eur_millions_for_k_scaled_donor(value: Any) -> float:
-    return round(_number_or_zero(value) / 1_000, 1)
+    """Convert raw EUR to millions (mEUR). Production xlsx ships RAW EUR; the
+    historical 'k_scaled_donor' name reflected an earlier donor-template
+    convention (input was already in kEUR) that no longer applies. Bug F-01
+    (audit 2026-05-03) — was /1_000 (gave kEUR labeled as mEUR), now /1_000_000.
+    """
+    return round(_number_or_zero(value) / 1_000_000, 1)
 
 
 def _for_k_scaled_donor(value: Any) -> float:
-    return round(_number_or_zero(value) * 1_000, 1)
+    """Identity-passthrough; input is in target units already. Bug F-01
+    (audit 2026-05-03) — was *1_000 (gave 100x-3-orders of magnitude wrong
+    output for share %), now passthrough with rounding."""
+    return round(_number_or_zero(value), 1)
 
 
 def _eur_thousands(value: Any) -> float:
@@ -448,15 +575,17 @@ def _pipe_movement_value(label: Any, value: Any) -> float:
 
 
 def _pipe_movement_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
-    matrix = model.matrix("Pipe_Movement", "A2:B6")
+    matrix = model.named_range("S04_PipeMovement")
     rows = [(row[0], row[1]) for row in matrix if row[0] not in (None, "")]
     categories = [_pipe_movement_label(label) for label, _ in rows]
     values = [_pipe_movement_value(label, value) for label, value in rows]
-    return _chart_entry("S04_PipeMovement", categories=categories, series_rows=[("ARR (mEUR)", values)])
+    return _chart_entry(
+        "S04_PipeMovement", categories=categories, series_rows=[("ARR (mEUR)", values)]
+    )
 
 
 def _pipeline_by_stage_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
-    matrix = model.matrix("Pipeline_By_Stage", "A2:B9")
+    matrix = model.named_range("S05_PipelineByStage")
     categories = [row[0] for row in matrix if row[0] not in (None, "")]
     values = [_eur_millions(row[1]) for row in matrix if row[0] not in (None, "")]
     return _chart_entry(
@@ -467,7 +596,7 @@ def _pipeline_by_stage_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
 
 
 def _pipeline_aging_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
-    matrix = model.matrix("Pipeline_Aging", "A2:E7")
+    matrix = model.named_range("S06_PipelineAging")
     categories = [row[0] for row in matrix if row[0] not in (None, "")]
     values = [_eur_millions(row[3]) for row in matrix if row[0] not in (None, "")]
     return _chart_entry(
@@ -480,7 +609,9 @@ def _pipeline_aging_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
 def _forecast_category_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
     matrix = _forecast_category_matrix(model)
     categories = [row[0] for row in matrix[1:] if row[0] not in (None, "")]
-    values = [_eur_millions_for_k_scaled_donor(row[2]) for row in matrix[1:] if row[0] not in (None, "")]
+    values = [
+        _eur_millions_for_k_scaled_donor(row[2]) for row in matrix[1:] if row[0] not in (None, "")
+    ]
     return _chart_entry(
         "S13_ForecastCategory",
         categories=categories,
@@ -507,7 +638,7 @@ def _by_owner_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
 
 
 def _stage_by_industry_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
-    matrix = model.matrix("Pivots", "A5:M13")
+    matrix = model.named_range("S16_StageByIndustry")
     headers = matrix[0]
     industries = [str(header) for header in headers[1:] if header not in (None, "")]
     data_rows = [
@@ -515,25 +646,13 @@ def _stage_by_industry_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
         for row in matrix[1:]
         if row[0] not in (None, "")
     ]
-    totals = [
-        (idx, sum(values[idx] for _, values in data_rows))
-        for idx in range(len(industries))
-    ]
+    totals = [(idx, sum(values[idx] for _, values in data_rows)) for idx in range(len(industries))]
     top_indices = [
-        idx
-        for idx, total in sorted(totals, key=lambda item: item[1], reverse=True)
-        if total > 0
+        idx for idx, total in sorted(totals, key=lambda item: item[1], reverse=True) if total > 0
     ][:5]
-    other_indices = [
-        idx
-        for idx, total in totals
-        if total > 0 and idx not in top_indices
-    ]
+    other_indices = [idx for idx, total in totals if total > 0 and idx not in top_indices]
     selected_indices = top_indices + ([-1] if other_indices else [])
-    categories = [
-        "Other" if idx == -1 else industries[idx]
-        for idx in selected_indices
-    ]
+    categories = ["Other" if idx == -1 else industries[idx] for idx in selected_indices]
     raw_series: list[tuple[str, list[Any]]] = []
     for stage_name, row_values in data_rows:
         values = [
@@ -558,7 +677,9 @@ def _stage_by_industry_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
         if name in top_stage_names:
             series_rows.append((name, values))
         else:
-            other_values = [left + _number_or_zero(right) for left, right in zip(other_values, values)]
+            other_values = [
+                left + _number_or_zero(right) for left, right in zip(other_values, values)
+            ]
     if any(other_values):
         series_rows.append(("Other stages", [round(value, 1) for value in other_values]))
     return _chart_entry("S16_StageByIndustry", categories=categories, series_rows=series_rows)
@@ -582,7 +703,7 @@ def _territory_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
 
 
 def _wins_losses_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
-    matrix = model.matrix("Wins_Losses_QTD", "A1:D3")
+    matrix = model.named_range("S18_WinsLossesQTD")
     categories = [row[0] for row in matrix[1:]]
     arr = [_eur_millions_for_k_scaled_donor(row[2]) for row in matrix[1:]]
     acv = [_eur_millions_for_k_scaled_donor(row[3]) for row in matrix[1:]]
@@ -597,12 +718,12 @@ def _wins_losses_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
 
 
 def _velocity_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
-    matrix = model.matrix("Velocity", "A3:E10")
+    matrix = model.named_range("S19_Velocity")
     categories = [_compact_stage_label(row[0]) for row in matrix]
-    values = [
-        value * 1_000 if value is not None else None
-        for value in (_number_or_none(row[2]) for row in matrix)
-    ]
+    # Bug F-02 (audit 2026-05-03): Velocity!C is already in days; the *1_000
+    # multiplier was producing kilodays (e.g. 1,344,000 days for Shortlisted).
+    # Removed.
+    values = [_number_or_none(row[2]) for row in matrix]
     return _chart_entry(
         "S19_Velocity",
         categories=categories,
@@ -611,7 +732,7 @@ def _velocity_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
 
 
 def _concentration_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
-    matrix = model.matrix("Concentration", "A11:C15")
+    matrix = model.named_range("S21_ConcentrationTable")
     categories = [row[0] for row in matrix[1:]]
     shares = [_for_k_scaled_donor(_number_or_zero(row[2]) * 100) for row in matrix[1:]]
     return _chart_entry(
@@ -622,7 +743,7 @@ def _concentration_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
 
 
 def _stale_activity_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
-    matrix = model.matrix("Stale_Activity", "A1:C5")
+    matrix = model.named_range("S22_StaleActivity")
     categories = [row[0] for row in matrix[1:]]
     values = [_eur_millions(row[2]) for row in matrix[1:]]
     return _chart_entry(
@@ -633,7 +754,7 @@ def _stale_activity_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
 
 
 def _pipeline_creation_velocity_chart_entry(model: ModelWorkbook) -> dict[str, Any]:
-    matrix = model.matrix("Pipeline_Creation_Velocity", "A1:C13")
+    matrix = model.named_range("S25_PipelineCreationVelocity")
     categories = [_week_label(row[0]) for row in matrix[1:]]
     arr_values = [_eur_millions_for_k_scaled_donor(row[2]) for row in matrix[1:]]
     return _chart_entry(
@@ -675,7 +796,10 @@ def _sales_velocity_entries(model: ModelWorkbook) -> list[dict[str, Any]]:
     ]
     entries: list[dict[str, Any]] = []
     for offset, metric_name in enumerate(metric_names, start=2):
-        value = model.cell_value("Sales_Velocity", f"B{offset}")
+        # Note column has no named ranges (it's free-form prose, not
+        # surfaced as a binding to think-cell), so it keeps its
+        # positional read.
+        value = model.named_cell(f"S23_{metric_name}_src")
         note = model.cell_value("Sales_Velocity", f"C{offset}")
         if metric_name == "WinRate":
             value_text = _format_percentage(value)
@@ -684,7 +808,11 @@ def _sales_velocity_entries(model: ModelWorkbook) -> list[dict[str, Any]]:
             if metric_name == "Velocity":
                 value_text = f"{value_text} / day"
         elif metric_name == "AvgCycleDays":
-            value_text = f"{int(round(float(value)))} days" if isinstance(value, (int, float)) else str(value)
+            value_text = (
+                f"{int(round(float(value)))} days"
+                if isinstance(value, (int, float))
+                else str(value)
+            )
         else:
             value_text = str(int(value)) if isinstance(value, (int, float)) else str(value)
         entries.append(_text_entry(f"S23_{metric_name}Value", value_text))
@@ -694,16 +822,19 @@ def _sales_velocity_entries(model: ModelWorkbook) -> list[dict[str, Any]]:
 
 
 def _concentration_entries(model: ModelWorkbook) -> list[dict[str, Any]]:
-    account = model.cell_value("Concentration", "B5")
-    arr = model.cell_value("Concentration", "B6")
-    share = model.cell_value("Concentration", "B7")
-    threshold = model.cell_value("Concentration", "B8")
+    account = model.named_cell("S21_LargestAccount_src")
+    arr = model.named_cell("S21_LargestArr_src")
+    share = model.named_cell("S21_LargestShare_src")
+    threshold = model.named_cell("S21_ThresholdFlag_src")
     return [
         _text_entry("S21_LargestAccount", str(account or "")),
         _text_entry("S21_LargestArr", _format_currency(arr)),
         _text_entry("S21_LargestShare", _format_percentage(share)),
         _text_entry("S21_ThresholdFlag", str(threshold or "")),
-        _table_entry("S21_ConcentrationTable", model.matrix("Concentration", "A11:C15")),
+        _table_entry(
+            "S21_ConcentrationTable",
+            _scale_eur_to_meur(model.named_range("S21_ConcentrationTable")),
+        ),
     ]
 
 
@@ -768,7 +899,9 @@ def _ppttc_entries_from_context(
             _pipe_movement_chart_entry(model),
             _pipeline_by_stage_chart_entry(model),
             _pipeline_aging_chart_entry(model),
-            _table_entry("S07_TopDealsLand", legacy.matrix("Top_Deals_Land", f"A1:H{top_land_last}")),
+            _table_entry(
+                "S07_TopDealsLand", legacy.matrix("Top_Deals_Land", f"A1:H{top_land_last}")
+            ),
             _table_entry(
                 "S08_TopDealsExpand", legacy.matrix("Top_Deals_Expand", f"A1:H{top_expand_last}")
             ),
@@ -779,9 +912,13 @@ def _ppttc_entries_from_context(
             _table_entry(
                 "S11_RenewalPipeline", legacy.matrix("At_Risk_Renewals", f"A1:H{renewal_last}")
             ),
-            _table_entry("S12_GRRProxyTable", model.matrix("Retention", "A1:B4")),
+            _table_entry(
+                "S12_GRRProxyTable",
+                _scale_eur_to_meur(model.named_range("S12_GRRProxyTable")),
+            ),
             _text_entry(
-                "S12_GRRProxyFootnote", str(model.cell_value("Retention", "A5") or "")
+                "S12_GRRProxyFootnote",
+                str(model.named_cell("S12_GRRProxyFootnote_src") or ""),
             ),
             _forecast_category_chart_entry(model),
             _by_owner_chart_entry(model),
@@ -792,9 +929,13 @@ def _ppttc_entries_from_context(
             _concentration_chart_entry(model),
             _stale_activity_chart_entry(model),
             _text_entry(
-                "S22_StaleActivityFootnote", str(model.cell_value("Stale_Activity", "A7") or "")
+                "S22_StaleActivityFootnote",
+                str(model.named_cell("S22_StaleActivityFootnote_src") or ""),
             ),
-            _table_entry("S24_AccountExpansion", model.matrix("Account_Expansion", "A1:F16")),
+            _table_entry(
+                "S24_AccountExpansion",
+                _scale_eur_columns_to_meur(model.named_range("S24_AccountExpansion")),
+            ),
             _pipeline_creation_velocity_chart_entry(model),
             _table_entry("S26_ActionItems", _action_items_table(trends)),
         ]
@@ -823,6 +964,101 @@ def _build_payload(template_path: Path, entries: list[dict[str, Any]]) -> list[d
     return [{"template": str(template_path.resolve()), "data": entries}]
 
 
+# Six valid leaf cell tags per the official ppttc schema, sourced from
+# state/thinkcell_bridge/official_docs_corpus/<ts>/extraction.json
+# section A_ppttc_schema. `null` is represented by the JSON null literal,
+# not by an object; it is therefore checked separately.
+_PPTTC_VALID_CELL_KEYS: frozenset[str] = frozenset(
+    {"string", "number", "percentage", "date", "fill"}
+)
+
+
+def _validate_ppttc_shape(parsed: Any) -> list[str]:
+    """Return shape-violation messages for a parsed `.ppttc` payload.
+
+    The check is structural only -- it does not attempt to validate
+    that emitted numbers make business sense, only that the JSON
+    matches the official think-cell schema (top-level array of
+    template-objects; each entry has `name` + `table`; each cell is
+    None or a single-key object whose key is in `_PPTTC_VALID_CELL_KEYS`).
+    """
+    violations: list[str] = []
+
+    if not isinstance(parsed, list):
+        violations.append("top-level must be a JSON array")
+        return violations
+    if not parsed:
+        violations.append("top-level array is empty (need at least one template object)")
+        return violations
+
+    for tpl_idx, tpl in enumerate(parsed):
+        loc = f"template[{tpl_idx}]"
+        if not isinstance(tpl, dict):
+            violations.append(f"{loc}: must be an object, got {type(tpl).__name__}")
+            continue
+        template_value = tpl.get("template")
+        if not isinstance(template_value, str) or not template_value:
+            violations.append(f"{loc}: 'template' must be a non-empty string")
+        data_entries = tpl.get("data")
+        if not isinstance(data_entries, list):
+            violations.append(f"{loc}: 'data' must be an array")
+            continue
+
+        seen_names: dict[str, int] = {}
+        for ent_idx, entry in enumerate(data_entries):
+            entry_loc = f"{loc}.data[{ent_idx}]"
+            if not isinstance(entry, dict):
+                violations.append(f"{entry_loc}: must be an object")
+                continue
+            name = entry.get("name")
+            if not isinstance(name, str) or not name:
+                violations.append(f"{entry_loc}: 'name' must be a non-empty string")
+            else:
+                seen_names[name] = seen_names.get(name, 0) + 1
+            table = entry.get("table")
+            if not isinstance(table, list):
+                violations.append(f"{entry_loc} ({name!r}): 'table' must be a list")
+                continue
+            for row_idx, row in enumerate(table):
+                row_loc = f"{entry_loc} ({name!r}).table[{row_idx}]"
+                if not isinstance(row, list):
+                    violations.append(f"{row_loc}: row must be a list")
+                    continue
+                for col_idx, cell in enumerate(row):
+                    cell_loc = f"{row_loc}[{col_idx}]"
+                    if cell is None:
+                        continue
+                    if not isinstance(cell, dict):
+                        violations.append(
+                            f"{cell_loc}: cell must be null or a single-key object, "
+                            f"got {type(cell).__name__}"
+                        )
+                        continue
+                    keys = set(cell.keys())
+                    extra = keys - _PPTTC_VALID_CELL_KEYS
+                    if extra:
+                        violations.append(
+                            f"{cell_loc}: unknown cell key(s) {sorted(extra)} "
+                            f"(valid: {sorted(_PPTTC_VALID_CELL_KEYS)})"
+                        )
+                    # `fill` may co-exist with one of the data keys; otherwise we
+                    # expect exactly one key.
+                    data_keys = keys & (_PPTTC_VALID_CELL_KEYS - {"fill"})
+                    if len(data_keys) > 1:
+                        violations.append(
+                            f"{cell_loc}: cell has multiple data keys {sorted(data_keys)}; "
+                            "expected at most one of string/number/percentage/date"
+                        )
+
+        for dup_name, count in seen_names.items():
+            if count > 1:
+                violations.append(
+                    f"{loc}: duplicate binding name {dup_name!r} appears {count} times"
+                )
+
+    return violations
+
+
 def _write_ppttc(
     artifacts: DirectorArtifacts,
     *,
@@ -831,6 +1067,10 @@ def _write_ppttc(
 ) -> Path:
     out_path = artifacts.director_dir / f"{artifacts.slug}-LAND-{artifacts.period}.ppttc"
     payload = _build_payload(template_path, entries)
+    violations = _validate_ppttc_shape(payload)
+    if violations:
+        joined = "\n  - ".join(violations)
+        raise SystemExit(f"ppttc shape validation failed for {artifacts.name}:\n  - {joined}")
     out_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False))
     return out_path
 
@@ -852,12 +1092,207 @@ def _validate_inputs(artifacts: DirectorArtifacts) -> None:
         raise SystemExit(f"Missing director artifacts for {artifacts.name}: {missing_str}")
 
 
+def _build_director_context_for_narrative(
+    artifacts: DirectorArtifacts,
+    *,
+    trends: dict[str, Any],
+    model: ModelWorkbook,
+) -> Any:
+    """Build a tcrender.narrative.DirectorContext from existing artifacts.
+
+    Lazy-imports tcrender.narrative so this script keeps importing cleanly
+    even when tcrender is missing on the path (e.g. when the venv has not
+    been installed).
+    """
+    sys.path.insert(0, str(ROOT / "libs" / "tcrender"))
+    from tcrender.narrative import DirectorContext  # noqa: PLC0415
+
+    closeable_arr = float(_number_or_zero(model.cell_value("Forecast_Category", "C5") or 0.0))
+    renewal_acv = float(_number_or_zero(model.cell_value("Retention", "B2") or 0.0))
+    largest_share = model.cell_value("Concentration", "B7")
+    largest_share_pct: float | None
+    if isinstance(largest_share, (int, float)) and not isinstance(largest_share, bool):
+        largest_share_pct = float(largest_share) * 100.0
+    else:
+        largest_share_pct = None
+
+    risks = tuple(_extract_risk_claims(trends)[:5])
+    actions = tuple(_extract_action_item_claims(trends, limit=5))
+    top_deals_rows: list[dict[str, Any]] = []
+    try:
+        top_land = LiteralWorkbook(artifacts.legacy_path).matrix("Top_Deals_Land", "A2:H7")
+    except Exception:  # noqa: BLE001 - best-effort
+        top_land = []
+    for row in top_land:
+        if not row or row[0] in (None, ""):
+            continue
+        top_deals_rows.append(
+            {
+                "account": str(row[0]),
+                "stage": str(row[3] or ""),
+                "owner": str(row[2] or ""),
+                "arr_eur": _number_or_zero(row[7] if len(row) > 7 else 0.0),
+            }
+        )
+
+    return DirectorContext(
+        name=artifacts.name,
+        slug=artifacts.slug,
+        period=artifacts.period,
+        scope_label=artifacts.scope_label,
+        closeable_arr_eur=closeable_arr,
+        renewal_acv_eur=renewal_acv,
+        largest_account_share_pct=largest_share_pct,
+        risk_claims=risks,
+        action_items=actions,
+        top_deals=tuple(top_deals_rows[:6]),
+    )
+
+
+def _count_cache_files(cache_dir: Path) -> int:
+    if not cache_dir.exists():
+        return 0
+    return sum(1 for _ in cache_dir.glob("*.txt"))
+
+
+def _override_narrative_entries(
+    entries: list[dict[str, Any]],
+    artifacts: DirectorArtifacts,
+    *,
+    trends: dict[str, Any],
+    model: ModelWorkbook,
+    rich_narrative: bool = False,
+) -> tuple[list[dict[str, Any]], dict[str, str], int]:
+    """Replace S02 Left/Right + S27 entries with Claude-generated bullets.
+
+    When ``rich_narrative`` is true, also overrides:
+        - S01_Subtitle (cover page director-specific framing)
+        - S{NN}_Insight bindings for every chart with non-empty data
+          (S04, S05, S06, S07, S13, S15, S16, S17, S18, S19, S21, S22, S25)
+        - S98_AnomalyWatch (3-5 Claude-detected anomalies)
+        - S26_ActionsRanked (top-5 actions ranked by impact x urgency)
+        - S03/S10/S20/S25_Header (per-section subtitles, picked up by
+          polish_pass when present on the appropriate slides)
+
+    Caches under ``state/narrative_cache/`` (created on first use). Falls
+    back to the rule-based entries on any NarrativeError so the .ppttc is
+    always emittable.
+
+    Returns:
+        (updated_entries, sample_narratives, claude_call_count) -- the
+        second item maps binding_name -> the verbatim text written; the
+        third is the number of cache misses (i.e. real ``claude -p``
+        invocations) made during this call. Cached hits do not count.
+    """
+    sys.path.insert(0, str(ROOT / "libs" / "tcrender"))
+    from tcrender.narrative import (  # noqa: PLC0415
+        NarrativeError,
+        generate_anomaly_watch,
+        generate_chart_insights,
+        generate_cover_subtitle,
+        generate_exec_summary,
+        generate_ranked_actions,
+        generate_risks_outlook,
+        generate_section_subtitles,
+        load_thinkcell_vocabulary_primer,
+    )
+
+    ctx = _build_director_context_for_narrative(artifacts, trends=trends, model=model)
+    cache_dir = ROOT / "state" / "narrative_cache"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    cache_before = _count_cache_files(cache_dir)
+    samples: dict[str, str] = {}
+
+    try:
+        left, right = generate_exec_summary(ctx, cache_dir=cache_dir)
+        risks_body = generate_risks_outlook(ctx, cache_dir=cache_dir)
+    except NarrativeError as exc:
+        print(
+            f"warning: claude narrative generation failed ({exc}); "
+            "keeping rule-based S02/S27 bullets.",
+            file=sys.stderr,
+        )
+        return entries, samples, _count_cache_files(cache_dir) - cache_before
+
+    left_text = "\n".join(f"- {b}" for b in left) or "(no highlights generated)"
+    right_text = "\n".join(f"- {b}" for b in right) or "(no risks generated)"
+
+    overrides: dict[str, str] = {
+        "S02_ExecSummaryLeft": left_text,
+        "S02_ExecSummaryRight": right_text,
+        "S27_RisksOutlook": risks_body,
+    }
+
+    if rich_narrative:
+        primer = load_thinkcell_vocabulary_primer()
+        # Per-chart insights -- best-effort, individual failures are
+        # silently skipped inside generate_chart_insights.
+        try:
+            insight_map = generate_chart_insights(ctx, entries, cache_dir=cache_dir, primer=primer)
+            overrides.update(insight_map)
+        except NarrativeError as exc:
+            print(f"warning: chart insights pass failed ({exc})", file=sys.stderr)
+
+        # S98 anomaly watch
+        try:
+            overrides["S98_AnomalyWatch"] = generate_anomaly_watch(
+                ctx, cache_dir=cache_dir, primer=primer
+            )
+        except NarrativeError as exc:
+            print(f"warning: anomaly watch failed ({exc})", file=sys.stderr)
+
+        # S26 ranked actions (separate binding from the rule-based S26_ActionItems
+        # table; polish_pass / native_fallback can decide which to render).
+        try:
+            overrides["S26_ActionsRanked"] = generate_ranked_actions(
+                ctx, cache_dir=cache_dir, primer=primer
+            )
+        except NarrativeError as exc:
+            print(f"warning: ranked actions failed ({exc})", file=sys.stderr)
+
+        # S01 cover-page subtitle
+        try:
+            overrides["S01_Subtitle"] = generate_cover_subtitle(
+                ctx, cache_dir=cache_dir, primer=primer
+            )
+        except NarrativeError as exc:
+            print(f"warning: cover subtitle failed ({exc})", file=sys.stderr)
+
+        # Per-section subtitles
+        try:
+            section_map = generate_section_subtitles(ctx, cache_dir=cache_dir, primer=primer)
+            overrides.update(section_map)
+        except NarrativeError as exc:
+            print(f"warning: section subtitles failed ({exc})", file=sys.stderr)
+
+    samples.update(overrides)
+
+    new_entries: list[dict[str, Any]] = []
+    seen_overrides: set[str] = set()
+    for entry in entries:
+        name = entry.get("name")
+        if isinstance(name, str) and name in overrides:
+            new_entries.append(_text_entry(name, overrides[name]))
+            seen_overrides.add(name)
+        else:
+            new_entries.append(entry)
+    # If a binding wasn't in the original entry list, append it.
+    for name, text in overrides.items():
+        if name not in seen_overrides:
+            new_entries.append(_text_entry(name, text))
+
+    cache_after = _count_cache_files(cache_dir)
+    return new_entries, samples, cache_after - cache_before
+
+
 def _build_for_director(
     director: dict[str, Any],
     *,
     period: str,
     template_path: Path,
     strict_template_contract: bool = False,
+    narrative_enabled: bool = False,
+    rich_narrative_enabled: bool = False,
 ) -> Path:
     artifacts = _director_artifacts(period, director)
     _validate_inputs(artifacts)
@@ -884,6 +1319,54 @@ def _build_for_director(
         model=model,
         legacy=legacy,
     )
+    if narrative_enabled or rich_narrative_enabled:
+        entries, narrative_samples, claude_calls = _override_narrative_entries(
+            entries,
+            artifacts,
+            trends=trends,
+            model=model,
+            rich_narrative=rich_narrative_enabled,
+        )
+        # Order matters: cover/section before exec, then chart insights,
+        # then ranked actions + anomaly watch.
+        ordered_keys: list[str] = [
+            "S01_Subtitle",
+            "S03_Header",
+            "S10_Header",
+            "S20_Header",
+            "S25_Header",
+            "S02_ExecSummaryLeft",
+            "S02_ExecSummaryRight",
+            "S04_Insight",
+            "S05_Insight",
+            "S06_Insight",
+            "S07_Insight",
+            "S13_Insight",
+            "S15_Insight",
+            "S16_Insight",
+            "S17_Insight",
+            "S18_Insight",
+            "S19_Insight",
+            "S21_Insight",
+            "S22_Insight",
+            "S25_Insight",
+            "S26_ActionsRanked",
+            "S98_AnomalyWatch",
+            "S27_RisksOutlook",
+        ]
+        for name in ordered_keys:
+            text = narrative_samples.get(name)
+            if text:
+                print(f"-- narrative {name} --")
+                for line in text.splitlines():
+                    print(line)
+                print()
+        kind_label = "rich-narrative" if rich_narrative_enabled else "narrative"
+        print(
+            f"[{kind_label}] {artifacts.slug}: {claude_calls} claude call(s) "
+            f"(cache misses); {len(narrative_samples)} bindings overridden",
+            file=sys.stderr,
+        )
     entry_names = {entry["name"] for entry in entries}
     if resolved_template != template_path:
         backed_names = template_named_elements(resolved_template)
@@ -929,6 +1412,29 @@ def main() -> int:
             "template during real .ppttc import."
         ),
     )
+    parser.add_argument(
+        "--narrative",
+        action="store_true",
+        help=(
+            "Override S02_ExecSummary{Left,Right} and S27_RisksOutlook with "
+            "Claude-generated narrative bullets matching the prior shipped "
+            "deck style (uses tcrender.narrative + tcrender.narrative_templates "
+            "style-guide injection). Cached under state/narrative_cache/. "
+            "Falls back to rule-based bullets on any narrative error."
+        ),
+    )
+    parser.add_argument(
+        "--rich-narrative",
+        action="store_true",
+        help=(
+            "Implies --narrative. Additionally generates per-chart S{NN}_Insight "
+            "captions (S04..S25), S98_AnomalyWatch, S26_ActionsRanked, "
+            "S01_Subtitle (cover framing), and S03/S10/S20/S25_Header (per-"
+            "section subtitles). Cold-run cost: ~20 claude calls per director "
+            "(~100 seconds). All cached under state/narrative_cache/ for "
+            "subsequent runs to be free."
+        ),
+    )
     args = parser.parse_args()
 
     template_path = args.template.expanduser().resolve()
@@ -969,6 +1475,8 @@ def main() -> int:
             period=args.period,
             template_path=template_path,
             strict_template_contract=args.strict_template,
+            narrative_enabled=args.narrative or args.rich_narrative,
+            rich_narrative_enabled=args.rich_narrative,
         )
         for director in directors
     ]
