@@ -69,6 +69,25 @@ PLACEHOLDER_PHRASES = [
 # light fill behind them on a brand divider slide.
 DARK_HEX_RE = re.compile(r"^[0-3][0-9A-Fa-f][0-3][0-9A-Fa-f][0-3][0-9A-Fa-f]$")
 
+# Theme color names (ECMA-376 §20.1.6.2 a:clrScheme). PowerPoint aliases
+# bg1↔lt1, bg2↔lt2, tx1↔dk1, tx2↔dk2 — the bg/tx form is the slide-context
+# alias for the dk/lt scheme entries.
+SCHEME_NAMES = (
+    "dk1",
+    "lt1",
+    "dk2",
+    "lt2",
+    "accent1",
+    "accent2",
+    "accent3",
+    "accent4",
+    "accent5",
+    "accent6",
+    "hlink",
+    "folHlink",
+)
+SCHEME_ALIASES = {"bg1": "lt1", "tx1": "dk1", "bg2": "lt2", "tx2": "dk2"}
+
 
 @dataclass
 class Finding:
@@ -120,6 +139,51 @@ def _text_runs(root: etree._Element) -> list[etree._Element]:
     return root.findall(".//a:t", NS)
 
 
+def _load_theme_colors(zf: zipfile.ZipFile) -> dict[str, str]:
+    try:
+        theme_root = etree.fromstring(zf.read("ppt/theme/theme1.xml"))
+    except (KeyError, etree.XMLSyntaxError):
+        return {}
+    scheme = theme_root.find(".//a:clrScheme", NS)
+    if scheme is None:
+        return {}
+    out: dict[str, str] = {}
+    for name in SCHEME_NAMES:
+        node = scheme.find(f"a:{name}", NS)
+        if node is None:
+            continue
+        srgb = node.find("a:srgbClr", NS)
+        if srgb is not None and srgb.get("val"):
+            out[name] = srgb.get("val", "").upper()
+            continue
+        sys_clr = node.find("a:sysClr", NS)
+        if sys_clr is not None and sys_clr.get("lastClr"):
+            out[name] = sys_clr.get("lastClr", "").upper()
+    for alias, target in SCHEME_ALIASES.items():
+        if target in out:
+            out[alias] = out[target]
+    return out
+
+
+def _resolve_color(elem: etree._Element | None, theme: dict[str, str]) -> str | None:
+    if elem is None:
+        return None
+    for child in elem:
+        tag = etree.QName(child).localname
+        if tag == "srgbClr":
+            v = child.get("val")
+            return v.upper() if v else None
+        if tag == "sysClr":
+            v = child.get("lastClr") or child.get("val")
+            return v.upper() if v else None
+        if tag == "schemeClr":
+            v = child.get("val")
+            if v and v in theme:
+                return theme[v]
+            return None
+    return None
+
+
 def _check_placeholder_text(name: str, root: etree._Element, rep: Report) -> None:
     """Placeholder prompts ARE expected in slideLayouts/slideMasters — they
     are template-design content that PowerPoint replaces on instantiation.
@@ -146,31 +210,28 @@ def _check_placeholder_text(name: str, root: etree._Element, rep: Report) -> Non
                 break
 
 
-def _check_dark_text_on_dark_fill(name: str, root: etree._Element, rep: Report) -> None:
-    """Heuristic: text run with explicit dark fill inside a shape with explicit dark fill.
-
-    PresentationML structure:
-      sp / txBody / p / r / rPr / solidFill / srgbClr@val   (text color)
-      sp / spPr / solidFill / srgbClr@val                   (shape fill)
+def _check_dark_text_on_dark_fill(
+    name: str, root: etree._Element, rep: Report, theme: dict[str, str]
+) -> None:
+    """Resolve theme colors so we catch schemeClr-based dark text/fill, not
+    just literal srgbClr@val. Both shape fill and run color paths walk
+    srgbClr | schemeClr | sysClr.
     """
     for sp in root.findall(".//p:sp", NS):
-        sp_fill_hex = None
         sp_pr = sp.find("p:spPr", NS)
-        if sp_pr is not None:
-            color_el = sp_pr.find("a:solidFill/a:srgbClr", NS)
-            if color_el is not None:
-                sp_fill_hex = color_el.get("val")
+        if sp_pr is None:
+            continue
+        sp_fill = sp_pr.find("a:solidFill", NS)
+        sp_fill_hex = _resolve_color(sp_fill, theme)
         if sp_fill_hex is None or not DARK_HEX_RE.match(sp_fill_hex):
             continue
         for r_el in sp.findall(".//a:r", NS):
             r_pr = r_el.find("a:rPr", NS)
-            txt_color_hex = None
-            if r_pr is not None:
-                color_el = r_pr.find("a:solidFill/a:srgbClr", NS)
-                if color_el is not None:
-                    txt_color_hex = color_el.get("val")
             t = r_el.find("a:t", NS)
             text_preview = (t.text if t is not None else "") or ""
+            txt_color_hex = (
+                _resolve_color(r_pr.find("a:solidFill", NS), theme) if r_pr is not None else None
+            )
             if txt_color_hex and DARK_HEX_RE.match(txt_color_hex):
                 rep.add(
                     "fail",
@@ -179,10 +240,37 @@ def _check_dark_text_on_dark_fill(name: str, root: etree._Element, rep: Report) 
                     f"text {text_preview[:40]!r} unreadable",
                     location=name,
                 )
-            elif txt_color_hex is None and not text_preview.strip():
-                # blank rPr on dark fill — likely default theme color (often
-                # black). flag as warn only because theme colors may be white.
-                pass
+
+
+def _check_title_no_text_fill(
+    name: str, root: etree._Element, rep: Report, theme: dict[str, str]
+) -> None:
+    """Slide 1 text runs with no explicit color resolve to the theme default
+    (tx1, typically near-black). Without a light layout fill PowerPoint will
+    render them unreadable on dark divider/title backgrounds. Flag every
+    colorless run on slide 1 so the template author confirms intent.
+    """
+    if not name.endswith("/slide1.xml"):
+        return
+    default_dark = theme.get("tx1") or theme.get("dk1") or "000000"
+    if not DARK_HEX_RE.match(default_dark):
+        return
+    for sp in root.findall(".//p:sp", NS):
+        for r_el in sp.findall(".//a:r", NS) + sp.findall(".//a:fld", NS):
+            r_pr = r_el.find("a:rPr", NS)
+            if r_pr is not None and r_pr.find("a:solidFill", NS) is not None:
+                continue
+            t = r_el.find("a:t", NS)
+            text_preview = (t.text if t is not None else "") or ""
+            if not text_preview.strip():
+                continue
+            rep.add(
+                "warn",
+                "slide.title.no-text-fill",
+                f"title-slide run {text_preview[:40]!r} has no explicit color "
+                f"— inherits theme default #{default_dark}",
+                location=name,
+            )
 
 
 def _check_off_canvas(
@@ -268,6 +356,8 @@ def validate(path: Path) -> Report:
             1 for n in names if n.startswith("ppt/embeddings/oleObject") and n.endswith(".bin")
         )
 
+        theme = _load_theme_colors(zf)
+
         for parts in (slide_parts, master_parts, layout_parts):
             for name in parts:
                 try:
@@ -277,7 +367,8 @@ def validate(path: Path) -> Report:
                     continue
                 _check_placeholder_text(name, root, rep)
                 if name.startswith("ppt/slides/"):
-                    _check_dark_text_on_dark_fill(name, root, rep)
+                    _check_dark_text_on_dark_fill(name, root, rep, theme)
+                    _check_title_no_text_fill(name, root, rep, theme)
                     _check_off_canvas(name, root, rep, rep.slide_w_emu, rep.slide_h_emu)
     return rep
 

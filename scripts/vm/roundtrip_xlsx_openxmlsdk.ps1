@@ -103,19 +103,26 @@ try {
 }
 
 $inItem = Get-Item -LiteralPath $absIn
+$absOut = [System.IO.Path]::Combine(
+    [System.IO.Path]::GetDirectoryName($absIn),
+    [System.IO.Path]::GetFileNameWithoutExtension($absIn) + '.roundtrip.xlsx'
+)
+
 $result = @{
-    input_path        = $absIn
-    bytes_in          = $inItem.Length
-    bytes_out         = 0
-    validation_count  = 0
-    validation_errors = @()
+    input_path         = $absIn
+    output_path        = $absOut
+    bytes_in           = $inItem.Length
+    bytes_out          = 0
+    validation_count   = 0
+    validation_errors  = @()
     defined_name_count = 0
-    sheet_count       = 0
-    ole_object_count  = 0
-    open_seconds      = 0.0
-    validate_seconds  = 0.0
-    ok                = $false
-    error             = $null
+    sheet_count        = 0
+    ole_object_count   = 0
+    open_seconds       = 0.0
+    validate_seconds   = 0.0
+    save_seconds       = 0.0
+    ok                 = $false
+    error              = $null
 }
 
 $doc = $null
@@ -171,6 +178,33 @@ try {
     }
     $result.validation_errors = $errorList
     $result.validation_count = $errorList.Count
+
+    # Close the read-only handle before cloning so we don't double-open.
+    try { $doc.Close() } catch {}
+    try { $doc.Dispose() } catch {}
+    $doc = $null
+
+    # Roundtrip-save: copy the input bytes to a sibling path, open the COPY
+    # with isEditable=true, save, and close. The save flushes whatever the
+    # SDK normalizes (attribute order, namespace prefixes, etc.). Diffing
+    # the original vs the roundtrip surfaces what an OOXML-spec-compliant
+    # serializer would silently rewrite — a strong proxy for what Excel's
+    # repair pass would change.
+    $sw.Restart()
+    if (Test-Path -LiteralPath $absOut) { Remove-Item -LiteralPath $absOut -Force }
+    Copy-Item -LiteralPath $absIn -Destination $absOut -Force
+    $rtDoc = [DocumentFormat.OpenXml.Packaging.SpreadsheetDocument]::Open($absOut, $true)
+    try {
+        $rtDoc.Save()
+    } finally {
+        try { $rtDoc.Close() } catch {}
+        try { $rtDoc.Dispose() } catch {}
+    }
+    $sw.Stop()
+    $result.save_seconds = [math]::Round($sw.Elapsed.TotalSeconds, 3)
+    if (Test-Path -LiteralPath $absOut) {
+        $result.bytes_out = (Get-Item -LiteralPath $absOut).Length
+    }
 
     $result.ok = $true
 }
