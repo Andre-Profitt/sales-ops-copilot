@@ -11,14 +11,13 @@ import subprocess
 import sys
 from pathlib import Path
 
-import pytest
 
 REPO = Path(__file__).resolve().parents[1]
 PY = sys.executable
 SCRIPT = REPO / "scripts" / "atlas" / "atlas_query.py"
 
 
-def test_query_returns_ranked_candidates(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_query_returns_ranked_candidates(tmp_path: Path) -> None:
     """A query against a synthetic corpus returns the most relevant chunks first."""
     corpus = tmp_path / "corpus.jsonl"
     # synthetic chunks with pre-baked unit-vector embeddings (3-d for tests)
