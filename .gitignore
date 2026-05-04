@@ -22,3 +22,4 @@ _windows_test/
 ~$*.xlsx
 *.scrub.tmp.pptx
 *.scrub.normalized.tmp.pptx
+assets/golden/
