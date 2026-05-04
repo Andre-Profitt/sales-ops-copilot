@@ -19,7 +19,7 @@ def _run_factory(*args: str) -> subprocess.CompletedProcess[str]:
     )
 
 
-def test_factory_refuses_legacy_seed_without_override(tmp_path: Path) -> None:
+def test_factory_refuses_legacy_seed_without_override() -> None:
     legacy = REPO / "assets" / "LAND_thinkcell_seed.pptx"
     assert legacy.exists(), "fixture: legacy seed must exist on disk for this test"
 
@@ -38,7 +38,7 @@ def test_factory_refuses_legacy_seed_without_override(tmp_path: Path) -> None:
     assert "legacy" in combined.lower() or "quarantined" in combined.lower()
 
 
-def test_factory_accepts_legacy_seed_with_override(tmp_path: Path) -> None:
+def test_factory_accepts_legacy_seed_with_override() -> None:
     legacy = REPO / "assets" / "LAND_thinkcell_seed.pptx"
     proc = _run_factory(
         "--period",
