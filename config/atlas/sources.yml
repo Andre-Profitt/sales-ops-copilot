@@ -1,0 +1,90 @@
+schema: salesops/atlas-sources/v1
+description: |
+  Inputs to the Template Atlas. Each entry is a single document or
+  a glob. The atlas treats each as a typed source and indexes
+  per-slide for pptx, per-section for markdown.
+sources:
+  - id: canonical_land
+    type: pptx
+    role: canonical_brand_reference
+    path: assets/golden/LAND_canonical.pptx
+    weight: 1.0
+  - id: salesops_month_close_inspiration
+    type: pptx
+    role: visual_inspiration
+    path: /Users/test/Downloads/042026 Sales Operations Reporting.pptx
+    weight: 0.7
+    optional: true
+  - id: current_seed_debris
+    type: pptx
+    role: negative_example
+    path: assets/LAND_thinkcell_seed.pptx
+    weight: 1.0
+    notes: "Index for debris signature retrieval. Do not use as positive example."
+  - id: pre_strip_seed
+    type: pptx
+    role: negative_example
+    path: assets/LAND_thinkcell_seed.pre-stripdev.pptx
+    weight: 1.0
+    optional: true
+  - id: handoff_fix_plan
+    type: markdown
+    role: spec
+    path: docs/handoffs/2026-05-04-thinkcell-template-fix-plan.md
+    weight: 1.0
+  - id: handoff_deep_dive
+    type: markdown
+    role: spec
+    path: docs/handoffs/2026-05-04-thinkcell-template-deep-dive.md
+    weight: 1.0
+  - id: thinkcell_corpus_docs
+    type: markdown_glob
+    role: domain_knowledge
+    path: docs/thinkcell-corpus/**/*.md
+    weight: 0.6
+  - id: factory_strategy_2026_05_03
+    type: markdown
+    role: domain_knowledge
+    path: docs/FACTORY_RENDERING_STRATEGY_2026-05-03.md
+    weight: 0.8
+  - id: sales_process_graph
+    type: markdown
+    role: domain_knowledge
+    path: docs/SALES_PROCESS_GRAPH.md
+    weight: 0.8
+  - id: registry
+    type: yaml_registry
+    role: graph_seed
+    path: config/thinkcell/land_review_full_28.binding_registry.yml
+    weight: 1.0
+  - id: slot_map
+    type: yaml_slotmap
+    role: graph_seed
+    path: assets/templates/land_review_full_28/land_review_full_28.template_slot_map.v1.yml
+    weight: 1.0
+  - id: handoff_repo_state
+    type: markdown
+    role: domain_knowledge
+    path: HANDOFF_2026-05-04.md
+    weight: 1.0
+embeddings:
+  provider: azure_openai
+  endpoint: https://apro-openai.openai.azure.com/
+  deployment: text-embedding-3-small
+  dimension: 1536
+graph:
+  nodes:
+    - story_goal
+    - slide_variant
+    - chart_kind
+    - render_lane
+    - named_element
+    - guardrail
+    - debris_signature
+  edges:
+    - { from: story_goal, to: slide_variant, kind: supports }
+    - { from: slide_variant, to: chart_kind, kind: uses }
+    - { from: slide_variant, to: render_lane, kind: routed_via }
+    - { from: slide_variant, to: named_element, kind: binds_to }
+    - { from: slide_variant, to: guardrail, kind: must_pass }
+    - { from: debris_signature, to: slide_variant, kind: contaminates }
