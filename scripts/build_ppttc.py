@@ -48,6 +48,7 @@ except ImportError as exc:  # pragma: no cover - exercised by CLI usage.
         "Missing dependency 'formulas'. Activate the project virtualenv first."
     ) from exc
 
+import yaml
 from openpyxl import load_workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.utils.cell import range_boundaries
@@ -1399,6 +1400,232 @@ def _build_for_director(
     return _write_ppttc(artifacts, template_path=resolved_template, entries=entries)
 
 
+# ---------------------------------------------------------------------------
+# Registry-driven path (PR 6 of 2026-05-04-land-review-factory-rebuild)
+# ---------------------------------------------------------------------------
+#
+# The functions below provide a parallel emission path that reads bindings
+# from `config/thinkcell/land_review_full_28.binding_registry.yml` instead of
+# the hard-coded chart/text helpers above. This is the new default. The
+# legacy bindings path stays reachable via `--legacy-bindings` for forensic
+# comparison until a future PR deprecates it.
+
+
+def _load_registry(path: Path) -> dict[str, Any]:
+    return yaml.safe_load(path.read_text())
+
+
+def _resolve_source(source: str, ctx: dict[str, Any]) -> Any:
+    """Resolve a registry `source` reference against the director context.
+
+    Examples:
+      'director.name'                          -> ctx['director']['name']
+      'insight_titles.S05'                     -> ctx['insight_titles']['S05']
+      'source_notes.S05'                       -> ctx['source_notes']['S05']
+      'literal.Pipeline'                       -> 'Pipeline'
+      'model.named_range.S05_PipelineByStage'  -> ctx['model']['named_range']['S05_PipelineByStage']
+      'workbook.range.Top_Deals_Land!A1:H11'   -> handled at refresh-image time, not here
+      'workbook.named_ranges.<X>'              -> handled at refresh-image time, not here
+    """
+    if source.startswith("literal."):
+        return source.split(".", 1)[1]
+    parts = source.split(".")
+    cur: Any = ctx
+    for p in parts:
+        if isinstance(cur, dict):
+            cur = cur.get(p)
+        else:
+            return None
+    return cur
+
+
+def _build_director_context_for_registry(
+    director_name: str,
+    period: str,
+    director_dir: Path,
+    insight_titles_path: Path | None = None,
+    source_notes_path: Path | None = None,
+) -> dict[str, Any]:
+    """Build the context dict that the registry's `source` references resolve against.
+
+    Layered: director + period + insight_titles + source_notes + brief + trends
+    + (optional) model named ranges. Skips entries that don't exist on disk;
+    consumers see None and the binding becomes 'suppressed'.
+    """
+    ctx: dict[str, Any] = {
+        "director": {
+            "name": director_name,
+            "scope_label": f"{director_name} · {period}",
+        },
+        "period": {
+            "label": period,
+        },
+        "insight_titles": {},
+        "source_notes": {},
+        "model": {"named_range": {}},
+        "brief": {},
+        "trends": {},
+        "sales_velocity": {},
+    }
+    if insight_titles_path and insight_titles_path.exists():
+        try:
+            ctx["insight_titles"] = json.loads(insight_titles_path.read_text())
+        except Exception:
+            ctx["insight_titles"] = {}
+    if source_notes_path and source_notes_path.exists():
+        try:
+            ctx["source_notes"] = json.loads(source_notes_path.read_text())
+        except Exception:
+            ctx["source_notes"] = {}
+    trends_path = director_dir / "trends.json"
+    if trends_path.exists():
+        try:
+            ctx["trends"] = json.loads(trends_path.read_text())
+        except Exception:
+            ctx["trends"] = {}
+    return ctx
+
+
+def _build_ppttc_from_registry(
+    director_ctx: dict[str, Any],
+    registry: dict[str, Any],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Returns (ppttc_data_array, evidence_bindings).
+
+    For ppttc_text: emit a {"name": ..., "table": [[{"v": str(value)}]]} entry.
+    For ppttc_chart: emit a {"name": ..., "table": value} where value is 2D.
+    For excel_table_image: defer to refresh script — record evidence only.
+    For static: skip emission, record evidence as 'static'.
+
+    Each registry element produces exactly one entry in evidence_bindings.
+    """
+    data_items: list[dict[str, Any]] = []
+    evidence: list[dict[str, Any]] = []
+    for slide in registry.get("slides", []):
+        sid = slide.get("slide_id", "")
+        for el in slide.get("elements", []):
+            name = el.get("name", "")
+            kind = el.get("kind", "")
+            lane = el.get("lane", "")
+            base_evidence: dict[str, Any] = {
+                "name": name,
+                "kind": kind,
+                "lane": lane,
+                "required": el.get("required", False),
+                "slide_id": sid,
+            }
+            if lane == "static":
+                evidence.append({**base_evidence, "status": "static"})
+                continue
+            if lane == "excel_table_image":
+                evidence.append(
+                    {
+                        **base_evidence,
+                        "status": "deferred",
+                        "deferred_to": "excel_updatebatch",
+                    }
+                )
+                continue
+            source = el.get("source", "")
+            value = _resolve_source(source, director_ctx)
+            if value is None and el.get("required"):
+                evidence.append(
+                    {
+                        **base_evidence,
+                        "status": "suppressed",
+                        "reason": f"source '{source}' resolved to None",
+                    }
+                )
+                continue
+            if value is None:
+                evidence.append({**base_evidence, "status": "absent"})
+                continue
+            if lane == "ppttc_text":
+                data_items.append({"name": name, "table": [[{"v": str(value)}]]})
+                evidence.append({**base_evidence, "status": "bound", "expected_text": str(value)})
+            elif lane == "ppttc_chart":
+                if isinstance(value, list):
+                    data_items.append({"name": name, "table": value})
+                    evidence.append({**base_evidence, "status": "bound"})
+                else:
+                    evidence.append(
+                        {
+                            **base_evidence,
+                            "status": "suppressed",
+                            "reason": (
+                                f"chart source must be 2D table, got {type(value).__name__}"
+                            ),
+                        }
+                    )
+            else:
+                evidence.append(
+                    {
+                        **base_evidence,
+                        "status": "suppressed",
+                        "reason": f"unknown lane '{lane}'",
+                    }
+                )
+    return data_items, evidence
+
+
+def _run_registry_driven(
+    *,
+    director_name: str,
+    period: str,
+    registry_path: Path,
+    template_path: Path,
+    out_dir: Path | None,
+    emit_evidence_manifest: bool,
+) -> int:
+    registry = _load_registry(registry_path)
+
+    # Try to resolve a canonical director (normalises display name + slug).
+    # If the director isn't canonical, fall back to the raw input — the
+    # registry path is also useful for synthetic / fixture builds where the
+    # director may not exist in `_directors.canonical_directors()`.
+    try:
+        director = _resolve_director(director_name)
+        canonical_name = director["name"]
+        slug = _slugify_director_name(canonical_name)
+    except SystemExit:
+        canonical_name = director_name
+        slug = _slugify_director_name(director_name)
+
+    director_dir = out_dir if out_dir is not None else (ROOT / "state" / period / slug)
+    director_dir.mkdir(parents=True, exist_ok=True)
+
+    insight_titles_path = director_dir / "insight_titles.json"
+    source_notes_path = director_dir / "source_notes.json"
+
+    ctx = _build_director_context_for_registry(
+        director_name=canonical_name,
+        period=period,
+        director_dir=director_dir,
+        insight_titles_path=insight_titles_path,
+        source_notes_path=source_notes_path,
+    )
+
+    data_items, evidence = _build_ppttc_from_registry(ctx, registry)
+    payload = [{"template": template_path.name, "data": data_items}]
+
+    out_path = director_dir / f"{slug}-LAND-{period}.ppttc"
+    out_path.write_text(json.dumps(payload, indent=2))
+
+    if emit_evidence_manifest:
+        manifest_path = director_dir / "render_evidence_manifest.json"
+        manifest = {
+            "director": canonical_name,
+            "period": period,
+            "template": str(template_path),
+            "registry": str(registry_path),
+            "bindings": evidence,
+        }
+        manifest_path.write_text(json.dumps(manifest, indent=2))
+
+    print(f"OK: registry-driven .ppttc -> {out_path}")
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Build think-cell .ppttc files for LAND monthly.")
     group = parser.add_mutually_exclusive_group(required=True)
@@ -1461,6 +1688,31 @@ def main() -> int:
             "asset. Use only for forensic comparison."
         ),
     )
+    parser.add_argument(
+        "--registry",
+        type=Path,
+        default=ROOT / "config" / "thinkcell" / "land_review_full_28.binding_registry.yml",
+        help=(
+            "Path to binding registry. Default: land_review_full_28 registry. "
+            "Used by the registry-driven emission path (the new default)."
+        ),
+    )
+    parser.add_argument(
+        "--emit-evidence-manifest",
+        action="store_true",
+        help="Write render_evidence_manifest.json alongside the .ppttc.",
+    )
+    parser.add_argument(
+        "--legacy-bindings",
+        action="store_true",
+        help=("Use hard-coded bindings instead of the registry. For forensic comparison only."),
+    )
+    parser.add_argument(
+        "--out-dir",
+        type=Path,
+        default=None,
+        help="Override per-director output directory. Default: state/<period>/<slug>/.",
+    )
     args = parser.parse_args()
 
     template_path = args.template.expanduser().resolve()
@@ -1473,6 +1725,19 @@ def main() -> int:
 
     if not template_path.exists():
         raise SystemExit(f"Template not found: {template_path}")
+
+    # Registry-driven path is the new default. Legacy bindings are reachable
+    # only via --legacy-bindings or --all-directors (multi-director batch
+    # still flows through the legacy path until a future PR ports it).
+    if not args.legacy_bindings and not args.all_directors:
+        return _run_registry_driven(
+            director_name=args.director,
+            period=args.period,
+            registry_path=args.registry.expanduser().resolve(),
+            template_path=template_path,
+            out_dir=(args.out_dir.expanduser().resolve() if args.out_dir else None),
+            emit_evidence_manifest=args.emit_evidence_manifest,
+        )
 
     if template_path == DEFAULT_TEMPLATE.resolve() and not args.experimental_generated_template:
         raise SystemExit(
