@@ -52,7 +52,7 @@ def _pptx_slide_chunks(src: dict) -> Iterable[dict]:
             if getattr(shape, "name", None):
                 names.append(shape.name)
             if shape.has_text_frame:
-                t = shape.text_frame.text.strip()
+                t = shape.text_frame.text.strip()  # type: ignore[attr-defined]
                 if t:
                     chunks.append(t)
         text = " ".join(chunks)
