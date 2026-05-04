@@ -1,4 +1,18 @@
-"""Post-render verification: confirm that bindings actually landed in a .pptx.
+"""DEPRECATED for publish-gate use. Retained as diagnostic only.
+
+The publish gate is now scripts/verify_render_bindings.py which reads
+render_evidence_manifest.json and checks each required binding has
+evidence on its slide. This module's global min_match_ratio approach
+gave false positives when stray text matched director-specific strings.
+
+Use this as a side-channel diagnostic: it surfaces gross drift where
+none of the expected strings landed at all. Do not block release on
+its result.
+
+Original purpose:
+~~~~~~~~~~~~~~~~~
+
+Post-render verification: confirm that bindings actually landed in a .pptx.
 
 ppttc.exe returns exit-code 0 even when most bindings fail to resolve; the
 rendered .pptx silently lacks director-specific content. This module scans
@@ -22,6 +36,7 @@ from __future__ import annotations
 
 import json
 import re
+import warnings
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
@@ -103,6 +118,12 @@ def verify_render(
         zipfile.BadZipFile: if ``output_pptx_path`` is not a valid .pptx.
         ValueError: if ``min_match_ratio`` is outside ``[0.0, 1.0]``.
     """
+    warnings.warn(
+        "tcrender.verify is a diagnostic; do not use as a publish gate. "
+        "Use scripts/verify_render_bindings.py instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     output_pptx_path = output_pptx_path.expanduser().resolve()
     if not output_pptx_path.exists():
         raise FileNotFoundError(f"output not found: {output_pptx_path}")
