@@ -15,6 +15,7 @@ import argparse
 import json
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 import yaml
@@ -54,7 +55,14 @@ def main(argv: list[str] | None = None) -> int:
         args.out.write_bytes(args.pptx.read_bytes())
         return 0
 
-    bindings_json = json.dumps(bindings)
+    # Write bindings to a local temp file then scp to the VM. File-based
+    # transfer avoids shell-quoting fragility around any future registry
+    # source values that contain quotes or backslashes.
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".json", delete=False, encoding="utf-8"
+    ) as tf:
+        json.dump(bindings, tf)
+        local_bindings_path = Path(tf.name)
 
     # ferry inputs to VM
     subprocess.run(["ssh", args.vm, f"mkdir -p {args.vm_stage_dir}"], check=True)
@@ -62,6 +70,11 @@ def main(argv: list[str] | None = None) -> int:
     subprocess.run(
         ["scp", str(args.workbook), f"{args.vm}:{args.vm_stage_dir}/in.xlsx"], check=True
     )
+    subprocess.run(
+        ["scp", str(local_bindings_path), f"{args.vm}:{args.vm_stage_dir}/bindings.json"],
+        check=True,
+    )
+    local_bindings_path.unlink(missing_ok=True)
 
     # run PS1
     ps1 = Path(__file__).parent / "vm" / "refresh_thinkcell_table_images.ps1"
@@ -77,8 +90,8 @@ def main(argv: list[str] | None = None) -> int:
             f"{args.vm_stage_dir}/in.pptx",
             "-Workbook",
             f"{args.vm_stage_dir}/in.xlsx",
-            "-BindingsJson",
-            json.dumps(bindings_json),
+            "-BindingsJsonPath",
+            f"{args.vm_stage_dir}/bindings.json",
             "-Out",
             f"{args.vm_stage_dir}/out.pptx",
         ],

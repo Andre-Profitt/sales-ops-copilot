@@ -8,9 +8,11 @@ Input pptx that has placeholders named per binding registry.
 .PARAMETER Workbook
 Connected factory workbook with the source ranges/named ranges.
 
-.PARAMETER BindingsJson
-JSON string: list of {slide_id, name, source} where `source` is e.g.
-"workbook.named_ranges.S07_TopDealsLand" or "workbook.range.Sheet!A1:H11".
+.PARAMETER BindingsJsonPath
+Path to a JSON file on disk: list of {slide_id, name, source} where `source`
+is e.g. "workbook.named_ranges.S07_TopDealsLand" or
+"workbook.range.Sheet!A1:H11". Reading from a file (not a parameter) avoids
+shell-quoting fragility around quotes/backslashes in source values.
 
 .PARAMETER Out
 Output pptx path.
@@ -19,14 +21,13 @@ Output pptx path.
 param(
     [Parameter(Mandatory=$true)][string]$Pptx,
     [Parameter(Mandatory=$true)][string]$Workbook,
-    [Parameter(Mandatory=$true)][string]$BindingsJson,
+    [Parameter(Mandatory=$true)][string]$BindingsJsonPath,
     [Parameter(Mandatory=$true)][string]$Out
 )
 
 $ErrorActionPreference = 'Stop'
 
-# BindingsJson arrives as a JSON-encoded string of a JSON list
-$bindings = ConvertFrom-Json (ConvertFrom-Json $BindingsJson)
+$bindings = Get-Content -Raw -Path $BindingsJsonPath | ConvertFrom-Json
 
 $excel = New-Object -ComObject Excel.Application
 $excel.Visible = $false
