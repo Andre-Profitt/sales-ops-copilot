@@ -1,0 +1,54 @@
+schema: salesops/thinkcell-binding-registry/v1
+deck_family: land_review_full_28
+brand: simcorp
+period_context: 2026-Q2
+rules:
+  arr_basis: "Land+Expand ARR uses APTS_Opportunity_ARR__c; renewal ACV uses APTS_Renewal_ACV__c; never blend."
+  currency_basis: "FX-converted EUR/EUR M only."
+  stage_basis: "SimCorp 8-stage process."
+  title_rule: "Every analytic slide requires evidence-backed insight title."
+  source_rule: "Every analytic slide requires source note."
+lanes:
+  ppttc_chart: "real Think-Cell chart"
+  ppttc_text: "automation text"
+  excel_table_image: "AddRangeImage"
+  static: "no dynamic binding"
+slides:
+  - slide_id: S01
+    purpose: cover
+    elements:
+      - {
+          name: S01_DirectorName,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: deck_plan.director_name,
+          evidence: exact_text,
+        }
+  - slide_id: S05
+    purpose: pipeline_by_stage
+    elements:
+      - {
+          name: S05_Title,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: insight_titles.S05,
+          evidence: exact_text,
+        }
+      - {
+          name: S05_PipelineByStage,
+          kind: bar_chart,
+          lane: ppttc_chart,
+          required: true,
+          source: model.named_range.S05_PipelineByStage,
+          evidence: category_labels,
+        }
+      - {
+          name: S05_Source,
+          kind: text,
+          lane: ppttc_text,
+          required: true,
+          source: source_notes.S05,
+          evidence: exact_text,
+        }
