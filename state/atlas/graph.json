@@ -1,14 +1,14 @@
 {
   "summary": {
-    "node_count": 153,
-    "edge_count": 506,
+    "node_count": 160,
+    "edge_count": 514,
     "by_kind": {
       "guardrail": 6,
       "slide_variant": 28,
-      "story_goal": 28,
-      "named_element": 78,
+      "story_goal": 33,
+      "named_element": 79,
       "chart_kind": 7,
-      "render_lane": 2,
+      "render_lane": 3,
       "debris_signature": 4
     }
   },
@@ -62,9 +62,9 @@
       "kind": "chart_kind",
       "key": "text"
     },
-    "render_lane:ppttc": {
+    "render_lane:ppttc_text": {
       "kind": "render_lane",
-      "key": "ppttc"
+      "key": "ppttc_text"
     },
     "named_element:S01_Period": {
       "kind": "named_element",
@@ -145,6 +145,10 @@
       "kind": "chart_kind",
       "key": "waterfall_chart"
     },
+    "render_lane:ppttc_chart": {
+      "kind": "render_lane",
+      "key": "ppttc_chart"
+    },
     "named_element:S04_Source": {
       "kind": "named_element",
       "key": "S04_Source",
@@ -219,18 +223,18 @@
       "key": "S07_Title",
       "required": true
     },
-    "named_element:S07_TopDealsLand_IMG": {
+    "named_element:S07_TopDealsLand_Image": {
       "kind": "named_element",
-      "key": "S07_TopDealsLand_IMG",
+      "key": "S07_TopDealsLand_Image",
       "required": true
     },
     "chart_kind:table_image": {
       "kind": "chart_kind",
       "key": "table_image"
     },
-    "render_lane:excel_updatebatch_image": {
+    "render_lane:excel_table_image": {
       "kind": "render_lane",
-      "key": "excel_updatebatch_image"
+      "key": "excel_table_image"
     },
     "named_element:S07_Source": {
       "kind": "named_element",
@@ -252,9 +256,9 @@
       "key": "S08_Title",
       "required": true
     },
-    "named_element:S08_TopDealsExpand_IMG": {
+    "named_element:S08_TopDealsExpand_Image": {
       "kind": "named_element",
-      "key": "S08_TopDealsExpand_IMG",
+      "key": "S08_TopDealsExpand_Image",
       "required": true
     },
     "named_element:S08_Source": {
@@ -277,9 +281,9 @@
       "key": "S09_Title",
       "required": true
     },
-    "named_element:S09_PendingCommercialApproval_IMG": {
+    "named_element:S09_PendingCommercialApproval_Image": {
       "kind": "named_element",
-      "key": "S09_PendingCommercialApproval_IMG",
+      "key": "S09_PendingCommercialApproval_Image",
       "required": true
     },
     "named_element:S09_Source": {
@@ -317,9 +321,9 @@
       "key": "S11_Title",
       "required": true
     },
-    "named_element:S11_RenewalPipeline_IMG": {
+    "named_element:S11_RenewalPipeline_Image": {
       "kind": "named_element",
-      "key": "S11_RenewalPipeline_IMG",
+      "key": "S11_RenewalPipeline_Image",
       "required": true
     },
     "named_element:S11_Source": {
@@ -342,9 +346,9 @@
       "key": "S12_Title",
       "required": true
     },
-    "named_element:S12_GRRProxyTable_IMG": {
+    "named_element:S12_GRRProxyTable_Image": {
       "kind": "named_element",
-      "key": "S12_GRRProxyTable_IMG",
+      "key": "S12_GRRProxyTable_Image",
       "required": true
     },
     "named_element:S12_GRRProxyFootnote": {
@@ -560,9 +564,9 @@
       "key": "S21_ConcentrationRiskChart",
       "required": true
     },
-    "named_element:S21_ConcentrationTable_IMG": {
+    "named_element:S21_ConcentrationTable_Image": {
       "kind": "named_element",
-      "key": "S21_ConcentrationTable_IMG",
+      "key": "S21_ConcentrationTable_Image",
       "required": true
     },
     "named_element:S21_Source": {
@@ -635,6 +639,11 @@
       "key": "S23_SalesVelocity",
       "required": true
     },
+    "named_element:S23_Source": {
+      "kind": "named_element",
+      "key": "S23_Source",
+      "required": true
+    },
     "slide_variant:S24": {
       "kind": "slide_variant",
       "key": "S24",
@@ -650,9 +659,9 @@
       "key": "S24_Title",
       "required": true
     },
-    "named_element:S24_AccountExpansion_IMG": {
+    "named_element:S24_AccountExpansion_Image": {
       "kind": "named_element",
-      "key": "S24_AccountExpansion_IMG",
+      "key": "S24_AccountExpansion_Image",
       "required": true
     },
     "named_element:S24_Source": {
@@ -704,9 +713,9 @@
       "key": "S26_Title",
       "required": true
     },
-    "named_element:S26_ActionItems_IMG": {
+    "named_element:S26_ActionItems_Image": {
       "kind": "named_element",
-      "key": "S26_ActionItems_IMG",
+      "key": "S26_ActionItems_Image",
       "required": true
     },
     "named_element:S26_Source": {
@@ -749,6 +758,36 @@
       "key": "closing",
       "source": "registry"
     },
+    "story_goal:late_stage_gap": {
+      "kind": "story_goal",
+      "key": "late_stage_gap",
+      "source": "title_rules",
+      "severity": "high"
+    },
+    "story_goal:omitted_overweight": {
+      "kind": "story_goal",
+      "key": "omitted_overweight",
+      "source": "title_rules",
+      "severity": "high"
+    },
+    "story_goal:aged_pipe": {
+      "kind": "story_goal",
+      "key": "aged_pipe",
+      "source": "title_rules",
+      "severity": "medium"
+    },
+    "story_goal:top_n_concentration": {
+      "kind": "story_goal",
+      "key": "top_n_concentration",
+      "source": "title_rules",
+      "severity": "high"
+    },
+    "story_goal:approval_backlog": {
+      "kind": "story_goal",
+      "key": "approval_backlog",
+      "source": "title_rules",
+      "severity": "high"
+    },
     "debris_signature:paste from\\b": {
       "kind": "debris_signature",
       "key": "paste from\\b",
@@ -788,7 +827,7 @@
     },
     {
       "from": "slide_variant:S01",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -803,7 +842,7 @@
     },
     {
       "from": "slide_variant:S01",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -818,7 +857,7 @@
     },
     {
       "from": "slide_variant:S01",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -838,7 +877,7 @@
     },
     {
       "from": "slide_variant:S02",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -853,7 +892,7 @@
     },
     {
       "from": "slide_variant:S02",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -868,7 +907,7 @@
     },
     {
       "from": "slide_variant:S02",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -883,7 +922,7 @@
     },
     {
       "from": "slide_variant:S02",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -933,7 +972,7 @@
     },
     {
       "from": "slide_variant:S03",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -953,7 +992,7 @@
     },
     {
       "from": "slide_variant:S04",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -968,7 +1007,7 @@
     },
     {
       "from": "slide_variant:S04",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_chart",
       "kind": "routed_via"
     },
     {
@@ -983,7 +1022,7 @@
     },
     {
       "from": "slide_variant:S04",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -1033,7 +1072,7 @@
     },
     {
       "from": "slide_variant:S05",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -1048,7 +1087,7 @@
     },
     {
       "from": "slide_variant:S05",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_chart",
       "kind": "routed_via"
     },
     {
@@ -1063,7 +1102,7 @@
     },
     {
       "from": "slide_variant:S05",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -1113,7 +1152,7 @@
     },
     {
       "from": "slide_variant:S06",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -1128,7 +1167,7 @@
     },
     {
       "from": "slide_variant:S06",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_chart",
       "kind": "routed_via"
     },
     {
@@ -1143,7 +1182,7 @@
     },
     {
       "from": "slide_variant:S06",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -1193,12 +1232,12 @@
     },
     {
       "from": "slide_variant:S07",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
       "from": "slide_variant:S07",
-      "to": "named_element:S07_TopDealsLand_IMG",
+      "to": "named_element:S07_TopDealsLand_Image",
       "kind": "binds_to"
     },
     {
@@ -1208,7 +1247,7 @@
     },
     {
       "from": "slide_variant:S07",
-      "to": "render_lane:excel_updatebatch_image",
+      "to": "render_lane:excel_table_image",
       "kind": "routed_via"
     },
     {
@@ -1223,7 +1262,7 @@
     },
     {
       "from": "slide_variant:S07",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -1273,12 +1312,12 @@
     },
     {
       "from": "slide_variant:S08",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
       "from": "slide_variant:S08",
-      "to": "named_element:S08_TopDealsExpand_IMG",
+      "to": "named_element:S08_TopDealsExpand_Image",
       "kind": "binds_to"
     },
     {
@@ -1288,7 +1327,7 @@
     },
     {
       "from": "slide_variant:S08",
-      "to": "render_lane:excel_updatebatch_image",
+      "to": "render_lane:excel_table_image",
       "kind": "routed_via"
     },
     {
@@ -1303,7 +1342,7 @@
     },
     {
       "from": "slide_variant:S08",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -1353,12 +1392,12 @@
     },
     {
       "from": "slide_variant:S09",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
       "from": "slide_variant:S09",
-      "to": "named_element:S09_PendingCommercialApproval_IMG",
+      "to": "named_element:S09_PendingCommercialApproval_Image",
       "kind": "binds_to"
     },
     {
@@ -1368,7 +1407,7 @@
     },
     {
       "from": "slide_variant:S09",
-      "to": "render_lane:excel_updatebatch_image",
+      "to": "render_lane:excel_table_image",
       "kind": "routed_via"
     },
     {
@@ -1383,7 +1422,7 @@
     },
     {
       "from": "slide_variant:S09",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -1433,7 +1472,7 @@
     },
     {
       "from": "slide_variant:S10",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -1453,12 +1492,12 @@
     },
     {
       "from": "slide_variant:S11",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
       "from": "slide_variant:S11",
-      "to": "named_element:S11_RenewalPipeline_IMG",
+      "to": "named_element:S11_RenewalPipeline_Image",
       "kind": "binds_to"
     },
     {
@@ -1468,7 +1507,7 @@
     },
     {
       "from": "slide_variant:S11",
-      "to": "render_lane:excel_updatebatch_image",
+      "to": "render_lane:excel_table_image",
       "kind": "routed_via"
     },
     {
@@ -1483,7 +1522,7 @@
     },
     {
       "from": "slide_variant:S11",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -1533,12 +1572,12 @@
     },
     {
       "from": "slide_variant:S12",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
       "from": "slide_variant:S12",
-      "to": "named_element:S12_GRRProxyTable_IMG",
+      "to": "named_element:S12_GRRProxyTable_Image",
       "kind": "binds_to"
     },
     {
@@ -1548,7 +1587,7 @@
     },
     {
       "from": "slide_variant:S12",
-      "to": "render_lane:excel_updatebatch_image",
+      "to": "render_lane:excel_table_image",
       "kind": "routed_via"
     },
     {
@@ -1563,7 +1602,7 @@
     },
     {
       "from": "slide_variant:S12",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -1613,7 +1652,7 @@
     },
     {
       "from": "slide_variant:S13",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -1628,7 +1667,7 @@
     },
     {
       "from": "slide_variant:S13",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_chart",
       "kind": "routed_via"
     },
     {
@@ -1643,7 +1682,7 @@
     },
     {
       "from": "slide_variant:S13",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -1693,7 +1732,7 @@
     },
     {
       "from": "slide_variant:S14",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -1713,7 +1752,7 @@
     },
     {
       "from": "slide_variant:S15",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -1728,7 +1767,7 @@
     },
     {
       "from": "slide_variant:S15",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_chart",
       "kind": "routed_via"
     },
     {
@@ -1743,7 +1782,7 @@
     },
     {
       "from": "slide_variant:S15",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -1793,7 +1832,7 @@
     },
     {
       "from": "slide_variant:S16",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -1808,7 +1847,7 @@
     },
     {
       "from": "slide_variant:S16",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_chart",
       "kind": "routed_via"
     },
     {
@@ -1823,7 +1862,7 @@
     },
     {
       "from": "slide_variant:S16",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -1873,7 +1912,7 @@
     },
     {
       "from": "slide_variant:S17",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -1888,7 +1927,7 @@
     },
     {
       "from": "slide_variant:S17",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_chart",
       "kind": "routed_via"
     },
     {
@@ -1903,7 +1942,7 @@
     },
     {
       "from": "slide_variant:S17",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -1953,7 +1992,7 @@
     },
     {
       "from": "slide_variant:S18",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -1968,7 +2007,7 @@
     },
     {
       "from": "slide_variant:S18",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_chart",
       "kind": "routed_via"
     },
     {
@@ -1983,7 +2022,7 @@
     },
     {
       "from": "slide_variant:S18",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -2033,7 +2072,7 @@
     },
     {
       "from": "slide_variant:S19",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -2048,7 +2087,7 @@
     },
     {
       "from": "slide_variant:S19",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_chart",
       "kind": "routed_via"
     },
     {
@@ -2063,7 +2102,7 @@
     },
     {
       "from": "slide_variant:S19",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -2113,7 +2152,7 @@
     },
     {
       "from": "slide_variant:S20",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -2133,7 +2172,7 @@
     },
     {
       "from": "slide_variant:S21",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -2148,12 +2187,12 @@
     },
     {
       "from": "slide_variant:S21",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_chart",
       "kind": "routed_via"
     },
     {
       "from": "slide_variant:S21",
-      "to": "named_element:S21_ConcentrationTable_IMG",
+      "to": "named_element:S21_ConcentrationTable_Image",
       "kind": "binds_to"
     },
     {
@@ -2163,7 +2202,7 @@
     },
     {
       "from": "slide_variant:S21",
-      "to": "render_lane:excel_updatebatch_image",
+      "to": "render_lane:excel_table_image",
       "kind": "routed_via"
     },
     {
@@ -2178,7 +2217,7 @@
     },
     {
       "from": "slide_variant:S21",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -2228,7 +2267,7 @@
     },
     {
       "from": "slide_variant:S22",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -2243,7 +2282,7 @@
     },
     {
       "from": "slide_variant:S22",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_chart",
       "kind": "routed_via"
     },
     {
@@ -2258,7 +2297,7 @@
     },
     {
       "from": "slide_variant:S22",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -2308,7 +2347,7 @@
     },
     {
       "from": "slide_variant:S23",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -2323,7 +2362,7 @@
     },
     {
       "from": "slide_variant:S23",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -2338,7 +2377,7 @@
     },
     {
       "from": "slide_variant:S23",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -2353,7 +2392,7 @@
     },
     {
       "from": "slide_variant:S23",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -2368,7 +2407,7 @@
     },
     {
       "from": "slide_variant:S23",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -2383,7 +2422,22 @@
     },
     {
       "from": "slide_variant:S23",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S23",
+      "to": "named_element:S23_Source",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S23",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S23",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -2433,12 +2487,12 @@
     },
     {
       "from": "slide_variant:S24",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
       "from": "slide_variant:S24",
-      "to": "named_element:S24_AccountExpansion_IMG",
+      "to": "named_element:S24_AccountExpansion_Image",
       "kind": "binds_to"
     },
     {
@@ -2448,7 +2502,7 @@
     },
     {
       "from": "slide_variant:S24",
-      "to": "render_lane:excel_updatebatch_image",
+      "to": "render_lane:excel_table_image",
       "kind": "routed_via"
     },
     {
@@ -2463,7 +2517,7 @@
     },
     {
       "from": "slide_variant:S24",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -2513,7 +2567,7 @@
     },
     {
       "from": "slide_variant:S25",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -2528,7 +2582,7 @@
     },
     {
       "from": "slide_variant:S25",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_chart",
       "kind": "routed_via"
     },
     {
@@ -2543,7 +2597,7 @@
     },
     {
       "from": "slide_variant:S25",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -2593,12 +2647,12 @@
     },
     {
       "from": "slide_variant:S26",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
       "from": "slide_variant:S26",
-      "to": "named_element:S26_ActionItems_IMG",
+      "to": "named_element:S26_ActionItems_Image",
       "kind": "binds_to"
     },
     {
@@ -2608,7 +2662,7 @@
     },
     {
       "from": "slide_variant:S26",
-      "to": "render_lane:excel_updatebatch_image",
+      "to": "render_lane:excel_table_image",
       "kind": "routed_via"
     },
     {
@@ -2623,7 +2677,7 @@
     },
     {
       "from": "slide_variant:S26",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -2673,7 +2727,7 @@
     },
     {
       "from": "slide_variant:S27",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -2688,7 +2742,7 @@
     },
     {
       "from": "slide_variant:S27",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -2703,7 +2757,7 @@
     },
     {
       "from": "slide_variant:S27",
-      "to": "render_lane:ppttc",
+      "to": "render_lane:ppttc_text",
       "kind": "routed_via"
     },
     {
@@ -2739,6 +2793,31 @@
     {
       "from": "story_goal:closing",
       "to": "slide_variant:S28",
+      "kind": "supports"
+    },
+    {
+      "from": "story_goal:late_stage_gap",
+      "to": "slide_variant:S05",
+      "kind": "supports"
+    },
+    {
+      "from": "story_goal:omitted_overweight",
+      "to": "slide_variant:S13",
+      "kind": "supports"
+    },
+    {
+      "from": "story_goal:aged_pipe",
+      "to": "slide_variant:S06",
+      "kind": "supports"
+    },
+    {
+      "from": "story_goal:top_n_concentration",
+      "to": "slide_variant:S21",
+      "kind": "supports"
+    },
+    {
+      "from": "story_goal:approval_backlog",
+      "to": "slide_variant:S09",
       "kind": "supports"
     },
     {
