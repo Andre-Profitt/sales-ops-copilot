@@ -1,0 +1,3305 @@
+{
+  "summary": {
+    "node_count": 153,
+    "edge_count": 506,
+    "by_kind": {
+      "guardrail": 6,
+      "slide_variant": 28,
+      "story_goal": 28,
+      "named_element": 78,
+      "chart_kind": 7,
+      "render_lane": 2,
+      "debris_signature": 4
+    }
+  },
+  "nodes": {
+    "guardrail:arr_acv_separation": {
+      "kind": "guardrail",
+      "key": "arr_acv_separation",
+      "label": "Land+Expand ARR vs Renewal ACV must not blend"
+    },
+    "guardrail:currency_basis": {
+      "kind": "guardrail",
+      "key": "currency_basis",
+      "label": "FX-converted EUR/EUR M only"
+    },
+    "guardrail:stage_basis": {
+      "kind": "guardrail",
+      "key": "stage_basis",
+      "label": "SimCorp 8-stage process"
+    },
+    "guardrail:title_rule": {
+      "kind": "guardrail",
+      "key": "title_rule",
+      "label": "Every analytic slide requires evidence-backed insight title"
+    },
+    "guardrail:source_rule": {
+      "kind": "guardrail",
+      "key": "source_rule",
+      "label": "Every analytic slide requires source note"
+    },
+    "guardrail:no_debris": {
+      "kind": "guardrail",
+      "key": "no_debris",
+      "label": "No dev instructions / lorem / donor placeholders"
+    },
+    "slide_variant:S01": {
+      "kind": "slide_variant",
+      "key": "S01",
+      "purpose": "cover"
+    },
+    "story_goal:cover": {
+      "kind": "story_goal",
+      "key": "cover",
+      "source": "registry"
+    },
+    "named_element:S01_DirectorName": {
+      "kind": "named_element",
+      "key": "S01_DirectorName",
+      "required": true
+    },
+    "chart_kind:text": {
+      "kind": "chart_kind",
+      "key": "text"
+    },
+    "render_lane:ppttc": {
+      "kind": "render_lane",
+      "key": "ppttc"
+    },
+    "named_element:S01_Period": {
+      "kind": "named_element",
+      "key": "S01_Period",
+      "required": true
+    },
+    "named_element:S01_ScopeLabel": {
+      "kind": "named_element",
+      "key": "S01_ScopeLabel",
+      "required": true
+    },
+    "slide_variant:S02": {
+      "kind": "slide_variant",
+      "key": "S02",
+      "purpose": "exec_summary"
+    },
+    "story_goal:exec_summary": {
+      "kind": "story_goal",
+      "key": "exec_summary",
+      "source": "registry"
+    },
+    "named_element:S02_Title": {
+      "kind": "named_element",
+      "key": "S02_Title",
+      "required": true
+    },
+    "named_element:S02_ExecSummaryLeft": {
+      "kind": "named_element",
+      "key": "S02_ExecSummaryLeft",
+      "required": true
+    },
+    "named_element:S02_ExecSummaryRight": {
+      "kind": "named_element",
+      "key": "S02_ExecSummaryRight",
+      "required": true
+    },
+    "named_element:S02_Source": {
+      "kind": "named_element",
+      "key": "S02_Source",
+      "required": true
+    },
+    "slide_variant:S03": {
+      "kind": "slide_variant",
+      "key": "S03",
+      "purpose": "pipeline_divider"
+    },
+    "story_goal:pipeline_divider": {
+      "kind": "story_goal",
+      "key": "pipeline_divider",
+      "source": "registry"
+    },
+    "named_element:S03_Title": {
+      "kind": "named_element",
+      "key": "S03_Title",
+      "required": true
+    },
+    "slide_variant:S04": {
+      "kind": "slide_variant",
+      "key": "S04",
+      "purpose": "pipe_movement"
+    },
+    "story_goal:pipe_movement": {
+      "kind": "story_goal",
+      "key": "pipe_movement",
+      "source": "registry"
+    },
+    "named_element:S04_Title": {
+      "kind": "named_element",
+      "key": "S04_Title",
+      "required": true
+    },
+    "named_element:S04_PipeMovement": {
+      "kind": "named_element",
+      "key": "S04_PipeMovement",
+      "required": true
+    },
+    "chart_kind:waterfall_chart": {
+      "kind": "chart_kind",
+      "key": "waterfall_chart"
+    },
+    "named_element:S04_Source": {
+      "kind": "named_element",
+      "key": "S04_Source",
+      "required": true
+    },
+    "slide_variant:S05": {
+      "kind": "slide_variant",
+      "key": "S05",
+      "purpose": "pipeline_by_stage"
+    },
+    "story_goal:pipeline_by_stage": {
+      "kind": "story_goal",
+      "key": "pipeline_by_stage",
+      "source": "registry"
+    },
+    "named_element:S05_Title": {
+      "kind": "named_element",
+      "key": "S05_Title",
+      "required": true
+    },
+    "named_element:S05_PipelineByStage": {
+      "kind": "named_element",
+      "key": "S05_PipelineByStage",
+      "required": true
+    },
+    "chart_kind:bar_chart": {
+      "kind": "chart_kind",
+      "key": "bar_chart"
+    },
+    "named_element:S05_Source": {
+      "kind": "named_element",
+      "key": "S05_Source",
+      "required": true
+    },
+    "slide_variant:S06": {
+      "kind": "slide_variant",
+      "key": "S06",
+      "purpose": "pipeline_aging"
+    },
+    "story_goal:pipeline_aging": {
+      "kind": "story_goal",
+      "key": "pipeline_aging",
+      "source": "registry"
+    },
+    "named_element:S06_Title": {
+      "kind": "named_element",
+      "key": "S06_Title",
+      "required": true
+    },
+    "named_element:S06_PipelineAging": {
+      "kind": "named_element",
+      "key": "S06_PipelineAging",
+      "required": true
+    },
+    "named_element:S06_Source": {
+      "kind": "named_element",
+      "key": "S06_Source",
+      "required": true
+    },
+    "slide_variant:S07": {
+      "kind": "slide_variant",
+      "key": "S07",
+      "purpose": "top_deals_land"
+    },
+    "story_goal:top_deals_land": {
+      "kind": "story_goal",
+      "key": "top_deals_land",
+      "source": "registry"
+    },
+    "named_element:S07_Title": {
+      "kind": "named_element",
+      "key": "S07_Title",
+      "required": true
+    },
+    "named_element:S07_TopDealsLand_IMG": {
+      "kind": "named_element",
+      "key": "S07_TopDealsLand_IMG",
+      "required": true
+    },
+    "chart_kind:table_image": {
+      "kind": "chart_kind",
+      "key": "table_image"
+    },
+    "render_lane:excel_updatebatch_image": {
+      "kind": "render_lane",
+      "key": "excel_updatebatch_image"
+    },
+    "named_element:S07_Source": {
+      "kind": "named_element",
+      "key": "S07_Source",
+      "required": true
+    },
+    "slide_variant:S08": {
+      "kind": "slide_variant",
+      "key": "S08",
+      "purpose": "top_deals_expand"
+    },
+    "story_goal:top_deals_expand": {
+      "kind": "story_goal",
+      "key": "top_deals_expand",
+      "source": "registry"
+    },
+    "named_element:S08_Title": {
+      "kind": "named_element",
+      "key": "S08_Title",
+      "required": true
+    },
+    "named_element:S08_TopDealsExpand_IMG": {
+      "kind": "named_element",
+      "key": "S08_TopDealsExpand_IMG",
+      "required": true
+    },
+    "named_element:S08_Source": {
+      "kind": "named_element",
+      "key": "S08_Source",
+      "required": true
+    },
+    "slide_variant:S09": {
+      "kind": "slide_variant",
+      "key": "S09",
+      "purpose": "pending_commercial_approval"
+    },
+    "story_goal:pending_commercial_approval": {
+      "kind": "story_goal",
+      "key": "pending_commercial_approval",
+      "source": "registry"
+    },
+    "named_element:S09_Title": {
+      "kind": "named_element",
+      "key": "S09_Title",
+      "required": true
+    },
+    "named_element:S09_PendingCommercialApproval_IMG": {
+      "kind": "named_element",
+      "key": "S09_PendingCommercialApproval_IMG",
+      "required": true
+    },
+    "named_element:S09_Source": {
+      "kind": "named_element",
+      "key": "S09_Source",
+      "required": true
+    },
+    "slide_variant:S10": {
+      "kind": "slide_variant",
+      "key": "S10",
+      "purpose": "retention_divider"
+    },
+    "story_goal:retention_divider": {
+      "kind": "story_goal",
+      "key": "retention_divider",
+      "source": "registry"
+    },
+    "named_element:S10_Title": {
+      "kind": "named_element",
+      "key": "S10_Title",
+      "required": true
+    },
+    "slide_variant:S11": {
+      "kind": "slide_variant",
+      "key": "S11",
+      "purpose": "renewal_pipeline"
+    },
+    "story_goal:renewal_pipeline": {
+      "kind": "story_goal",
+      "key": "renewal_pipeline",
+      "source": "registry"
+    },
+    "named_element:S11_Title": {
+      "kind": "named_element",
+      "key": "S11_Title",
+      "required": true
+    },
+    "named_element:S11_RenewalPipeline_IMG": {
+      "kind": "named_element",
+      "key": "S11_RenewalPipeline_IMG",
+      "required": true
+    },
+    "named_element:S11_Source": {
+      "kind": "named_element",
+      "key": "S11_Source",
+      "required": true
+    },
+    "slide_variant:S12": {
+      "kind": "slide_variant",
+      "key": "S12",
+      "purpose": "grr_proxy"
+    },
+    "story_goal:grr_proxy": {
+      "kind": "story_goal",
+      "key": "grr_proxy",
+      "source": "registry"
+    },
+    "named_element:S12_Title": {
+      "kind": "named_element",
+      "key": "S12_Title",
+      "required": true
+    },
+    "named_element:S12_GRRProxyTable_IMG": {
+      "kind": "named_element",
+      "key": "S12_GRRProxyTable_IMG",
+      "required": true
+    },
+    "named_element:S12_GRRProxyFootnote": {
+      "kind": "named_element",
+      "key": "S12_GRRProxyFootnote",
+      "required": true
+    },
+    "slide_variant:S13": {
+      "kind": "slide_variant",
+      "key": "S13",
+      "purpose": "forecast_category"
+    },
+    "story_goal:forecast_category": {
+      "kind": "story_goal",
+      "key": "forecast_category",
+      "source": "registry"
+    },
+    "named_element:S13_Title": {
+      "kind": "named_element",
+      "key": "S13_Title",
+      "required": true
+    },
+    "named_element:S13_ForecastCategory": {
+      "kind": "named_element",
+      "key": "S13_ForecastCategory",
+      "required": true
+    },
+    "chart_kind:column_chart": {
+      "kind": "chart_kind",
+      "key": "column_chart"
+    },
+    "named_element:S13_Source": {
+      "kind": "named_element",
+      "key": "S13_Source",
+      "required": true
+    },
+    "slide_variant:S14": {
+      "kind": "slide_variant",
+      "key": "S14",
+      "purpose": "territory_divider"
+    },
+    "story_goal:territory_divider": {
+      "kind": "story_goal",
+      "key": "territory_divider",
+      "source": "registry"
+    },
+    "named_element:S14_Title": {
+      "kind": "named_element",
+      "key": "S14_Title",
+      "required": true
+    },
+    "slide_variant:S15": {
+      "kind": "slide_variant",
+      "key": "S15",
+      "purpose": "by_owner"
+    },
+    "story_goal:by_owner": {
+      "kind": "story_goal",
+      "key": "by_owner",
+      "source": "registry"
+    },
+    "named_element:S15_Title": {
+      "kind": "named_element",
+      "key": "S15_Title",
+      "required": true
+    },
+    "named_element:S15_ByOwner": {
+      "kind": "named_element",
+      "key": "S15_ByOwner",
+      "required": true
+    },
+    "named_element:S15_Source": {
+      "kind": "named_element",
+      "key": "S15_Source",
+      "required": true
+    },
+    "slide_variant:S16": {
+      "kind": "slide_variant",
+      "key": "S16",
+      "purpose": "stage_by_industry"
+    },
+    "story_goal:stage_by_industry": {
+      "kind": "story_goal",
+      "key": "stage_by_industry",
+      "source": "registry"
+    },
+    "named_element:S16_Title": {
+      "kind": "named_element",
+      "key": "S16_Title",
+      "required": true
+    },
+    "named_element:S16_StageByIndustry": {
+      "kind": "named_element",
+      "key": "S16_StageByIndustry",
+      "required": true
+    },
+    "chart_kind:stacked_bar_chart": {
+      "kind": "chart_kind",
+      "key": "stacked_bar_chart"
+    },
+    "named_element:S16_Source": {
+      "kind": "named_element",
+      "key": "S16_Source",
+      "required": true
+    },
+    "slide_variant:S17": {
+      "kind": "slide_variant",
+      "key": "S17",
+      "purpose": "territory_performance"
+    },
+    "story_goal:territory_performance": {
+      "kind": "story_goal",
+      "key": "territory_performance",
+      "source": "registry"
+    },
+    "named_element:S17_Title": {
+      "kind": "named_element",
+      "key": "S17_Title",
+      "required": true
+    },
+    "named_element:S17_TerritoryPerformance": {
+      "kind": "named_element",
+      "key": "S17_TerritoryPerformance",
+      "required": true
+    },
+    "named_element:S17_Source": {
+      "kind": "named_element",
+      "key": "S17_Source",
+      "required": true
+    },
+    "slide_variant:S18": {
+      "kind": "slide_variant",
+      "key": "S18",
+      "purpose": "wins_losses_qtd"
+    },
+    "story_goal:wins_losses_qtd": {
+      "kind": "story_goal",
+      "key": "wins_losses_qtd",
+      "source": "registry"
+    },
+    "named_element:S18_Title": {
+      "kind": "named_element",
+      "key": "S18_Title",
+      "required": true
+    },
+    "named_element:S18_WinsLossesQTD": {
+      "kind": "named_element",
+      "key": "S18_WinsLossesQTD",
+      "required": true
+    },
+    "named_element:S18_Source": {
+      "kind": "named_element",
+      "key": "S18_Source",
+      "required": true
+    },
+    "slide_variant:S19": {
+      "kind": "slide_variant",
+      "key": "S19",
+      "purpose": "velocity"
+    },
+    "story_goal:velocity": {
+      "kind": "story_goal",
+      "key": "velocity",
+      "source": "registry"
+    },
+    "named_element:S19_Title": {
+      "kind": "named_element",
+      "key": "S19_Title",
+      "required": true
+    },
+    "named_element:S19_Velocity": {
+      "kind": "named_element",
+      "key": "S19_Velocity",
+      "required": true
+    },
+    "named_element:S19_Source": {
+      "kind": "named_element",
+      "key": "S19_Source",
+      "required": true
+    },
+    "slide_variant:S20": {
+      "kind": "slide_variant",
+      "key": "S20",
+      "purpose": "risks_divider"
+    },
+    "story_goal:risks_divider": {
+      "kind": "story_goal",
+      "key": "risks_divider",
+      "source": "registry"
+    },
+    "named_element:S20_Title": {
+      "kind": "named_element",
+      "key": "S20_Title",
+      "required": true
+    },
+    "slide_variant:S21": {
+      "kind": "slide_variant",
+      "key": "S21",
+      "purpose": "concentration_risk"
+    },
+    "story_goal:concentration_risk": {
+      "kind": "story_goal",
+      "key": "concentration_risk",
+      "source": "registry"
+    },
+    "named_element:S21_Title": {
+      "kind": "named_element",
+      "key": "S21_Title",
+      "required": true
+    },
+    "named_element:S21_ConcentrationRiskChart": {
+      "kind": "named_element",
+      "key": "S21_ConcentrationRiskChart",
+      "required": true
+    },
+    "named_element:S21_ConcentrationTable_IMG": {
+      "kind": "named_element",
+      "key": "S21_ConcentrationTable_IMG",
+      "required": true
+    },
+    "named_element:S21_Source": {
+      "kind": "named_element",
+      "key": "S21_Source",
+      "required": true
+    },
+    "slide_variant:S22": {
+      "kind": "slide_variant",
+      "key": "S22",
+      "purpose": "stale_activity"
+    },
+    "story_goal:stale_activity": {
+      "kind": "story_goal",
+      "key": "stale_activity",
+      "source": "registry"
+    },
+    "named_element:S22_Title": {
+      "kind": "named_element",
+      "key": "S22_Title",
+      "required": true
+    },
+    "named_element:S22_StaleActivity": {
+      "kind": "named_element",
+      "key": "S22_StaleActivity",
+      "required": true
+    },
+    "named_element:S22_Source": {
+      "kind": "named_element",
+      "key": "S22_Source",
+      "required": true
+    },
+    "slide_variant:S23": {
+      "kind": "slide_variant",
+      "key": "S23",
+      "purpose": "sales_velocity_formula"
+    },
+    "story_goal:sales_velocity_formula": {
+      "kind": "story_goal",
+      "key": "sales_velocity_formula",
+      "source": "registry"
+    },
+    "named_element:S23_Title": {
+      "kind": "named_element",
+      "key": "S23_Title",
+      "required": true
+    },
+    "named_element:S23_OppCount": {
+      "kind": "named_element",
+      "key": "S23_OppCount",
+      "required": true
+    },
+    "named_element:S23_WinRate": {
+      "kind": "named_element",
+      "key": "S23_WinRate",
+      "required": true
+    },
+    "named_element:S23_AvgDealSize": {
+      "kind": "named_element",
+      "key": "S23_AvgDealSize",
+      "required": true
+    },
+    "named_element:S23_CycleLength": {
+      "kind": "named_element",
+      "key": "S23_CycleLength",
+      "required": true
+    },
+    "named_element:S23_SalesVelocity": {
+      "kind": "named_element",
+      "key": "S23_SalesVelocity",
+      "required": true
+    },
+    "slide_variant:S24": {
+      "kind": "slide_variant",
+      "key": "S24",
+      "purpose": "account_expansion"
+    },
+    "story_goal:account_expansion": {
+      "kind": "story_goal",
+      "key": "account_expansion",
+      "source": "registry"
+    },
+    "named_element:S24_Title": {
+      "kind": "named_element",
+      "key": "S24_Title",
+      "required": true
+    },
+    "named_element:S24_AccountExpansion_IMG": {
+      "kind": "named_element",
+      "key": "S24_AccountExpansion_IMG",
+      "required": true
+    },
+    "named_element:S24_Source": {
+      "kind": "named_element",
+      "key": "S24_Source",
+      "required": true
+    },
+    "slide_variant:S25": {
+      "kind": "slide_variant",
+      "key": "S25",
+      "purpose": "pipeline_creation_velocity"
+    },
+    "story_goal:pipeline_creation_velocity": {
+      "kind": "story_goal",
+      "key": "pipeline_creation_velocity",
+      "source": "registry"
+    },
+    "named_element:S25_Title": {
+      "kind": "named_element",
+      "key": "S25_Title",
+      "required": true
+    },
+    "named_element:S25_PipelineCreationVelocity": {
+      "kind": "named_element",
+      "key": "S25_PipelineCreationVelocity",
+      "required": true
+    },
+    "chart_kind:line_chart": {
+      "kind": "chart_kind",
+      "key": "line_chart"
+    },
+    "named_element:S25_Source": {
+      "kind": "named_element",
+      "key": "S25_Source",
+      "required": true
+    },
+    "slide_variant:S26": {
+      "kind": "slide_variant",
+      "key": "S26",
+      "purpose": "action_items"
+    },
+    "story_goal:action_items": {
+      "kind": "story_goal",
+      "key": "action_items",
+      "source": "registry"
+    },
+    "named_element:S26_Title": {
+      "kind": "named_element",
+      "key": "S26_Title",
+      "required": true
+    },
+    "named_element:S26_ActionItems_IMG": {
+      "kind": "named_element",
+      "key": "S26_ActionItems_IMG",
+      "required": true
+    },
+    "named_element:S26_Source": {
+      "kind": "named_element",
+      "key": "S26_Source",
+      "required": true
+    },
+    "slide_variant:S27": {
+      "kind": "slide_variant",
+      "key": "S27",
+      "purpose": "risks_outlook"
+    },
+    "story_goal:risks_outlook": {
+      "kind": "story_goal",
+      "key": "risks_outlook",
+      "source": "registry"
+    },
+    "named_element:S27_Title": {
+      "kind": "named_element",
+      "key": "S27_Title",
+      "required": true
+    },
+    "named_element:S27_RisksOutlook": {
+      "kind": "named_element",
+      "key": "S27_RisksOutlook",
+      "required": true
+    },
+    "named_element:S27_Source": {
+      "kind": "named_element",
+      "key": "S27_Source",
+      "required": true
+    },
+    "slide_variant:S28": {
+      "kind": "slide_variant",
+      "key": "S28",
+      "purpose": "closing"
+    },
+    "story_goal:closing": {
+      "kind": "story_goal",
+      "key": "closing",
+      "source": "registry"
+    },
+    "debris_signature:paste from\\b": {
+      "kind": "debris_signature",
+      "key": "paste from\\b",
+      "example_snippet": "[Exec summary \u2014 manual paste for Phase 1]\nSource: state/<period>/<director>/trends.json\n  highlights[] (each: claim + rule_id)\n  risks[]      (each: claim + rule_id)\nPhase 1: copy/paste from state/<pe"
+    },
+    "debris_signature:\\[USD m\\]": {
+      "kind": "debris_signature",
+      "key": "\\[USD m\\]",
+      "example_snippet": "Revenues, costs, totals [USD m]"
+    },
+    "debris_signature:\\[think-cell\\b.*?\\]": {
+      "kind": "debris_signature",
+      "key": "\\[think-cell\\b.*?\\]",
+      "example_snippet": "[think-cell TABLE WITH FORMATTING \u2014 datalinked]\nSource: legacy land.xlsx (NOT mo"
+    },
+    "debris_signature:no think-cell binding here": {
+      "kind": "debris_signature",
+      "key": "no think-cell binding here",
+      "example_snippet": "[plain text \u2014 paste from brief.md '## Risks' section]\nNo think-cell binding here; this slide stays n"
+    }
+  },
+  "edges": [
+    {
+      "from": "story_goal:cover",
+      "to": "slide_variant:S01",
+      "kind": "supports"
+    },
+    {
+      "from": "slide_variant:S01",
+      "to": "named_element:S01_DirectorName",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S01",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S01",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S01",
+      "to": "named_element:S01_Period",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S01",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S01",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S01",
+      "to": "named_element:S01_ScopeLabel",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S01",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S01",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "story_goal:exec_summary",
+      "to": "slide_variant:S02",
+      "kind": "supports"
+    },
+    {
+      "from": "slide_variant:S02",
+      "to": "named_element:S02_Title",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S02",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S02",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S02",
+      "to": "named_element:S02_ExecSummaryLeft",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S02",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S02",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S02",
+      "to": "named_element:S02_ExecSummaryRight",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S02",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S02",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S02",
+      "to": "named_element:S02_Source",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S02",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S02",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S02",
+      "to": "guardrail:arr_acv_separation",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S02",
+      "to": "guardrail:currency_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S02",
+      "to": "guardrail:stage_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S02",
+      "to": "guardrail:title_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S02",
+      "to": "guardrail:source_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S02",
+      "to": "guardrail:no_debris",
+      "kind": "must_pass"
+    },
+    {
+      "from": "story_goal:pipeline_divider",
+      "to": "slide_variant:S03",
+      "kind": "supports"
+    },
+    {
+      "from": "slide_variant:S03",
+      "to": "named_element:S03_Title",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S03",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S03",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "story_goal:pipe_movement",
+      "to": "slide_variant:S04",
+      "kind": "supports"
+    },
+    {
+      "from": "slide_variant:S04",
+      "to": "named_element:S04_Title",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S04",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S04",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S04",
+      "to": "named_element:S04_PipeMovement",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S04",
+      "to": "chart_kind:waterfall_chart",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S04",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S04",
+      "to": "named_element:S04_Source",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S04",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S04",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S04",
+      "to": "guardrail:arr_acv_separation",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S04",
+      "to": "guardrail:currency_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S04",
+      "to": "guardrail:stage_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S04",
+      "to": "guardrail:title_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S04",
+      "to": "guardrail:source_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S04",
+      "to": "guardrail:no_debris",
+      "kind": "must_pass"
+    },
+    {
+      "from": "story_goal:pipeline_by_stage",
+      "to": "slide_variant:S05",
+      "kind": "supports"
+    },
+    {
+      "from": "slide_variant:S05",
+      "to": "named_element:S05_Title",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S05",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S05",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S05",
+      "to": "named_element:S05_PipelineByStage",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S05",
+      "to": "chart_kind:bar_chart",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S05",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S05",
+      "to": "named_element:S05_Source",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S05",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S05",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S05",
+      "to": "guardrail:arr_acv_separation",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S05",
+      "to": "guardrail:currency_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S05",
+      "to": "guardrail:stage_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S05",
+      "to": "guardrail:title_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S05",
+      "to": "guardrail:source_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S05",
+      "to": "guardrail:no_debris",
+      "kind": "must_pass"
+    },
+    {
+      "from": "story_goal:pipeline_aging",
+      "to": "slide_variant:S06",
+      "kind": "supports"
+    },
+    {
+      "from": "slide_variant:S06",
+      "to": "named_element:S06_Title",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S06",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S06",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S06",
+      "to": "named_element:S06_PipelineAging",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S06",
+      "to": "chart_kind:bar_chart",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S06",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S06",
+      "to": "named_element:S06_Source",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S06",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S06",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S06",
+      "to": "guardrail:arr_acv_separation",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S06",
+      "to": "guardrail:currency_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S06",
+      "to": "guardrail:stage_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S06",
+      "to": "guardrail:title_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S06",
+      "to": "guardrail:source_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S06",
+      "to": "guardrail:no_debris",
+      "kind": "must_pass"
+    },
+    {
+      "from": "story_goal:top_deals_land",
+      "to": "slide_variant:S07",
+      "kind": "supports"
+    },
+    {
+      "from": "slide_variant:S07",
+      "to": "named_element:S07_Title",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S07",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S07",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S07",
+      "to": "named_element:S07_TopDealsLand_IMG",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S07",
+      "to": "chart_kind:table_image",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S07",
+      "to": "render_lane:excel_updatebatch_image",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S07",
+      "to": "named_element:S07_Source",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S07",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S07",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S07",
+      "to": "guardrail:arr_acv_separation",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S07",
+      "to": "guardrail:currency_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S07",
+      "to": "guardrail:stage_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S07",
+      "to": "guardrail:title_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S07",
+      "to": "guardrail:source_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S07",
+      "to": "guardrail:no_debris",
+      "kind": "must_pass"
+    },
+    {
+      "from": "story_goal:top_deals_expand",
+      "to": "slide_variant:S08",
+      "kind": "supports"
+    },
+    {
+      "from": "slide_variant:S08",
+      "to": "named_element:S08_Title",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S08",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S08",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S08",
+      "to": "named_element:S08_TopDealsExpand_IMG",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S08",
+      "to": "chart_kind:table_image",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S08",
+      "to": "render_lane:excel_updatebatch_image",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S08",
+      "to": "named_element:S08_Source",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S08",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S08",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S08",
+      "to": "guardrail:arr_acv_separation",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S08",
+      "to": "guardrail:currency_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S08",
+      "to": "guardrail:stage_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S08",
+      "to": "guardrail:title_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S08",
+      "to": "guardrail:source_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S08",
+      "to": "guardrail:no_debris",
+      "kind": "must_pass"
+    },
+    {
+      "from": "story_goal:pending_commercial_approval",
+      "to": "slide_variant:S09",
+      "kind": "supports"
+    },
+    {
+      "from": "slide_variant:S09",
+      "to": "named_element:S09_Title",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S09",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S09",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S09",
+      "to": "named_element:S09_PendingCommercialApproval_IMG",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S09",
+      "to": "chart_kind:table_image",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S09",
+      "to": "render_lane:excel_updatebatch_image",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S09",
+      "to": "named_element:S09_Source",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S09",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S09",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S09",
+      "to": "guardrail:arr_acv_separation",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S09",
+      "to": "guardrail:currency_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S09",
+      "to": "guardrail:stage_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S09",
+      "to": "guardrail:title_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S09",
+      "to": "guardrail:source_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S09",
+      "to": "guardrail:no_debris",
+      "kind": "must_pass"
+    },
+    {
+      "from": "story_goal:retention_divider",
+      "to": "slide_variant:S10",
+      "kind": "supports"
+    },
+    {
+      "from": "slide_variant:S10",
+      "to": "named_element:S10_Title",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S10",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S10",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "story_goal:renewal_pipeline",
+      "to": "slide_variant:S11",
+      "kind": "supports"
+    },
+    {
+      "from": "slide_variant:S11",
+      "to": "named_element:S11_Title",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S11",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S11",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S11",
+      "to": "named_element:S11_RenewalPipeline_IMG",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S11",
+      "to": "chart_kind:table_image",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S11",
+      "to": "render_lane:excel_updatebatch_image",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S11",
+      "to": "named_element:S11_Source",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S11",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S11",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S11",
+      "to": "guardrail:arr_acv_separation",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S11",
+      "to": "guardrail:currency_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S11",
+      "to": "guardrail:stage_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S11",
+      "to": "guardrail:title_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S11",
+      "to": "guardrail:source_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S11",
+      "to": "guardrail:no_debris",
+      "kind": "must_pass"
+    },
+    {
+      "from": "story_goal:grr_proxy",
+      "to": "slide_variant:S12",
+      "kind": "supports"
+    },
+    {
+      "from": "slide_variant:S12",
+      "to": "named_element:S12_Title",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S12",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S12",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S12",
+      "to": "named_element:S12_GRRProxyTable_IMG",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S12",
+      "to": "chart_kind:table_image",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S12",
+      "to": "render_lane:excel_updatebatch_image",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S12",
+      "to": "named_element:S12_GRRProxyFootnote",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S12",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S12",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S12",
+      "to": "guardrail:arr_acv_separation",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S12",
+      "to": "guardrail:currency_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S12",
+      "to": "guardrail:stage_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S12",
+      "to": "guardrail:title_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S12",
+      "to": "guardrail:source_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S12",
+      "to": "guardrail:no_debris",
+      "kind": "must_pass"
+    },
+    {
+      "from": "story_goal:forecast_category",
+      "to": "slide_variant:S13",
+      "kind": "supports"
+    },
+    {
+      "from": "slide_variant:S13",
+      "to": "named_element:S13_Title",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S13",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S13",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S13",
+      "to": "named_element:S13_ForecastCategory",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S13",
+      "to": "chart_kind:column_chart",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S13",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S13",
+      "to": "named_element:S13_Source",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S13",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S13",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S13",
+      "to": "guardrail:arr_acv_separation",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S13",
+      "to": "guardrail:currency_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S13",
+      "to": "guardrail:stage_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S13",
+      "to": "guardrail:title_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S13",
+      "to": "guardrail:source_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S13",
+      "to": "guardrail:no_debris",
+      "kind": "must_pass"
+    },
+    {
+      "from": "story_goal:territory_divider",
+      "to": "slide_variant:S14",
+      "kind": "supports"
+    },
+    {
+      "from": "slide_variant:S14",
+      "to": "named_element:S14_Title",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S14",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S14",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "story_goal:by_owner",
+      "to": "slide_variant:S15",
+      "kind": "supports"
+    },
+    {
+      "from": "slide_variant:S15",
+      "to": "named_element:S15_Title",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S15",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S15",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S15",
+      "to": "named_element:S15_ByOwner",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S15",
+      "to": "chart_kind:bar_chart",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S15",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S15",
+      "to": "named_element:S15_Source",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S15",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S15",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S15",
+      "to": "guardrail:arr_acv_separation",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S15",
+      "to": "guardrail:currency_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S15",
+      "to": "guardrail:stage_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S15",
+      "to": "guardrail:title_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S15",
+      "to": "guardrail:source_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S15",
+      "to": "guardrail:no_debris",
+      "kind": "must_pass"
+    },
+    {
+      "from": "story_goal:stage_by_industry",
+      "to": "slide_variant:S16",
+      "kind": "supports"
+    },
+    {
+      "from": "slide_variant:S16",
+      "to": "named_element:S16_Title",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S16",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S16",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S16",
+      "to": "named_element:S16_StageByIndustry",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S16",
+      "to": "chart_kind:stacked_bar_chart",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S16",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S16",
+      "to": "named_element:S16_Source",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S16",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S16",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S16",
+      "to": "guardrail:arr_acv_separation",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S16",
+      "to": "guardrail:currency_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S16",
+      "to": "guardrail:stage_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S16",
+      "to": "guardrail:title_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S16",
+      "to": "guardrail:source_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S16",
+      "to": "guardrail:no_debris",
+      "kind": "must_pass"
+    },
+    {
+      "from": "story_goal:territory_performance",
+      "to": "slide_variant:S17",
+      "kind": "supports"
+    },
+    {
+      "from": "slide_variant:S17",
+      "to": "named_element:S17_Title",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S17",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S17",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S17",
+      "to": "named_element:S17_TerritoryPerformance",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S17",
+      "to": "chart_kind:bar_chart",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S17",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S17",
+      "to": "named_element:S17_Source",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S17",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S17",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S17",
+      "to": "guardrail:arr_acv_separation",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S17",
+      "to": "guardrail:currency_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S17",
+      "to": "guardrail:stage_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S17",
+      "to": "guardrail:title_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S17",
+      "to": "guardrail:source_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S17",
+      "to": "guardrail:no_debris",
+      "kind": "must_pass"
+    },
+    {
+      "from": "story_goal:wins_losses_qtd",
+      "to": "slide_variant:S18",
+      "kind": "supports"
+    },
+    {
+      "from": "slide_variant:S18",
+      "to": "named_element:S18_Title",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S18",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S18",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S18",
+      "to": "named_element:S18_WinsLossesQTD",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S18",
+      "to": "chart_kind:column_chart",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S18",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S18",
+      "to": "named_element:S18_Source",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S18",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S18",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S18",
+      "to": "guardrail:arr_acv_separation",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S18",
+      "to": "guardrail:currency_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S18",
+      "to": "guardrail:stage_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S18",
+      "to": "guardrail:title_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S18",
+      "to": "guardrail:source_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S18",
+      "to": "guardrail:no_debris",
+      "kind": "must_pass"
+    },
+    {
+      "from": "story_goal:velocity",
+      "to": "slide_variant:S19",
+      "kind": "supports"
+    },
+    {
+      "from": "slide_variant:S19",
+      "to": "named_element:S19_Title",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S19",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S19",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S19",
+      "to": "named_element:S19_Velocity",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S19",
+      "to": "chart_kind:column_chart",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S19",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S19",
+      "to": "named_element:S19_Source",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S19",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S19",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S19",
+      "to": "guardrail:arr_acv_separation",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S19",
+      "to": "guardrail:currency_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S19",
+      "to": "guardrail:stage_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S19",
+      "to": "guardrail:title_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S19",
+      "to": "guardrail:source_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S19",
+      "to": "guardrail:no_debris",
+      "kind": "must_pass"
+    },
+    {
+      "from": "story_goal:risks_divider",
+      "to": "slide_variant:S20",
+      "kind": "supports"
+    },
+    {
+      "from": "slide_variant:S20",
+      "to": "named_element:S20_Title",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S20",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S20",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "story_goal:concentration_risk",
+      "to": "slide_variant:S21",
+      "kind": "supports"
+    },
+    {
+      "from": "slide_variant:S21",
+      "to": "named_element:S21_Title",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S21",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S21",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S21",
+      "to": "named_element:S21_ConcentrationRiskChart",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S21",
+      "to": "chart_kind:column_chart",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S21",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S21",
+      "to": "named_element:S21_ConcentrationTable_IMG",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S21",
+      "to": "chart_kind:table_image",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S21",
+      "to": "render_lane:excel_updatebatch_image",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S21",
+      "to": "named_element:S21_Source",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S21",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S21",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S21",
+      "to": "guardrail:arr_acv_separation",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S21",
+      "to": "guardrail:currency_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S21",
+      "to": "guardrail:stage_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S21",
+      "to": "guardrail:title_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S21",
+      "to": "guardrail:source_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S21",
+      "to": "guardrail:no_debris",
+      "kind": "must_pass"
+    },
+    {
+      "from": "story_goal:stale_activity",
+      "to": "slide_variant:S22",
+      "kind": "supports"
+    },
+    {
+      "from": "slide_variant:S22",
+      "to": "named_element:S22_Title",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S22",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S22",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S22",
+      "to": "named_element:S22_StaleActivity",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S22",
+      "to": "chart_kind:bar_chart",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S22",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S22",
+      "to": "named_element:S22_Source",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S22",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S22",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S22",
+      "to": "guardrail:arr_acv_separation",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S22",
+      "to": "guardrail:currency_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S22",
+      "to": "guardrail:stage_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S22",
+      "to": "guardrail:title_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S22",
+      "to": "guardrail:source_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S22",
+      "to": "guardrail:no_debris",
+      "kind": "must_pass"
+    },
+    {
+      "from": "story_goal:sales_velocity_formula",
+      "to": "slide_variant:S23",
+      "kind": "supports"
+    },
+    {
+      "from": "slide_variant:S23",
+      "to": "named_element:S23_Title",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S23",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S23",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S23",
+      "to": "named_element:S23_OppCount",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S23",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S23",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S23",
+      "to": "named_element:S23_WinRate",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S23",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S23",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S23",
+      "to": "named_element:S23_AvgDealSize",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S23",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S23",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S23",
+      "to": "named_element:S23_CycleLength",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S23",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S23",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S23",
+      "to": "named_element:S23_SalesVelocity",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S23",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S23",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S23",
+      "to": "guardrail:arr_acv_separation",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S23",
+      "to": "guardrail:currency_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S23",
+      "to": "guardrail:stage_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S23",
+      "to": "guardrail:title_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S23",
+      "to": "guardrail:source_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S23",
+      "to": "guardrail:no_debris",
+      "kind": "must_pass"
+    },
+    {
+      "from": "story_goal:account_expansion",
+      "to": "slide_variant:S24",
+      "kind": "supports"
+    },
+    {
+      "from": "slide_variant:S24",
+      "to": "named_element:S24_Title",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S24",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S24",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S24",
+      "to": "named_element:S24_AccountExpansion_IMG",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S24",
+      "to": "chart_kind:table_image",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S24",
+      "to": "render_lane:excel_updatebatch_image",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S24",
+      "to": "named_element:S24_Source",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S24",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S24",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S24",
+      "to": "guardrail:arr_acv_separation",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S24",
+      "to": "guardrail:currency_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S24",
+      "to": "guardrail:stage_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S24",
+      "to": "guardrail:title_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S24",
+      "to": "guardrail:source_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S24",
+      "to": "guardrail:no_debris",
+      "kind": "must_pass"
+    },
+    {
+      "from": "story_goal:pipeline_creation_velocity",
+      "to": "slide_variant:S25",
+      "kind": "supports"
+    },
+    {
+      "from": "slide_variant:S25",
+      "to": "named_element:S25_Title",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S25",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S25",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S25",
+      "to": "named_element:S25_PipelineCreationVelocity",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S25",
+      "to": "chart_kind:line_chart",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S25",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S25",
+      "to": "named_element:S25_Source",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S25",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S25",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S25",
+      "to": "guardrail:arr_acv_separation",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S25",
+      "to": "guardrail:currency_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S25",
+      "to": "guardrail:stage_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S25",
+      "to": "guardrail:title_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S25",
+      "to": "guardrail:source_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S25",
+      "to": "guardrail:no_debris",
+      "kind": "must_pass"
+    },
+    {
+      "from": "story_goal:action_items",
+      "to": "slide_variant:S26",
+      "kind": "supports"
+    },
+    {
+      "from": "slide_variant:S26",
+      "to": "named_element:S26_Title",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S26",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S26",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S26",
+      "to": "named_element:S26_ActionItems_IMG",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S26",
+      "to": "chart_kind:table_image",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S26",
+      "to": "render_lane:excel_updatebatch_image",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S26",
+      "to": "named_element:S26_Source",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S26",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S26",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S26",
+      "to": "guardrail:arr_acv_separation",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S26",
+      "to": "guardrail:currency_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S26",
+      "to": "guardrail:stage_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S26",
+      "to": "guardrail:title_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S26",
+      "to": "guardrail:source_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S26",
+      "to": "guardrail:no_debris",
+      "kind": "must_pass"
+    },
+    {
+      "from": "story_goal:risks_outlook",
+      "to": "slide_variant:S27",
+      "kind": "supports"
+    },
+    {
+      "from": "slide_variant:S27",
+      "to": "named_element:S27_Title",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S27",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S27",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S27",
+      "to": "named_element:S27_RisksOutlook",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S27",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S27",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S27",
+      "to": "named_element:S27_Source",
+      "kind": "binds_to"
+    },
+    {
+      "from": "slide_variant:S27",
+      "to": "chart_kind:text",
+      "kind": "uses"
+    },
+    {
+      "from": "slide_variant:S27",
+      "to": "render_lane:ppttc",
+      "kind": "routed_via"
+    },
+    {
+      "from": "slide_variant:S27",
+      "to": "guardrail:arr_acv_separation",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S27",
+      "to": "guardrail:currency_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S27",
+      "to": "guardrail:stage_basis",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S27",
+      "to": "guardrail:title_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S27",
+      "to": "guardrail:source_rule",
+      "kind": "must_pass"
+    },
+    {
+      "from": "slide_variant:S27",
+      "to": "guardrail:no_debris",
+      "kind": "must_pass"
+    },
+    {
+      "from": "story_goal:closing",
+      "to": "slide_variant:S28",
+      "kind": "supports"
+    },
+    {
+      "from": "debris_signature:paste from\\b",
+      "to": "slide_variant:S01",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:paste from\\b",
+      "to": "slide_variant:S02",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:paste from\\b",
+      "to": "slide_variant:S03",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:paste from\\b",
+      "to": "slide_variant:S04",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:paste from\\b",
+      "to": "slide_variant:S05",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:paste from\\b",
+      "to": "slide_variant:S06",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:paste from\\b",
+      "to": "slide_variant:S07",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:paste from\\b",
+      "to": "slide_variant:S08",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:paste from\\b",
+      "to": "slide_variant:S09",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:paste from\\b",
+      "to": "slide_variant:S10",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:paste from\\b",
+      "to": "slide_variant:S11",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:paste from\\b",
+      "to": "slide_variant:S12",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:paste from\\b",
+      "to": "slide_variant:S13",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:paste from\\b",
+      "to": "slide_variant:S14",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:paste from\\b",
+      "to": "slide_variant:S15",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:paste from\\b",
+      "to": "slide_variant:S16",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:paste from\\b",
+      "to": "slide_variant:S17",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:paste from\\b",
+      "to": "slide_variant:S18",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:paste from\\b",
+      "to": "slide_variant:S19",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:paste from\\b",
+      "to": "slide_variant:S20",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:paste from\\b",
+      "to": "slide_variant:S21",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:paste from\\b",
+      "to": "slide_variant:S22",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:paste from\\b",
+      "to": "slide_variant:S23",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:paste from\\b",
+      "to": "slide_variant:S24",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:paste from\\b",
+      "to": "slide_variant:S25",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:paste from\\b",
+      "to": "slide_variant:S26",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:paste from\\b",
+      "to": "slide_variant:S27",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:paste from\\b",
+      "to": "slide_variant:S28",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[USD m\\]",
+      "to": "slide_variant:S01",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[USD m\\]",
+      "to": "slide_variant:S02",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[USD m\\]",
+      "to": "slide_variant:S03",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[USD m\\]",
+      "to": "slide_variant:S04",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[USD m\\]",
+      "to": "slide_variant:S05",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[USD m\\]",
+      "to": "slide_variant:S06",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[USD m\\]",
+      "to": "slide_variant:S07",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[USD m\\]",
+      "to": "slide_variant:S08",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[USD m\\]",
+      "to": "slide_variant:S09",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[USD m\\]",
+      "to": "slide_variant:S10",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[USD m\\]",
+      "to": "slide_variant:S11",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[USD m\\]",
+      "to": "slide_variant:S12",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[USD m\\]",
+      "to": "slide_variant:S13",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[USD m\\]",
+      "to": "slide_variant:S14",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[USD m\\]",
+      "to": "slide_variant:S15",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[USD m\\]",
+      "to": "slide_variant:S16",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[USD m\\]",
+      "to": "slide_variant:S17",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[USD m\\]",
+      "to": "slide_variant:S18",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[USD m\\]",
+      "to": "slide_variant:S19",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[USD m\\]",
+      "to": "slide_variant:S20",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[USD m\\]",
+      "to": "slide_variant:S21",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[USD m\\]",
+      "to": "slide_variant:S22",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[USD m\\]",
+      "to": "slide_variant:S23",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[USD m\\]",
+      "to": "slide_variant:S24",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[USD m\\]",
+      "to": "slide_variant:S25",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[USD m\\]",
+      "to": "slide_variant:S26",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[USD m\\]",
+      "to": "slide_variant:S27",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[USD m\\]",
+      "to": "slide_variant:S28",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[think-cell\\b.*?\\]",
+      "to": "slide_variant:S01",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[think-cell\\b.*?\\]",
+      "to": "slide_variant:S02",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[think-cell\\b.*?\\]",
+      "to": "slide_variant:S03",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[think-cell\\b.*?\\]",
+      "to": "slide_variant:S04",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[think-cell\\b.*?\\]",
+      "to": "slide_variant:S05",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[think-cell\\b.*?\\]",
+      "to": "slide_variant:S06",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[think-cell\\b.*?\\]",
+      "to": "slide_variant:S07",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[think-cell\\b.*?\\]",
+      "to": "slide_variant:S08",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[think-cell\\b.*?\\]",
+      "to": "slide_variant:S09",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[think-cell\\b.*?\\]",
+      "to": "slide_variant:S10",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[think-cell\\b.*?\\]",
+      "to": "slide_variant:S11",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[think-cell\\b.*?\\]",
+      "to": "slide_variant:S12",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[think-cell\\b.*?\\]",
+      "to": "slide_variant:S13",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[think-cell\\b.*?\\]",
+      "to": "slide_variant:S14",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[think-cell\\b.*?\\]",
+      "to": "slide_variant:S15",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[think-cell\\b.*?\\]",
+      "to": "slide_variant:S16",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[think-cell\\b.*?\\]",
+      "to": "slide_variant:S17",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[think-cell\\b.*?\\]",
+      "to": "slide_variant:S18",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[think-cell\\b.*?\\]",
+      "to": "slide_variant:S19",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[think-cell\\b.*?\\]",
+      "to": "slide_variant:S20",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[think-cell\\b.*?\\]",
+      "to": "slide_variant:S21",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[think-cell\\b.*?\\]",
+      "to": "slide_variant:S22",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[think-cell\\b.*?\\]",
+      "to": "slide_variant:S23",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[think-cell\\b.*?\\]",
+      "to": "slide_variant:S24",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[think-cell\\b.*?\\]",
+      "to": "slide_variant:S25",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[think-cell\\b.*?\\]",
+      "to": "slide_variant:S26",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[think-cell\\b.*?\\]",
+      "to": "slide_variant:S27",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:\\[think-cell\\b.*?\\]",
+      "to": "slide_variant:S28",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:no think-cell binding here",
+      "to": "slide_variant:S01",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:no think-cell binding here",
+      "to": "slide_variant:S02",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:no think-cell binding here",
+      "to": "slide_variant:S03",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:no think-cell binding here",
+      "to": "slide_variant:S04",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:no think-cell binding here",
+      "to": "slide_variant:S05",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:no think-cell binding here",
+      "to": "slide_variant:S06",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:no think-cell binding here",
+      "to": "slide_variant:S07",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:no think-cell binding here",
+      "to": "slide_variant:S08",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:no think-cell binding here",
+      "to": "slide_variant:S09",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:no think-cell binding here",
+      "to": "slide_variant:S10",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:no think-cell binding here",
+      "to": "slide_variant:S11",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:no think-cell binding here",
+      "to": "slide_variant:S12",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:no think-cell binding here",
+      "to": "slide_variant:S13",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:no think-cell binding here",
+      "to": "slide_variant:S14",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:no think-cell binding here",
+      "to": "slide_variant:S15",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:no think-cell binding here",
+      "to": "slide_variant:S16",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:no think-cell binding here",
+      "to": "slide_variant:S17",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:no think-cell binding here",
+      "to": "slide_variant:S18",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:no think-cell binding here",
+      "to": "slide_variant:S19",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:no think-cell binding here",
+      "to": "slide_variant:S20",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:no think-cell binding here",
+      "to": "slide_variant:S21",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:no think-cell binding here",
+      "to": "slide_variant:S22",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:no think-cell binding here",
+      "to": "slide_variant:S23",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:no think-cell binding here",
+      "to": "slide_variant:S24",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:no think-cell binding here",
+      "to": "slide_variant:S25",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:no think-cell binding here",
+      "to": "slide_variant:S26",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:no think-cell binding here",
+      "to": "slide_variant:S27",
+      "kind": "contaminates"
+    },
+    {
+      "from": "debris_signature:no think-cell binding here",
+      "to": "slide_variant:S28",
+      "kind": "contaminates"
+    }
+  ]
+}

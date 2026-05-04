@@ -6,6 +6,7 @@ state/*
 !state/atlas/
 state/atlas/*
 !state/atlas/manifest.json
+!state/atlas/graph.json
 .env
 eval/runs/*.json
 !eval/runs/.gitkeep
