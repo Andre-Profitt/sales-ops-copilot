@@ -20,3 +20,15 @@ These artifacts are slated for quarantine once the new `tcseed` is certified and
 **Not yet moved** to avoid breaking the currently-functional May-2026 packaging lane. Migration happens in PR 1 of the plan once the clean `tcseed` is built and certified.
 
 See `docs/handoffs/2026-05-04-thinkcell-template-fix-plan.md` for the surgical PR sequence.
+
+## Migration boundary
+
+The flip happens in PR 1 of `docs/plans/2026-05-04-land-review-factory-rebuild.md`.
+
+After PR 1 lands:
+
+- `scripts/factory.py` defaults to `assets/templates/land_review_full_28/LAND_review_full_28.tcseed.pptx`
+- Any path matching `LAND_thinkcell_seed*`, `/legacy/`, `Patrick-Gaughan-LAND`, `_polished`, `pre-stripdev`, or `pre-jinja-cleanup` requires `--allow-legacy-seed`
+- Until the tcseed file exists (PR 4), `--dry-run` works but real runs fail with "template not found"
+
+The actual `mv` of legacy seeds into this directory happens in Task 10.1 only after the new factory has rendered all 9 directors successfully.
