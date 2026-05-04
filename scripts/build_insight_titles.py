@@ -27,7 +27,8 @@ def _safe_eval(expr: str, ns: dict[str, Any]) -> bool:
     """Evaluate `when` expression in a restricted namespace."""
 
     class _NoneDict(dict):
-        def __missing__(self, _key: str) -> None:  # type: ignore[override]  # pyright: ignore[reportUnusedParameter]
+        def __missing__(self, key: str) -> None:  # type: ignore[override]
+            del key
             return None
 
     safe_ns = _NoneDict(ns)
@@ -39,7 +40,8 @@ def _safe_eval(expr: str, ns: dict[str, Any]) -> bool:
 
 def _format_title(template: str, ns: dict[str, Any]) -> str:
     class _NoneDict(dict):
-        def __missing__(self, _key: str) -> str:  # pyright: ignore[reportUnusedParameter]
+        def __missing__(self, key: str) -> str:
+            del key
             return ""
 
     return template.format_map(_NoneDict(ns))
