@@ -110,7 +110,7 @@ def main() -> int:
         xml_slides.remove(sld_id)
 
     # Add 28 slides using planned layouts
-    for _slide_id, sub in SLIDE_PLAN:
+    for _, sub in SLIDE_PLAN:
         layout = _layout_by_substring(prs, sub)
         slide = prs.slides.add_slide(layout)
         _strip_placeholder_text(slide)
