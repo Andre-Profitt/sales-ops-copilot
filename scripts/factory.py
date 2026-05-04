@@ -50,8 +50,24 @@ from typing import Any
 # side effects out of the module (so pytest can import this file freely).
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCRIPTS_DIR = REPO_ROOT / "scripts"
-DEFAULT_TEMPLATE = REPO_ROOT / "assets" / "LAND_thinkcell_seed.pptx"
+DEFAULT_TEMPLATE = (
+    REPO_ROOT / "assets" / "templates" / "land_review_full_28" / "LAND_review_full_28.tcseed.pptx"
+)
 DEFAULT_PERIOD = "2026-Q2"
+
+LEGACY_SEED_MARKERS = (
+    "LAND_thinkcell_seed",
+    "/legacy/",
+    "Patrick-Gaughan-LAND",
+    "_polished",
+    "pre-stripdev",
+    "pre-jinja-cleanup",
+)
+
+
+def _is_legacy_template(template_path: Path) -> bool:
+    s = str(template_path)
+    return any(marker in s for marker in LEGACY_SEED_MARKERS)
 
 
 @dataclass(frozen=True)
@@ -619,6 +635,29 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_false",
         help="Disable image-charts pass (default ON).",
     )
+    p.add_argument(
+        "--print-default-template",
+        action="store_true",
+        help="Print the canonical default template path and exit.",
+    )
+    p.add_argument(
+        "--allow-legacy-seed",
+        action="store_true",
+        help=(
+            "Allow legacy debris seed paths. Required if --template points at "
+            "assets/LAND_thinkcell_seed*, assets/legacy/, or any quarantined "
+            "asset. Use only for forensic comparison."
+        ),
+    )
+    p.add_argument(
+        "--dry-run",
+        action="store_true",
+        help=(
+            "Resolve directors + template path and print the plan without "
+            "building any .ppttc or rendering. Does not require the template "
+            "file to exist."
+        ),
+    )
     return p.parse_args(argv)
 
 
@@ -655,8 +694,20 @@ def _print_summary_table(summary: FactorySummary) -> None:
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv)
 
+    if args.print_default_template:
+        print(DEFAULT_TEMPLATE)
+        return 0
+
     template = args.template.expanduser().resolve()
-    if not template.exists():
+
+    if _is_legacy_template(template) and not args.allow_legacy_seed:
+        sys.stderr.write(
+            f"refusing to use quarantined/legacy template: {template}\n"
+            "pass --allow-legacy-seed for forensic-only override.\n"
+        )
+        return 2
+
+    if not args.dry_run and not template.exists():
         print(f"[factory] template not found: {template}", file=sys.stderr)
         return 2
 
@@ -668,6 +719,13 @@ def main(argv: list[str] | None = None) -> int:
     except SystemExit as exc:
         print(f"[factory] {exc}", file=sys.stderr)
         return 2
+
+    if args.dry_run:
+        print(f"[factory] dry-run period={args.period} template={template}")
+        print(f"[factory] directors ({len(directors)}):")
+        for d in directors:
+            print(f"  - {d['name']}")
+        return 0
 
     summary = run_factory(
         period=args.period,

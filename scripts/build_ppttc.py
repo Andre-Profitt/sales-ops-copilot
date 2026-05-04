@@ -64,6 +64,23 @@ ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_TEMPLATE = ROOT / "assets/LAND_template.pptx"
 DEFAULT_STYLE = ROOT / "assets/SimCorp-thinkcell-style.xml"
 
+# Mirrors scripts/factory.py LEGACY_SEED_MARKERS. Duplicated intentionally
+# (per PR 1 of docs/plans/2026-05-04-land-review-factory-rebuild.md): both
+# scripts are sibling CLIs and a shared helper is YAGNI for two call sites.
+LEGACY_SEED_MARKERS = (
+    "LAND_thinkcell_seed",
+    "/legacy/",
+    "Patrick-Gaughan-LAND",
+    "_polished",
+    "pre-stripdev",
+    "pre-jinja-cleanup",
+)
+
+
+def _is_legacy_template(template_path: Path) -> bool:
+    s = str(template_path)
+    return any(marker in s for marker in LEGACY_SEED_MARKERS)
+
 
 @dataclass(frozen=True)
 class DirectorArtifacts:
@@ -1435,9 +1452,25 @@ def main() -> int:
             "subsequent runs to be free."
         ),
     )
+    parser.add_argument(
+        "--allow-legacy-seed",
+        action="store_true",
+        help=(
+            "Allow legacy debris seed paths. Required if --template points at "
+            "assets/LAND_thinkcell_seed*, assets/legacy/, or any quarantined "
+            "asset. Use only for forensic comparison."
+        ),
+    )
     args = parser.parse_args()
 
     template_path = args.template.expanduser().resolve()
+
+    if _is_legacy_template(template_path) and not args.allow_legacy_seed:
+        raise SystemExit(
+            f"refusing to use quarantined/legacy template: {template_path}\n"
+            "pass --allow-legacy-seed for forensic-only override."
+        )
+
     if not template_path.exists():
         raise SystemExit(f"Template not found: {template_path}")
 
