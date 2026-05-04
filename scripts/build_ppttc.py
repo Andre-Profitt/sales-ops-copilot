@@ -1504,6 +1504,7 @@ def _build_ppttc_from_registry(
     evidence: list[dict[str, Any]] = []
     for slide in registry.get("slides", []):
         sid = slide.get("slide_id", "")
+        slide_idx = int(sid.lstrip("S")) if sid.startswith("S") and sid[1:].isdigit() else 0
         for el in slide.get("elements", []):
             name = el.get("name", "")
             kind = el.get("kind", "")
@@ -1514,6 +1515,7 @@ def _build_ppttc_from_registry(
                 "lane": lane,
                 "required": el.get("required", False),
                 "slide_id": sid,
+                "slide": slide_idx,
             }
             if lane == "static":
                 evidence.append({**base_evidence, "status": "static"})

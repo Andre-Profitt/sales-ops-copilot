@@ -76,6 +76,9 @@ def main(argv: list[str] | None = None) -> int:
         if b.get("status") == "suppressed":
             status = "fail" if b.get("required") else "skip"
             evidence = f"binding suppressed: {b.get('reason', 'no reason given')}"
+        elif b["lane"] == "static" or b.get("status") == "static":
+            status = "skip"
+            evidence = "static lane: no dynamic binding to verify"
         elif b["lane"] == "ppttc_text" or b["kind"] in ("text", "scalar"):
             expected = b.get("expected_text", "")
             present = expected and expected in texts.get(slide_idx, "")
