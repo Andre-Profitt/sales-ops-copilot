@@ -52,3 +52,17 @@ Per SimCorp's AI Code of Conduct (`~/.claude/skills/simcorp-org-wrap/governance.
 - `~/code/apps/RevOps-Hub/` — Palantir Foundry-based RevOps platform (different layer)
 - `~/code/apps/book-of-business/` — CRM Analytics + SF report builder (CLI-first, builders-only); per memory `feedback_no_python_builders.md`, do NOT touch its `build_*.py` files
 - `~/crm-analytics/` — Sales Director Monthly deck pipeline (separate workspace)
+
+## Tracks in this repo
+
+This repo hosts multiple parallel tracks. Read `docs/AGENT_COORDINATION.md` before edits. **Filter your context to the relevant track:**
+
+| Track                | Scope                                     | Code                                                         | Docs                                     |
+| -------------------- | ----------------------------------------- | ------------------------------------------------------------ | ---------------------------------------- |
+| **track:cockpit**    | Daily Sales Ops brief + alerts            | `scripts/brief.py`, `scripts/alerts/`                        | repo root                                |
+| **track:rw**         | Richard Wyeth Power BI scorecard (Fabric) | `scripts/sales/rw_*.py`, `scripts/sales/sf_to_fabric_rw*.py` | `docs/sales/`, `docs/superpowers/specs/` |
+| **track:workforce**  | Workforce KPI model (Power BI)            | `scripts/workforce/`                                         | `docs/workforce/`                        |
+| **track:sf-audit**   | Salesforce metadata + report audits       | `scripts/sf_audit/`                                          | `docs/sf_audit/`                         |
+| **track:sd-factory** | SD-Monthly LAND deck factory + ThinkCell  | (separate repos / `~/crm-analytics/`)                        | `docs/sd-factory/`                       |
+
+Cross-cutting docs (relevant to all tracks): `AGENT_COORDINATION.md`, `ARCHITECTURE.md`, `SALES_PROCESS_GRAPH.md`, `FORECAST_ACCURACY_CAVEAT.md`, `REPORTING_SNAPSHOTS.md`.

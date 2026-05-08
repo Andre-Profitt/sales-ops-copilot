@@ -24,3 +24,4 @@ _windows_test/
 *.scrub.normalized.tmp.pptx
 assets/golden/
 assets/*.pre-*.pptx
+.superpowers/
