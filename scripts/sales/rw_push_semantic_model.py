@@ -388,6 +388,84 @@ def build_model_bim() -> dict:
             "formatString": '"$"#,0',
             "description": "Open ARR for opps stalled >21 days.",
         },
+        # ── Risk classification (Tab 1 What Changed risk band) ──────────────
+        # Stage 5+ open = IN {"5 - Preferred","6 - Contracting","7 - Sales Ops QC"}.
+        # Stage 3-4 open = IN {"3 - Engagement","4 - Shortlisted"}.
+        # Verified against OpportunityStage (apro@simcorp.com) 2026-05-08.
+        {
+            "name": "At Risk Opps Count",
+            "expression": (
+                "COUNTROWS ( "
+                "FILTER ( f_opportunity, "
+                "f_opportunity[is_closed] = FALSE() && "
+                'f_opportunity[stage_name] IN { "5 - Preferred", "6 - Contracting", "7 - Sales Ops QC" } && '
+                "DATEDIFF ( f_opportunity[last_stage_change_date], TODAY(), DAY ) > 21 "
+                ") )"
+            ),
+            "formatString": "#,0",
+            "description": "At Risk: Stage 5+ open AND stalled >21d.",
+        },
+        {
+            "name": "At Risk Opps ARR",
+            "expression": (
+                "CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), "
+                "FILTER ( f_opportunity, "
+                "f_opportunity[is_closed] = FALSE() && "
+                'f_opportunity[stage_name] IN { "5 - Preferred", "6 - Contracting", "7 - Sales Ops QC" } && '
+                "DATEDIFF ( f_opportunity[last_stage_change_date], TODAY(), DAY ) > 21 "
+                ") )"
+            ),
+            "formatString": '"$"#,0',
+            "description": "ARR exposed in At Risk bucket (Stage 5+ stalled >21d).",
+        },
+        {
+            "name": "Watch Opps Count",
+            "expression": (
+                "COUNTROWS ( "
+                "FILTER ( f_opportunity, "
+                "f_opportunity[is_closed] = FALSE() && "
+                'f_opportunity[stage_name] IN { "3 - Engagement", "4 - Shortlisted" } && '
+                "DATEDIFF ( f_opportunity[last_stage_change_date], TODAY(), DAY ) > 14 "
+                ") )"
+            ),
+            "formatString": "#,0",
+            "description": "Watch: Stage 3-4 open AND stalled >14d.",
+        },
+        {
+            "name": "Watch Opps ARR",
+            "expression": (
+                "CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), "
+                "FILTER ( f_opportunity, "
+                "f_opportunity[is_closed] = FALSE() && "
+                'f_opportunity[stage_name] IN { "3 - Engagement", "4 - Shortlisted" } && '
+                "DATEDIFF ( f_opportunity[last_stage_change_date], TODAY(), DAY ) > 14 "
+                ") )"
+            ),
+            "formatString": '"$"#,0',
+            "description": "ARR exposed in Watch bucket (Stage 3-4 stalled >14d).",
+        },
+        {
+            "name": "Healthy Moves Count",
+            "expression": (
+                "CALCULATE ( COUNTROWS ( f_stage_transition ), "
+                'f_stage_transition[direction] = "forward", '
+                "f_stage_transition[transition_at] >= TODAY() - 7 )"
+            ),
+            "formatString": "#,0",
+            "description": "Forward stage moves in the last 7 days.",
+        },
+        {
+            "name": "Healthy Moves ARR",
+            "expression": (
+                "CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), "
+                "TREATAS ( "
+                'CALCULATETABLE ( VALUES ( f_stage_transition[opp_id] ), f_stage_transition[direction] = "forward", '
+                "f_stage_transition[transition_at] >= TODAY() - 7 ), "
+                "f_opportunity[opp_id] ) )"
+            ),
+            "formatString": '"$"#,0',
+            "description": "ARR of opps with a forward stage move in the last 7 days.",
+        },
     ]
 
     # Stage-transition measures (Phase 2; require f_stage_transition table).
