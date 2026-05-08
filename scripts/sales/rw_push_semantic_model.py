@@ -338,6 +338,56 @@ def build_model_bim() -> dict:
             "formatString": "0",
             "description": "Expand cycle length. Typically longer than Land in this org.",
         },
+        # ── Stall detection (Tab 3 Stage Hygiene + Tab 1 What Changed) ────
+        # Uses last_stage_change_date already on f_opportunity (no f_stage_transition LOOKUP needed).
+        {
+            "name": "Stalled Open Opps Count 14d",
+            "expression": (
+                "COUNTROWS ( "
+                "FILTER ( f_opportunity, "
+                "f_opportunity[is_closed] = FALSE() && "
+                "DATEDIFF ( f_opportunity[last_stage_change_date], TODAY(), DAY ) > 14 "
+                ") )"
+            ),
+            "formatString": "#,0",
+            "description": "Open opps with no stage movement in >14 days (Watch threshold).",
+        },
+        {
+            "name": "Stalled Open Opps ARR 14d",
+            "expression": (
+                "CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), "
+                "FILTER ( f_opportunity, "
+                "f_opportunity[is_closed] = FALSE() && "
+                "DATEDIFF ( f_opportunity[last_stage_change_date], TODAY(), DAY ) > 14 "
+                ") )"
+            ),
+            "formatString": '"$"#,0',
+            "description": "Open ARR for opps stalled >14 days.",
+        },
+        {
+            "name": "Stalled Open Opps Count 21d",
+            "expression": (
+                "COUNTROWS ( "
+                "FILTER ( f_opportunity, "
+                "f_opportunity[is_closed] = FALSE() && "
+                "DATEDIFF ( f_opportunity[last_stage_change_date], TODAY(), DAY ) > 21 "
+                ") )"
+            ),
+            "formatString": "#,0",
+            "description": "Open opps with no stage movement in >21 days (At-risk threshold).",
+        },
+        {
+            "name": "Stalled Open Opps ARR 21d",
+            "expression": (
+                "CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), "
+                "FILTER ( f_opportunity, "
+                "f_opportunity[is_closed] = FALSE() && "
+                "DATEDIFF ( f_opportunity[last_stage_change_date], TODAY(), DAY ) > 21 "
+                ") )"
+            ),
+            "formatString": '"$"#,0',
+            "description": "Open ARR for opps stalled >21 days.",
+        },
     ]
 
     # Stage-transition measures (Phase 2; require f_stage_transition table).
