@@ -137,3 +137,80 @@ def build_slicer_visual(
         "y": y,
         "z": 500,
     }
+
+
+def build_table_visual(
+    name: str,
+    columns: list[dict],
+    x: float,
+    y: float,
+    w: float = 900,
+    h: float = 240,
+) -> dict:
+    """Construct a tableEx visualContainer.
+
+    columns: list of {"table": str, "field": str, "kind": "column"|"measure", "title": str}.
+    Order of columns in the list = display order in the table.
+    """
+    visual_name = uuid.uuid4().hex[:20]
+    aliases: dict[str, str] = {}
+    for c in columns:
+        aliases.setdefault(c["table"], chr(ord("a") + len(aliases)))
+
+    select = []
+    projections = []
+    column_props: dict[str, dict] = {}
+    for c in columns:
+        alias = aliases[c["table"]]
+        query_ref = f"{c['table']}.{c['field']}"
+        node_key = "Measure" if c["kind"] == "measure" else "Column"
+        select.append(
+            {
+                node_key: {
+                    "Expression": {"SourceRef": {"Source": alias}},
+                    "Property": c["field"],
+                },
+                "Name": query_ref,
+            }
+        )
+        projections.append({"queryRef": query_ref})
+        column_props[query_ref] = {"displayName": c["title"]}
+
+    config = {
+        "name": visual_name,
+        "layouts": [
+            {
+                "id": 0,
+                "position": {
+                    "x": x,
+                    "y": y,
+                    "z": 800,
+                    "width": w,
+                    "height": h,
+                    "tabOrder": 800,
+                },
+            }
+        ],
+        "singleVisual": {
+            "visualType": "tableEx",
+            "projections": {"Values": projections},
+            "prototypeQuery": {
+                "Version": 2,
+                "From": [
+                    {"Name": alias, "Entity": tbl, "Type": 0} for tbl, alias in aliases.items()
+                ],
+                "Select": select,
+            },
+            "columnProperties": column_props,
+            "drillFilterOtherVisuals": True,
+        },
+    }
+    return {
+        "config": json.dumps(config),
+        "filters": "[]",
+        "height": h,
+        "width": w,
+        "x": x,
+        "y": y,
+        "z": 800,
+    }
