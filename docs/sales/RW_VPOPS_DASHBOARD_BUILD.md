@@ -255,3 +255,25 @@ Requires SF SOQL pull additions in `sf_to_fabric_rw.py` + ETL run before measure
 ### Tests
 
 `tests/sales/test_pbir_helpers.py` — 8 passing tests covering all helper builders and page-management primitives.
+
+## 2026-05-08 — Tab 1 (What Changed) shipped
+
+Composed via `scripts/sales/rw_compose_what_changed.py`. Idempotent — re-run wipes and rebuilds.
+
+**Visuals shipped (12):**
+
+- Risk band: At Risk · Watch · Healthy × {count, ARR} = 6 cards
+- Change buckets: Stage Moves (count + ARR) · New Opps · Won · Lost = 5 cards
+- Detail table: Top open opps by Open ARR (6 columns) = 1 table
+
+**Spec deviations (path-(a) deferrals):**
+
+- Slips card: needs `f_ofh_close_date` ETL (deferred per foundation)
+- Detail table "Change" + "Risk class" columns: row-context measures TBD
+- Detail table top-20 filter: apply via PBI Visual filter pane manually until `build_table_visual` grows a `top_n` kwarg
+- Window slicer: field-parameter shape not in `_pbir_shapes.py`; cards use the 7d window today
+- Conditional formatting on Risk band: `objects` shape not yet captured (use `rw_capture_visual.py` after browser-authoring one)
+
+**Pre-flight:** the composer runs every visual through `validate_visual_dict` against the deployed `sm_sales_kpis_rw` before pushing. Catches measure-name typos pre-LRO.
+
+**To rebuild:** `python3 -m scripts.sales.rw_compose_what_changed`
