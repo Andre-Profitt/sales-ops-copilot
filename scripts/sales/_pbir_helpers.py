@@ -214,3 +214,96 @@ def build_table_visual(
         "y": y,
         "z": 800,
     }
+
+
+def build_matrix_visual(
+    rows: list[dict],
+    columns: list[dict],
+    values: list[dict],
+    x: float,
+    y: float,
+    w: float = 900,
+    h: float = 260,
+) -> dict:
+    """Construct a pivotTable (matrix) visualContainer.
+
+    rows / columns: list of {"table": str, "field": str, "title": str} — column refs.
+    values: list of {"table": str, "field": str, "title": str} — measure refs.
+    """
+    visual_name = uuid.uuid4().hex[:20]
+    aliases: dict[str, str] = {}
+    for c in rows + columns + values:
+        aliases.setdefault(c["table"], chr(ord("a") + len(aliases)))
+
+    def _col_node(c: dict) -> dict:
+        alias = aliases[c["table"]]
+        return {
+            "Column": {
+                "Expression": {"SourceRef": {"Source": alias}},
+                "Property": c["field"],
+            },
+            "Name": f"{c['table']}.{c['field']}",
+        }
+
+    def _measure_node(c: dict) -> dict:
+        alias = aliases[c["table"]]
+        return {
+            "Measure": {
+                "Expression": {"SourceRef": {"Source": alias}},
+                "Property": c["field"],
+            },
+            "Name": f"{c['table']}.{c['field']}",
+        }
+
+    select = (
+        [_col_node(c) for c in rows]
+        + [_col_node(c) for c in columns]
+        + [_measure_node(v) for v in values]
+    )
+    projections = {
+        "Rows": [{"queryRef": f"{c['table']}.{c['field']}"} for c in rows],
+        "Columns": [{"queryRef": f"{c['table']}.{c['field']}"} for c in columns],
+        "Values": [{"queryRef": f"{v['table']}.{v['field']}"} for v in values],
+    }
+    column_props: dict[str, dict] = {}
+    for c in rows + columns + values:
+        column_props[f"{c['table']}.{c['field']}"] = {"displayName": c["title"]}
+
+    config = {
+        "name": visual_name,
+        "layouts": [
+            {
+                "id": 0,
+                "position": {
+                    "x": x,
+                    "y": y,
+                    "z": 800,
+                    "width": w,
+                    "height": h,
+                    "tabOrder": 800,
+                },
+            }
+        ],
+        "singleVisual": {
+            "visualType": "pivotTable",
+            "projections": projections,
+            "prototypeQuery": {
+                "Version": 2,
+                "From": [
+                    {"Name": alias, "Entity": tbl, "Type": 0} for tbl, alias in aliases.items()
+                ],
+                "Select": select,
+            },
+            "columnProperties": column_props,
+            "drillFilterOtherVisuals": True,
+        },
+    }
+    return {
+        "config": json.dumps(config),
+        "filters": "[]",
+        "height": h,
+        "width": w,
+        "x": x,
+        "y": y,
+        "z": 800,
+    }

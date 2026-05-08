@@ -1,6 +1,30 @@
 import json
 
-from scripts.sales._pbir_helpers import build_card_visual, build_table_visual
+from scripts.sales._pbir_helpers import (
+    build_card_visual,
+    build_matrix_visual,
+    build_table_visual,
+)
+
+
+def test_build_matrix_visual_axes():
+    vc = build_matrix_visual(
+        rows=[{"table": "f_opportunity", "field": "stage_name", "title": "Stage"}],
+        columns=[{"table": "f_opportunity", "field": "motion_type", "title": "Motion"}],
+        values=[
+            {"table": "f_opportunity", "field": "Total Open Pipeline ARR", "title": "Open ARR"},
+            {"table": "f_opportunity", "field": "Total Closed Won ARR", "title": "Won ARR"},
+        ],
+        x=20,
+        y=120,
+        w=900,
+        h=260,
+    )
+    config = json.loads(vc["config"])
+    assert config["singleVisual"]["visualType"] == "pivotTable"
+    proj = config["singleVisual"]["projections"]
+    assert "Rows" in proj and "Columns" in proj and "Values" in proj
+    assert len(proj["Values"]) == 2
 
 
 def test_build_card_visual_basic_shape():
