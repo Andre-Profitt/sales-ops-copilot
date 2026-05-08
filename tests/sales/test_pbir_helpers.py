@@ -3,11 +3,49 @@ import json
 from scripts.sales._pbir_helpers import (
     add_page,
     build_card_visual,
+    build_card_visual_with_objects,
     build_matrix_visual,
     build_table_visual,
     ensure_pages,
     remove_page,
 )
+
+
+def test_build_card_visual_with_objects_attaches_objects_block():
+    rag = {
+        "general": [
+            {
+                "properties": {
+                    "orientation": {"expr": {"Literal": {"Value": "1D"}}},
+                }
+            }
+        ]
+    }
+    vc = build_card_visual_with_objects(
+        measure_table="f_opportunity",
+        measure_name="Win Rate ARR",
+        display_title="Win Rate",
+        x=0,
+        y=0,
+        objects=rag,
+    )
+    config = json.loads(vc["config"])
+    assert config["singleVisual"]["visualType"] == "card"
+    assert config["singleVisual"]["objects"] == rag
+
+
+def test_build_card_visual_with_objects_no_block_falls_through():
+    """When objects is None, output should match plain build_card_visual."""
+    vc = build_card_visual_with_objects(
+        measure_table="f_opportunity",
+        measure_name="Win Rate ARR",
+        display_title="Win Rate",
+        x=0,
+        y=0,
+        objects=None,
+    )
+    config = json.loads(vc["config"])
+    assert "objects" not in config["singleVisual"]
 
 
 def test_add_page_appends_section(empty_report):

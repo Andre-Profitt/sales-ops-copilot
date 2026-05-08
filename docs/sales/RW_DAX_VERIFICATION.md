@@ -138,3 +138,61 @@ The whole-stack truth is: **the cleanest Microsoft-canonical path
 (`/executeQueries`) is blocked by tenant policy**, sempy desktop is broken
 on macOS arm64, and our compromise is `rw_probe_measures.py`. Future you
 will forget all three of these facts; this doc is the receipt.
+
+---
+
+## Recipe 4 — Capture browser-configured shapes (conditional formatting, themes)
+
+**When:** you need a visual config you don't have a builder for yet —
+conditional formatting (RAG by threshold), custom themes, drill-through,
+sync slicers, bookmark navigation.
+
+**Why this is the right pattern:** PBIR's `singleVisual.objects` schema is
+massive and undocumented. Inventing shapes from scratch is a guess; the
+browser editor produces verified-correct shapes.
+
+**Workflow:**
+
+1. **Browser:** open `rpt_vp_ops_scorecard`, configure the visual you want
+   (e.g., a card with `Win Rate ARR < 25%` → red background). Save the
+   report.
+
+2. **CLI list:** find your visual.
+   ```bash
+   python3 -m scripts.sales.rw_capture_visual --list --page "VP Ops Scorecard"
+   # Look for `*cf*` marker — visuals with non-empty objects block
+   ```
+
+3. **CLI extract:** dump the visual's structured config.
+   ```bash
+   python3 -m scripts.sales.rw_capture_visual --extract <visual-name-prefix>
+   # Or --raw for the full visualContainer dict
+   ```
+
+4. **Generalize:** the `singleVisual.objects` subtree is your reusable shape.
+   Pass it as kwarg to `build_card_visual_with_objects(...)`, or paste it into
+   a new builder in `_pbir_helpers.py` if it's worth a named function.
+
+5. **Capture into `_pbir_shapes.py`:** for shapes you'll reuse across tabs,
+   add an entry to `SHAPES` with `verified_at` and `source_report_id`.
+
+**Example — applying RAG to a Win Rate card:**
+
+```python
+from scripts.sales._pbir_helpers import build_card_visual_with_objects
+
+rag = {  # captured via rw_capture_visual --extract <win-rate-visual>
+    # ... paste the singleVisual.objects subtree from the live editor
+}
+
+vc = build_card_visual_with_objects(
+    measure_table="f_opportunity",
+    measure_name="Win Rate ARR",
+    display_title="Win Rate",
+    x=20, y=20,
+    objects=rag,
+)
+```
+
+**Limitations:** the objects schema isn't typed. A typo silently no-ops in
+the renderer (no LRO error). Always re-deploy and eyeball after changes.

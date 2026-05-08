@@ -346,3 +346,36 @@ def ensure_pages(report: dict, targets: list[tuple[str, str]]) -> None:
     for name, display in targets:
         if name not in existing:
             add_page(report, name, display)
+
+
+def build_card_visual_with_objects(
+    measure_table: str,
+    measure_name: str,
+    display_title: str,
+    x: float,
+    y: float,
+    w: float = 280,
+    h: float = 110,
+    objects: dict | None = None,
+) -> dict:
+    """Card variant that accepts a singleVisual.objects block — for conditional
+    formatting, theme overrides, font tuning, etc.
+
+    The `objects` shape is browser-authored, not invented. Capture from a
+    live-configured visual via:
+        python3 -m scripts.sales.rw_capture_visual --extract <visual-name>
+    and copy the singleVisual.objects subtree here as the kwarg.
+
+    Common shapes (paste your captured shape — these are placeholders, NOT
+    verified):
+        # RAG by data-bar / background:
+        objects={
+            "dataLabels": [{"properties": {"color": {"solid": {"color": "#D32F2F"}}}}],
+        }
+    """
+    vc = build_card_visual(measure_table, measure_name, display_title, x, y, w, h)
+    if objects:
+        config = json.loads(vc["config"])
+        config["singleVisual"]["objects"] = objects
+        vc["config"] = json.dumps(config)
+    return vc
