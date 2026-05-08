@@ -1,6 +1,8 @@
 # RW VP Ops Scorecard — Power BI build (browser)
 
-The semantic model is live with **25 DAX measures** covering **16 of 31** Richard Wyeth target KPIs. This doc is the curated browser-side build spec — drag-and-drop in Power BI Service.
+The semantic model is live with **55 DAX measures** covering **16 of 31** Richard Wyeth target KPIs (the rest are Phase 3 — they need ForecastingItem snapshots, ApprovalProcess history, Asset/Subscription, or custom Account/Opp fields not yet in the model). This doc is the curated browser-side build spec — drag-and-drop in Power BI Service.
+
+The 16 covered KPIs are: `forecast_closed_won`, `pipeline_coverage_3x`, `opp_win_rate`, `closed_won_avg_deal_size`, `sales_cycle_length`, `opp_age`, `stage3_acv_value`, `partner_opps_pct`, `renewals_mom_trend`, `lost_arr_quarterly`, `renewal_retention_rate`, `new_opps_by_region`, `opp_source_effectiveness`, `new_customer_reporting`, `time_in_stage`, `stage_conversion`. Source of truth for KPI definitions, targets, motion filters, and caveats: `scripts/sales/rw_kpi_graph.py`.
 
 ## Where to start
 
@@ -31,7 +33,7 @@ d_region             (7)                       — slicer source, sorted NE→ME
 d_calendar           (1,491 days)              — date hierarchy
 ```
 
-## DAX measures (25 total) by KPI mapping
+## DAX measures (55 total) by KPI mapping
 
 ### Headlines — drag onto KPI cards
 
@@ -51,9 +53,21 @@ d_calendar           (1,491 days)              — date hierarchy
 | Measure                   | RW KPI                             | Target              |
 | ------------------------- | ---------------------------------- | ------------------- |
 | `Avg Days In Prior Stage` | time_in_stage                      | Baseline & optimize |
-| `Stage Forward Pct`       | stage_conversion (proxy)           | >70%                |
+| `Stage Forward Pct`       | stage_conversion (all motions)     | >70%                |
+| `Stage Forward Pct (LE)`  | stage_conversion (Land+Expand)     | >70%                |
 | `Stage Backward Pct`      | (insight metric — flag regression) | track               |
 | `Total Stage Transitions` | helper                             | —                   |
+
+**Per-stage forward rates (Land+Expand only — `motion_filter='land_expand'` per KG)** — drag for stage-by-stage funnel hygiene. Stage 3→4 and Stage 4→5 carry the funnel-skip caveat from `rw_kpi_graph.py`: ~70% of close-wons skip Stage 4 in OFH, so those two measures are over a partial population. Surface that caveat as a footer note on those visuals.
+
+| Measure               | Transition                  | Target                     |
+| --------------------- | --------------------------- | -------------------------- |
+| `Stage 1 Forward Pct` | Prospecting → Discovery     | >70%                       |
+| `Stage 2 Forward Pct` | Discovery → Engagement      | >70%                       |
+| `Stage 3 Forward Pct` | Engagement → Decision-Maker | >70% (caveat: funnel-skip) |
+| `Stage 4 Forward Pct` | Decision-Maker → Preferred  | >70% (caveat: funnel-skip) |
+| `Stage 5 Forward Pct` | Preferred → Contracting     | >70%                       |
+| `Stage 6 Forward Pct` | Contracting → Won           | >70%                       |
 
 ### Renewals — drag with motion=Renewal context
 
