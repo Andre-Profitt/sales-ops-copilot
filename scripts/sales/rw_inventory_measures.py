@@ -52,7 +52,10 @@ _MEASURE_RE = __import__("re").compile(
 )
 
 
-def main() -> None:
+def fetch_measures_by_table() -> dict[str, list[str]]:
+    """Pull the deployed semantic model definition (TMDL) and return
+    {table_name: [sorted measure names]}. Reusable by validators / tests.
+    """
     token = _token()
     r = requests.post(
         f"{FABRIC}/v1/workspaces/{WORKSPACE_ID}/semanticModels/{SEMANTIC_MODEL_ID}/getDefinition",
@@ -71,7 +74,11 @@ def main() -> None:
         names = sorted(set(_MEASURE_RE.findall(tmdl)))
         if names:
             by_table[table] = names
+    return by_table
 
+
+def main() -> None:
+    by_table = fetch_measures_by_table()
     total = sum(len(v) for v in by_table.values())
     print(f"Total measures: {total}")
     print(f"Tables with measures: {len(by_table)}")
