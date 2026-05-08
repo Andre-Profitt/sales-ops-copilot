@@ -154,6 +154,12 @@ def main() -> None:
         action="store_true",
         help="Idempotently ensure the 5 redesign tabs exist in report.json",
     )
+    ap.add_argument(
+        "--page",
+        default="VP Ops Scorecard",
+        help="Target page (displayName) for build/clear ops. Default: VP Ops Scorecard. "
+        "Fabric re-sorts sections alphabetically post-push, so don't rely on positional index.",
+    )
     args = ap.parse_args()
 
     token = _token()
@@ -170,9 +176,13 @@ def main() -> None:
         )
         return
 
-    section = rj["sections"][0]
+    matches = [s for s in rj["sections"] if s.get("displayName") == args.page]
+    if not matches:
+        names = [s.get("displayName") for s in rj["sections"]]
+        raise SystemExit(f"  no section with displayName={args.page!r}. Available: {names}")
+    section = matches[0]
     print(
-        f"  current visuals in '{section.get('displayName', section['name'])}': {len(section.get('visualContainers', []))}"
+        f"  target page: '{section.get('displayName')}' — current visuals: {len(section.get('visualContainers', []))}"
     )
 
     if args.clear:
