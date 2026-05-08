@@ -11,10 +11,14 @@ import argparse
 import base64
 import json
 import time
-import uuid
 
 import requests
 from azure.identity import AzureCliCredential
+
+from scripts.sales._pbir_helpers import (
+    build_card_visual,
+    build_slicer_visual,
+)
 
 WORKSPACE_ID = "b66233d5-9d4a-44ba-89a8-b70206d98ae7"
 REPORT_ID = "d7362a11-f3dd-4bd1-a69a-68c941c2598b"  # rpt_vp_ops_scorecard
@@ -77,136 +81,6 @@ def get_current_report_json(token: str) -> dict:
     raise RuntimeError("no report.json in definition")
 
 
-def build_card_visual(
-    measure_table: str,
-    measure_name: str,
-    display_title: str,
-    x: float,
-    y: float,
-    w: float = 280,
-    h: float = 110,
-) -> dict:
-    """Construct a card visualContainer that references a model measure.
-
-    Differs from SalesManager's pattern: SalesManager uses Aggregation+Column
-    on raw fields. We use Measure on properly-defined DAX measures."""
-    visual_name = uuid.uuid4().hex[:20]
-    table_alias = "f"
-    query_ref = f"{measure_table}.{measure_name}"
-
-    config = {
-        "name": visual_name,
-        "layouts": [
-            {
-                "id": 0,
-                "position": {
-                    "x": x,
-                    "y": y,
-                    "z": 1000,
-                    "width": w,
-                    "height": h,
-                    "tabOrder": 1000,
-                },
-            }
-        ],
-        "singleVisual": {
-            "visualType": "card",
-            "projections": {"Values": [{"queryRef": query_ref}]},
-            "prototypeQuery": {
-                "Version": 2,
-                "From": [{"Name": table_alias, "Entity": measure_table, "Type": 0}],
-                "Select": [
-                    {
-                        "Measure": {
-                            "Expression": {"SourceRef": {"Source": table_alias}},
-                            "Property": measure_name,
-                        },
-                        "Name": query_ref,
-                    }
-                ],
-            },
-            "columnProperties": {query_ref: {"displayName": display_title}},
-            "drillFilterOtherVisuals": True,
-        },
-    }
-    return {
-        "config": json.dumps(config),
-        "filters": "[]",
-        "height": h,
-        "width": w,
-        "x": x,
-        "y": y,
-        "z": 1000,
-    }
-
-
-def build_slicer_visual(
-    table: str,
-    column: str,
-    title: str,
-    x: float,
-    y: float,
-    w: float = 240,
-    h: float = 90,
-) -> dict:
-    """Construct a slicer visualContainer for a column on a dim table."""
-    visual_name = uuid.uuid4().hex[:20]
-    table_alias = "d"
-    query_ref = f"{table}.{column}"
-    config = {
-        "name": visual_name,
-        "layouts": [
-            {
-                "id": 0,
-                "position": {
-                    "x": x,
-                    "y": y,
-                    "z": 500,
-                    "width": w,
-                    "height": h,
-                    "tabOrder": 500,
-                },
-            }
-        ],
-        "singleVisual": {
-            "visualType": "slicer",
-            "projections": {"Values": [{"queryRef": query_ref}]},
-            "prototypeQuery": {
-                "Version": 2,
-                "From": [{"Name": table_alias, "Entity": table, "Type": 0}],
-                "Select": [
-                    {
-                        "Column": {
-                            "Expression": {"SourceRef": {"Source": table_alias}},
-                            "Property": column,
-                        },
-                        "Name": query_ref,
-                    }
-                ],
-            },
-            "columnProperties": {query_ref: {"displayName": title}},
-            "objects": {
-                "general": [
-                    {
-                        "properties": {
-                            "orientation": {"expr": {"Literal": {"Value": "1D"}}},
-                        }
-                    }
-                ],
-            },
-        },
-    }
-    return {
-        "config": json.dumps(config),
-        "filters": "[]",
-        "height": h,
-        "width": w,
-        "x": x,
-        "y": y,
-        "z": 500,
-    }
-
-
 def push_report(token: str, report_json: dict) -> None:
     parts = [
         {
@@ -264,7 +138,7 @@ def main() -> None:
     ap.add_argument(
         "--build-stage-forward",
         action="store_true",
-        help="Add 6 per-stage forward-rate cards (Stages 1-6, RW KPI stage_conversion target >70%)",
+        help="Add 6 per-stage forward-rate cards (Stages 1-6, RW KPI stage_conversion target >70%%)",
     )
     args = ap.parse_args()
 
