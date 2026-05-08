@@ -1,10 +1,44 @@
 import json
 
 from scripts.sales._pbir_helpers import (
+    add_page,
     build_card_visual,
     build_matrix_visual,
     build_table_visual,
+    ensure_pages,
+    remove_page,
 )
+
+
+def test_add_page_appends_section(empty_report):
+    add_page(empty_report, name="ReportSection2", display_name="Forecast")
+    names = [s["name"] for s in empty_report["sections"]]
+    assert "ReportSection2" in names
+    new = [s for s in empty_report["sections"] if s["name"] == "ReportSection2"][0]
+    assert new["displayName"] == "Forecast"
+    assert new["visualContainers"] == []
+
+
+def test_remove_page_drops_section(empty_report):
+    add_page(empty_report, name="X", display_name="X")
+    remove_page(empty_report, name="X")
+    assert all(s["name"] != "X" for s in empty_report["sections"])
+
+
+def test_ensure_pages_idempotent(empty_report):
+    targets = [
+        ("PageWhatChanged", "What Changed"),
+        ("PageForecast", "Forecast"),
+        ("PageStageHygiene", "Stage Hygiene"),
+        ("PageRenewals", "Renewals"),
+        ("PageGrowthMix", "Growth Mix"),
+    ]
+    ensure_pages(empty_report, targets)
+    ensure_pages(empty_report, targets)
+    names = [s["name"] for s in empty_report["sections"]]
+    for n, _ in targets:
+        assert n in names
+    assert len(names) == len(set(names))
 
 
 def test_build_matrix_visual_axes():

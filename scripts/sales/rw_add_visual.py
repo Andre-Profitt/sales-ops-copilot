@@ -18,7 +18,16 @@ from azure.identity import AzureCliCredential
 from scripts.sales._pbir_helpers import (
     build_card_visual,
     build_slicer_visual,
+    ensure_pages,
 )
+
+REDESIGN_PAGES = [
+    ("PageWhatChanged", "What Changed"),
+    ("PageForecast", "Forecast"),
+    ("PageStageHygiene", "Stage Hygiene"),
+    ("PageRenewals", "Renewals"),
+    ("PageGrowthMix", "Growth Mix"),
+]
 
 WORKSPACE_ID = "b66233d5-9d4a-44ba-89a8-b70206d98ae7"
 REPORT_ID = "d7362a11-f3dd-4bd1-a69a-68c941c2598b"  # rpt_vp_ops_scorecard
@@ -140,12 +149,27 @@ def main() -> None:
         action="store_true",
         help="Add 6 per-stage forward-rate cards (Stages 1-6, RW KPI stage_conversion target >70%%)",
     )
+    ap.add_argument(
+        "--ensure-pages",
+        action="store_true",
+        help="Idempotently ensure the 5 redesign tabs exist in report.json",
+    )
     args = ap.parse_args()
 
     token = _token()
     print("getting current report.json...")
     rj = get_current_report_json(token)
     print(f"  current sections: {len(rj.get('sections', []))}")
+
+    if args.ensure_pages:
+        ensure_pages(rj, REDESIGN_PAGES)
+        print(f"  pages now: {[s['displayName'] for s in rj['sections']]}")
+        push_report(token, rj)
+        print(
+            f"\ndone. open: https://app.fabric.microsoft.com/groups/{WORKSPACE_ID}/reports/{REPORT_ID}"
+        )
+        return
+
     section = rj["sections"][0]
     print(
         f"  current visuals in '{section.get('displayName', section['name'])}': {len(section.get('visualContainers', []))}"

@@ -307,3 +307,42 @@ def build_matrix_visual(
         "y": y,
         "z": 800,
     }
+
+
+def _new_section(name: str, display_name: str, ordinal: int) -> dict:
+    return {
+        "name": name,
+        "displayName": display_name,
+        "filters": "[]",
+        "ordinal": ordinal,
+        "visualContainers": [],
+        "displayOption": 1,
+        "height": 720,
+        "width": 1280,
+    }
+
+
+def add_page(report: dict, name: str, display_name: str) -> dict:
+    """Append a new page (section). Returns the section dict (existing or new)."""
+    if any(s["name"] == name for s in report["sections"]):
+        return next(s for s in report["sections"] if s["name"] == name)
+    section = _new_section(name, display_name, ordinal=len(report["sections"]))
+    report["sections"].append(section)
+    return section
+
+
+def remove_page(report: dict, name: str) -> None:
+    """Remove a page (section) by name. No-op if not found."""
+    report["sections"] = [s for s in report["sections"] if s["name"] != name]
+
+
+def ensure_pages(report: dict, targets: list[tuple[str, str]]) -> None:
+    """Idempotently ensure each (name, display_name) page exists.
+
+    Existing pages are left untouched (visualContainers preserved).
+    Missing pages are appended in the order given.
+    """
+    existing = {s["name"] for s in report["sections"]}
+    for name, display in targets:
+        if name not in existing:
+            add_page(report, name, display)
