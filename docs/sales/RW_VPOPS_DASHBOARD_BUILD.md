@@ -277,3 +277,26 @@ Composed via `scripts/sales/rw_compose_what_changed.py`. Idempotent — re-run w
 **Pre-flight:** the composer runs every visual through `validate_visual_dict` against the deployed `sm_sales_kpis_rw` before pushing. Catches measure-name typos pre-LRO.
 
 **To rebuild:** `python3 -m scripts.sales.rw_compose_what_changed`
+
+## 2026-05-08 — Tab 2 (Forecast) shipped
+
+Composed via `scripts/sales/rw_compose_forecast.py`. Idempotent. Model now at 100 measures (added: `Days Remaining In FQ`, `Total Open Pipeline Value`).
+
+**Visuals shipped (9):**
+
+- Hero (3 cards): Days Remaining (FQ) · Open Pipeline Value (cross-motion) · Closed Won ARR
+- Stage × Motion matrix (rows=stage_name, cols=motion_type, value=Open Value)
+- Forecast discipline (4 cards): Slip Rate · Total Slips · Total Upgrades · Avg Days In Category
+- Commit-risk table (6 cols): Opp · Account · Stage · Value · Close Date · Last Stage Move
+
+**Spec deviations (path-(a) deferrals):**
+
+- Quota attainment + Pipeline coverage 3x cards: need `Quota__c` per region
+- Stage × motion "Weighted" column: no win-prob-by-stage in model; ship Open Value only
+- Region split table: needs quota
+- Forecast accuracy + Avg days in commit + WoW delta: ForecastingItem snapshots not in ETL
+- Commit-risk "Owner" + "Days late" columns: need d_user join + row-context measure
+
+**Cross-motion measure caveat:** `Total Open Pipeline Value` blends ARR (Land/Expand) and ACV (Renewal) into one column. Use ONLY for cross-motion comparison visuals like the Stage × Motion matrix. For any single-motion or motion-summable visual, keep using `Total Open Pipeline ARR` (L+E only) or `Total Renewal ACV Won` (Renewal-only) — the never-blend rule still applies.
+
+**To rebuild:** `python3 -m scripts.sales.rw_compose_forecast`
