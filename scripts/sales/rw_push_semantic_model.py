@@ -478,6 +478,55 @@ def build_model_bim() -> dict:
             "formatString": "0.0%",
             "description": "Backward rate out of Contracting (Land+Expand).",
         },
+        # Time-in-stage: Land+Expand restriction + per-stage variants of Avg Days In Prior Stage.
+        {
+            "name": "Avg Days In Prior Stage (LE)",
+            "expression": (
+                "CALCULATE ( [Avg Days In Prior Stage], "
+                "TREATAS ( "
+                "CALCULATETABLE ( VALUES ( f_opportunity[opp_id] ), "
+                'f_opportunity[motion_type] IN { "Land", "Expand" } ), '
+                "f_stage_transition[opp_id] ) )"
+            ),
+            "formatString": "0.0",
+            "description": "Avg days an opp spent in its prior stage before transitioning (Land+Expand only).",
+        },
+        {
+            "name": "Avg Days In Stage 1",
+            "expression": "CALCULATE ( [Avg Days In Prior Stage (LE)], f_stage_transition[from_stage_num] = 1 )",
+            "formatString": "0.0",
+            "description": "Avg days in Prospecting (Land+Expand).",
+        },
+        {
+            "name": "Avg Days In Stage 2",
+            "expression": "CALCULATE ( [Avg Days In Prior Stage (LE)], f_stage_transition[from_stage_num] = 2 )",
+            "formatString": "0.0",
+            "description": "Avg days in Discovery (Land+Expand).",
+        },
+        {
+            "name": "Avg Days In Stage 3",
+            "expression": "CALCULATE ( [Avg Days In Prior Stage (LE)], f_stage_transition[from_stage_num] = 3 )",
+            "formatString": "0.0",
+            "description": "Avg days in Engagement (Land+Expand).",
+        },
+        {
+            "name": "Avg Days In Stage 4",
+            "expression": "CALCULATE ( [Avg Days In Prior Stage (LE)], f_stage_transition[from_stage_num] = 4 )",
+            "formatString": "0.0",
+            "description": "Avg days in Shortlisted (Land+Expand). Caveat: small/skewed sample due to S4 funnel-skip pattern.",
+        },
+        {
+            "name": "Avg Days In Stage 5",
+            "expression": "CALCULATE ( [Avg Days In Prior Stage (LE)], f_stage_transition[from_stage_num] = 5 )",
+            "formatString": "0.0",
+            "description": "Avg days in Preferred (Land+Expand).",
+        },
+        {
+            "name": "Avg Days In Stage 6",
+            "expression": "CALCULATE ( [Avg Days In Prior Stage (LE)], f_stage_transition[from_stage_num] = 6 )",
+            "formatString": "0.0",
+            "description": "Avg days in Contracting (Land+Expand).",
+        },
     ]
 
     # Forecast-category transition measures (Phase 3; require f_forecast_transition).
