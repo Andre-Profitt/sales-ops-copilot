@@ -239,6 +239,32 @@ def build_model_bim() -> dict:
             "formatString": '"$"#,0',
             "description": "S3+ open ACV (companion to Stage 3 Plus ARR; covers Renewal motion via ACV field). Real stage-name list verified vs OpportunityStage.",
         },
+        # ── Forecast tab support ───────────────────────────────────────
+        {
+            "name": "Days Remaining In FQ",
+            "expression": (
+                "VAR _today = TODAY () "
+                "VAR _q_end = EOMONTH ( _today, 3 - MOD ( MONTH ( _today ) - 1, 3 ) - 1 ) "
+                "RETURN DATEDIFF ( _today, _q_end, DAY )"
+            ),
+            "formatString": "0",
+            "description": "Calendar days from today to end-of-current-fiscal-quarter (FY = calendar year per d_calendar).",
+        },
+        {
+            "name": "Total Open Pipeline Value",
+            "expression": (
+                "CALCULATE ( "
+                'SUMX ( f_opportunity, IF ( f_opportunity[motion_type] = "Renewal", '
+                "f_opportunity[acv_org_ccy], f_opportunity[arr_org_ccy] ) ), "
+                "f_opportunity[is_closed] = FALSE() )"
+            ),
+            "formatString": '"$"#,0',
+            "description": (
+                "Open pipeline value combining ARR (Land+Expand) and ACV (Renewal) per "
+                "SimCorp business rules — never blend, but render in one column when "
+                "comparing motions side-by-side. Use ONLY for cross-motion visuals."
+            ),
+        },
         # Partner mix
         {
             "name": "Partner ARR",
