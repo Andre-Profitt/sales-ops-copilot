@@ -188,3 +188,70 @@ python3 scripts/sales/sf_to_fabric_rw.py            # opp/account/user
 python3 scripts/sales/sf_to_fabric_rw_phase2.py     # OFH stage transitions
 # semantic model uses Direct Lake — auto-picks up new data on next query
 ```
+
+## 2026-05-08 — Foundation Phase Complete
+
+Foundation for the 5-tab redesign (spec: `docs/superpowers/specs/2026-05-08-rw-dashboard-redesign-design.md`, plan: `docs/superpowers/plans/2026-05-08-rw-dashboard-foundation.md`).
+
+### Builders shipped (`scripts/sales/_pbir_helpers.py`)
+
+- `build_card_visual` — extracted from `rw_add_visual.py`
+- `build_slicer_visual` — extracted
+- `build_table_visual` — `tableEx` with mixed column / measure projections
+- `build_matrix_visual` — `pivotTable` with rows / columns / values axes
+- `add_page` / `remove_page` / `ensure_pages` — idempotent page management
+
+All five live-probed against `rpt_vp_ops_scorecard` Fabric LRO and accepted.
+
+### Pages live in `rpt_vp_ops_scorecard`
+
+`VP Ops Scorecard` (original 26 visuals + leftover probe table + matrix from Tasks 3-4 — `--clear` to wipe) plus the 5 redesign tabs:
+
+- PageWhatChanged (`What Changed`)
+- PageForecast (`Forecast`)
+- PageStageHygiene (`Stage Hygiene`)
+- PageRenewals (`Renewals`)
+- PageGrowthMix (`Growth Mix`)
+
+All five new tabs are empty — ready for per-tab visual composition.
+
+### DAX measures shipped
+
+98 total measures in `sm_sales_kpis_rw` (verify via `python3 -m scripts.sales.rw_inventory_measures`). Net new this session:
+
+| Family | Count | Source |
+|---|---|---|
+| Stage Backward Pct (LE) + 6 per-stage | 7 | f_stage_transition |
+| Avg Days In Prior Stage (LE) + 6 per-stage | 7 | f_stage_transition |
+| Stalled Open Opps Count/ARR × {14d, 21d} | 4 | f_opportunity |
+| At Risk / Watch / Healthy × {Count, ARR} | 6 | f_opportunity (+ rel) |
+| Window deltas: New/Won/Lost × {1d, 7d, FQTD} | 9 | f_opportunity |
+| Window deltas: Stage Moves Count/ARR + Backward Moves × {1d, 7d, FQTD} | 9 | f_stage_transition |
+| S3+ Open ACV | 1 | f_opportunity |
+
+### Schema deltas vs. plan draft
+
+The plan draft was authored against assumed columns; real schema reality-check (verified vs deployed model + SF metadata):
+
+- `f_stage_transition[direction]` is `"forward"`/`"backward"` (string), not `1`/`-1` (int)
+- `f_stage_transition[transition_at]` (not `transition_date`)
+- `f_stage_transition[days_in_prior_stage]` (not `days_in_from_stage`)
+- `f_opportunity` has no `stage_num` column → stage filters use `stage_name IN {...}` with verified OpportunityStage names
+- Last-stage-move date already lives on `f_opportunity[last_stage_change_date]` → no LOOKUP through f_stage_transition needed for stall detection
+- Existing `Stage Backward Pct` already in model → only per-stage variants are net-new
+
+All new measures above use the real schema and were live-deployed (Fabric LRO succeeded for each commit).
+
+### Deferred to follow-up plans
+
+Requires SF SOQL pull additions in `sf_to_fabric_rw.py` + ETL run before measures can ship:
+
+- **S3+ Approval Compliance Pct** — needs `Stage_20_Approval__c` (label "Commercial Approval") added to f_opportunity
+- **Slips family** (3 window-delta measures) — needs `f_ofh_close_date` table (CloseDate OFH pull)
+- **Growth Mix family** (Task 12, ~6 measures: SaaS YoY, Synergy pipe/won) — `Synergy` field doesn't exist on Opportunity; SaaS measures need `APTS_RH_ASP_Annual__c` ("SimCorp SaaS ACV") added to ETL pull
+- ILF/ALF pipeline split, cross-sell-to-acquired, PS attach, one-off revenue — need new ETL extensions
+- **Per-tab visual composition** — 5 separate per-tab planning sessions using the primitives + measures shipped here
+
+### Tests
+
+`tests/sales/test_pbir_helpers.py` — 8 passing tests covering all helper builders and page-management primitives.
