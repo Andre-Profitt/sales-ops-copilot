@@ -92,6 +92,77 @@ def build_model_bim() -> dict:
             },
         }
 
+    # Window-bound delta helper: 3 windows × N families.
+    # 1d / 7d / FQTD (fiscal-quarter-to-date — start of current calendar quarter).
+    _windows = {
+        "1d": "TODAY() - 1",
+        "7d": "TODAY() - 7",
+        "FQTD": "DATE(YEAR(TODAY()), CEILING(MONTH(TODAY())/3, 1)*3 - 2, 1)",
+    }
+
+    def _window_measures():
+        out = []
+        for label, since in _windows.items():
+            out.append(
+                {
+                    "name": f"New Opps Count {label}",
+                    "expression": f"CALCULATE ( COUNTROWS ( f_opportunity ), f_opportunity[created_date] >= {since} )",
+                    "formatString": "#,0",
+                    "description": f"Opps created in the last {label} window.",
+                }
+            )
+            out.append(
+                {
+                    "name": f"Closed Won Count {label}",
+                    "expression": f"CALCULATE ( COUNTROWS ( f_opportunity ), f_opportunity[is_won] = TRUE(), f_opportunity[close_date] >= {since} )",
+                    "formatString": "#,0",
+                    "description": f"Opps won and closed in the last {label} window.",
+                }
+            )
+            out.append(
+                {
+                    "name": f"Closed Lost Count {label}",
+                    "expression": f"CALCULATE ( COUNTROWS ( f_opportunity ), f_opportunity[is_closed] = TRUE(), f_opportunity[is_won] = FALSE(), f_opportunity[close_date] >= {since} )",
+                    "formatString": "#,0",
+                    "description": f"Opps closed-lost in the last {label} window.",
+                }
+            )
+        return out
+
+    def _stage_window_measures():
+        out = []
+        for label, since in _windows.items():
+            out.append(
+                {
+                    "name": f"Stage Moves Count {label}",
+                    "expression": f"CALCULATE ( COUNTROWS ( f_stage_transition ), f_stage_transition[transition_at] >= {since} )",
+                    "formatString": "#,0",
+                    "description": f"Stage transitions (any direction) in the last {label} window.",
+                }
+            )
+            out.append(
+                {
+                    "name": f"Backward Moves Count {label}",
+                    "expression": f'CALCULATE ( COUNTROWS ( f_stage_transition ), f_stage_transition[direction] = "backward", f_stage_transition[transition_at] >= {since} )',
+                    "formatString": "#,0",
+                    "description": f"Backward stage transitions in the last {label} window.",
+                }
+            )
+            out.append(
+                {
+                    "name": f"Stage Moves ARR {label}",
+                    "expression": (
+                        "CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), "
+                        "TREATAS ( "
+                        f"CALCULATETABLE ( VALUES ( f_stage_transition[opp_id] ), f_stage_transition[transition_at] >= {since} ), "
+                        "f_opportunity[opp_id] ) )"
+                    ),
+                    "formatString": '"$"#,0',
+                    "description": f"ARR of opps with any stage move in the last {label} window.",
+                }
+            )
+        return out
+
     # Phase 1 measures — computable from f_opportunity alone. Names use
     # "Total"/"Avg"/"Pct"/"Count" prefixes so they don't collide with raw
     # column names (lesson from sm_workforce_rw).
@@ -466,6 +537,9 @@ def build_model_bim() -> dict:
             "formatString": '"$"#,0',
             "description": "ARR of opps with a forward stage move in the last 7 days.",
         },
+        # Window-bound deltas (Tab 1 What Changed) — 3 families × 3 windows = 9 measures.
+        # Slips family deferred — requires f_ofh_close_date table not in current ETL.
+        *_window_measures(),
     ]
 
     # Stage-transition measures (Phase 2; require f_stage_transition table).
@@ -655,6 +729,8 @@ def build_model_bim() -> dict:
             "formatString": "0.0",
             "description": "Avg days in Contracting (Land+Expand).",
         },
+        # Window-bound stage-transition deltas — 3 families × 3 windows = 9 measures.
+        *_stage_window_measures(),
     ]
 
     # Forecast-category transition measures (Phase 3; require f_forecast_transition).
