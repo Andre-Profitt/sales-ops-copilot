@@ -229,6 +229,16 @@ def build_model_bim() -> dict:
             "formatString": '"$"#,0',
             "description": "RW KPI: stage3_acv_value (proxy). Stage 3+ open ARR.",
         },
+        {
+            "name": "S3 Plus Open ACV",
+            "expression": (
+                "CALCULATE ( SUM ( f_opportunity[acv_org_ccy] ), "
+                "f_opportunity[is_closed] = FALSE(), "
+                'f_opportunity[stage_name] IN { "3 - Engagement", "4 - Shortlisted", "5 - Preferred", "6 - Contracting", "7 - Sales Ops QC" } )'
+            ),
+            "formatString": '"$"#,0',
+            "description": "S3+ open ACV (companion to Stage 3 Plus ARR; covers Renewal motion via ACV field). Real stage-name list verified vs OpportunityStage.",
+        },
         # Partner mix
         {
             "name": "Partner ARR",
