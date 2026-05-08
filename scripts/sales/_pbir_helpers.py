@@ -309,6 +309,80 @@ def build_matrix_visual(
     }
 
 
+def build_textbox_visual(
+    text: str,
+    x: float,
+    y: float,
+    w: float = 1200,
+    h: float = 26,
+    font_size_pt: int = 10,
+    color: str = "#666666",
+    bold: bool = True,
+) -> dict:
+    """Construct a textbox visualContainer for section labels and notes.
+
+    This PBIR-Legacy shape matches textbox visuals already used elsewhere
+    in this repo and the SalesManager fixture. It has no model binding.
+    """
+    visual_name = uuid.uuid4().hex[:20]
+    text_style = {
+        "fontFamily": "Segoe UI",
+        "fontSize": f"{font_size_pt}pt",
+        "color": color,
+    }
+    if bold:
+        text_style["fontWeight"] = "bold"
+
+    config = {
+        "name": visual_name,
+        "layouts": [
+            {
+                "id": 0,
+                "position": {
+                    "x": x,
+                    "y": y,
+                    "z": 900,
+                    "width": w,
+                    "height": h,
+                    "tabOrder": 900,
+                },
+            }
+        ],
+        "singleVisual": {
+            "visualType": "textbox",
+            "drillFilterOtherVisuals": True,
+            "objects": {
+                "general": [
+                    {
+                        "properties": {
+                            "paragraphs": [
+                                {
+                                    "textRuns": [
+                                        {
+                                            "value": text,
+                                            "textStyle": text_style,
+                                        }
+                                    ],
+                                    "horizontalTextAlignment": "left",
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+        },
+    }
+    return {
+        "config": json.dumps(config),
+        "filters": "[]",
+        "height": h,
+        "width": w,
+        "x": x,
+        "y": y,
+        "z": 900,
+    }
+
+
 def _new_section(name: str, display_name: str, ordinal: int) -> dict:
     return {
         "name": name,

@@ -23,6 +23,7 @@ from scripts.sales._pbir_helpers import (
     build_card_visual,
     build_matrix_visual,
     build_table_visual,
+    build_textbox_visual,
 )
 from scripts.sales.rw_add_visual import (
     REPORT_ID,
@@ -50,12 +51,19 @@ def _compose(section: dict) -> None:
     """Append all visuals for the Forecast tab.
 
     Layout grid:
-        y=20    Hero — 3 cards × 380×120 (Days Remaining · Open · Closed Won)
-        y=160   Stage × motion matrix — 1200×260
-        y=440   Forecast discipline — 4 cards × 280×110
-        y=570   Commit-risk table — 1200×260
+        y=12    Hero header
+        y=42    Hero - 3 cards x 380x96 (Days Remaining, Open, Closed Won)
+        y=154   Stage x motion header
+        y=182   Stage x motion matrix - 1200x210
+        y=408   Forecast discipline header
+        y=436   Forecast discipline - 4 cards x 280x80
+        y=532   Commit-risk header
+        y=560   Commit-risk table - 1200x145
     """
     # ── Hero (3 cards) ─────────────────────────────────────────
+    section["visualContainers"].append(
+        build_textbox_visual("HERO - quarter answer", x=20, y=12, w=1200, h=24)
+    )
     # Spec calls for Quota attainment + Pipeline coverage 3x +
     # Days remaining. Quota dependency unmet — substitute with
     # Open Pipeline Value (cross-motion) + Closed Won ARR.
@@ -66,10 +74,13 @@ def _compose(section: dict) -> None:
     ]
     for tbl, msr, title, x in hero:
         section["visualContainers"].append(
-            build_card_visual(tbl, msr, title, x=x, y=20, w=380, h=120)
+            build_card_visual(tbl, msr, title, x=x, y=42, w=380, h=96)
         )
 
     # ── Stage × motion matrix ──────────────────────────────────
+    section["visualContainers"].append(
+        build_textbox_visual("STAGE X MOTION - open value matrix", x=20, y=154, w=1200, h=24)
+    )
     # Rows = stage_name, columns = motion_type, value = Total Open Pipeline Value
     # (which renders ARR for Land/Expand and ACV for Renewal — see measure
     # description). Filtering to S3+ stages happens via the visual's filter
@@ -86,13 +97,16 @@ def _compose(section: dict) -> None:
                 }
             ],
             x=20,
-            y=160,
+            y=182,
             w=1200,
-            h=260,
+            h=210,
         )
     )
 
     # ── Forecast discipline (4 cards) ──────────────────────────
+    section["visualContainers"].append(
+        build_textbox_visual("FORECAST DISCIPLINE - movement quality", x=20, y=408, w=1200, h=24)
+    )
     discipline = [
         ("f_forecast_transition", "Forecast Slip Pct", "Slip Rate", 20),
         ("f_forecast_transition", "Forecast Slips", "Total Slips (qtr)", 320),
@@ -106,10 +120,13 @@ def _compose(section: dict) -> None:
     ]
     for tbl, msr, title, x in discipline:
         section["visualContainers"].append(
-            build_card_visual(tbl, msr, title, x=x, y=440, w=280, h=110)
+            build_card_visual(tbl, msr, title, x=x, y=436, w=280, h=80)
         )
 
     # ── Commit-risk table ──────────────────────────────────────
+    section["visualContainers"].append(
+        build_textbox_visual("COMMIT RISK - late-stage open deals", x=20, y=532, w=1200, h=24)
+    )
     # Top late-stage open deals. Owner column deferred (no d_user join in
     # build_table_visual yet); use account_name instead. "Days late"
     # column also deferred (would need a row-context measure).
@@ -155,9 +172,9 @@ def _compose(section: dict) -> None:
                 },
             ],
             x=20,
-            y=570,
+            y=560,
             w=1200,
-            h=260,
+            h=145,
         )
     )
 

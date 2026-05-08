@@ -6,6 +6,7 @@ from scripts.sales._pbir_helpers import (
     build_card_visual_with_objects,
     build_matrix_visual,
     build_table_visual,
+    build_textbox_visual,
     ensure_pages,
     remove_page,
 )
@@ -141,3 +142,21 @@ def test_build_table_visual_columns():
     sel = config["singleVisual"]["prototypeQuery"]["Select"]
     assert "Column" in sel[0] and sel[0]["Column"]["Property"] == "opp_name"
     assert "Measure" in sel[2] and sel[2]["Measure"]["Property"] == "Total Open Pipeline ARR"
+
+
+def test_build_textbox_visual_static_label():
+    vc = build_textbox_visual(
+        "RISK BAND - only what needs attention",
+        x=20,
+        y=12,
+        w=1200,
+        h=26,
+    )
+    assert vc["filters"] == "[]"
+    config = json.loads(vc["config"])
+    assert config["singleVisual"]["visualType"] == "textbox"
+    run = config["singleVisual"]["objects"]["general"][0]["properties"]["paragraphs"][0][
+        "textRuns"
+    ][0]
+    assert run["value"] == "RISK BAND - only what needs attention"
+    assert run["textStyle"]["fontSize"] == "10pt"

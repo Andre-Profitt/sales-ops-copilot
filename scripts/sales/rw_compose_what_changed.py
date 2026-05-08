@@ -11,7 +11,7 @@ Run:
 
 from __future__ import annotations
 
-from scripts.sales._pbir_helpers import build_card_visual, build_table_visual
+from scripts.sales._pbir_helpers import build_card_visual, build_table_visual, build_textbox_visual
 from scripts.sales.rw_add_visual import (
     REPORT_ID,
     WORKSPACE_ID,
@@ -38,9 +38,12 @@ def _compose(section: dict) -> None:
     """Append all visuals for the What Changed tab to section['visualContainers'].
 
     Layout grid:
-        y=20    Risk band hero — 3 columns × (count card 320×120 + ARR card 320×80)
-        y=255   Change buckets — 5 cards across (Stage Moves count + ARR, New, Won, Lost)
-        y=510   Detail table — 1200×260 spanning the page
+        y=12    Risk band header
+        y=42    Risk band hero - 3 columns x (count card 320x78 + ARR card 320x56)
+        y=198   Change buckets header
+        y=228   Change buckets - compact cards
+        y=386   Detail header
+        y=414   Detail table - 1200x280 spanning the page
         Spec calls for a window slicer at (1000, 20). Field-parameter slicer
         shape not yet captured in _pbir_shapes.py — defer until a textbox
         or field-parameter slicer is browser-authored and captured via
@@ -48,6 +51,9 @@ def _compose(section: dict) -> None:
         measure name.
     """
     # ── Phase 1: Risk band ──────────────────────────────────────
+    section["visualContainers"].append(
+        build_textbox_visual("RISK BAND - only what needs attention", x=20, y=12, w=1200, h=24)
+    )
     # Hero cards. ARR shown via a separate small card under each count
     # — a single card hosts one Measure per the current builder.
     # Combine into one card via objects block in a follow-up after we
@@ -60,29 +66,37 @@ def _compose(section: dict) -> None:
     for count_msr, arr_msr, title, x in risk_band:
         section["visualContainers"].append(
             build_card_visual(
-                "f_opportunity", count_msr, f"{title} — count", x=x, y=20, w=320, h=120
+                "f_opportunity", count_msr, f"{title} - count", x=x, y=42, w=320, h=78
             )
         )
         section["visualContainers"].append(
-            build_card_visual("f_opportunity", arr_msr, f"{title} — ARR", x=x, y=145, w=320, h=80)
+            build_card_visual("f_opportunity", arr_msr, f"{title} - ARR", x=x, y=124, w=320, h=56)
         )
 
     # ── Phase 2: Change buckets (3 of 4 spec'd; Slips deferred) ──
+    section["visualContainers"].append(
+        build_textbox_visual("CHANGE BUCKETS - comprehensive", x=20, y=198, w=1200, h=24)
+    )
     # Spec calls for Stage Moves · Slips · New Opps · Closed.
     # Slips defers until f_ofh_close_date ETL ships
     # (see docs/sales/RW_VPOPS_DASHBOARD_BUILD.md Foundation Phase).
     change_buckets = [
         # (table, measure, title, x, y, w, h)
-        ("f_stage_transition", "Stage Moves Count 7d", "Stage Moves (7d)", 20, 255, 240, 120),
-        ("f_stage_transition", "Stage Moves ARR 7d", "Stage Moves (7d) — ARR", 20, 380, 240, 80),
-        ("f_opportunity", "New Opps Count 7d", "New Opps (7d)", 280, 255, 240, 120),
-        ("f_opportunity", "Closed Won Count 7d", "Won (7d)", 540, 255, 240, 120),
-        ("f_opportunity", "Closed Lost Count 7d", "Lost (7d)", 800, 255, 240, 120),
+        ("f_stage_transition", "Stage Moves Count 7d", "Stage Moves (7d)", 20, 228, 240, 72),
+        ("f_stage_transition", "Stage Moves ARR 7d", "Stage Moves (7d) - ARR", 20, 305, 240, 54),
+        ("f_opportunity", "New Opps Count 7d", "New Opps (7d)", 280, 228, 240, 90),
+        ("f_opportunity", "Closed Won Count 7d", "Won (7d)", 540, 228, 240, 90),
+        ("f_opportunity", "Closed Lost Count 7d", "Lost (7d)", 800, 228, 240, 90),
     ]
     for tbl, msr, title, x, y, w, h in change_buckets:
         section["visualContainers"].append(build_card_visual(tbl, msr, title, x=x, y=y, w=w, h=h))
 
     # ── Phase 3: Detail table ──────────────────────────────────
+    section["visualContainers"].append(
+        build_textbox_visual(
+            "DETAIL - top open opportunities by ARR impact", x=20, y=386, w=1200, h=24
+        )
+    )
     # Open opps by Open Pipeline ARR. Spec's "Change" + "Risk class"
     # columns require row-context measures — deferred. Top-20 filter
     # is applied via the PBI Visual filter pane today; build_table_visual
@@ -119,9 +133,9 @@ def _compose(section: dict) -> None:
                 },
             ],
             x=20,
-            y=510,
+            y=414,
             w=1200,
-            h=260,
+            h=280,
         )
     )
 

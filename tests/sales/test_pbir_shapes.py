@@ -11,9 +11,9 @@ from scripts.sales._pbir_shapes import (
 )
 
 
-def test_four_shapes_captured_at_minimum():
-    """The 4 shapes shipped in the foundation phase must be in the KG."""
-    for name in ("card", "slicer", "tableEx", "pivotTable"):
+def test_foundation_shapes_captured_at_minimum():
+    """The shipped REST-safe shapes must be in the KG."""
+    for name in ("card", "slicer", "tableEx", "pivotTable", "textbox"):
         assert name in SHAPES, f"{name} should be captured"
 
 

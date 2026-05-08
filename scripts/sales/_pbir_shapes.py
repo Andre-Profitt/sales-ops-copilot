@@ -95,6 +95,19 @@ SHAPES: dict[str, VisualShape] = {
             "refs. Use for Stage × Motion, region × FQ, stage hygiene grids."
         ),
     ),
+    "textbox": VisualShape(
+        visual_type="textbox",
+        select_kinds=(),
+        projection_keys=(),
+        builder="build_textbox_visual",
+        verified_at="2026-05-08",
+        source_report_id=_RPT_VP_OPS,
+        requires_aliases=False,
+        notes=(
+            "Static text container for section labels and notes. Shape matches "
+            "SalesManager fixture textboxes plus scripts/workforce/wf_push_report.py."
+        ),
+    ),
 }
 
 
@@ -125,7 +138,6 @@ PENDING: tuple[str, ...] = (
     "decompositionTreeVisual",
     "waterfallChart",
     "treemap",
-    "textbox",
     "actionButton",
     "basicShape",
     "image",

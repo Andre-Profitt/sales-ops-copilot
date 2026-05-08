@@ -300,3 +300,35 @@ Composed via `scripts/sales/rw_compose_forecast.py`. Idempotent. Model now at 10
 **Cross-motion measure caveat:** `Total Open Pipeline Value` blends ARR (Land/Expand) and ACV (Renewal) into one column. Use ONLY for cross-motion comparison visuals like the Stage × Motion matrix. For any single-motion or motion-summable visual, keep using `Total Open Pipeline ARR` (L+E only) or `Total Renewal ACV Won` (Renewal-only) — the never-blend rule still applies.
 
 **To rebuild:** `python3 -m scripts.sales.rw_compose_forecast`
+
+## 2026-05-08 — REST-safe visual polish pass
+
+Path chosen: **Path C — ship the cleanest possible Power BI report via REST**. Path A remains the highest-fidelity route for RAG-tinted card backgrounds and conditional formatting, but it still needs a Windows/PBI Desktop or browser-authored capture pass. Path B would hit the brainstorm mockup exactly, but changes the medium away from Fabric/Power BI.
+
+**Shipped:**
+
+- Added `build_textbox_visual` in `scripts/sales/_pbir_helpers.py` using the PBIR-Legacy textbox shape already present in the SalesManager fixture and workforce report builder.
+- Registered `textbox` in `scripts/sales/_pbir_shapes.py` and removed it from `PENDING`.
+- Re-composed **What Changed** with REST-safe section headers:
+  - `RISK BAND - only what needs attention`
+  - `CHANGE BUCKETS - comprehensive`
+  - `DETAIL - top open opportunities by ARR impact`
+- Re-composed **Forecast** with REST-safe section headers:
+  - `HERO - quarter answer`
+  - `STAGE X MOTION - open value matrix`
+  - `FORECAST DISCIPLINE - movement quality`
+  - `COMMIT RISK - late-stage open deals`
+- Tightened both pages back inside the 1280x720 canvas. The previous Forecast commit-risk table extended below the page (`y=570, h=260`); it now ends at `y=705`.
+
+**Live push evidence:**
+
+- `python3 -m scripts.sales.rw_compose_what_changed` succeeded; What Changed now has 15 visuals.
+- `python3 -m scripts.sales.rw_compose_forecast` succeeded; Forecast now has 13 visuals.
+- `python3 -m scripts.sales.rw_validate --live` succeeded: 6 sections, 54 visualContainers, all measure refs resolve against 100 deployed measures.
+- `python3 -m scripts.sales.rw_capture_visual --list --page "What Changed"` and `--page "Forecast"` confirm the textbox visualContainers are present in the live report.
+
+**Still deferred:**
+
+- RAG-tinted card backgrounds, combined count+ARR cards, and table cell conditional formatting. Do not hand-roll these `objects` blocks; capture a renderer-validated shape via PBI Desktop/Windows or a browser-authored Fabric edit, then generalize it.
+
+**Tests:** `python3 -m pytest tests/sales` — 20 passed.
