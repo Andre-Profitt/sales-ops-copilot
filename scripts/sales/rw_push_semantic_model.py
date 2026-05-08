@@ -428,6 +428,56 @@ def build_model_bim() -> dict:
             "formatString": "0.0%",
             "description": "Contracting → Won forward rate (Land+Expand). RW KPI stage_conversion target >70%.",
         },
+        # Stage Backward Pct + per-stage variants (Land+Expand). Mirrors the forward family;
+        # uses TREATAS to push motion filter from f_opportunity into f_stage_transition.
+        {
+            "name": "Stage Backward Pct (LE)",
+            "expression": (
+                "CALCULATE ( [Stage Backward Pct], "
+                "TREATAS ( "
+                "CALCULATETABLE ( VALUES ( f_opportunity[opp_id] ), "
+                'f_opportunity[motion_type] IN { "Land", "Expand" } ), '
+                "f_stage_transition[opp_id] ) )"
+            ),
+            "formatString": "0.0%",
+            "description": "Stage Backward Pct restricted to Land+Expand opps (excludes Renewal).",
+        },
+        {
+            "name": "Stage 1 Backward Pct",
+            "expression": "CALCULATE ( [Stage Backward Pct (LE)], f_stage_transition[from_stage_num] = 1 )",
+            "formatString": "0.0%",
+            "description": "Backward rate out of Prospecting (Land+Expand). Pairs with Stage 1 Forward Pct.",
+        },
+        {
+            "name": "Stage 2 Backward Pct",
+            "expression": "CALCULATE ( [Stage Backward Pct (LE)], f_stage_transition[from_stage_num] = 2 )",
+            "formatString": "0.0%",
+            "description": "Backward rate out of Discovery (Land+Expand).",
+        },
+        {
+            "name": "Stage 3 Backward Pct",
+            "expression": "CALCULATE ( [Stage Backward Pct (LE)], f_stage_transition[from_stage_num] = 3 )",
+            "formatString": "0.0%",
+            "description": "Backward rate out of Engagement (Land+Expand). Caveat: ~70% close-won S4 skip — partial population.",
+        },
+        {
+            "name": "Stage 4 Backward Pct",
+            "expression": "CALCULATE ( [Stage Backward Pct (LE)], f_stage_transition[from_stage_num] = 4 )",
+            "formatString": "0.0%",
+            "description": "Backward rate out of Shortlisted (Land+Expand). Caveat: small/skewed sample.",
+        },
+        {
+            "name": "Stage 5 Backward Pct",
+            "expression": "CALCULATE ( [Stage Backward Pct (LE)], f_stage_transition[from_stage_num] = 5 )",
+            "formatString": "0.0%",
+            "description": "Backward rate out of Preferred (Land+Expand).",
+        },
+        {
+            "name": "Stage 6 Backward Pct",
+            "expression": "CALCULATE ( [Stage Backward Pct (LE)], f_stage_transition[from_stage_num] = 6 )",
+            "formatString": "0.0%",
+            "description": "Backward rate out of Contracting (Land+Expand).",
+        },
     ]
 
     # Forecast-category transition measures (Phase 3; require f_forecast_transition).
