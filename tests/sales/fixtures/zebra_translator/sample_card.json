@@ -1,0 +1,451 @@
+{
+  "template_slug": "annual-comparative-statement-power-bi-template",
+  "page_name": "195ad565c9ae200e6187",
+  "page_display_name": "Consolidated financials",
+  "visual_family": "ZebraBICards",
+  "visual_type_full": "zebraBiCards8085D508EB994C8081CA47C85ABD7C26",
+  "position": {
+    "x": 0,
+    "y": 71.60965617108447,
+    "w": 279.92865594151203,
+    "h": 648.5556360040264
+  },
+  "projections": {
+    "Values": [
+      "\u2211 Key Measures.AC"
+    ],
+    "PreviousYear": [
+      "\u2211 Key Measures.PY"
+    ],
+    "Group": [
+      "AccountHierarchy.Account"
+    ]
+  },
+  "objects": {
+    "license": [
+      {
+        "properties": {
+          "licenseKey": "0qZf1bd6fV30Am7ZKojGNFfnexsrLwEVNMHvnbXtaokD4zop4JU9sDYAMuMsM9OmpuawJ7iBQMdsjL+i7F9SDXsiY29tcGFueSI6IlplYnJhIEJJIiwiZXhwaXJ5RGF0ZSI6IjIwMjYtMDgtMDEiLCJuT2ZVc2VycyI6IjEiLCJsaWNlbnNlVHlwZSI6IlBhaWQiLCJ2aXN1YWxUeXBlIjoiQWxsIn0=",
+          "licensedTo": "Zebra BI",
+          "validUntil": "2027-04-06T00:00:00.000Z"
+        }
+      }
+    ],
+    "customData": [
+      {
+        "properties": {
+          "version": "7.3.0.13238154566",
+          "migrations": {
+            "dataMigrationVersion": "7.3.0.13238154566"
+          },
+          "gridData": {
+            "cards": {
+              "card-f3a8370f-3876-5827-bd0a-518a22a67775": {
+                "id": "card-f3a8370f-3876-5827-bd0a-518a22a67775",
+                "cardTitle": "",
+                "cardValue": 3842.2590161639846,
+                "cardType": 1,
+                "total": 3842.2590161639846,
+                "valueFormat": "",
+                "sortScenarioAbsoluteValue": 32.42403624108283,
+                "sortScenarioRelativeValue": 0.8510614347327712,
+                "role": "Values",
+                "invertedCategories": [],
+                "highlightedCategories": [],
+                "highlightedCategoriesColors": [],
+                "kpiDescription": "",
+                "decimals": 1,
+                "relativeDecimals": 1,
+                "basisPointDecimals": 0,
+                "percentPointDecimals": 0,
+                "currency": "None",
+                "chartMax": 0,
+                "chartMin": 0,
+                "coordinates": {
+                  "x": null,
+                  "y": null,
+                  "h": 2,
+                  "w": 2
+                },
+                "hasComments": false,
+                "isNegative": false,
+                "isMixed": false
+              },
+              "card-11f53e51-785e-5771-8c85-b7f95102019c": {
+                "id": "card-11f53e51-785e-5771-8c85-b7f95102019c",
+                "cardTitle": "",
+                "cardValue": 2541.4159985745882,
+                "cardType": 1,
+                "total": 2541.4159985745882,
+                "valueFormat": "",
+                "sortScenarioAbsoluteValue": 2.3731464811367005,
+                "sortScenarioRelativeValue": 0.0934661846758526,
+                "role": "Values",
+                "invertedCategories": [],
+                "highlightedCategories": [],
+                "highlightedCategoriesColors": [],
+                "kpiDescription": "",
+                "decimals": 1,
+                "relativeDecimals": 1,
+                "basisPointDecimals": 0,
+                "percentPointDecimals": 0,
+                "currency": "None",
+                "chartMax": 0,
+                "chartMin": 0,
+                "coordinates": {
+                  "x": null,
+                  "y": null,
+                  "h": 2,
+                  "w": 2
+                },
+                "hasComments": false,
+                "isNegative": false,
+                "isMixed": false
+              },
+              "card-028511d3-6364-5410-ae9e-ec84f42c4dc9": {
+                "id": "card-028511d3-6364-5410-ae9e-ec84f42c4dc9",
+                "cardTitle": "",
+                "cardValue": 1347.7026582610981,
+                "cardType": 1,
+                "total": 1347.7026582610981,
+                "valueFormat": "",
+                "sortScenarioAbsoluteValue": 27.072895222131365,
+                "sortScenarioRelativeValue": 2.0499988702232925,
+                "role": "Values",
+                "invertedCategories": [],
+                "highlightedCategories": [],
+                "highlightedCategoriesColors": [],
+                "kpiDescription": "",
+                "decimals": 1,
+                "relativeDecimals": 1,
+                "basisPointDecimals": 0,
+                "percentPointDecimals": 0,
+                "currency": "None",
+                "chartMax": 0,
+                "chartMin": 0,
+                "coordinates": {
+                  "x": null,
+                  "y": null,
+                  "h": 2,
+                  "w": 2
+                },
+                "hasComments": false,
+                "isNegative": false,
+                "isMixed": false
+              },
+              "card-f91a9510-8695-504d-98fa-d2d90575d5c3": {
+                "id": "card-f91a9510-8695-504d-98fa-d2d90575d5c3",
+                "cardTitle": "",
+                "cardValue": 983.2600776716467,
+                "cardType": 1,
+                "total": 983.2600776716467,
+                "valueFormat": "",
+                "sortScenarioAbsoluteValue": 25.550309053800106,
+                "sortScenarioRelativeValue": 2.6678551155089454,
+                "role": "Values",
+                "invertedCategories": [],
+                "highlightedCategories": [],
+                "highlightedCategoriesColors": [],
+                "kpiDescription": "",
+                "decimals": 1,
+                "relativeDecimals": 1,
+                "basisPointDecimals": 0,
+                "percentPointDecimals": 0,
+                "currency": "None",
+                "chartMax": 0,
+                "chartMin": 0,
+                "coordinates": {
+                  "x": null,
+                  "y": null,
+                  "h": 2,
+                  "w": 2
+                },
+                "hasComments": false,
+                "isNegative": false,
+                "isMixed": false
+              },
+              "card-268aab57-5cff-5ef2-a64b-540aac46f23b": {
+                "id": "card-268aab57-5cff-5ef2-a64b-540aac46f23b",
+                "cardTitle": "",
+                "cardValue": 1315.0440791391577,
+                "cardType": 1,
+                "total": 1315.0440791391577,
+                "valueFormat": "",
+                "sortScenarioAbsoluteValue": 27.576206604493336,
+                "sortScenarioRelativeValue": 2.1418947371636925,
+                "role": "Values",
+                "invertedCategories": [],
+                "highlightedCategories": [],
+                "highlightedCategoriesColors": [],
+                "kpiDescription": "",
+                "decimals": 1,
+                "relativeDecimals": 1,
+                "basisPointDecimals": 0,
+                "percentPointDecimals": 0,
+                "currency": "None",
+                "chartMax": 0,
+                "chartMin": 0,
+                "coordinates": {
+                  "x": null,
+                  "y": null,
+                  "h": 2,
+                  "w": 2
+                },
+                "hasComments": false,
+                "isNegative": false,
+                "isMixed": false
+              }
+            },
+            "nesting": {},
+            "groups": {}
+          },
+          "dataVersion": "103L",
+          "uniformData": {
+            "instance": 0,
+            "globalCardSize": {
+              "w": 256,
+              "h": 127
+            },
+            "cards": {
+              "card-f3a8370f-3876-5827-bd0a-518a22a67775": {
+                "id": "card-f3a8370f-3876-5827-bd0a-518a22a67775",
+                "cardTitle": "AC",
+                "cardValue": 3842.2590161639846,
+                "cardType": 1,
+                "total": 3809.8349799229018,
+                "valueFormat": "",
+                "sortScenarioAbsoluteValue": -3.5200233221053168,
+                "sortScenarioRelativeValue": -0.09230777934679364,
+                "role": "Values",
+                "chartType": 0,
+                "invertedCategories": [],
+                "highlightedCategories": [],
+                "highlightedCategoriesColors": [],
+                "kpiDescription": "",
+                "decimals": 1,
+                "relativeDecimals": 1,
+                "basisPointDecimals": 0,
+                "percentPointDecimals": 0,
+                "currency": "None",
+                "chartMax": 0,
+                "chartMin": 0,
+                "coordinates": {
+                  "x": 0,
+                  "y": null,
+                  "h": 127,
+                  "w": 256
+                },
+                "hasComments": false,
+                "isNegative": false,
+                "isMixed": false
+              },
+              "card-05b8a039-17d9-5461-b0ca-a851431b7f72": {
+                "id": "card-05b8a039-17d9-5461-b0ca-a851431b7f72",
+                "cardTitle": "AC",
+                "cardValue": 1270.7921278294507,
+                "cardType": 1,
+                "total": 1270.7921278294507,
+                "valueFormat": "",
+                "sortScenarioAbsoluteValue": -15.591743067158177,
+                "sortScenarioRelativeValue": -1.2120599006182144,
+                "role": "Values",
+                "invertedCategories": [],
+                "highlightedCategories": [],
+                "highlightedCategoriesColors": [],
+                "kpiDescription": "",
+                "decimals": 1,
+                "relativeDecimals": 1,
+                "basisPointDecimals": 0,
+                "percentPointDecimals": 0,
+                "currency": "None",
+                "chartMax": 0,
+                "chartMin": 0,
+                "coordinates": {
+                  "x": null,
+                  "y": null,
+                  "h": null,
+                  "w": null
+                },
+                "hasComments": false,
+                "isNegative": false,
+                "isMixed": false
+              },
+              "card-11f53e51-785e-5771-8c85-b7f95102019c": {
+                "id": "card-11f53e51-785e-5771-8c85-b7f95102019c",
+                "cardTitle": "AC",
+                "cardValue": 2541.4159985745882,
+                "cardType": 1,
+                "total": 2539.0428520934515,
+                "valueFormat": "",
+                "sortScenarioAbsoluteValue": 12.071719745054907,
+                "sortScenarioRelativeValue": 0.47771498417697644,
+                "role": "Values",
+                "invertedCategories": [],
+                "highlightedCategories": [],
+                "highlightedCategoriesColors": [],
+                "kpiDescription": "",
+                "decimals": 1,
+                "relativeDecimals": 1,
+                "basisPointDecimals": 0,
+                "percentPointDecimals": 0,
+                "currency": "None",
+                "chartMax": 0,
+                "chartMin": 0,
+                "coordinates": {
+                  "x": 1,
+                  "y": null,
+                  "h": 127,
+                  "w": 256
+                },
+                "hasComments": false,
+                "isNegative": false,
+                "isMixed": false
+              },
+              "card-5de3a22e-4d77-5f45-a95d-50e6fed3cf3f": {
+                "id": "card-5de3a22e-4d77-5f45-a95d-50e6fed3cf3f",
+                "cardTitle": "AC",
+                "cardValue": 1218.413089054484,
+                "cardType": 1,
+                "total": 1218.413089054484,
+                "valueFormat": "",
+                "sortScenarioAbsoluteValue": 2.391850123319955,
+                "sortScenarioRelativeValue": 0.19669476541563524,
+                "role": "Values",
+                "invertedCategories": [],
+                "highlightedCategories": [],
+                "highlightedCategoriesColors": [],
+                "kpiDescription": "",
+                "decimals": 1,
+                "relativeDecimals": 1,
+                "basisPointDecimals": 0,
+                "percentPointDecimals": 0,
+                "currency": "None",
+                "chartMax": 0,
+                "chartMin": 0,
+                "coordinates": {
+                  "x": null,
+                  "y": null,
+                  "h": null,
+                  "w": null
+                },
+                "hasComments": false,
+                "isNegative": false,
+                "isMixed": false
+              },
+              "card-268aab57-5cff-5ef2-a64b-540aac46f23b": {
+                "id": "card-268aab57-5cff-5ef2-a64b-540aac46f23b",
+                "cardTitle": "AC",
+                "cardValue": 1315.0440791391577,
+                "cardType": 1,
+                "total": 1287.4678725346644,
+                "valueFormat": "",
+                "sortScenarioAbsoluteValue": 9.391398130351263,
+                "sortScenarioRelativeValue": 0.7348072136863651,
+                "role": "Values",
+                "invertedCategories": [],
+                "highlightedCategories": [],
+                "highlightedCategoriesColors": [],
+                "kpiDescription": "",
+                "decimals": 1,
+                "relativeDecimals": 1,
+                "basisPointDecimals": 0,
+                "percentPointDecimals": 0,
+                "currency": "None",
+                "chartMax": 0,
+                "chartMin": 0,
+                "coordinates": {
+                  "x": 2,
+                  "y": null,
+                  "h": 127,
+                  "w": 256
+                },
+                "hasComments": false,
+                "isNegative": false,
+                "isMixed": false
+              },
+              "card-028511d3-6364-5410-ae9e-ec84f42c4dc9": {
+                "id": "card-028511d3-6364-5410-ae9e-ec84f42c4dc9",
+                "cardTitle": "AC",
+                "cardValue": 1347.7026582610981,
+                "cardType": 1,
+                "total": 1320.6297630389668,
+                "valueFormat": "",
+                "sortScenarioAbsoluteValue": 9.679869621734724,
+                "sortScenarioRelativeValue": 0.7383859345304468,
+                "role": "Values",
+                "invertedCategories": [],
+                "highlightedCategories": [],
+                "highlightedCategoriesColors": [],
+                "kpiDescription": "",
+                "decimals": 1,
+                "relativeDecimals": 1,
+                "basisPointDecimals": 0,
+                "percentPointDecimals": 0,
+                "currency": "None",
+                "chartMax": 0,
+                "chartMin": 0,
+                "coordinates": {
+                  "x": 3,
+                  "y": null,
+                  "h": 127,
+                  "w": 256
+                },
+                "hasComments": false,
+                "isNegative": false,
+                "isMixed": false
+              },
+              "card-f91a9510-8695-504d-98fa-d2d90575d5c3": {
+                "id": "card-f91a9510-8695-504d-98fa-d2d90575d5c3",
+                "cardTitle": "AC",
+                "cardValue": 983.2600776716467,
+                "cardType": 1,
+                "total": 957.7097686178466,
+                "valueFormat": "",
+                "sortScenarioAbsoluteValue": 18.15515454050933,
+                "sortScenarioRelativeValue": 1.9323149786601899,
+                "role": "Values",
+                "invertedCategories": [],
+                "highlightedCategories": [],
+                "highlightedCategoriesColors": [],
+                "kpiDescription": "",
+                "decimals": 1,
+                "relativeDecimals": 1,
+                "basisPointDecimals": 0,
+                "percentPointDecimals": 0,
+                "currency": "None",
+                "chartMax": 0,
+                "chartMin": 0,
+                "coordinates": {
+                  "x": 4,
+                  "y": null,
+                  "h": 127,
+                  "w": 256
+                },
+                "hasComments": false,
+                "isNegative": false,
+                "isMixed": false
+              }
+            },
+            "groups": {}
+          }
+        }
+      }
+    ],
+    "grid": [
+      {
+        "properties": {
+          "cardsInRow": "1D",
+          "layoutPreset": "uniform-layout",
+          "cardSort": "custom-sort"
+        }
+      }
+    ],
+    "card": [
+      {
+        "properties": {
+          "suppressChart": "true"
+        }
+      }
+    ]
+  }
+}

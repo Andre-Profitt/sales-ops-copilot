@@ -87,3 +87,126 @@ def test_translate_visual_invalid_config_string_passes_through():
     src = {"x": 0, "y": 0, "width": 300, "height": 200, "config": "not-json{"}
     out = translate_visual(src, MeasureCatalog(), BindMap())
     assert out == [src]
+
+
+from pathlib import Path
+
+import pytest
+
+FIXTURES = Path(__file__).parent / "fixtures" / "zebra_translator"
+
+
+def _layout_vc_from_raw(raw_row: dict) -> dict:
+    """Convert an infra-miner raw_configs.jsonl row into a Layout-shape vc.
+
+    The miner stores singleVisual.objects + projections+visualType separately,
+    not as an embedded config string. Re-pack them so the translator can parse.
+    """
+    pos = raw_row["position"]
+    return {
+        "x": pos["x"],
+        "y": pos["y"],
+        "width": pos["w"],
+        "height": pos["h"],
+        "config": json.dumps(
+            {
+                "name": "raw",
+                "singleVisual": {
+                    "visualType": raw_row["visual_type_full"],
+                    "projections": {
+                        role: [{"queryRef": q} for q in qs]
+                        for role, qs in raw_row.get("projections", {}).items()
+                    },
+                    "objects": raw_row.get("objects", {}),
+                },
+            }
+        ),
+    }
+
+
+def _catalog_for_refs(raw_row: dict) -> MeasureCatalog:
+    """Build a catalog that resolves every queryRef in the raw row's projections.
+
+    Each measure stays in its native table and is keyed by the field-name
+    (which is what BindMap will lookup against).
+    """
+    by_scenario = {}
+    measure_to_table = {}
+    for refs in raw_row.get("projections", {}).values():
+        for ref in refs:
+            if "." not in ref:
+                continue
+            tbl, fld = ref.split(".", 1)
+            by_scenario[fld] = fld
+            measure_to_table[fld] = tbl
+    return MeasureCatalog(by_scenario=by_scenario, measure_to_table=measure_to_table)
+
+
+def _bindmap_for_refs(raw_row: dict) -> BindMap:
+    return BindMap(
+        zebra_to_rw={
+            ref: ref
+            for refs in raw_row.get("projections", {}).values()
+            for ref in refs
+            if "." in ref
+        }
+    )
+
+
+def test_translate_visual_table_emits_native_tableEx():
+    raw = json.loads((FIXTURES / "sample_table.json").read_text())
+    src = _layout_vc_from_raw(raw)
+    out = translate_visual(src, _catalog_for_refs(raw), _bindmap_for_refs(raw))
+    assert len(out) == 1
+    cfg = json.loads(out[0]["config"])
+    assert cfg["singleVisual"]["visualType"] == "tableEx"
+
+
+def test_translate_visual_table_preserves_position():
+    raw = json.loads((FIXTURES / "sample_table.json").read_text())
+    src = _layout_vc_from_raw(raw)
+    out = translate_visual(src, _catalog_for_refs(raw), _bindmap_for_refs(raw))
+    assert out[0]["x"] == src["x"]
+    assert out[0]["y"] == src["y"]
+    assert out[0]["width"] == src["width"]
+    assert out[0]["height"] == src["height"]
+
+
+def test_translate_visual_card_emits_native_card():
+    raw = json.loads((FIXTURES / "sample_card.json").read_text())
+    src = _layout_vc_from_raw(raw)
+    out = translate_visual(src, _catalog_for_refs(raw), _bindmap_for_refs(raw))
+    assert len(out) >= 1
+    cfg = json.loads(out[0]["config"])
+    assert cfg["singleVisual"]["visualType"] in {"card", "multiRowCard"}
+
+
+@pytest.mark.skipif(
+    not (FIXTURES / "sample_waterfall.json").exists(),
+    reason="ZebraWaterfall fixture not available in corpus",
+)
+def test_translate_visual_waterfall_emits_native_waterfallChart():
+    raw = json.loads((FIXTURES / "sample_waterfall.json").read_text())
+    src = _layout_vc_from_raw(raw)
+    out = translate_visual(src, _catalog_for_refs(raw), _bindmap_for_refs(raw))
+    cfg = json.loads(out[0]["config"])
+    assert cfg["singleVisual"]["visualType"] == "waterfallChart"
+
+
+def test_translate_visual_corpus_smoke_no_exceptions():
+    """Every row in the 360-VC corpus translates without raising."""
+    src = Path("data/zebra_kg/infrastructure/raw_configs.jsonl")
+    if not src.exists():
+        pytest.skip("infrastructure corpus not present")
+    cat = MeasureCatalog()  # empty -> translator falls back gracefully
+    bm = BindMap()
+    count = 0
+    with src.open() as f:
+        for line in f:
+            raw = json.loads(line)
+            vc = _layout_vc_from_raw(raw)
+            out = translate_visual(vc, cat, bm)
+            assert isinstance(out, list)
+            assert len(out) >= 1
+            count += 1
+    assert count > 0

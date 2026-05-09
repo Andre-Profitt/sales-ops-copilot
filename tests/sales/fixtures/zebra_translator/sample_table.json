@@ -1,0 +1,461 @@
+{
+  "template_slug": "annual-comparative-statement-power-bi-template",
+  "page_name": "934619f7c08505330c88",
+  "page_display_name": "Overview",
+  "visual_family": "ZebraBITables",
+  "visual_type_full": "ZebraBITables98F88148E5424E949E69864664EE1860",
+  "position": {
+    "x": 8.951207021385558,
+    "y": 67.5409257068183,
+    "w": 762,
+    "h": 652.6243664682926
+  },
+  "projections": {
+    "Category": [
+      "AccountHierarchy.Account"
+    ],
+    "Values": [
+      "\u2211 Key Measures.AC"
+    ],
+    "PreviousYear": [
+      "\u2211 Key Measures.PY"
+    ],
+    "Filters": [
+      "\u2211 Key Measures.Selected Year"
+    ]
+  },
+  "objects": {
+    "version": [
+      {
+        "properties": {
+          "version": "7.7.0.17726213625"
+        }
+      }
+    ],
+    "migrationLog": [
+      {
+        "properties": {
+          "isMigrating": "false"
+        }
+      }
+    ],
+    "licenseSettings": [
+      {
+        "properties": {
+          "licenseKey": "0qZf1bd6fV30Am7ZKojGNFfnexsrLwEVNMHvnbXtaokD4zop4JU9sDYAMuMsM9OmpuawJ7iBQMdsjL+i7F9SDXsiY29tcGFueSI6IlplYnJhIEJJIiwiZXhwaXJ5RGF0ZSI6IjIwMjYtMDgtMDEiLCJuT2ZVc2VycyI6IjEiLCJsaWNlbnNlVHlwZSI6IlBhaWQiLCJ2aXN1YWxUeXBlIjoiQWxsIn0=",
+          "lastLicenseCheck": ""
+        }
+      }
+    ],
+    "proFeaturesSettings": [
+      {
+        "properties": {
+          "show": "true"
+        }
+      }
+    ],
+    "chartSettings": [
+      {
+        "properties": {
+          "firstTimeShowingColumnAdder": "false",
+          "valueChart": "2D",
+          "columnSettings": {
+            "actual": {
+              "invert": false,
+              "scaleGroup": 1,
+              "format": 0,
+              "useMeasureName": false,
+              "suppressOthers": false,
+              "tableView": {
+                "bold": false,
+                "textColor": "",
+                "backgroundFill": "",
+                "markerStyle": 5,
+                "border": "",
+                "showAsTable": 0,
+                "hidden": false,
+                "hiddenFromGroups": []
+              },
+              "chartView": {
+                "bold": false,
+                "textColor": "",
+                "backgroundFill": "",
+                "markerStyle": 5,
+                "border": "",
+                "showAsTable": 2,
+                "hidden": false,
+                "hiddenFromGroups": []
+              }
+            },
+            "previousYear": {
+              "invert": false,
+              "scaleGroup": 1,
+              "format": 0,
+              "useMeasureName": false,
+              "suppressOthers": false,
+              "tableView": {
+                "bold": false,
+                "textColor": "",
+                "backgroundFill": "",
+                "markerStyle": 5,
+                "border": "",
+                "showAsTable": 0,
+                "hidden": false,
+                "hiddenFromGroups": []
+              },
+              "chartView": {
+                "bold": false,
+                "textColor": "",
+                "backgroundFill": "",
+                "markerStyle": 5,
+                "border": "",
+                "showAsTable": 2,
+                "hidden": true,
+                "hiddenFromGroups": []
+              }
+            },
+            "actual-previousYear": {
+              "invert": false,
+              "scaleGroup": 1,
+              "format": 1,
+              "useMeasureName": false,
+              "suppressOthers": false,
+              "tableView": {
+                "bold": false,
+                "textColor": "",
+                "backgroundFill": "",
+                "markerStyle": 5,
+                "border": "",
+                "showAsTable": 0,
+                "hidden": false,
+                "hiddenFromGroups": []
+              },
+              "chartView": {
+                "bold": false,
+                "textColor": "",
+                "backgroundFill": "",
+                "markerStyle": 5,
+                "border": "",
+                "showAsTable": 0,
+                "hidden": false,
+                "hiddenFromGroups": []
+              }
+            },
+            "actual-previousYear-percent": {
+              "invert": false,
+              "scaleGroup": 1,
+              "format": 2,
+              "useMeasureName": false,
+              "suppressOthers": false,
+              "tableView": {
+                "bold": false,
+                "textColor": "",
+                "backgroundFill": "",
+                "markerStyle": 5,
+                "border": "",
+                "showAsTable": 0,
+                "hidden": false,
+                "hiddenFromGroups": []
+              },
+              "chartView": {
+                "bold": false,
+                "textColor": "",
+                "backgroundFill": "",
+                "markerStyle": 5,
+                "border": "",
+                "showAsTable": 2,
+                "hidden": false,
+                "hiddenFromGroups": []
+              }
+            }
+          },
+          "relativeChart": "0D"
+        }
+      }
+    ],
+    "sortSettings": [
+      {
+        "properties": {
+          "columnName": "actual",
+          "chartSort": "0D",
+          "categorySort": "0D"
+        }
+      }
+    ],
+    "categoriesMetadata": [
+      {
+        "properties": {
+          "invertCalculationCategories": [
+            {
+              "hierarchyIdentity": "AccountHierarchy.Account",
+              "category": "Cost of Goods Sold (COGS)",
+              "level": 0
+            },
+            {
+              "hierarchyIdentity": "AccountHierarchy.Account",
+              "category": "Total Operating Expenses",
+              "level": 0
+            },
+            {
+              "hierarchyIdentity": "AccountHierarchy.Account",
+              "category": "Interest Expense",
+              "level": 0
+            },
+            {
+              "hierarchyIdentity": "AccountHierarchy.Account",
+              "category": "Taxes",
+              "level": 0
+            }
+          ],
+          "userOverrides": [
+            "Cost of Goods Sold (COGS)",
+            "Total Operating Expenses",
+            "Interest Expense",
+            "Taxes"
+          ],
+          "collapsedVirtually": [],
+          "flatResultCalculationCategories": [
+            {
+              "hierarchyIdentity": "AccountHierarchy.Account",
+              "category": "Gross Profit",
+              "level": 0
+            },
+            {
+              "hierarchyIdentity": "AccountHierarchy.Account",
+              "category": "Operating Income (EBIT)",
+              "level": 0
+            },
+            {
+              "hierarchyIdentity": "AccountHierarchy.Account",
+              "category": "Net Income",
+              "level": 0
+            },
+            {
+              "hierarchyIdentity": "AccountHierarchy.Account",
+              "category": "EBITDA",
+              "level": 0
+            }
+          ],
+          "categoryFormatSettings": {
+            "Total Revenue": {
+              "isBold": true,
+              "isItalic": false,
+              "textColor": "",
+              "highlightColor": "",
+              "topBorder": false
+            }
+          },
+          "invertedHierarchies": [],
+          "invertCalculationCategoriesValues": [
+            {
+              "hierarchyIdentity": "AccountHierarchy.Account",
+              "category": "Cost of Goods Sold (COGS)",
+              "level": 0,
+              "type": 0
+            },
+            {
+              "hierarchyIdentity": "AccountHierarchy.Account",
+              "category": "Total Operating Expenses",
+              "level": 0,
+              "type": 0
+            },
+            {
+              "hierarchyIdentity": "AccountHierarchy.Account",
+              "category": "Interest Expense",
+              "level": 0,
+              "type": 0
+            },
+            {
+              "hierarchyIdentity": "AccountHierarchy.Account",
+              "category": "Taxes",
+              "level": 0,
+              "type": 0
+            }
+          ]
+        }
+      }
+    ],
+    "coreSettings": [
+      {
+        "properties": {
+          "forceVisualRefreshTimestamp": "1743766019760L"
+        }
+      }
+    ],
+    "annotationLayerSettings": [
+      {
+        "properties": {
+          "annotationComments": [
+            {
+              "title": "Total Revenue - 3842.2590161639846",
+              "content": "",
+              "deltaContent": {
+                "ops": [
+                  {
+                    "insert": "Supported by "
+                  },
+                  {
+                    "attributes": {
+                      "bold": true
+                    },
+                    "insert": "licensing and OTC growth"
+                  },
+                  {
+                    "insert": ", though partially offset by flat performance in core prescription lines. Focus on accelerating high-margin streams to drive topline momentum.\n"
+                  }
+                ]
+              },
+              "commentType": 1,
+              "filterContexts": [
+                {
+                  "fieldName": "Selected Year",
+                  "value": 2024,
+                  "queryName": "\u2211 Key Measures.Selected Year"
+                }
+              ],
+              "uuid": "735ad186-5f20-4e34-88c7-3501ff139ee0",
+              "categoryFields": [],
+              "dataProperty": 2,
+              "dataPointSelection": {
+                "identifier": {
+                  "fullGroup": "",
+                  "fullCategory": "Total Revenue"
+                }
+              },
+              "createdAt": "2025-03-26T14:33:16.646Z",
+              "updatedAt": "2025-03-26T14:33:16.646Z"
+            },
+            {
+              "title": "Cost of Goods Sold (COGS) - 1300.843017589395",
+              "content": "",
+              "deltaContent": {
+                "ops": [
+                  {
+                    "insert": "Driven by"
+                  },
+                  {
+                    "attributes": {
+                      "bold": true
+                    },
+                    "insert": " inflationary pressures"
+                  },
+                  {
+                    "insert": " on raw materials and logistics. Tighten procurement strategies and evaluate cost-saving initiatives in packaging and distribution.\n"
+                  }
+                ]
+              },
+              "commentType": 1,
+              "filterContexts": [
+                {
+                  "fieldName": "Selected Year",
+                  "value": 2024,
+                  "queryName": "\u2211 Key Measures.Selected Year"
+                }
+              ],
+              "uuid": "9c6064b7-d245-46a2-ae13-067b2d919ec0",
+              "categoryFields": [],
+              "dataProperty": 2,
+              "dataPointSelection": {
+                "identifier": {
+                  "fullGroup": "",
+                  "fullCategory": "Cost of Goods Sold (COGS)"
+                }
+              },
+              "createdAt": "2025-03-26T14:33:21.468Z",
+              "updatedAt": "2025-03-26T14:33:21.468Z"
+            },
+            {
+              "title": "Total Operating Expenses - 1193.71334031349",
+              "content": "",
+              "deltaContent": {
+                "ops": [
+                  {
+                    "insert": "Reflects disciplined "
+                  },
+                  {
+                    "attributes": {
+                      "bold": true
+                    },
+                    "insert": "cost control across SG&A"
+                  },
+                  {
+                    "insert": " functions. Maintain efficiency focus while ensuring adequate investment in growth and innovation.\n"
+                  }
+                ]
+              },
+              "commentType": 1,
+              "filterContexts": [
+                {
+                  "fieldName": "Selected Year",
+                  "value": 2024,
+                  "queryName": "\u2211 Key Measures.Selected Year"
+                }
+              ],
+              "uuid": "1b9b3864-10be-499b-a9e3-cd53fc2486fb",
+              "categoryFields": [],
+              "dataProperty": 2,
+              "dataPointSelection": {
+                "identifier": {
+                  "fullGroup": "",
+                  "fullCategory": "Total Operating Expenses"
+                }
+              },
+              "createdAt": "2025-03-26T14:33:28.287Z",
+              "updatedAt": "2025-03-26T14:33:28.287Z"
+            }
+          ]
+        }
+      }
+    ],
+    "commentBoxSettings": [
+      {
+        "properties": {
+          "show": "true",
+          "placement": "3D",
+          "size": "0.5476661951909477",
+          "shadow": "true",
+          "itemsMargin": "10L",
+          "padding": "10L",
+          "title": "3D",
+          "varianceIcon": "2D",
+          "showVariance": "1D"
+        }
+      }
+    ],
+    "titleSettings": [
+      {
+        "properties": {
+          "fontFamily": "''Segoe UI'', wf_segoe-ui_normal, helvetica, arial, sans-serif",
+          "fontSize": "12D",
+          "text": "[Selected Year] P&L, in USD ",
+          "fontColor": {
+            "solid": {
+              "color": "#000"
+            }
+          },
+          "fontWeight": "normal",
+          "fontStyle": "normal",
+          "alignment": "left",
+          "wrapLongTitle": "true"
+        }
+      }
+    ],
+    "previewSettings": [
+      {
+        "properties": {
+          "migrationsLog": {
+            "calculationCorrectionFeature": {
+              "visualVersion": "1.0.0",
+              "isMigrationCompleted": true
+            }
+          },
+          "activationLog": {
+            "calculationCorrectionFeature": {
+              "previewFeatureVersion": "1.0.0"
+            }
+          }
+        }
+      }
+    ]
+  }
+}
