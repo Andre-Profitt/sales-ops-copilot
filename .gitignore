@@ -44,3 +44,6 @@ data/zebra_kg/infrastructure/visual_packages.json
 data/zebra_kg/graphrag/*.jsonl
 data/zebra_kg/graphrag/*.json
 data/zebra_kg/graphrag/*.npy
+
+# track:rw — quick test dashboard outputs (regenerable from translator).
+data/zebra_kg/test_dashboards/*.json
