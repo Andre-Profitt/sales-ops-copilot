@@ -67,3 +67,40 @@ def test_build_index_node_count_matches_embedding_rows(tmp_path):
     emb = np.load(out_dir / "embeddings.npy")
     assert len(nodes) == emb.shape[0]
     assert emb.shape[1] == 384  # all-MiniLM-L6-v2 dim
+
+
+from scripts.sales.rw_zebra_kg_graphrag import retrieve, Chunk
+
+
+def _build_fixture_index(tmp_path) -> Path:
+    md = tmp_path / "atlas.md"
+    md.write_text(SAMPLE_MD)
+    out = tmp_path / "graphrag"
+    build_index([md], out, model_name="sentence-transformers/all-MiniLM-L6-v2")
+    return out
+
+
+def test_retrieve_returns_chunks_sorted_by_score(tmp_path):
+    out = _build_fixture_index(tmp_path)
+    results = retrieve("how does the column synthesis rule work", index_dir=out, top_k=2)
+    assert len(results) == 2
+    assert isinstance(results[0], Chunk)
+    assert results[0].score >= results[1].score
+
+
+def test_retrieve_top1_for_column_synthesis_query(tmp_path):
+    out = _build_fixture_index(tmp_path)
+    results = retrieve("X Y projection auto-derive percent column", index_dir=out, top_k=1)
+    assert results[0].section == "§3 Column synthesis"
+
+
+def test_retrieve_top1_for_bullet_marker_query(tmp_path):
+    out = _build_fixture_index(tmp_path)
+    results = retrieve("integrated bullet bar marker style 5", index_dir=out, top_k=1)
+    assert results[0].section == "§6.1 Bullet markerStyle"
+
+
+def test_retrieve_respects_top_k(tmp_path):
+    out = _build_fixture_index(tmp_path)
+    results = retrieve("anything", index_dir=out, top_k=2)
+    assert len(results) == 2

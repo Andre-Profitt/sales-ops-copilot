@@ -83,3 +83,90 @@ def build_index(
         "sources": [str(p) for p in md_paths],
     }
     (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=2))
+
+
+import argparse
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class Chunk:
+    id: str
+    source_doc: str
+    section: str
+    anchor: str
+    text: str
+    score: float
+
+
+_MODEL_CACHE: dict[str, object] = {}
+
+
+def _load_model(name: str):
+    if name not in _MODEL_CACHE:
+        from sentence_transformers import SentenceTransformer
+
+        _MODEL_CACHE[name] = SentenceTransformer(name)
+    return _MODEL_CACHE[name]
+
+
+def retrieve(
+    intent: str,
+    index_dir: Path = Path("data/zebra_kg/graphrag"),
+    top_k: int = 5,
+    model_name: str = "sentence-transformers/all-MiniLM-L6-v2",
+) -> list[Chunk]:
+    """Cosine-similarity rank atlas chunks against the intent query."""
+    nodes_path = index_dir / "nodes.jsonl"
+    emb_path = index_dir / "embeddings.npy"
+    if not nodes_path.exists() or not emb_path.exists():
+        raise FileNotFoundError(
+            f"GraphRAG index missing under {index_dir}. Run "
+            f"`python -m scripts.sales.rw_zebra_kg_graphrag build` first."
+        )
+    nodes = [json.loads(l) for l in nodes_path.open()]
+    emb = np.load(emb_path)
+    model = _load_model(model_name)
+    q = model.encode([intent], convert_to_numpy=True)[0]
+    q_norm = q / (np.linalg.norm(q) + 1e-12)
+    e_norm = emb / (np.linalg.norm(emb, axis=1, keepdims=True) + 1e-12)
+    scores = e_norm @ q_norm
+    top_idx = np.argsort(-scores)[:top_k]
+    return [
+        Chunk(
+            id=nodes[i]["id"],
+            source_doc=nodes[i]["source_doc"],
+            section=nodes[i]["section"],
+            anchor=nodes[i]["anchor"],
+            text=nodes[i]["text"],
+            score=float(scores[i]),
+        )
+        for i in top_idx
+    ]
+
+
+def _cli() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    sub = parser.add_subparsers(dest="cmd", required=True)
+    sub.add_parser("build", help="Build the index from the two atlas markdowns")
+    q = sub.add_parser("query", help="Query the index")
+    q.add_argument("intent", help="Free-text intent query")
+    q.add_argument("--top-k", type=int, default=5)
+    args = parser.parse_args()
+    if args.cmd == "build":
+        build_index(
+            [
+                Path("docs/sales/RW_ZEBRA_BI_INFRASTRUCTURE_ATLAS.md"),
+                Path("docs/sales/RW_POWER_BI_NATIVE_INFRASTRUCTURE_ATLAS.md"),
+            ],
+            Path("data/zebra_kg/graphrag"),
+        )
+    elif args.cmd == "query":
+        for c in retrieve(args.intent, top_k=args.top_k):
+            print(f"[{c.score:.3f}] {c.source_doc} :: {c.section}")
+            print(c.text[:200].replace("\n", " "))
+            print()
+
+
+if __name__ == "__main__":
+    _cli()
