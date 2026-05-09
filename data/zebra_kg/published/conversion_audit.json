@@ -1,0 +1,836 @@
+[
+  {
+    "slug": "cost-management-power-bi-template",
+    "source": {
+      "pages": 17,
+      "visuals": 148,
+      "zebra_visuals": 31,
+      "custom_visual_packages": 3,
+      "visual_type_counts": {
+        "pageNavigator": 4,
+        "ZebraBITables98F88148E5424E949E69864664EE1860": 12,
+        "slicer": 57,
+        "zebraBiCards8085D508EB994C8081CA47C85ABD7C26": 11,
+        "textbox": 14,
+        "basicShape": 14,
+        "image": 14,
+        "actionButton": 14,
+        "waterfall0221D8FBE40445C1A4E598AA8EF8B506": 8
+      }
+    },
+    "raw_zebra_rows": 31,
+    "raw_zebra_pages": 16,
+    "native": {
+      "pages": 16,
+      "visuals": 31,
+      "off_canvas_visuals": 0,
+      "fallback_textboxes": 0,
+      "custom_visual_leftovers": 0,
+      "unresolved_measure_refs": 0,
+      "placeholder_column_refs": 0,
+      "visual_type_counts": {
+        "tableEx": 12,
+        "multiRowCard": 11,
+        "waterfallChart": 8
+      }
+    },
+    "measures": 26,
+    "lost_context_visuals": 117,
+    "lost_source_pages": 1,
+    "fidelity_coverage_pct": 20.9,
+    "review_verdict": "not-template-fidelity",
+    "primary_issue": "1 source pages have no mined Zebra visual"
+  },
+  {
+    "slug": "saas-sales-power-bi-dashboard-template",
+    "source": {
+      "pages": 10,
+      "visuals": 97,
+      "zebra_visuals": 28,
+      "custom_visual_packages": 3,
+      "visual_type_counts": {
+        "waterfall0221D8FBE40445C1A4E598AA8EF8B506": 14,
+        "ZebraBITables98F88148E5424E949E69864664EE1860": 8,
+        "slicer": 43,
+        "zebraBiCards8085D508EB994C8081CA47C85ABD7C26": 6,
+        "image": 8,
+        "shape": 8,
+        "textbox": 8,
+        "<none>": 2
+      }
+    },
+    "raw_zebra_rows": 28,
+    "raw_zebra_pages": 10,
+    "native": {
+      "pages": 10,
+      "visuals": 28,
+      "off_canvas_visuals": 0,
+      "fallback_textboxes": 1,
+      "custom_visual_leftovers": 0,
+      "unresolved_measure_refs": 0,
+      "placeholder_column_refs": 3,
+      "visual_type_counts": {
+        "waterfallChart": 13,
+        "tableEx": 8,
+        "multiRowCard": 6,
+        "textbox": 1
+      }
+    },
+    "measures": 38,
+    "lost_context_visuals": 69,
+    "lost_source_pages": 0,
+    "fidelity_coverage_pct": 28.9,
+    "review_verdict": "native-approx-only",
+    "primary_issue": "69 non-Zebra source visuals dropped"
+  },
+  {
+    "slug": "social-media-power-bi-template",
+    "source": {
+      "pages": 10,
+      "visuals": 57,
+      "zebra_visuals": 27,
+      "custom_visual_packages": 3,
+      "visual_type_counts": {
+        "<none>": 8,
+        "slicer": 12,
+        "textbox": 4,
+        "zebraBiCards8085D508EB994C8081CA47C85ABD7C26": 9,
+        "ZebraBITables98F88148E5424E949E69864664EE1860": 11,
+        "waterfall0221D8FBE40445C1A4E598AA8EF8B506": 7,
+        "actionButton": 6
+      }
+    },
+    "raw_zebra_rows": 27,
+    "raw_zebra_pages": 10,
+    "native": {
+      "pages": 10,
+      "visuals": 27,
+      "off_canvas_visuals": 0,
+      "fallback_textboxes": 0,
+      "custom_visual_leftovers": 0,
+      "unresolved_measure_refs": 0,
+      "placeholder_column_refs": 30,
+      "visual_type_counts": {
+        "multiRowCard": 9,
+        "tableEx": 11,
+        "waterfallChart": 7
+      }
+    },
+    "measures": 12,
+    "lost_context_visuals": 30,
+    "lost_source_pages": 0,
+    "fidelity_coverage_pct": 47.4,
+    "review_verdict": "native-approx-only",
+    "primary_issue": "30 non-Zebra source visuals dropped"
+  },
+  {
+    "slug": "dynamic-comments-power-bi-template",
+    "source": {
+      "pages": 15,
+      "visuals": 149,
+      "zebra_visuals": 23,
+      "custom_visual_packages": 3,
+      "visual_type_counts": {
+        "waterfall0221D8FBE40445C1A4E598AA8EF8B506": 13,
+        "textbox": 39,
+        "slicer": 39,
+        "ZebraBITables98F88148E5424E949E69864664EE1860": 10,
+        "basicShape": 26,
+        "image": 17,
+        "pivotTable": 3,
+        "<none>": 1,
+        "tableEx": 1
+      }
+    },
+    "raw_zebra_rows": 23,
+    "raw_zebra_pages": 14,
+    "native": {
+      "pages": 14,
+      "visuals": 23,
+      "off_canvas_visuals": 0,
+      "fallback_textboxes": 0,
+      "custom_visual_leftovers": 0,
+      "unresolved_measure_refs": 0,
+      "placeholder_column_refs": 10,
+      "visual_type_counts": {
+        "waterfallChart": 13,
+        "tableEx": 10
+      }
+    },
+    "measures": 15,
+    "lost_context_visuals": 126,
+    "lost_source_pages": 1,
+    "fidelity_coverage_pct": 15.4,
+    "review_verdict": "not-template-fidelity",
+    "primary_issue": "1 source pages have no mined Zebra visual"
+  },
+  {
+    "slug": "hr-analytics-power-bi-template",
+    "source": {
+      "pages": 7,
+      "visuals": 136,
+      "zebra_visuals": 23,
+      "custom_visual_packages": 3,
+      "visual_type_counts": {
+        "shape": 44,
+        "textbox": 19,
+        "<none>": 8,
+        "actionButton": 11,
+        "image": 12,
+        "zebraBiCards8085D508EB994C8081CA47C85ABD7C26": 6,
+        "ZebraBITables98F88148E5424E949E69864664EE1860": 13,
+        "slicer": 15,
+        "scatterChart": 2,
+        "waterfall0221D8FBE40445C1A4E598AA8EF8B506": 4,
+        "bookmarkNavigator": 1,
+        "decompositionTreeVisual": 1
+      }
+    },
+    "raw_zebra_rows": 23,
+    "raw_zebra_pages": 5,
+    "native": {
+      "pages": 5,
+      "visuals": 23,
+      "off_canvas_visuals": 0,
+      "fallback_textboxes": 0,
+      "custom_visual_leftovers": 0,
+      "unresolved_measure_refs": 0,
+      "placeholder_column_refs": 5,
+      "visual_type_counts": {
+        "multiRowCard": 6,
+        "tableEx": 13,
+        "waterfallChart": 4
+      }
+    },
+    "measures": 21,
+    "lost_context_visuals": 113,
+    "lost_source_pages": 2,
+    "fidelity_coverage_pct": 16.9,
+    "review_verdict": "not-template-fidelity",
+    "primary_issue": "2 source pages have no mined Zebra visual"
+  },
+  {
+    "slug": "consolidated-financials-power-bi-template",
+    "source": {
+      "pages": 11,
+      "visuals": 95,
+      "zebra_visuals": 22,
+      "custom_visual_packages": 3,
+      "visual_type_counts": {
+        "waterfall0221D8FBE40445C1A4E598AA8EF8B506": 12,
+        "textbox": 13,
+        "slicer": 31,
+        "zebraBiCards8085D508EB994C8081CA47C85ABD7C26": 4,
+        "basicShape": 17,
+        "image": 11,
+        "ZebraBITables98F88148E5424E949E69864664EE1860": 6,
+        "actionButton": 1
+      }
+    },
+    "raw_zebra_rows": 22,
+    "raw_zebra_pages": 11,
+    "native": {
+      "pages": 11,
+      "visuals": 22,
+      "off_canvas_visuals": 0,
+      "fallback_textboxes": 0,
+      "custom_visual_leftovers": 0,
+      "unresolved_measure_refs": 0,
+      "placeholder_column_refs": 11,
+      "visual_type_counts": {
+        "waterfallChart": 12,
+        "multiRowCard": 4,
+        "tableEx": 6
+      }
+    },
+    "measures": 21,
+    "lost_context_visuals": 73,
+    "lost_source_pages": 0,
+    "fidelity_coverage_pct": 23.2,
+    "review_verdict": "native-approx-only",
+    "primary_issue": "73 non-Zebra source visuals dropped"
+  },
+  {
+    "slug": "manufacturing-oee-power-bi-template",
+    "source": {
+      "pages": 6,
+      "visuals": 91,
+      "zebra_visuals": 22,
+      "custom_visual_packages": 3,
+      "visual_type_counts": {
+        "<none>": 20,
+        "bookmarkNavigator": 3,
+        "ZebraBITables98F88148E5424E949E69864664EE1860": 9,
+        "shape": 19,
+        "waterfall0221D8FBE40445C1A4E598AA8EF8B506": 5,
+        "textbox": 4,
+        "slicer": 12,
+        "image": 4,
+        "basicShape": 4,
+        "zebraBiCards8085D508EB994C8081CA47C85ABD7C26": 8,
+        "actionButton": 3
+      }
+    },
+    "raw_zebra_rows": 22,
+    "raw_zebra_pages": 6,
+    "native": {
+      "pages": 6,
+      "visuals": 22,
+      "off_canvas_visuals": 0,
+      "fallback_textboxes": 0,
+      "custom_visual_leftovers": 0,
+      "unresolved_measure_refs": 0,
+      "placeholder_column_refs": 7,
+      "visual_type_counts": {
+        "tableEx": 9,
+        "waterfallChart": 5,
+        "multiRowCard": 8
+      }
+    },
+    "measures": 58,
+    "lost_context_visuals": 69,
+    "lost_source_pages": 0,
+    "fidelity_coverage_pct": 24.2,
+    "review_verdict": "native-approx-only",
+    "primary_issue": "69 non-Zebra source visuals dropped"
+  },
+  {
+    "slug": "sales-dashboard-power-bi-template",
+    "source": {
+      "pages": 13,
+      "visuals": 139,
+      "zebra_visuals": 22,
+      "custom_visual_packages": 5,
+      "visual_type_counts": {
+        "textbox": 14,
+        "image": 1,
+        "<none>": 22,
+        "slicer": 36,
+        "ZebraBITables98F88148E5424E949E69864664EE1860": 12,
+        "waterfall0221D8FBE40445C1A4E598AA8EF8B506": 9,
+        "actionButton": 38,
+        "columnChart": 2,
+        "basicShape": 3,
+        "zebraBiCards8085D508EB994C8081CA47C85ABD7C26": 1,
+        "multiRowCard": 1
+      }
+    },
+    "raw_zebra_rows": 22,
+    "raw_zebra_pages": 12,
+    "native": {
+      "pages": 12,
+      "visuals": 22,
+      "off_canvas_visuals": 0,
+      "fallback_textboxes": 0,
+      "custom_visual_leftovers": 0,
+      "unresolved_measure_refs": 0,
+      "placeholder_column_refs": 8,
+      "visual_type_counts": {
+        "tableEx": 12,
+        "waterfallChart": 9,
+        "multiRowCard": 1
+      }
+    },
+    "measures": 21,
+    "lost_context_visuals": 117,
+    "lost_source_pages": 1,
+    "fidelity_coverage_pct": 15.8,
+    "review_verdict": "not-template-fidelity",
+    "primary_issue": "1 source pages have no mined Zebra visual"
+  },
+  {
+    "slug": "brand-product-portfolio-analysis-fmcg-power-bi-template",
+    "source": {
+      "pages": 12,
+      "visuals": 83,
+      "zebra_visuals": 21,
+      "custom_visual_packages": 3,
+      "visual_type_counts": {
+        "image": 7,
+        "basicShape": 1,
+        "textbox": 14,
+        "waterfall0221D8FBE40445C1A4E598AA8EF8B506": 16,
+        "<none>": 5,
+        "shape": 17,
+        "ZebraBITables98F88148E5424E949E69864664EE1860": 5,
+        "slicer": 11,
+        "pivotTable": 6,
+        "actionButton": 1
+      }
+    },
+    "raw_zebra_rows": 21,
+    "raw_zebra_pages": 11,
+    "native": {
+      "pages": 11,
+      "visuals": 21,
+      "off_canvas_visuals": 0,
+      "fallback_textboxes": 0,
+      "custom_visual_leftovers": 0,
+      "unresolved_measure_refs": 0,
+      "placeholder_column_refs": 24,
+      "visual_type_counts": {
+        "waterfallChart": 16,
+        "tableEx": 5
+      }
+    },
+    "measures": 22,
+    "lost_context_visuals": 62,
+    "lost_source_pages": 1,
+    "fidelity_coverage_pct": 25.3,
+    "review_verdict": "not-template-fidelity",
+    "primary_issue": "1 source pages have no mined Zebra visual"
+  },
+  {
+    "slug": "sales-funnel-power-bi-template",
+    "source": {
+      "pages": 6,
+      "visuals": 104,
+      "zebra_visuals": 20,
+      "custom_visual_packages": 3,
+      "visual_type_counts": {
+        "basicShape": 2,
+        "image": 20,
+        "textbox": 20,
+        "actionButton": 12,
+        "zebraBiCards8085D508EB994C8081CA47C85ABD7C26": 9,
+        "waterfall0221D8FBE40445C1A4E598AA8EF8B506": 5,
+        "ZebraBITables98F88148E5424E949E69864664EE1860": 6,
+        "<none>": 15,
+        "columnChart": 6,
+        "shape": 9
+      }
+    },
+    "raw_zebra_rows": 20,
+    "raw_zebra_pages": 5,
+    "native": {
+      "pages": 5,
+      "visuals": 20,
+      "off_canvas_visuals": 0,
+      "fallback_textboxes": 0,
+      "custom_visual_leftovers": 0,
+      "unresolved_measure_refs": 0,
+      "placeholder_column_refs": 14,
+      "visual_type_counts": {
+        "multiRowCard": 9,
+        "waterfallChart": 5,
+        "tableEx": 6
+      }
+    },
+    "measures": 15,
+    "lost_context_visuals": 84,
+    "lost_source_pages": 1,
+    "fidelity_coverage_pct": 19.2,
+    "review_verdict": "not-template-fidelity",
+    "primary_issue": "1 source pages have no mined Zebra visual"
+  },
+  {
+    "slug": "brand-product-portfolio-analysis-automotive-power-bi-template",
+    "source": {
+      "pages": 11,
+      "visuals": 101,
+      "zebra_visuals": 17,
+      "custom_visual_packages": 3,
+      "visual_type_counts": {
+        "textbox": 11,
+        "image": 12,
+        "basicShape": 1,
+        "<none>": 16,
+        "shape": 9,
+        "ZebraBITables98F88148E5424E949E69864664EE1860": 5,
+        "slicer": 33,
+        "waterfall0221D8FBE40445C1A4E598AA8EF8B506": 8,
+        "zebraBiCards8085D508EB994C8081CA47C85ABD7C26": 4,
+        "lineChart": 2
+      }
+    },
+    "raw_zebra_rows": 17,
+    "raw_zebra_pages": 10,
+    "native": {
+      "pages": 10,
+      "visuals": 17,
+      "off_canvas_visuals": 0,
+      "fallback_textboxes": 0,
+      "custom_visual_leftovers": 0,
+      "unresolved_measure_refs": 0,
+      "placeholder_column_refs": 8,
+      "visual_type_counts": {
+        "tableEx": 5,
+        "waterfallChart": 8,
+        "card": 4
+      }
+    },
+    "measures": 31,
+    "lost_context_visuals": 84,
+    "lost_source_pages": 1,
+    "fidelity_coverage_pct": 16.8,
+    "review_verdict": "not-template-fidelity",
+    "primary_issue": "1 source pages have no mined Zebra visual"
+  },
+  {
+    "slug": "athletic-footwear-benchmarking-financial-analysis-template",
+    "source": {
+      "pages": 14,
+      "visuals": 114,
+      "zebra_visuals": 16,
+      "custom_visual_packages": 3,
+      "visual_type_counts": {
+        "textbox": 16,
+        "image": 8,
+        "basicShape": 12,
+        "actionButton": 1,
+        "ZebraBITablesBAE31B370F254F808553548EFB35BFA5": 7,
+        "<none>": 22,
+        "slicer": 29,
+        "pivotTable": 6,
+        "bookmarkNavigator": 3,
+        "waterfall0221D8FBE40445C1A4E598AA8EF8B506": 6,
+        "zebraBiCards8085D508EB994C8081CA47C85ABD7C26": 3,
+        "tableEx": 1
+      }
+    },
+    "raw_zebra_rows": 16,
+    "raw_zebra_pages": 12,
+    "native": {
+      "pages": 12,
+      "visuals": 16,
+      "off_canvas_visuals": 0,
+      "fallback_textboxes": 0,
+      "custom_visual_leftovers": 0,
+      "unresolved_measure_refs": 0,
+      "placeholder_column_refs": 20,
+      "visual_type_counts": {
+        "tableEx": 7,
+        "waterfallChart": 6,
+        "multiRowCard": 3
+      }
+    },
+    "measures": 17,
+    "lost_context_visuals": 98,
+    "lost_source_pages": 2,
+    "fidelity_coverage_pct": 14.0,
+    "review_verdict": "not-template-fidelity",
+    "primary_issue": "2 source pages have no mined Zebra visual"
+  },
+  {
+    "slug": "food-beverage-financial-analysis-benchmarking-powerbi-template",
+    "source": {
+      "pages": 14,
+      "visuals": 114,
+      "zebra_visuals": 16,
+      "custom_visual_packages": 5,
+      "visual_type_counts": {
+        "textbox": 16,
+        "image": 8,
+        "basicShape": 12,
+        "actionButton": 1,
+        "ZebraBITables98F88148E5424E949E69864664EE1860": 7,
+        "<none>": 22,
+        "slicer": 29,
+        "pivotTable": 6,
+        "bookmarkNavigator": 3,
+        "waterfall0221D8FBE40445C1A4E598AA8EF8B506": 6,
+        "zebraBiCards8085D508EB994C8081CA47C85ABD7C26": 3,
+        "tableEx": 1
+      }
+    },
+    "raw_zebra_rows": 16,
+    "raw_zebra_pages": 12,
+    "native": {
+      "pages": 12,
+      "visuals": 16,
+      "off_canvas_visuals": 0,
+      "fallback_textboxes": 0,
+      "custom_visual_leftovers": 0,
+      "unresolved_measure_refs": 0,
+      "placeholder_column_refs": 20,
+      "visual_type_counts": {
+        "tableEx": 7,
+        "waterfallChart": 6,
+        "multiRowCard": 3
+      }
+    },
+    "measures": 17,
+    "lost_context_visuals": 98,
+    "lost_source_pages": 2,
+    "fidelity_coverage_pct": 14.0,
+    "review_verdict": "not-template-fidelity",
+    "primary_issue": "2 source pages have no mined Zebra visual"
+  },
+  {
+    "slug": "annual-comparative-statement-power-bi-template",
+    "source": {
+      "pages": 8,
+      "visuals": 30,
+      "zebra_visuals": 13,
+      "custom_visual_packages": 3,
+      "visual_type_counts": {
+        "ZebraBITables98F88148E5424E949E69864664EE1860": 7,
+        "slicer": 9,
+        "waterfall0221D8FBE40445C1A4E598AA8EF8B506": 4,
+        "textbox": 7,
+        "zebraBiCards8085D508EB994C8081CA47C85ABD7C26": 2,
+        "bookmarkNavigator": 1
+      }
+    },
+    "raw_zebra_rows": 13,
+    "raw_zebra_pages": 8,
+    "native": {
+      "pages": 8,
+      "visuals": 13,
+      "off_canvas_visuals": 0,
+      "fallback_textboxes": 0,
+      "custom_visual_leftovers": 0,
+      "unresolved_measure_refs": 0,
+      "placeholder_column_refs": 4,
+      "visual_type_counts": {
+        "tableEx": 7,
+        "waterfallChart": 4,
+        "multiRowCard": 2
+      }
+    },
+    "measures": 5,
+    "lost_context_visuals": 17,
+    "lost_source_pages": 0,
+    "fidelity_coverage_pct": 43.3,
+    "review_verdict": "native-approx-only",
+    "primary_issue": "17 non-Zebra source visuals dropped"
+  },
+  {
+    "slug": "inventory-power-bi-template",
+    "source": {
+      "pages": 8,
+      "visuals": 49,
+      "zebra_visuals": 13,
+      "custom_visual_packages": 3,
+      "visual_type_counts": {
+        "slicer": 20,
+        "zebraBiCards8085D508EB994C8081CA47C85ABD7C26": 3,
+        "waterfall0221D8FBE40445C1A4E598AA8EF8B506": 5,
+        "textbox": 8,
+        "image": 8,
+        "ZebraBITables98F88148E5424E949E69864664EE1860": 5
+      }
+    },
+    "raw_zebra_rows": 13,
+    "raw_zebra_pages": 8,
+    "native": {
+      "pages": 8,
+      "visuals": 13,
+      "off_canvas_visuals": 0,
+      "fallback_textboxes": 0,
+      "custom_visual_leftovers": 0,
+      "unresolved_measure_refs": 0,
+      "placeholder_column_refs": 8,
+      "visual_type_counts": {
+        "multiRowCard": 3,
+        "waterfallChart": 5,
+        "tableEx": 5
+      }
+    },
+    "measures": 24,
+    "lost_context_visuals": 36,
+    "lost_source_pages": 0,
+    "fidelity_coverage_pct": 26.5,
+    "review_verdict": "native-approx-only",
+    "primary_issue": "36 non-Zebra source visuals dropped"
+  },
+  {
+    "slug": "working-capital-in-power-bi-template",
+    "source": {
+      "pages": 5,
+      "visuals": 40,
+      "zebra_visuals": 12,
+      "custom_visual_packages": 3,
+      "visual_type_counts": {
+        "waterfall0221D8FBE40445C1A4E598AA8EF8B506": 4,
+        "zebraBiCards8085D508EB994C8081CA47C85ABD7C26": 4,
+        "ZebraBITables98F88148E5424E949E69864664EE1860": 4,
+        "<none>": 8,
+        "image": 4,
+        "shape": 5,
+        "textbox": 5,
+        "slicer": 5,
+        "actionButton": 1
+      }
+    },
+    "raw_zebra_rows": 12,
+    "raw_zebra_pages": 5,
+    "native": {
+      "pages": 5,
+      "visuals": 12,
+      "off_canvas_visuals": 0,
+      "fallback_textboxes": 0,
+      "custom_visual_leftovers": 0,
+      "unresolved_measure_refs": 0,
+      "placeholder_column_refs": 6,
+      "visual_type_counts": {
+        "waterfallChart": 4,
+        "multiRowCard": 4,
+        "tableEx": 4
+      }
+    },
+    "measures": 13,
+    "lost_context_visuals": 28,
+    "lost_source_pages": 0,
+    "fidelity_coverage_pct": 30.0,
+    "review_verdict": "native-approx-only",
+    "primary_issue": "28 non-Zebra source visuals dropped"
+  },
+  {
+    "slug": "income-statement-dashboard-in-power-bi",
+    "source": {
+      "pages": 11,
+      "visuals": 63,
+      "zebra_visuals": 10,
+      "custom_visual_packages": 3,
+      "visual_type_counts": {
+        "textbox": 16,
+        "basicShape": 2,
+        "actionButton": 3,
+        "image": 3,
+        "slicer": 28,
+        "ZebraBITables98F88148E5424E949E69864664EE1860": 6,
+        "PowerApps_PBI_CV_C29F1DCC_81F5_4973_94AD_0517D44CC06A": 1,
+        "waterfall0221D8FBE40445C1A4E598AA8EF8B506": 4
+      }
+    },
+    "raw_zebra_rows": 10,
+    "raw_zebra_pages": 9,
+    "native": {
+      "pages": 9,
+      "visuals": 10,
+      "off_canvas_visuals": 0,
+      "fallback_textboxes": 0,
+      "custom_visual_leftovers": 0,
+      "unresolved_measure_refs": 0,
+      "placeholder_column_refs": 3,
+      "visual_type_counts": {
+        "tableEx": 6,
+        "waterfallChart": 4
+      }
+    },
+    "measures": 15,
+    "lost_context_visuals": 53,
+    "lost_source_pages": 2,
+    "fidelity_coverage_pct": 15.9,
+    "review_verdict": "not-template-fidelity",
+    "primary_issue": "2 source pages have no mined Zebra visual"
+  },
+  {
+    "slug": "price-volume-mix-analysis-power-bi-template",
+    "source": {
+      "pages": 8,
+      "visuals": 41,
+      "zebra_visuals": 9,
+      "custom_visual_packages": 3,
+      "visual_type_counts": {
+        "textbox": 10,
+        "image": 7,
+        "basicShape": 4,
+        "actionButton": 6,
+        "<none>": 3,
+        "waterfall0221D8FBE40445C1A4E598AA8EF8B506": 5,
+        "ZebraBITables98F88148E5424E949E69864664EE1860": 4,
+        "card": 2
+      }
+    },
+    "raw_zebra_rows": 9,
+    "raw_zebra_pages": 7,
+    "native": {
+      "pages": 7,
+      "visuals": 9,
+      "off_canvas_visuals": 0,
+      "fallback_textboxes": 0,
+      "custom_visual_leftovers": 0,
+      "unresolved_measure_refs": 0,
+      "placeholder_column_refs": 5,
+      "visual_type_counts": {
+        "waterfallChart": 5,
+        "tableEx": 4
+      }
+    },
+    "measures": 17,
+    "lost_context_visuals": 32,
+    "lost_source_pages": 1,
+    "fidelity_coverage_pct": 22.0,
+    "review_verdict": "not-template-fidelity",
+    "primary_issue": "1 source pages have no mined Zebra visual"
+  },
+  {
+    "slug": "daily-sales-flash-power-bi-dashboard",
+    "source": {
+      "pages": 4,
+      "visuals": 66,
+      "zebra_visuals": 8,
+      "custom_visual_packages": 3,
+      "visual_type_counts": {
+        "textbox": 20,
+        "shape": 8,
+        "image": 4,
+        "slicer": 17,
+        "waterfall0221D8FBE40445C1A4E598AA8EF8B506": 2,
+        "ZebraBITables98F88148E5424E949E69864664EE1860": 5,
+        "zebraBiCards8085D508EB994C8081CA47C85ABD7C26": 1,
+        "actionButton": 7,
+        "<none>": 2
+      }
+    },
+    "raw_zebra_rows": 8,
+    "raw_zebra_pages": 4,
+    "native": {
+      "pages": 4,
+      "visuals": 8,
+      "off_canvas_visuals": 0,
+      "fallback_textboxes": 0,
+      "custom_visual_leftovers": 0,
+      "unresolved_measure_refs": 0,
+      "placeholder_column_refs": 0,
+      "visual_type_counts": {
+        "waterfallChart": 2,
+        "tableEx": 5,
+        "multiRowCard": 1
+      }
+    },
+    "measures": 40,
+    "lost_context_visuals": 58,
+    "lost_source_pages": 0,
+    "fidelity_coverage_pct": 12.1,
+    "review_verdict": "native-approx-only",
+    "primary_issue": "58 non-Zebra source visuals dropped"
+  },
+  {
+    "slug": "cost-benefit-analysis-power-bi-template",
+    "source": {
+      "pages": 5,
+      "visuals": 12,
+      "zebra_visuals": 7,
+      "custom_visual_packages": 3,
+      "visual_type_counts": {
+        "ZebraBITables98F88148E5424E949E69864664EE1860": 4,
+        "textbox": 5,
+        "waterfall0221D8FBE40445C1A4E598AA8EF8B506": 3
+      }
+    },
+    "raw_zebra_rows": 7,
+    "raw_zebra_pages": 5,
+    "native": {
+      "pages": 5,
+      "visuals": 7,
+      "off_canvas_visuals": 0,
+      "fallback_textboxes": 0,
+      "custom_visual_leftovers": 0,
+      "unresolved_measure_refs": 0,
+      "placeholder_column_refs": 0,
+      "visual_type_counts": {
+        "tableEx": 4,
+        "waterfallChart": 3
+      }
+    },
+    "measures": 11,
+    "lost_context_visuals": 5,
+    "lost_source_pages": 0,
+    "fidelity_coverage_pct": 58.3,
+    "review_verdict": "native-approx-only",
+    "primary_issue": "5 non-Zebra source visuals dropped"
+  }
+]

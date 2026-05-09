@@ -256,7 +256,6 @@ def _translate_charts(
     vtbl, vfld = resolved
     return [
         build_clustered_bar_chart_visual(
-            name=f"chart_{int(pos['x'])}_{int(pos['y'])}",
             category_table=ctbl,
             category_column=cfld,
             category_title=cfld,

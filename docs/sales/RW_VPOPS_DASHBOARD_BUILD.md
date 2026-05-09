@@ -841,3 +841,29 @@ back from snapshot. Future RW front-page deploys must use
 - Zebra Cards binding pattern — current PR1 strip uses native cards; sparklines
   + variance arrows wait for the Cards binding to be authored against the live
   semantic model.
+
+
+## Zebra Template Bulk Conversion Audit — 2026-05-09
+
+The 20-template Fabric bulk publish succeeded mechanically, but failed the
+polish gate. Treat the output as a native-approximation harness, not as a
+template-fidelity conversion.
+
+Artifacts:
+
+- Publisher: `scripts/sales/rw_zebra_kg_publish_all_templates.py`
+- TMDL emitter: `scripts/sales/rw_zebra_kg_tmdl_emit.py`
+- Conversion audit: `scripts/sales/rw_zebra_kg_conversion_audit.py`
+- Audit report: `docs/sales/RW_ZEBRA_NATIVE_CONVERSION_AUDIT.md`
+- Review memo: `docs/sales/RW_ZEBRA_NATIVE_CONVERSION_REVIEW.md`
+
+Audit result: source Zebra PBIX corpus has 195 pages and 1,729 visualContainers.
+The current native bridge uses 360 mined Zebra visualContainers and drops 1,369
+non-Zebra context visualContainers. After the page-preserving fix, native output
+has 0 unresolved measure refs and 0 off-canvas visuals, but it is only 20.8%
+source-visual coverage.
+
+Decision: do not bulk-republish this path as "polished." Next work is either a
+Zebra-fidelity lab that preserves full PBIX `Report/Layout` and custom visual
+packages, or a smaller RW-native redesign that deliberately lifts selected Zebra
+patterns into the VP Ops dashboard.

@@ -268,3 +268,58 @@ for p in res['definition']['parts']:
 ```
 
 Ship it.
+
+---
+
+## Codex completion — 2026-05-09
+
+✅ all 20 published — 2026-05-09. Summary artifact:
+`data/zebra_kg/published/all_templates.json`.
+
+URLs:
+
+- `cost-management-power-bi-template` — https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/47057b85-1c43-4b35-bb19-08fe1c460854
+- `saas-sales-power-bi-dashboard-template` — https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/8de90cd5-c0f5-4a9b-87c7-e6bb63fa208c
+- `social-media-power-bi-template` — https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/fe1d7084-7ef6-48cf-a9b3-871f664872de
+- `dynamic-comments-power-bi-template` — https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/ffc6fe6b-2e5f-4400-807c-7986dce69f81
+- `hr-analytics-power-bi-template` — https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/4dac7b79-8f8a-4e3a-a1f7-d49b2ae087c6
+- `consolidated-financials-power-bi-template` — https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/44cf5988-ff0b-488e-9fc1-3c04d35a9bc9
+- `manufacturing-oee-power-bi-template` — https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/d17d6405-dabe-4b6b-b849-9eba9f1cc34d
+- `sales-dashboard-power-bi-template` — https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/ec90c80f-7b47-485f-8da2-963b9a89f32f
+- `brand-product-portfolio-analysis-fmcg-power-bi-template` — https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/58922d53-848b-4c03-857b-3e4c37af4eb5
+- `sales-funnel-power-bi-template` — https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/7432ae37-4137-4125-a050-d880531f829d
+- `brand-product-portfolio-analysis-automotive-power-bi-template` — https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/a55305fe-d344-4a1d-bda2-1c38100a890f
+- `athletic-footwear-benchmarking-financial-analysis-template` — https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/7f1e7a75-774c-4672-9e09-572e53ce14b0
+- `food-beverage-financial-analysis-benchmarking-powerbi-template` — https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/48fc8b33-51c0-4beb-9202-60df6a85830c
+- `annual-comparative-statement-power-bi-template` — https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/95b98e8f-bf22-475c-8239-5d36f03efa12
+- `inventory-power-bi-template` — https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/531a414a-8ba0-4e0e-84fd-230601798fee
+- `working-capital-in-power-bi-template` — https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/6b3d11c7-7b37-430c-8fdf-25cc3b3b0b83
+- `income-statement-dashboard-in-power-bi` — https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/888d5115-c182-41a7-9dcd-9897b3d84435
+- `price-volume-mix-analysis-power-bi-template` — https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/c523d6bf-0577-4407-91bc-28a821f85f0a
+- `daily-sales-flash-power-bi-dashboard` — https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/c7b7485e-4719-4375-b996-4af57525181e
+- `cost-benefit-analysis-power-bi-template` — https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/4febaca4-a07c-42dd-895e-3ebe04734c07
+
+## Post-publish conversion review — 2026-05-09
+
+Andre's visual review correctly failed the polish gate. The bulk path is a
+native approximation harness, not a fidelity converter.
+
+Audit artifacts:
+
+- `scripts/sales/rw_zebra_kg_conversion_audit.py`
+- `data/zebra_kg/published/conversion_audit.json`
+- `docs/sales/RW_ZEBRA_NATIVE_CONVERSION_AUDIT.md`
+- `docs/sales/RW_ZEBRA_NATIVE_CONVERSION_REVIEW.md`
+
+Bridge audit result: 20 templates, 195 source PBIX pages, 1,729 source
+visualContainers, 360 mined Zebra visualContainers, 1,369 non-Zebra context
+visualContainers dropped. Native output has 0 unresolved measure refs and 0
+off-canvas visuals after the page-preserving fix, but it is not reviewable as
+template fidelity.
+
+Next publish should be one of:
+
+1. Zebra-fidelity lab: preserve full PBIX `Report/Layout`, page furniture,
+   Zebra custom visual packages, and Zebra object settings.
+2. RW-native redesign: lift only selected Zebra patterns into purpose-built RW
+   pages with screenshot QA.
