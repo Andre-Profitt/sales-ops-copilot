@@ -175,3 +175,73 @@ def test_build_databar_cf_objects_field_driven_max_present():
     )
     props = cf["values"][0]["properties"]
     assert "maxValue" in props
+
+
+from scripts.sales.rw_zebra_kg_ibcs_synth import build_composite_kpi_tile
+
+
+def test_build_composite_kpi_tile_returns_3_vcs_when_variance_provided():
+    vcs = build_composite_kpi_tile(
+        label="Pipeline ARR",
+        value_table="Measures",
+        value_measure="Total Pipeline ARR",
+        variance_table="Measures",
+        variance_measure="Pipeline ARR vs PY",
+        x=10,
+        y=20,
+        w=300,
+        h=120,
+    )
+    assert len(vcs) == 3
+
+
+def test_build_composite_kpi_tile_returns_2_vcs_when_no_variance():
+    vcs = build_composite_kpi_tile(
+        label="Pipeline ARR",
+        value_table="Measures",
+        value_measure="Total Pipeline ARR",
+        variance_table=None,
+        variance_measure=None,
+        x=10,
+        y=20,
+        w=300,
+        h=120,
+    )
+    assert len(vcs) == 2
+
+
+def test_build_composite_kpi_tile_all_vcs_within_outer_bbox():
+    vcs = build_composite_kpi_tile(
+        label="Pipeline ARR",
+        value_table="Measures",
+        value_measure="Total Pipeline ARR",
+        variance_table="Measures",
+        variance_measure="Pipeline ARR vs PY",
+        x=10,
+        y=20,
+        w=300,
+        h=120,
+    )
+    for vc in vcs:
+        assert vc["x"] >= 10
+        assert vc["y"] >= 20
+        assert vc["x"] + vc["width"] <= 10 + 300
+        assert vc["y"] + vc["height"] <= 20 + 120
+
+
+def test_build_composite_kpi_tile_overall_bbox_matches_w_h():
+    vcs = build_composite_kpi_tile(
+        label="Pipeline ARR",
+        value_table="Measures",
+        value_measure="Total Pipeline ARR",
+        variance_table="Measures",
+        variance_measure="Pipeline ARR vs PY",
+        x=10,
+        y=20,
+        w=300,
+        h=120,
+    )
+    max_right = max(vc["x"] + vc["width"] for vc in vcs)
+    max_bottom = max(vc["y"] + vc["height"] for vc in vcs)
+    assert max_right == 10 + 300
+    assert max_bottom == 20 + 120

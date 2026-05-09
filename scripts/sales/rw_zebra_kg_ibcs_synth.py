@@ -162,3 +162,67 @@ def build_databar_cf_objects(
             }
         ]
     }
+
+
+from scripts.sales._pbir_helpers import (  # noqa: E402
+    build_card_visual_with_objects,
+    build_textbox_visual,
+)
+
+
+def build_composite_kpi_tile(
+    label: str,
+    value_table: str,
+    value_measure: str,
+    variance_table: str | None,
+    variance_measure: str | None,
+    x: float,
+    y: float,
+    w: float,
+    h: float,
+) -> list[dict]:
+    """Three-VC stack approximating the Zebra Cards KPI tile.
+
+    - header textbox: top 24px, full width
+    - value card: middle, full width minus variance footprint when variance present
+    - variance card (optional): bottom-right corner, 30% width × 24px
+
+    All VCs sit within the (x, y, w, h) bounding box per native atlas §6 row 14.
+    """
+    header_h = 24
+    variance_w = w * 0.30 if variance_measure else 0.0
+    variance_h = 24 if variance_measure else 0.0
+
+    out: list[dict] = [
+        build_textbox_visual(
+            text=label,
+            x=x,
+            y=y,
+            w=w,
+            h=header_h,
+            font_size_pt=10,
+            color="#666666",
+        ),
+        build_card_visual_with_objects(
+            measure_table=value_table,
+            measure_name=value_measure,
+            display_title=value_measure,
+            x=x,
+            y=y + header_h,
+            w=w - variance_w,
+            h=h - header_h,
+        ),
+    ]
+    if variance_measure:
+        out.append(
+            build_card_visual_with_objects(
+                measure_table=variance_table,
+                measure_name=variance_measure,
+                display_title=variance_measure,
+                x=x + (w - variance_w),
+                y=y + (h - variance_h),
+                w=variance_w,
+                h=variance_h,
+            )
+        )
+    return out
