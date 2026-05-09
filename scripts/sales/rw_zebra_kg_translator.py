@@ -8,3 +8,39 @@ Spec: docs/superpowers/specs/2026-05-09-rw-zebra-kg-translator-design.md §4.3
 """
 
 from __future__ import annotations
+
+from dataclasses import dataclass, field
+
+
+@dataclass(frozen=True)
+class MeasureCatalog:
+    """Available measures in the target dataset, keyed by canonical scenario.
+
+    by_scenario: {"AC": "Total Closed Won ARR", "PY": "Closed Won ARR PY", ...}
+    measure_to_table: {"Total Closed Won ARR": "Measures", ...}
+    """
+
+    by_scenario: dict[str, str] = field(default_factory=dict)
+    measure_to_table: dict[str, str] = field(default_factory=dict)
+
+    def has(self, scenario: str) -> bool:
+        return scenario in self.by_scenario
+
+    def resolve(self, scenario: str) -> tuple[str, str] | None:
+        name = self.by_scenario.get(scenario)
+        if name is None:
+            return None
+        table = self.measure_to_table.get(name)
+        if table is None:
+            return None
+        return (table, name)
+
+
+@dataclass(frozen=True)
+class BindMap:
+    """Zebra field-name -> RW field-name overlay (loaded from bindings.jsonl)."""
+
+    zebra_to_rw: dict[str, str] = field(default_factory=dict)
+
+    def lookup(self, zebra_ref: str) -> str | None:
+        return self.zebra_to_rw.get(zebra_ref)
