@@ -9,7 +9,7 @@
 
 ## Purpose
 
-Replace the 26-card sprawl on the live `VP Ops Scorecard` page with two structured spines + one compact KPI strip, using Zebra BI Tables grammar that Codex already proved renders against the live RW semantic model.
+Replace the 45-visualContainer card wall on the live `VP Ops Scorecard` page (current state, verified 2026-05-09 against `tests/sales/test_rw_compose_scorecard_home.py:12`) with two structured spines + one compact KPI strip, using Zebra BI Tables grammar that Codex already proved renders against the live RW semantic model.
 
 PR1 ships the **exception spine** (stalled-deal grammar) and the **KPI strip**. Both are bindable to existing measures — no new DAX. PR2 will add the **movement spine** (waterfall over 4 new ARR-7d measures) and a **gate-violation column** (1 new measure that joins to `Stage_20_Approval__c`).
 
@@ -19,7 +19,7 @@ PR1 ships the **exception spine** (stalled-deal grammar) and the **KPI strip**. 
 
 - Rewrite `scripts/sales/rw_compose_scorecard_home.py:PAGE = "VP Ops Scorecard"` around three sections (`_build_exception_spine`, `_build_movement_spine_placeholder`, `_build_kpi_strip`)
 - Lab-first deploy: apply to `~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/` first, render-verify in Power BI Desktop, then promote to live Fabric workspace `b66233d5-9d4a-44ba-89a8-b70206d98ae7`
-- Delete the existing 26 KPI/RAG card builders that the current `rw_compose_scorecard_home.py` instantiates (no deprecation, no half-states)
+- Delete the existing 45-visualContainer card-wall pattern that the current `rw_compose_scorecard_home.py` instantiates (no deprecation, no half-states)
 - Use existing measures only — bindings are validated by `data/zebra_kg_rw/bindings.jsonl` (33/33 bound)
 - Update `docs/sales/RW_VPOPS_DASHBOARD_BUILD.md` with the rebuild's render proof + screenshot evidence
 
@@ -84,41 +84,58 @@ The placeholder section is intentional — it preserves vertical real-estate for
 
 | File                                            | Change                                                                                                                                                            |
 | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `scripts/sales/rw_compose_scorecard_home.py`    | Rewritten around 3 builders. Existing 26-card builders deleted. Existing `PAGE = "VP Ops Scorecard"` constant retained.                                           |
+| `scripts/sales/rw_compose_scorecard_home.py`    | Rewritten around 3 builders. Existing 45-visualContainer card-wall pattern deleted. Existing `PAGE = "VP Ops Scorecard"` constant retained.                       |
 | `tests/sales/test_rw_compose_scorecard_home.py` | New tests for each builder; existing tests updated or deleted to match the new layout.                                                                            |
 | `scripts/sales/rw_apply_zebra_lab_proof.py`     | Extended (or sibling script added) to apply the _full_ three-section layout to the lab PBIP, not just the single Zebra Exceptions visual that `303bc6b` produced. |
 | `docs/sales/RW_VPOPS_DASHBOARD_BUILD.md`        | Append a "Front-page spine rebuild — PR1" section with render-proof screenshot path.                                                                              |
 
 ### Components
 
-#### `_build_exception_spine(spec_table_id) -> dict`
+#### `_build_exception_spine(values: list[dict]) -> dict`
 
-Returns one PBIR `visualContainer` for a Zebra BI Tables visual. Lifts the binding pattern verbatim from `rw_apply_zebra_lab_proof.py`'s Zebra Exceptions visual (Codex `303bc6b`):
+Returns one PBIR `visualContainer` for a Zebra BI Tables visual. Lifts the binding pattern verbatim from `rw_apply_zebra_lab_proof.py:apply_zebra_exceptions_proof()` (Codex `303bc6b`). The signature matches `_pbir_helpers.build_zebra_bi_table_visual()`'s calling convention.
 
 - visual type: `Zebra-BI-Tables` (custom visual GUID per `_pbir_helpers.py`)
 - projection role: `Primary` (category + values combined under one role per the lab fix)
 - bindings:
   - Category: `d_region[region]`
-  - Values (in this order): `Exception ARR`, `At Risk Opps ARR`, `Watch Opps ARR`, `Exception Opps Count`
-- position: x=0, y=64, w=1280, h=280
+  - Values (in this exact order — matches Codex's lab proof; Zebra Tables uses positional ordering for IBCS column grouping, so re-ordering is a render regression):
+    1. `Exception ARR`
+    2. `Exception Opps Count`
+    3. `At Risk Opps ARR`
+    4. `Watch Opps ARR`
+- position: x=0, y=80, w=1280, h=264 (see Layout table below)
 - formatting: Zebra's default IBCS palette (no theme override)
 
 #### `_build_movement_spine_placeholder() -> dict`
 
-Returns a single textbox visualContainer with the text "Movement spine — see PR2 (`Pipeline ARR last 7d` waterfall, pending new ARR-7d measures)". Position x=0, y=360, w=1280, h=240. Background light grey to read as "wireframe placeholder" not "empty space."
+Returns a single textbox visualContainer with the text "Movement spine — see PR2 (`Pipeline ARR last 7d` waterfall, pending new ARR-7d measures)". Position x=0, y=360, w=1280, h=224. Background light grey to read as "wireframe placeholder" not "empty space."
 
 #### `_build_kpi_strip() -> list[dict]`
 
 Returns 4 visualContainers, each a Zebra BI Card (or — fallback — a native `kpiVisual`):
 
-| KPI               | Measure                          | Rationale                                                                                                                          |
-| ----------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Closed Won FQTD   | `Total Closed Won ARR`           | Quarter-to-date wins, ARR — primary outcome KPI                                                                                    |
-| Win Rate          | `Win Rate ARR`                   | Conversion health, ARR-weighted                                                                                                    |
-| Stage Hygiene     | `Stage Forward Pct (LE)`         | Process governance — % stages moving forward (LE = leading edge)                                                                   |
-| Renewal Retention | `Renewal Retention Pct (Period)` | Renewal health, ACV side. (Cross-motion KPI is OK on a _summary_ card row; the rule is no blending in compute, not no co-display.) |
+| KPI               | Measure                          | Rationale                                                           |
+| ----------------- | -------------------------------- | ------------------------------------------------------------------- |
+| Closed Won FQTD   | `Total Closed Won ARR`           | Quarter-to-date wins, ARR — primary outcome KPI                     |
+| Win Rate          | `Win Rate ARR`                   | Conversion health, ARR-weighted                                     |
+| Stage Hygiene     | `Stage Forward Pct (LE)`         | Process governance — % stages moving forward (LE = leading edge)    |
+| Renewal Retention | `Renewal Retention Pct (Period)` | Renewal health, ACV side (see "Cardinal-rule justification" below). |
 
-Each card has: title, current value with format string from the measure's TMDL, sparkline over last 4 quarters, embedded variance arrow vs. PY. Cards are positioned: x=0/320/640/960, y=600, w=320, h=120.
+**Cardinal-rule justification for Renewal Retention co-display.** The rule from `~/.claude/CLAUDE.md.shared` is: _"ARR=Land+Expand (`APTS_Opportunity_ARR__c`) · ACV=Renewals (`APTS_Renewal_ACV__c`) · NEVER blend."_ The "blend" prohibition applies to the **compute layer** — a single metric must not sum ARR and ACV. A KPI strip is a **display layer**: each card renders one measure, computed independently, with its own format string. Showing ARR-side health (cards 1–3) alongside Renewal-side health (card 4) is standard enterprise scorecard practice — these are the two halves of total revenue health, and surfacing them separately on the same row is the _correct_ way to show executives both numbers without inviting a blended computation. The deployed DAX confirms separation: `Win Rate ARR` reads `f_opportunity[arr_org_ccy]`; `Renewal Retention Pct (Period)` reads `APTS_Renewal_ACV__c`. No measure crosses the boundary.
+
+Each card has: title, current value with format string from the measure's TMDL, **and (Zebra Cards only)** sparkline over last 4 quarters, embedded variance arrow vs. PY. If the lab apply takes the native `kpiVisual` fallback (see Open questions), sparklines and variance arrows are deferred to PR2 — the cards still render with title + value. Cards are positioned: x=0/320/640/960, y=600, w=320, h=120.
+
+### Layout zones (explicit, sums to 720)
+
+| Zone                 | x             | y   | w    | h   | Notes                                                                                                                 |
+| -------------------- | ------------- | --- | ---- | --- | --------------------------------------------------------------------------------------------------------------------- |
+| Page title (textbox) | 0             | 0   | 1280 | 64  | Single-line title; matches the existing header padding (current code uses y=16 h=58; rounded up to 64 for clean math) |
+| Exception spine      | 0             | 80  | 1280 | 264 | 16 px gap above (intentional breathing room)                                                                          |
+| Movement placeholder | 0             | 360 | 1280 | 224 | 16 px gap above (separates exception from movement bands)                                                             |
+| KPI strip (4 cards)  | 0/320/640/960 | 600 | 320  | 120 | 16 px gap above the strip; cards span full width                                                                      |
+
+Total: 64 + 16 + 264 + 16 + 224 + 16 + 120 = **720 px**. No overlap, no overflow.
 
 ### Data flow
 
@@ -138,15 +155,16 @@ Lab apply:
         ─► Power BI Desktop opens the lab → render proof → screenshot
 
 Live promote:
-    rw_push_report.py --workspace b66233d5-9d4a-44ba-89a8-b70206d98ae7 \
-                      --report rpt_vp_ops_scorecard
+    python3 -m scripts.sales.rw_push_report
+        ─► reads WORKSPACE_ID + REPORT_NAME from module-level constants
+           (no argparse — the existing CLI shape; do NOT add flags in PR1)
         ─► uses same composer output, posts to Fabric REST
         ─► uses azure-identity/AzureCliCredential (existing auth path)
 ```
 
-### Card deletion list (the 26 that go away)
+### Card deletion list (the 45 visualContainers that go away)
 
-The existing `rw_compose_scorecard_home.py` instantiates a card wall. Per the brainstorm rule "Don't keep the card wall and just swap visual types," PR1 deletes (not deprecates) the 26 builders. The exact list belongs in the implementation plan; the spec just commits to the policy.
+The existing `rw_compose_scorecard_home.py:_compose()` emits **45 visualContainers** on the front page (verified 2026-05-09: 3 header + 5 left-rail filter + 7 left-rail contract + 10 top exception row + 8 middle band + 9 bottom band = 45). The current `tests/sales/test_rw_compose_scorecard_home.py` line 12 asserts `len(visuals) == 45` and is the authoritative anchor. Per the brainstorm rule "Don't keep the card wall and just swap visual types," PR1 deletes (not deprecates) the helper-call patterns that produce these 45 visuals. The new layout emits **7 visualContainers** (1 title + 1 exception spine + 1 movement placeholder + 4 KPI cards). The exact deletion list belongs in the implementation plan; the spec commits to the count delta (45 → 7) as the success criterion.
 
 ## Error handling
 
@@ -157,11 +175,12 @@ The existing `rw_compose_scorecard_home.py` instantiates a card wall. Per the br
 ## Testing
 
 - `tests/sales/test_rw_compose_scorecard_home.py`:
-  - `test_compose_emits_three_top_level_sections` — verifies the assembled section has exactly: 1 exception Zebra Table + 1 placeholder textbox + 4 KPI cards (= 6 visualContainers + page title textbox = 7 total). NOT 26.
+  - `test_compose_emits_seven_visualcontainers` — replaces the existing `len(visuals) == 45` assertion at `tests/sales/test_rw_compose_scorecard_home.py:12`. New assertion: `len(visuals) == 7` (1 page-title textbox + 1 exception Zebra Table + 1 placeholder textbox + 4 KPI cards).
+  - `test_exception_spine_value_order_matches_lab_proof` — the value projection list, in order, is exactly `["Exception ARR", "Exception Opps Count", "At Risk Opps ARR", "Watch Opps ARR"]`. Locks against accidental reordering, since Zebra Tables uses positional ordering for IBCS column grouping.
   - `test_exception_spine_binds_existing_measures` — every measure name in the spine's value projections appears in `fetch_measures_by_table()`'s output.
   - `test_kpi_strip_binds_existing_measures` — same check for the strip.
-  - `test_movement_placeholder_is_textbox_not_zebra` — confirms PR1 doesn't accidentally ship a half-built waterfall.
-  - `test_no_card_wall_residue` — assert that none of the deleted 26-card builder names are still present in the composer module.
+  - `test_movement_placeholder_is_textbox_not_zebra` — confirms PR1 doesn't accidentally ship a half-built waterfall (the placeholder visual's `visualType` is `textbox`, not any Zebra GUID).
+  - `test_layout_zones_sum_to_720px` — pure unit test over the layout-zone table: total y+h closes to exactly 720, no overlap, gap math matches the spec.
 
 - Render proof — manual, but documented in `docs/sales/RW_VPOPS_DASHBOARD_BUILD.md` per the lab-first protocol.
 
@@ -186,13 +205,13 @@ The existing `rw_compose_scorecard_home.py` instantiates a card wall. Per the br
 
 ## Risk register
 
-| Risk                                                                            | Likelihood | Mitigation                                                                                                                               |
-| ------------------------------------------------------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Zebra Cards binding quirk (only Tables proved so far)                           | Medium     | Lab-first protocol catches this; native fallback documented as a switch                                                                  |
-| Existing front-page consumers break (other reports referencing this page name?) | Low        | Page name unchanged (`VP Ops Scorecard`); only inner visualContainer set is rewritten                                                    |
-| Trial license expiry mid-build                                                  | Low        | 30-day window (expires 2026-06-08); PR1 + PR2 both fit comfortably                                                                       |
-| Cardinal rule violation (Renewal ACV blended into ARR)                          | Low        | All four spine + strip measures already isolate Land+Expand or Renewal cleanly; verified by reading deployed DAX                         |
-| Codex and Claude touching the composer in parallel                              | Medium     | Coordinate via PR review on branch tip (push frequency is the signal); spec is committed before code so there's a single source of truth |
+| Risk                                                                            | Likelihood | Mitigation                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------------------------------------------------------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Zebra Cards binding quirk (only Tables proved so far)                           | Medium     | Lab-first protocol catches this; native fallback documented as a switch                                                                                                                                                                                                                                                                                                                                                      |
+| Existing front-page consumers break (other reports referencing this page name?) | Low        | Page name unchanged (`VP Ops Scorecard`); only inner visualContainer set is rewritten                                                                                                                                                                                                                                                                                                                                        |
+| Trial license expiry mid-build                                                  | Low        | 30-day window (expires 2026-06-08); PR1 + PR2 both fit comfortably                                                                                                                                                                                                                                                                                                                                                           |
+| Cardinal rule violation (Renewal ACV blended into ARR)                          | Low        | All four spine + strip measures already isolate Land+Expand or Renewal cleanly; verified by reading deployed DAX                                                                                                                                                                                                                                                                                                             |
+| Codex and Claude touching the composer in parallel                              | Medium     | (a) PR1 implementation pushes a per-file lock signal: prepend `# REBUILD IN PROGRESS — see specs/2026-05-09-vp-ops-front-page-spine-rebuild-design.md — DO NOT MODIFY UNTIL MERGED` at the top of `rw_compose_scorecard_home.py` as the FIRST commit of the implementation, removed at merge. (b) Push branch frequently so Codex sees PR1 progress at `git pull` time. (c) Spec committed before code; both agents read it. |
 
 ## Out-of-scope reminders
 
