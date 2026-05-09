@@ -10,10 +10,10 @@ Run:
 from __future__ import annotations
 
 from scripts.sales._pbir_helpers import (
-    ZEBRA_BI_TABLES_VISUAL_TYPE,
     build_card_visual_with_objects,
+    build_table_style_objects,
+    build_table_visual,
     build_textbox_visual,
-    build_zebra_bi_table_visual,
 )
 from scripts.sales.rw_add_visual import (
     REPORT_ID,
@@ -35,30 +35,53 @@ KPI_STRIP_MEASURES = [
 
 
 def _build_exception_spine() -> dict:
-    """Zebra BI Tables: regional exception view.
+    """Native tableEx: regional exception view (PR1.5).
 
-    Lifts the binding pattern verbatim from
-    rw_apply_zebra_lab_proof.apply_zebra_exceptions_proof, with positions
-    re-anchored to the live VP Ops Scorecard layout zone (y=80, h=264).
+    Originally targeted Zebra BI Tables (lab-proven in Codex's 303bc6b) but
+    SimCorp tenant policy blocks uncertified AppSource visuals in the Power BI
+    Service. PR1.5 falls back to native tableEx so the page renders today;
+    PR3 will swap back via the KG-driven recipe pipeline once Zebra is
+    whitelisted by IT (or, if it isn't, generate a richer native equivalent
+    from the same KG recipe).
 
-    Value order is positional — Zebra Tables uses it for IBCS column grouping.
-    Do not reorder without re-rendering against the live model.
+    Value order matches the original Zebra binding (Codex's lab proof) so the
+    swap-back is a one-line change. Styling uses the canonical Zebra type
+    ramp from data/zebra_kg/style_tokens.json (Segoe UI 9px header).
     """
-    return build_zebra_bi_table_visual(
-        visual_type=ZEBRA_BI_TABLES_VISUAL_TYPE,
-        categories=[
-            {"table": "d_region", "field": "region", "title": "Region"},
-        ],
-        values=[
-            {"table": "f_opportunity", "field": "Exception ARR", "title": "Exception ARR"},
-            {"table": "f_opportunity", "field": "Exception Opps Count", "title": "Exception opps"},
-            {"table": "f_opportunity", "field": "At Risk Opps ARR", "title": "At-risk ARR"},
-            {"table": "f_opportunity", "field": "Watch Opps ARR", "title": "Watch ARR"},
+    return build_table_visual(
+        name="exception_spine",
+        columns=[
+            {"table": "d_region", "field": "region", "kind": "column", "title": "Region"},
+            {
+                "table": "f_opportunity",
+                "field": "Exception ARR",
+                "kind": "measure",
+                "title": "Exception ARR",
+            },
+            {
+                "table": "f_opportunity",
+                "field": "Exception Opps Count",
+                "kind": "measure",
+                "title": "Exception opps",
+            },
+            {
+                "table": "f_opportunity",
+                "field": "At Risk Opps ARR",
+                "kind": "measure",
+                "title": "At-risk ARR",
+            },
+            {
+                "table": "f_opportunity",
+                "field": "Watch Opps ARR",
+                "kind": "measure",
+                "title": "Watch ARR",
+            },
         ],
         x=0,
         y=80,
         w=1280,
         h=264,
+        objects=build_table_style_objects(font_size=9),
     )
 
 
@@ -123,16 +146,23 @@ def _find_page(rj: dict) -> dict:
 
 
 def _compose(section: dict) -> None:
-    """Compose the VP Ops Scorecard front page (PR1).
+    """Compose the VP Ops Scorecard front page (PR1.5).
 
     Emits exactly 7 visualContainers:
       1. Page title (textbox at y=0)
-      2. Exception spine (Zebra BI Tables at y=80)
+      2. Exception spine (native tableEx at y=80; Zebra fallback per PR1.5)
       3. Movement-spine placeholder (textbox at y=360)
       4-7. KPI strip (4 native cards at y=600)
 
     Total layout closes to 720px with intentional 16px breathing-room gaps.
+
+    Drops the inherited page-level filters. The prior 45-card layout had a
+    `FilterYear` page filter targeting `d_calendar[year] = 2026`. That filter
+    intersects badly with `Total Closed Won ARR` which has its own date logic
+    in the deployed DAX, surfacing as $0. Each measure does its own scoping;
+    the page is filter-agnostic at the page level.
     """
+    section["filters"] = "[]"
     section["visualContainers"] = [
         build_textbox_visual(
             text="VP Ops Scorecard",

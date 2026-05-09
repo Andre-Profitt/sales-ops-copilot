@@ -1,8 +1,9 @@
-"""Tests for scripts.sales.rw_compose_scorecard_home — PR1 spine rebuild contract.
+"""Tests for scripts.sales.rw_compose_scorecard_home — PR1.5 contract.
 
 The page is composed of exactly 7 visualContainers:
 - 1 page-title textbox
-- 1 exception spine (Zebra BI Tables custom visual)
+- 1 exception spine (native tableEx; PR1.5 fallback from Zebra BI Tables
+  because SimCorp tenant policy blocks uncertified AppSource visuals)
 - 1 movement-spine placeholder textbox
 - 4 KPI strip cards
 """
@@ -17,7 +18,6 @@ from scripts.sales.rw_compose_scorecard_home import (
     _build_movement_spine_placeholder,
     _compose,
 )
-from scripts.sales._pbir_helpers import ZEBRA_BI_TABLES_VISUAL_TYPE
 
 
 # ---------- top-level shape ----------
@@ -56,20 +56,29 @@ def test_layout_zones_sum_to_720px():
 # ---------- exception spine ----------
 
 
-def test_exception_spine_value_order_matches_lab_proof():
-    """Zebra Tables uses positional ordering for IBCS column grouping. The order
-    here MUST match Codex's proven lab proof in
-    rw_apply_zebra_lab_proof.py:apply_zebra_exceptions_proof."""
+def test_exception_spine_is_native_tableex_per_pr15_fallback():
+    """PR1.5 swaps the spine from Zebra BI Tables to native tableEx because
+    SimCorp tenant policy blocks uncertified AppSource visuals in the Service.
+    Once Zebra is whitelisted, PR3 swaps back via the KG-driven recipe pipeline.
+    """
     visual = _build_exception_spine()
     config = json.loads(visual["config"])
     sv = config["singleVisual"]
-    assert sv["visualType"] == ZEBRA_BI_TABLES_VISUAL_TYPE
+    assert sv["visualType"] == "tableEx"
 
-    projections = sv["projections"]
-    value_role = projections.get("Y") or projections.get("Values") or projections.get("Primary")
-    assert value_role is not None, "expected Y/Values/Primary projection role"
-    field_names = [p["queryRef"].split(".")[-1] for p in value_role]
+
+def test_exception_spine_column_order_matches_lab_proof():
+    """The column projection order must still match Codex's proven Zebra lab
+    binding so a swap-back to Zebra Tables (when tenant unblocks) is a one-line
+    change. Region first (category), then 4 measures in lab order.
+    """
+    visual = _build_exception_spine()
+    config = json.loads(visual["config"])
+    sv = config["singleVisual"]
+    projections = sv["projections"]["Values"]
+    field_names = [p["queryRef"].split(".")[-1] for p in projections]
     assert field_names == [
+        "region",
         "Exception ARR",
         "Exception Opps Count",
         "At Risk Opps ARR",
