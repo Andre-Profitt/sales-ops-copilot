@@ -94,3 +94,75 @@ def test_shape_real_pbix_smoke():
         }
         for r in dm.relationships
     )
+
+
+def test_classify_scenario_recognises_py_pl_fc_ac():
+    classify = kg.classify_scenario
+    assert classify("ARR PY") == "PY"
+    assert classify("Sales Plan") == "PL"
+    assert classify("Forecast FY") == "FC"
+    assert classify("Stage Forward Pct") == "AC"
+    assert classify("Total Transitions") == "AC"
+
+
+def test_classify_variance_flags_var_diff_delta():
+    is_var = kg.is_variance
+    assert is_var("ARR vs PY") is True
+    assert is_var("Var % vs Plan") is True
+    assert is_var("Delta ARR") is True
+    assert is_var("Total Transitions") is False
+
+
+def test_node_ids_are_stable_and_namespaced():
+    pbix = make_stub_sales_funnel()
+    dm = kg.shape_datamodel(pbix, template_slug="sales-funnel")
+    nodes = list(kg.iter_nodes(dm))
+    ids = {n["id"] for n in nodes}
+
+    assert "tbl:sales-funnel:f_opp" in ids
+    assert "msr:sales-funnel:Stage Forward Pct" in ids
+    assert "col:sales-funnel:f_opp:StageId" in ids
+    assert "rel:sales-funnel:f_opp.StageId->d_stage.Id" in ids
+    # Scenario nodes — emitted once per template, only for scenarios actually used
+    assert "scn:PY" in ids
+
+
+def test_edges_link_measure_to_dependent_measure():
+    pbix = make_stub_sales_funnel()
+    dm = kg.shape_datamodel(pbix, template_slug="sales-funnel")
+    edges = list(kg.iter_edges(dm))
+
+    # Stage Forward Pct DAX references [Forward Moves] and [Total Transitions]
+    deps = {
+        (e["src"], e["dst"])
+        for e in edges
+        if e["type"] == "depends_on" and e["src"] == "msr:sales-funnel:Stage Forward Pct"
+    }
+    assert (
+        "msr:sales-funnel:Stage Forward Pct",
+        "msr:sales-funnel:Forward Moves",
+    ) in deps
+    assert (
+        "msr:sales-funnel:Stage Forward Pct",
+        "msr:sales-funnel:Total Transitions",
+    ) in deps
+
+
+def test_edges_include_relationship_and_scenario_links():
+    pbix = make_stub_sales_funnel()
+    dm = kg.shape_datamodel(pbix, template_slug="sales-funnel")
+    edges = list(kg.iter_edges(dm))
+    edge_types = {e["type"] for e in edges}
+
+    assert "related_to" in edge_types
+    assert "scenario_of" in edge_types  # ARR PY measure → scn:PY
+
+
+def test_measure_catalog_rows_have_dedupe_keys():
+    pbix = make_stub_sales_funnel()
+    dm = kg.shape_datamodel(pbix, template_slug="sales-funnel")
+    rows = list(kg.measure_catalog_rows(dm))
+    assert len(rows) == 4
+    keys = {(r["template_slug"], r["table"], r["name"]) for r in rows}
+    assert ("sales-funnel", "f_opp", "Stage Forward Pct") in keys
+    assert all("expression" in r and "format_string" in r for r in rows)
