@@ -464,3 +464,50 @@ uses explicit tinted `basicShape` panels behind the card pairs.
 
 The Desktop PBIP must be regenerated/reopened to inspect the latest live push.
 An already-open Desktop copy will not update automatically.
+
+## 2026-05-09 — Front page GraphRAG cleanup
+
+Andre flagged the real visible problem: the `VP Ops Scorecard` front page still
+looked like numbers sprawled across the canvas. The live audit confirmed it:
+26 visuals, 23 plain cards, three slicers embedded in the grid, six cards
+overflowing the 1280 x 720 canvas, and no decision hierarchy.
+
+**GraphRAG read:**
+
+- Source graph: `scripts/sales/rw_kpi_graph.py` with 31 RW target KPIs.
+- Front page should retrieve only high-impact live signals from the graph, not
+  display every KPI.
+- ARR and ACV lanes remain separate. `Total Open Pipeline Value` is used only
+  in the bottom portfolio map and is explicitly the cross-motion open-value
+  measure.
+- Missing/partial KPI graph items stay off the home page unless they explain a
+  gap.
+
+**Shipped:**
+
+- Added `docs/sales/RW_FRONT_PAGE_GRAPHRAG_AUDIT.md`.
+- Added `scripts/sales/rw_compose_scorecard_home.py`, an idempotent composer for
+  the `VP Ops Scorecard` page.
+- Replaced the old front page with:
+  - left filter rail plus GraphRAG routing contract
+  - top At Risk / Watch / Healthy operating-signal band
+  - Growth ARR, Pipeline Discipline, and Renewal ACV KPI lanes
+  - portfolio matrix by stage x motion
+  - open-deal inspection table
+- Added `tests/sales/test_rw_compose_scorecard_home.py`.
+
+**Live evidence:**
+
+- `python3 -m scripts.sales.rw_compose_scorecard_home` succeeded; old 26 visuals
+  cleared and 52 structured visuals pushed.
+- `python3 -m scripts.sales.rw_capture_visual --list --page "VP Ops Scorecard"`
+  confirms 52 visuals: 16 `basicShape`, 19 `textbox`, 12 object-bearing cards,
+  3 slicers, 1 matrix, and 1 table.
+- `python3 -m scripts.sales.rw_validate --live` succeeded: 6 sections, 83
+  visualContainers, all measure refs resolve against 100 measures.
+- `python3 -m pytest tests/sales` succeeded: 28 passed.
+
+**Remaining front-page visual debt:**
+
+- The front-page table is still audit-flagged as a plain `tableEx`; capture a
+  renderer-authored table formatting / conditional-formatting object block next.
