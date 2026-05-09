@@ -210,3 +210,76 @@ def test_translate_visual_corpus_smoke_no_exceptions():
             assert len(out) >= 1
             count += 1
     assert count > 0
+
+
+from unittest.mock import patch
+
+
+def test_native_emit_emit_native_visuals_calls_translate_visual():
+    """The refactor wires emit_native_visuals through translate_visual."""
+    from scripts.sales.rw_zebra_kg_native_emit import emit_native_visuals
+    from scripts.sales.rw_zebra_kg_recipe import Recipe, VisualRecipe
+
+    recipe = Recipe(
+        source_template="t",
+        source_page="p",
+        visuals=[
+            VisualRecipe(
+                visual_type="textbox",
+                position={"x": 0, "y": 0, "w": 100, "h": 50},
+                role_bindings={},
+                scenarios_used=[],
+                tables_referenced=[],
+                measure_refs=[],
+                text="hello",
+            )
+        ],
+    )
+    with patch(
+        "scripts.sales.rw_zebra_kg_native_emit.translate_visual",
+        wraps=__import__(
+            "scripts.sales.rw_zebra_kg_translator", fromlist=["translate_visual"]
+        ).translate_visual,
+    ) as spy:
+        emit_native_visuals(recipe, rw_map={})
+        assert spy.call_count == 1
+
+
+def test_swap_pbix_swap_layout_calls_translate_visual():
+    """The refactor wires swap_layout through translate_visual."""
+    from scripts.sales.rw_zebra_kg_swap_pbix import swap_layout
+
+    layout = {
+        "sections": [
+            {
+                "name": "p1",
+                "displayName": "Page 1",
+                "visualContainers": [
+                    {
+                        "x": 0,
+                        "y": 0,
+                        "width": 200,
+                        "height": 100,
+                        "config": json.dumps(
+                            {
+                                "name": "v1",
+                                "singleVisual": {
+                                    "visualType": "textbox",
+                                    "projections": {},
+                                },
+                            }
+                        ),
+                    }
+                ],
+            }
+        ]
+    }
+    rmap = {"measures_by_table": {}, "calendar_alias": "Calendar"}
+    with patch(
+        "scripts.sales.rw_zebra_kg_swap_pbix.translate_visual",
+        wraps=__import__(
+            "scripts.sales.rw_zebra_kg_translator", fromlist=["translate_visual"]
+        ).translate_visual,
+    ) as spy:
+        swap_layout(layout, rmap)
+        assert spy.call_count == 1

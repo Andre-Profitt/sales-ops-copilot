@@ -135,13 +135,23 @@ def _refs_for_roles(projs: dict, roles: tuple[str, ...]) -> list[str]:
 def _resolve_ref(
     zebra_ref: str, rw_map: BindMap, catalog: MeasureCatalog
 ) -> tuple[str, str] | None:
-    """Resolve a zebra_ref like 'Table.Field' to the live (table, field)."""
+    """Resolve a zebra_ref like 'Table.Field' to the live (table, field).
+
+    When the catalog has entries, require the field to be in it (real
+    deploys must validate). When the catalog is empty (e.g., corpus-smoke),
+    fall back to the zebra_ref's own table — the translator never raises;
+    callers that need drop-on-missing semantics filter passthrough at the
+    layer above (see emit_native_visuals).
+    """
     rw_ref = rw_map.lookup(zebra_ref) or zebra_ref
     if "." not in rw_ref:
         return None
     tbl, fld = rw_ref.split(".", 1)
-    tbl2 = catalog.measure_to_table.get(fld, tbl)
-    return (tbl2, fld)
+    if catalog.measure_to_table:
+        if fld not in catalog.measure_to_table:
+            return None
+        return (catalog.measure_to_table[fld], fld)
+    return (tbl, fld)
 
 
 def _translate_tables(

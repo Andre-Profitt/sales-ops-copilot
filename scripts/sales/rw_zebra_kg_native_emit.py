@@ -1,17 +1,8 @@
 """Translate a `Recipe` (from rw_zebra_kg_recipe) into native-PBI
 visualContainers using the deployed RW measure inventory.
 
-Translation matrix:
-    ZebraBITables*       -> tableEx (Category + measure columns)
-    zebraBiCards* / card -> card (single measure per card)
-    textbox              -> textbox (pass-through)
-    waterfall*           -> textbox placeholder ("see PR3.1 for native bridge")
-    columnChart / slicer / actionButton / basicShape / <none> -> dropped (v1)
-
-Zebra measure -> RW measure mapping: exact name match against the deployed
-RW model (via fetch_measures_by_table). Unmapped measures dropped from
-the value list. A Zebra table whose value list drops to empty -> visual
-dropped entirely.
+Delegates per-family translation to translate_visual so all family logic
+lives in one place (rw_zebra_kg_translator).
 
 Usage (from another module):
     from scripts.sales.rw_zebra_kg_recipe import extract_recipe
@@ -25,140 +16,74 @@ Usage (from another module):
 
 from __future__ import annotations
 
-from scripts.sales._pbir_helpers import (
-    build_card_visual_with_objects,
-    build_table_style_objects,
-    build_table_visual,
-    build_textbox_visual,
-)
+import json
+
 from scripts.sales.rw_zebra_kg_recipe import Recipe, VisualRecipe
-
-# IBCS column order — Zebra renders Values then PreviousYear then Plan then Forecast.
-# Native tableEx has no scenario grammar; we preserve the same column order so a
-# swap-back to Zebra Tables (when tenant unblocks) is a one-line change.
-_VALUE_ROLE_ORDER = ["Values", "PreviousYear", "Plan", "Forecast"]
-
-
-def _flatten_rw_measures(rw_map: dict) -> dict[str, str]:
-    """{measure_name: rw_table_name} for fast lookup."""
-    return {name: table for table, names in rw_map.items() for name in names}
+from scripts.sales.rw_zebra_kg_translator import (
+    BindMap,
+    MeasureCatalog,
+    translate_visual,
+)
 
 
-def _emit_zebra_table(v: VisualRecipe, rw_lookup: dict[str, str]) -> dict | None:
-    """ZebraBITables -> native tableEx. Drops unmapped measures; drops
-    visual entirely if no value columns survive."""
-    cat_refs = v.role_bindings.get("Category") or []
-    if not cat_refs or "." not in cat_refs[0]:
-        return None
-    cat_table, cat_field = cat_refs[0].split(".", 1)
-
-    columns = [
-        {
-            "table": cat_table,
-            "field": cat_field,
-            "kind": "column",
-            "title": cat_field,
+def _recipe_visual_to_layout_vc(v: VisualRecipe) -> dict:
+    """Adapt a VisualRecipe to the Layout-shape vc that translate_visual expects."""
+    pos = v.position
+    projections = {
+        role: [{"queryRef": ref} for ref in (refs or [])]
+        for role, refs in (v.role_bindings or {}).items()
+    }
+    sv: dict = {"visualType": v.visual_type, "projections": projections}
+    if v.text:
+        sv["objects"] = {
+            "general": [{"properties": {"paragraphs": [{"textRuns": [{"value": v.text}]}]}}]
         }
-    ]
-    value_cols_added = 0
-    for role in _VALUE_ROLE_ORDER:
-        for ref in v.role_bindings.get(role, []) or []:
-            if "." not in ref:
-                continue
-            _, field = ref.split(".", 1)
-            if field in rw_lookup:
-                columns.append(
-                    {
-                        "table": rw_lookup[field],
-                        "field": field,
-                        "kind": "measure",
-                        "title": field,
-                    }
-                )
-                value_cols_added += 1
-
-    if value_cols_added == 0:
-        return None
-
-    return build_table_visual(
-        name=f"recipe_{v.visual_type[:8]}",
-        columns=columns,
-        x=v.position["x"],
-        y=v.position["y"],
-        w=v.position["w"],
-        h=v.position["h"],
-        objects=build_table_style_objects(font_size=9),
-    )
+    return {
+        "x": pos.get("x", 0),
+        "y": pos.get("y", 0),
+        "width": pos.get("w", 0),
+        "height": pos.get("h", 0),
+        "config": json.dumps({"name": "recipe", "singleVisual": sv}),
+    }
 
 
-def _emit_zebra_card(v: VisualRecipe, rw_lookup: dict[str, str]) -> dict | None:
-    """zebraBiCards / card -> native card. Picks the first mapped measure
-    from any role binding."""
-    for refs in v.role_bindings.values():
-        for ref in refs or []:
-            if "." not in ref:
-                continue
-            _, field = ref.split(".", 1)
-            if field in rw_lookup:
-                return build_card_visual_with_objects(
-                    measure_table=rw_lookup[field],
-                    measure_name=field,
-                    display_title=field,
-                    x=v.position["x"],
-                    y=v.position["y"],
-                    w=v.position["w"],
-                    h=v.position["h"],
-                )
-    return None
+def _bindmap_from_rw_map(rw_map: dict[str, list[str]]) -> BindMap:
+    """rw_map shape is {rw_table: [measure_name, ...]}; flatten to a zebra-ref->rw-ref overlay."""
+    flat: dict[str, str] = {}
+    for tbl, names in (rw_map or {}).items():
+        for n in names:
+            flat[n] = f"{tbl}.{n}"
+    return BindMap(zebra_to_rw=flat)
 
 
-def _emit_textbox(v: VisualRecipe) -> dict:
-    return build_textbox_visual(
-        text=v.text or "(textbox)",
-        x=v.position["x"],
-        y=v.position["y"],
-        w=v.position["w"],
-        h=v.position["h"],
-        font_size_pt=10,
-        color="#666666",
-    )
-
-
-def _emit_waterfall_placeholder(v: VisualRecipe) -> dict:
-    return build_textbox_visual(
-        text=(
-            "Waterfall (Zebra bridge) — native equivalent deferred to PR3.1. "
-            "Source visual: " + v.visual_type
-        ),
-        x=v.position["x"],
-        y=v.position["y"],
-        w=v.position["w"],
-        h=v.position["h"],
-        font_size_pt=10,
-        color="#666666",
-    )
+def _catalog_from_rw_map(rw_map: dict[str, list[str]]) -> MeasureCatalog:
+    by_scenario: dict[str, str] = {}
+    measure_to_table: dict[str, str] = {}
+    for tbl, names in (rw_map or {}).items():
+        for n in names:
+            by_scenario[n] = n
+            measure_to_table[n] = tbl
+    return MeasureCatalog(by_scenario=by_scenario, measure_to_table=measure_to_table)
 
 
 def emit_native_visuals(recipe: Recipe, rw_map: dict[str, list[str]]) -> list[dict]:
     """Translate every visual in the recipe to a native PBIR visualContainer.
-    Returns list of native visualContainers; visuals that can't translate
-    are dropped silently (caller can diff len(recipe.visuals) vs len(out)
-    to detect drops)."""
-    rw_lookup = _flatten_rw_measures(rw_map)
+
+    Wraps translate_visual so per-family logic stays in one place.
+
+    Recipe-driven semantics: a synthetic Zebra-typed VisualRecipe whose
+    measures don't resolve produces a useless passthrough (Zebra visualType
+    blocked by SimCorp tenant policy). Drop those — callers detect via
+    `if not visuals` and raise. PBIX-path callers (swap_layout) keep the
+    passthrough because they're preserving real visuals, not synthesizing.
+    """
+    catalog = _catalog_from_rw_map(rw_map)
+    bm = _bindmap_from_rw_map(rw_map)
     out: list[dict] = []
     for v in recipe.visuals:
-        vt = v.visual_type
-        visual: dict | None
-        if "ZebraBITables" in vt:
-            visual = _emit_zebra_table(v, rw_lookup)
-        elif "zebraBiCards" in vt or vt == "card":
-            visual = _emit_zebra_card(v, rw_lookup)
-        elif vt == "textbox":
-            visual = _emit_textbox(v)
-        elif "waterfall" in vt:
-            visual = _emit_waterfall_placeholder(v)
-        else:
-            visual = None
-        if visual is not None:
-            out.append(visual)
+        src = _recipe_visual_to_layout_vc(v)
+        translated = translate_visual(src, catalog, bm)
+        if len(translated) == 1 and translated[0] is src:
+            continue
+        out.extend(translated)
     return out

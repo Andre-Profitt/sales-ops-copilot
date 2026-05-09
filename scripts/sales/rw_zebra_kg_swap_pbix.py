@@ -9,8 +9,7 @@ Translation:
 
 The pipeline: scan first (resolve Calendar-equivalent table, build qref→
 real-table map, count visual-type families), then per-visual rewrite using
-the helpers in scripts.sales._pbir_helpers + a small visualType-rebrand
-trick for waterfall/multiRowCard variants.
+translate_visual so all per-family logic lives in rw_zebra_kg_translator.
 
 Usage:
     # single file, no upload
@@ -41,14 +40,12 @@ import zipfile
 from collections import defaultdict
 from pathlib import Path
 
-from scripts.sales._pbir_helpers import (
-    build_card_visual_with_objects,
-    build_table_style_objects,
-    build_table_visual,
+from scripts.sales.rw_zebra_kg_translator import (
+    BindMap,
+    MeasureCatalog,
+    translate_visual,
 )
 
-VAL_ROLES = ("Values", "PreviousYear", "Plan", "Forecast")
-CAT_ROLES = ("Category", "Group")
 QREF_WRAP = re.compile(
     r"^(Sum|Min|Max|Count|Average|Distinct count|CountNonNull|Median|StandardDeviation|Variance)\((.+)\)$"
 )
@@ -98,46 +95,15 @@ def _build_resolution_map(pbix: Path) -> dict:
     }
 
 
-def _resolve_qref(qref: str, rmap: dict) -> tuple[str, str] | None:
-    if not isinstance(qref, str):
-        return None
-    m = QREF_WRAP.match(qref)
-    inner = m.group(2) if m else qref
-    if "." not in inner:
-        return None
-    t, f = inner.split(".", 1)
-    t, f = t.strip(), f.strip()
-    if t in rmap["all_tables"] and (
-        f in rmap["cols_by_table"].get(t, set()) or f in rmap["measures_by_table"].get(t, set())
-    ):
-        return (t, f)
-    if t == "Calendar" and rmap["calendar_alias"]:
-        if f in rmap["cols_by_table"].get(rmap["calendar_alias"], set()):
-            return (rmap["calendar_alias"], f)
-    return None
-
-
-def _role_refs(sv: dict, roles: tuple, rmap: dict) -> list[tuple[str, str]]:
-    out = []
-    for role in roles:
-        for p in (sv.get("projections") or {}).get(role, []) or []:
-            r = _resolve_qref(p.get("queryRef"), rmap)
-            if r and r not in out:
-                out.append(r)
-    return out
-
-
-def _visualtype_swap(config_str: str, new_type: str, role_renames: dict | None = None) -> str:
-    cfg = json.loads(config_str)
-    sv = cfg.get("singleVisual", {})
-    sv["visualType"] = new_type
-    if role_renames and "projections" in sv:
-        merged = {}
-        for old_role, projs in (sv["projections"] or {}).items():
-            new_role = role_renames.get(old_role, old_role)
-            merged.setdefault(new_role, []).extend(projs or [])
-        sv["projections"] = merged
-    return json.dumps(cfg, ensure_ascii=False)
+def _catalog_from_rmap(rmap: dict) -> MeasureCatalog:
+    """rmap['measures_by_table'] is {table: set(measure_names)}; flatten to catalog."""
+    by_scenario: dict[str, str] = {}
+    measure_to_table: dict[str, str] = {}
+    for tbl, names in (rmap.get("measures_by_table") or {}).items():
+        for n in names:
+            by_scenario[n] = n
+            measure_to_table[n] = tbl
+    return MeasureCatalog(by_scenario=by_scenario, measure_to_table=measure_to_table)
 
 
 def swap_layout(layout: dict, rmap: dict) -> dict:
@@ -147,10 +113,6 @@ def swap_layout(layout: dict, rmap: dict) -> dict:
     for sec in layout.get("sections", []):
         new = []
         for vc in sec.get("visualContainers", []):
-            x = vc.get("x", 0)
-            y = vc.get("y", 0)
-            w = vc.get("width", 100)
-            h = vc.get("height", 100)
             cstr = vc.get("config")
             if not isinstance(cstr, str):
                 new.append(vc)
@@ -163,109 +125,21 @@ def swap_layout(layout: dict, rmap: dict) -> dict:
                 stats["kept"] += 1
                 continue
             sv = cfg.get("singleVisual") or {}
-            vt = sv.get("visualType", "")
+            vt = sv.get("visualType", "")  # noqa: F841 — kept for potential future use
 
-            if "waterfall" in vt:
-                cat = _role_refs(sv, CAT_ROLES, rmap)
-                val = _role_refs(sv, VAL_ROLES, rmap)
-                if not cat or not val:
-                    new.append(vc)
-                    stats["wf_skipped"] += 1
-                    continue
-                ct, cf = cat[0]
-                vt2, vf2 = val[0]
-                cols = [
-                    {"table": ct, "field": cf, "kind": "column", "title": cf},
-                    {"table": vt2, "field": vf2, "kind": "measure", "title": vf2},
-                ]
-                scaffold = build_table_visual(
-                    name=f"wf_{int(x)}_{int(y)}",
-                    columns=cols,
-                    x=x,
-                    y=y,
-                    w=w,
-                    h=h,
-                )
-                # Rebrand to native waterfallChart, split projections back into Cat / Y
-                cfg2 = json.loads(scaffold["config"])
-                sv2 = cfg2["singleVisual"]
-                sv2["visualType"] = "waterfallChart"
-                vals = sv2["projections"].get("Values", [])
-                cat_p, y_p = [], []
-                for p in vals:
-                    qr = p.get("queryRef", "")
-                    if "." in qr:
-                        pt, pf = qr.split(".", 1)
-                        if pf in rmap["measures_by_table"].get(pt, set()):
-                            y_p.append(p)
-                        else:
-                            cat_p.append(p)
-                sv2["projections"] = {"Category": cat_p, "Y": y_p}
-                scaffold["config"] = json.dumps(cfg2, ensure_ascii=False)
-                new.append(scaffold)
-                stats["waterfall→native"] += 1
-
-            elif "zebraBiCards" in vt:
-                cat = _role_refs(sv, CAT_ROLES, rmap)
-                val = _role_refs(sv, VAL_ROLES, rmap)
-                if not val:
-                    new.append(vc)
-                    stats["card_skipped"] += 1
-                    continue
-                if len(val) == 1 and not cat:
-                    t, f = val[0]
-                    new.append(
-                        build_card_visual_with_objects(
-                            measure_table=t,
-                            measure_name=f,
-                            display_title=f,
-                            x=x,
-                            y=y,
-                            w=w,
-                            h=h,
-                        )
-                    )
-                    stats["card→card"] += 1
-                else:
-                    cols = []
-                    for t, f in cat[:1]:
-                        cols.append({"table": t, "field": f, "kind": "column", "title": f})
-                    for t, f in val:
-                        cols.append({"table": t, "field": f, "kind": "measure", "title": f})
-                    scaffold = build_table_visual(
-                        name=f"mrc_{int(x)}_{int(y)}", columns=cols, x=x, y=y, w=w, h=h
-                    )
-                    scaffold["config"] = _visualtype_swap(scaffold["config"], "multiRowCard")
-                    new.append(scaffold)
-                    stats["card→multiRow"] += 1
-
-            elif "ZebraBITables" in vt:
-                cat = _role_refs(sv, CAT_ROLES, rmap)
-                val = _role_refs(sv, VAL_ROLES, rmap)
-                if not val:
-                    new.append(vc)
-                    stats["tbl_skipped"] += 1
-                    continue
-                cols = []
-                for t, f in cat[:2]:
-                    cols.append({"table": t, "field": f, "kind": "column", "title": f})
-                for t, f in val:
-                    cols.append({"table": t, "field": f, "kind": "measure", "title": f})
-                new.append(
-                    build_table_visual(
-                        name=f"tbl_{int(x)}_{int(y)}",
-                        columns=cols,
-                        x=x,
-                        y=y,
-                        w=w,
-                        h=h,
-                        objects=build_table_style_objects(font_size=9),
-                    )
-                )
-                stats["tbl→tableEx"] += 1
-            else:
+            catalog = _catalog_from_rmap(rmap)
+            bm = BindMap()  # PBIX path: no overlay; identity binding
+            translated = translate_visual(vc, catalog, bm)
+            # translate_visual returns [src_vc] on pass-through or family failure;
+            # don't double-count untranslated visuals.
+            if len(translated) == 1 and translated[0] is vc:
                 new.append(vc)
                 stats["kept"] += 1
+            else:
+                new.extend(translated)
+                stats.setdefault("translated", 0)
+                stats["translated"] += len(translated)
+            continue
         sec["visualContainers"] = new
     return dict(stats)
 
