@@ -11,8 +11,6 @@ from __future__ import annotations
 
 from scripts.sales._pbir_helpers import (
     build_card_visual_with_objects,
-    build_table_style_objects,
-    build_table_visual,
     build_textbox_visual,
 )
 from scripts.sales.rw_add_visual import (
@@ -23,6 +21,8 @@ from scripts.sales.rw_add_visual import (
     push_report,
 )
 from scripts.sales.rw_validate import fetch_measures_by_table, validate_visual_dict
+from scripts.sales.rw_zebra_kg_native_emit import emit_native_visuals
+from scripts.sales.rw_zebra_kg_recipe import Recipe, VisualRecipe
 
 PAGE = "VP Ops Scorecard"
 
@@ -35,54 +35,56 @@ KPI_STRIP_MEASURES = [
 
 
 def _build_exception_spine() -> dict:
-    """Native tableEx: regional exception view (PR1.5).
+    """KG-pipeline-driven native exception spine.
 
-    Originally targeted Zebra BI Tables (lab-proven in Codex's 303bc6b) but
-    SimCorp tenant policy blocks uncertified AppSource visuals in the Power BI
-    Service. PR1.5 falls back to native tableEx so the page renders today;
-    PR3 will swap back via the KG-driven recipe pipeline once Zebra is
-    whitelisted by IT (or, if it isn't, generate a richer native equivalent
-    from the same KG recipe).
+    Hand-builds a VisualRecipe referencing RW measure names (the deployed
+    model uses bespoke names that don't match Zebra's IBCS slot names —
+    PR2's smoke confirmed 0/13 matches when crawling sales-dashboard Landing).
+    The recipe goes through emit_native_visuals which translates to a native
+    tableEx via build_table_visual.
 
-    Value order matches the original Zebra binding (Codex's lab proof) so the
-    swap-back is a one-line change. Styling uses the canonical Zebra type
-    ramp from data/zebra_kg/style_tokens.json (Segoe UI 9px header).
+    Architectural value: the spine now goes through the same Recipe → emit
+    pipeline that PR3.1 will use for the movement waterfall and the KPI
+    strip's Zebra Cards upgrade. When the Zebra tenant block is lifted,
+    swap visual_type from "ZebraBITables..." back to the Zebra GUID and
+    emit_native_visuals will route to a Zebra Tables visual instead. One
+    line, no other changes.
     """
-    return build_table_visual(
-        name="exception_spine",
-        columns=[
-            {"table": "d_region", "field": "region", "kind": "column", "title": "Region"},
-            {
-                "table": "f_opportunity",
-                "field": "Exception ARR",
-                "kind": "measure",
-                "title": "Exception ARR",
-            },
-            {
-                "table": "f_opportunity",
-                "field": "Exception Opps Count",
-                "kind": "measure",
-                "title": "Exception opps",
-            },
-            {
-                "table": "f_opportunity",
-                "field": "At Risk Opps ARR",
-                "kind": "measure",
-                "title": "At-risk ARR",
-            },
-            {
-                "table": "f_opportunity",
-                "field": "Watch Opps ARR",
-                "kind": "measure",
-                "title": "Watch ARR",
-            },
+    recipe_visual = VisualRecipe(
+        visual_type="ZebraBITables98F88148E5424E949E69864664EE1860",
+        position={"x": 0, "y": 80, "w": 1280, "h": 264},
+        role_bindings={
+            "Category": ["d_region.region"],
+            "Values": [
+                "f_opportunity.Exception ARR",
+                "f_opportunity.Exception Opps Count",
+                "f_opportunity.At Risk Opps ARR",
+                "f_opportunity.Watch Opps ARR",
+            ],
+        },
+        scenarios_used=["AC"],
+        tables_referenced=["d_region", "f_opportunity"],
+        measure_refs=[
+            "Exception ARR",
+            "Exception Opps Count",
+            "At Risk Opps ARR",
+            "Watch Opps ARR",
         ],
-        x=0,
-        y=80,
-        w=1280,
-        h=264,
-        objects=build_table_style_objects(font_size=9),
     )
+    recipe = Recipe(
+        source_template="rw-internal:exception-spine",
+        source_page="VP Ops Scorecard",
+        visuals=[recipe_visual],
+    )
+    rw_map = fetch_measures_by_table()
+    visuals = emit_native_visuals(recipe, rw_map)
+    if not visuals:
+        raise RuntimeError(
+            "KG pipeline produced no visual for the exception spine — "
+            "verify all 4 measures (Exception ARR, Exception Opps Count, "
+            "At Risk Opps ARR, Watch Opps ARR) are in the deployed RW model."
+        )
+    return visuals[0]
 
 
 def _build_movement_spine_placeholder() -> dict:

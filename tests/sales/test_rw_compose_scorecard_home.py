@@ -1,14 +1,17 @@
-"""Tests for scripts.sales.rw_compose_scorecard_home — PR1.5 contract.
+"""Tests for scripts.sales.rw_compose_scorecard_home — PR1.5 + PR3 contract.
 
 The page is composed of exactly 7 visualContainers:
 - 1 page-title textbox
-- 1 exception spine (native tableEx; PR1.5 fallback from Zebra BI Tables
-  because SimCorp tenant policy blocks uncertified AppSource visuals)
+- 1 exception spine (native tableEx via the KG Recipe → emit pipeline
+  per PR3; PR1.5 fallback from Zebra BI Tables because SimCorp tenant
+  policy blocks uncertified AppSource visuals)
 - 1 movement-spine placeholder textbox
 - 4 KPI strip cards
 """
 
 import json
+
+import pytest
 
 from scripts.sales.rw_compose_scorecard_home import (
     KPI_STRIP_MEASURES,
@@ -18,6 +21,36 @@ from scripts.sales.rw_compose_scorecard_home import (
     _build_movement_spine_placeholder,
     _compose,
 )
+
+
+@pytest.fixture(autouse=True)
+def _stub_fetch_measures_by_table(monkeypatch):
+    """Autouse: stub fetch_measures_by_table so composer tests don't hit live
+    Fabric REST. The 4 spine measures + the 4 KPI strip measures must be
+    present so _build_exception_spine + _build_kpi_strip don't drop visuals.
+
+    Tests that need a different stub (e.g. zero-measure case) override via
+    their own monkeypatch.setattr — pytest applies the test-local patch
+    after this fixture's setattr, so the test-local one wins.
+    """
+    from scripts.sales import rw_compose_scorecard_home as composer
+
+    monkeypatch.setattr(
+        composer,
+        "fetch_measures_by_table",
+        lambda: {
+            "f_opportunity": [
+                "Exception ARR",
+                "Exception Opps Count",
+                "At Risk Opps ARR",
+                "Watch Opps ARR",
+                "Total Closed Won ARR",
+                "Win Rate ARR",
+                "Renewal Retention Pct (Period)",
+            ],
+            "f_stage_transition": ["Stage Forward Pct (LE)"],
+        },
+    )
 
 
 # ---------- top-level shape ----------
@@ -135,3 +168,62 @@ def test_kpi_strip_uses_expected_measures():
 
 def test_page_constant_unchanged():
     assert PAGE == "VP Ops Scorecard"
+
+
+def test_exception_spine_kg_pipeline_matches_pr15_shape(monkeypatch):
+    """The KG-driven spine should produce structurally identical output to
+    PR1.5's hand-authored version: same visualType, position, column order.
+
+    Stubs fetch_measures_by_table so the test doesn't hit Fabric REST.
+    """
+    from scripts.sales import rw_compose_scorecard_home as composer
+
+    monkeypatch.setattr(
+        composer,
+        "fetch_measures_by_table",
+        lambda: {
+            "f_opportunity": [
+                "Exception ARR",
+                "Exception Opps Count",
+                "At Risk Opps ARR",
+                "Watch Opps ARR",
+            ],
+        },
+    )
+
+    visual = composer._build_exception_spine()
+    config = json.loads(visual["config"])
+    sv = config["singleVisual"]
+    assert sv["visualType"] == "tableEx"
+    assert visual["x"] == 0
+    assert visual["y"] == 80
+    assert visual["width"] == 1280
+    assert visual["height"] == 264
+
+    projections = sv["projections"]["Values"]
+    field_names = [p["queryRef"].split(".")[-1] for p in projections]
+    assert field_names == [
+        "region",
+        "Exception ARR",
+        "Exception Opps Count",
+        "At Risk Opps ARR",
+        "Watch Opps ARR",
+    ]
+
+
+def test_exception_spine_raises_when_pipeline_drops_all_measures(monkeypatch):
+    """If the deployed RW model is missing all 4 spine measures (e.g., a
+    botched semantic-model deploy), the spine builder must raise rather than
+    silently emit a category-only useless visual."""
+    import pytest as _pytest
+
+    from scripts.sales import rw_compose_scorecard_home as composer
+
+    monkeypatch.setattr(
+        composer,
+        "fetch_measures_by_table",
+        lambda: {"f_opportunity": ["Some Other Measure"]},
+    )
+
+    with _pytest.raises(RuntimeError, match="KG pipeline produced no visual"):
+        composer._build_exception_spine()
