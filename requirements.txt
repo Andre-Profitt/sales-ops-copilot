@@ -19,3 +19,4 @@ textual>=8.2.4
 # `formulas` — pure-Python xlsx formula evaluator. Used by
 # scripts/model_recalc.py to verify land.model.xlsx without LibreOffice.
 formulas>=1.3.4
+pbixray>=0.3.4
