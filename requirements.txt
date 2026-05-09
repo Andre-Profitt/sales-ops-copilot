@@ -23,3 +23,5 @@ formulas>=1.3.4
 # tables, columns, relationships from binary DataModel). Used by
 # scripts/sales/rw_zebra_kg_datamodel.py.
 pbixray>=0.3.4
+sentence-transformers>=2.7,<4
+numpy>=1.26
