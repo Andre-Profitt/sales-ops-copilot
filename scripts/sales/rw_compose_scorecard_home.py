@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from scripts.sales._pbir_helpers import (
     ZEBRA_BI_TABLES_VISUAL_TYPE,
+    build_card_visual_with_objects,
     build_clustered_bar_chart_visual,
     build_rag_card_visual,
     build_shape_visual,
@@ -164,41 +165,51 @@ def _build_exception_spine() -> dict:
 
 
 def _build_movement_spine_placeholder() -> dict:
-    """Placeholder textbox for the movement spine (Task 3)."""
+    """Textbox placeholder for the movement waterfall (PR2).
+
+    Reserves the vertical real-estate so PR2's bridge visual lands cleanly,
+    and signals to the executive viewer that 'what changed' is coming —
+    rather than the rebuild looking permanently incomplete.
+    """
     return build_textbox_visual(
-        "MOVEMENT SPINE — placeholder",
+        text=(
+            "Movement spine — see PR2 (Pipeline ARR last 7d waterfall, "
+            "pending new ARR-7d measures and Commercial Approval Gate "
+            "Exception ARR measure)"
+        ),
         x=0,
         y=360,
         w=1280,
         h=224,
-        font_size_pt=10,
-        color=MUTED,
+        font_size_pt=11,
+        color="#666666",
     )
 
 
 def _build_kpi_strip() -> list[dict]:
-    """Four native KPI cards across the bottom strip (Task 4)."""
-    cards = []
-    kpi_defs = [
-        ("f_opportunity", KPI_STRIP_MEASURES[0], "Won ARR"),
-        ("f_opportunity", KPI_STRIP_MEASURES[1], "Win rate"),
-        ("f_stage_transition", KPI_STRIP_MEASURES[2], "Stage fwd"),
-        ("f_opportunity", KPI_STRIP_MEASURES[3], "Renewal retention"),
-    ]
-    for i, (table, measure, title) in enumerate(kpi_defs):
+    """4 native cards, evenly spaced across 1280px at y=600.
+
+    Each card binds one measure from KPI_STRIP_MEASURES. Sparklines and
+    variance arrows are PR2 work (Zebra Cards binding pattern unproven).
+    Tables are sourced per-measure from the deployed RW semantic model.
+    """
+    kpi_tables = {
+        "Total Closed Won ARR": "f_opportunity",
+        "Win Rate ARR": "f_opportunity",
+        "Stage Forward Pct (LE)": "f_stage_transition",
+        "Renewal Retention Pct (Period)": "f_opportunity",
+    }
+    cards: list[dict] = []
+    for i, measure_name in enumerate(KPI_STRIP_MEASURES):
         cards.append(
-            build_rag_card_visual(
-                table,
-                measure,
-                title,
+            build_card_visual_with_objects(
+                measure_table=kpi_tables[measure_name],
+                measure_name=measure_name,
+                display_title=measure_name,
                 x=i * 320,
                 y=600,
                 w=320,
                 h=120,
-                tint="#ffffff",
-                accent=BLUE,
-                value_font_size=18,
-                label_font_size=10,
             )
         )
     return cards
