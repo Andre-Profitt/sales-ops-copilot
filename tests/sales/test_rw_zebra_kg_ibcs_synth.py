@@ -120,3 +120,58 @@ def test_synthesize_ibcs_columns_no_ac_returns_only_absolutes():
     cols = synthesize_ibcs_columns({"PY", "PL"})
     assert [c.name for c in cols] == ["PY", "PL"]
     assert all(c.role == "absolute" for c in cols)
+
+
+from scripts.sales.rw_zebra_kg_ibcs_synth import build_databar_cf_objects
+
+
+def test_build_databar_cf_objects_returns_values_block():
+    cf = build_databar_cf_objects(
+        column_name="ARR",
+        max_field="Measures.scaleGroup_max",
+        positive_color="#1F77B4",
+    )
+    assert "values" in cf
+    assert isinstance(cf["values"], list)
+    assert len(cf["values"]) == 1
+
+
+def test_build_databar_cf_objects_carries_column_selector():
+    cf = build_databar_cf_objects(
+        column_name="ARR",
+        max_field="Measures.scaleGroup_max",
+        positive_color="#1F77B4",
+    )
+    entry = cf["values"][0]
+    selector = entry["selector"]["metadata"]
+    assert selector == "ARR"
+
+
+def test_build_databar_cf_objects_carries_positive_color():
+    cf = build_databar_cf_objects(
+        column_name="ARR",
+        max_field="Measures.scaleGroup_max",
+        positive_color="#1F77B4",
+    )
+    props = cf["values"][0]["properties"]
+    assert props["axis"]["solid"]["color"]["expr"]["Literal"]["Value"] == "'#1F77B4'"
+
+
+def test_build_databar_cf_objects_default_negative_color():
+    cf = build_databar_cf_objects(
+        column_name="ARR",
+        max_field="Measures.scaleGroup_max",
+        positive_color="#1F77B4",
+    )
+    props = cf["values"][0]["properties"]
+    assert props["negativeBarColor"]["solid"]["color"]["expr"]["Literal"]["Value"] == "'#C00000'"
+
+
+def test_build_databar_cf_objects_field_driven_max_present():
+    cf = build_databar_cf_objects(
+        column_name="ARR",
+        max_field="Measures.scaleGroup_max",
+        positive_color="#1F77B4",
+    )
+    props = cf["values"][0]["properties"]
+    assert "maxValue" in props

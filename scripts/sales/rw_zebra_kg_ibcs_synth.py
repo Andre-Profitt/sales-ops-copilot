@@ -115,3 +115,50 @@ def synthesize_ibcs_columns(
                 )
             )
     return out
+
+
+def build_databar_cf_objects(
+    column_name: str,
+    max_field: str,
+    positive_color: str,
+    negative_color: str = "#C00000",
+) -> dict:
+    """DataBars conditional-formatting block for one tableEx column.
+
+    Returns a partial singleVisual.objects dict suitable for merging into
+    build_table_visual(objects=...). Encodes the Zebra bullet-bar markerStyle=5
+    look as native PBI dataBars: positive_color for the bar, negative_color for
+    negative values, and a field-driven max via max_field ('Table.Measure' ref)
+    so multiple columns share an axis (Zebra scaleGroup behaviour).
+
+    Per native atlas §2 conditional-formatting reference.
+    """
+    if "." not in max_field:
+        raise ValueError(f"max_field must be 'Table.Measure', got: {max_field!r}")
+    max_table, max_measure = max_field.split(".", 1)
+    return {
+        "values": [
+            {
+                "selector": {"metadata": column_name},
+                "properties": {
+                    "axis": {
+                        "solid": {"color": {"expr": {"Literal": {"Value": f"'{positive_color}'"}}}}
+                    },
+                    "negativeBarColor": {
+                        "solid": {"color": {"expr": {"Literal": {"Value": f"'{negative_color}'"}}}}
+                    },
+                    "maxValue": {
+                        "expr": {
+                            "Measure": {
+                                "Expression": {"SourceRef": {"Entity": max_table}},
+                                "Property": max_measure,
+                            }
+                        }
+                    },
+                    "axisColor": {
+                        "solid": {"color": {"expr": {"Literal": {"Value": "'#999999'"}}}}
+                    },
+                },
+            }
+        ]
+    }
