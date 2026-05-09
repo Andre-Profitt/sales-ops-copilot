@@ -35,3 +35,55 @@ def test_bindmap_lookup_returns_rw_field_for_zebra_field():
     bm = BindMap(zebra_to_rw={"PnL.AC": "Measures.Total Closed Won ARR"})
     assert bm.lookup("PnL.AC") == "Measures.Total Closed Won ARR"
     assert bm.lookup("Unknown.X") is None
+
+
+import json
+
+from scripts.sales.rw_zebra_kg_translator import translate_visual
+
+
+def _make_src_vc(visual_type: str, x=0, y=0, w=300, h=200) -> dict:
+    """Helper: build a Layout-shape visualContainer (config is a JSON string)."""
+    return {
+        "x": x,
+        "y": y,
+        "width": w,
+        "height": h,
+        "config": json.dumps(
+            {
+                "name": "abc123",
+                "singleVisual": {"visualType": visual_type, "projections": {}},
+            }
+        ),
+    }
+
+
+def test_translate_visual_textbox_passes_through():
+    src = _make_src_vc("textbox")
+    out = translate_visual(src, MeasureCatalog(), BindMap())
+    assert len(out) == 1
+    assert out[0] is src
+
+
+def test_translate_visual_basicShape_passes_through():
+    src = _make_src_vc("basicShape")
+    out = translate_visual(src, MeasureCatalog(), BindMap())
+    assert out == [src]
+
+
+def test_translate_visual_slicer_passes_through():
+    src = _make_src_vc("slicer")
+    out = translate_visual(src, MeasureCatalog(), BindMap())
+    assert out == [src]
+
+
+def test_translate_visual_unknown_visualtype_passes_through():
+    src = _make_src_vc("someUnknownVisual")
+    out = translate_visual(src, MeasureCatalog(), BindMap())
+    assert out == [src]
+
+
+def test_translate_visual_invalid_config_string_passes_through():
+    src = {"x": 0, "y": 0, "width": 300, "height": 200, "config": "not-json{"}
+    out = translate_visual(src, MeasureCatalog(), BindMap())
+    assert out == [src]

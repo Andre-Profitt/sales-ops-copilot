@@ -9,6 +9,7 @@ Spec: docs/superpowers/specs/2026-05-09-rw-zebra-kg-translator-design.md §4.3
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 
 
@@ -44,3 +45,46 @@ class BindMap:
 
     def lookup(self, zebra_ref: str) -> str | None:
         return self.zebra_to_rw.get(zebra_ref)
+
+
+def _classify_family(visual_type: str) -> str:
+    """Return one of: 'tables', 'cards', 'charts', 'waterfall', 'passthrough'.
+
+    Native types (textbox/basicShape/slicer/actionButton/card) and unknown types
+    fall through to passthrough — the translator never loses a visual.
+    """
+    if visual_type.startswith("ZebraBITables"):
+        return "tables"
+    if visual_type.startswith("zebraBiCards"):
+        return "cards"
+    if visual_type.startswith("ZebraBICharts"):
+        return "charts"
+    if visual_type.startswith("waterfall"):
+        return "waterfall"
+    return "passthrough"
+
+
+def translate_visual(
+    src_vc: dict,
+    target_catalog: MeasureCatalog,
+    rw_map: BindMap,
+) -> list[dict]:
+    """Translate one source visualContainer to one or more native ones.
+
+    Identity pass-through for non-Zebra families and any parse failure;
+    the translator must never lose visuals.
+    """
+    cstr = src_vc.get("config")
+    if not isinstance(cstr, str):
+        return [src_vc]
+    try:
+        cfg = json.loads(cstr)
+    except json.JSONDecodeError:
+        return [src_vc]
+    sv = cfg.get("singleVisual") or {}
+    vt = sv.get("visualType", "")
+    family = _classify_family(vt)
+    if family == "passthrough":
+        return [src_vc]
+    # Non-passthrough families implemented in Task 8.
+    return [src_vc]
