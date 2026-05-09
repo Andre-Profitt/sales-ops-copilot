@@ -260,12 +260,16 @@ def launch_powerbi(pbip_path: Path, vm: str, windows_user: str) -> None:
     """Launch Power BI Desktop in the interactive Windows session via Task Scheduler."""
     win_pbip = windows_path(pbip_path)
     task_run = f'\\"{POWERBI_EXE}\\" \\"{win_pbip}\\"'
-    command = (
+    create_and_run = (
         "schtasks /Create /TN RWOpenPBIP /SC ONCE /ST 23:59 "
         f'/TR "{task_run}" /RU {windows_user} /IT /F '
         "&& schtasks /Run /TN RWOpenPBIP"
     )
-    subprocess.run(["prlctl", "exec", vm, "cmd", "/c", command], check=True)
+    delete_task = "schtasks /Delete /TN RWOpenPBIP /F"
+    try:
+        subprocess.run(["prlctl", "exec", vm, "cmd", "/c", create_and_run], check=True)
+    finally:
+        subprocess.run(["prlctl", "exec", vm, "cmd", "/c", delete_task], check=False)
 
 
 def main() -> None:
