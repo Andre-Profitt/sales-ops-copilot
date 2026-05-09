@@ -32,5 +32,6 @@ data/zebra_kg/*.csv
 data/zebra_kg/*.json
 data/zebra_kg_rw/*.jsonl
 data/zebra_kg_rw/*.csv
+data/zebra_kg_rw/*.json
 !data/zebra_kg/README.md
 !data/zebra_kg_rw/README.md
