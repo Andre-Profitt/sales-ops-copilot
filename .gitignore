@@ -41,3 +41,6 @@ data/zebra_kg/schemas/*/
 # Heavy / IP-bearing extracts stay local; curated atlases are committed.
 data/zebra_kg/infrastructure/raw_configs.jsonl
 data/zebra_kg/infrastructure/visual_packages.json
+data/zebra_kg/graphrag/*.jsonl
+data/zebra_kg/graphrag/*.json
+data/zebra_kg/graphrag/*.npy
