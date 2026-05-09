@@ -64,3 +64,56 @@ Live evidence after the pass:
 - front page no longer appears in the harness audit as plain-card, plain-table,
   or canvas-overflow debt
 - live report validates at 96 visualContainers / 100 measures
+
+## Consulting Pattern Reset
+
+Desktop proved the sophistication pass still used the wrong pattern: too many
+short standalone textboxes. They passed JSON validation but clipped in the
+Power BI renderer.
+
+The current front page pattern is stricter:
+
+- 56 total visuals, down from 69.
+- 18 standalone textboxes only, all 34px+ high.
+- No standalone metric labels inside KPI panels.
+- Larger native cards own their value and category label.
+- RAG panels use status accent rails, not decorative card walls.
+- The bottom portfolio surface is now a real `clusteredBarChart` for
+  `Total Open Pipeline Value` by stage.
+- The deal table remains the inspection queue.
+
+Live evidence:
+
+- `rw_capture_visual --list --page "VP Ops Scorecard"` shows 21 shapes,
+  18 textboxes, 12 object-bearing cards, 3 slicers, 1 chart, and 1 table.
+- `rw_validate --live` resolves all references against 100 measures.
+- `rw_dashboard_harness audit --source live --label front_page_consulting_v3`
+  leaves no front-page findings.
+
+## Exception-Led Pattern Reset
+
+The next pass changed the consulting pattern itself. V3 was cleaner, but it
+still gave the eye three equally weighted RAG blocks. V4 starts with the
+executive answer and then uses charts to explain where to act.
+
+Additional correction: the ARR exception measures now explicitly filter
+Land+Expand for both counts and dollars. This keeps renewal ACV out of ARR
+risk-count logic and preserves the SimCorp motion contract.
+
+The current pattern is:
+
+- Left rail: persistent filters plus the ARR/ACV contract.
+- Top strip: `Exception ARR` and `Exception Opps Count` first, with at-risk,
+  watch, and forward-move support metrics.
+- Middle: two chart-led panels: exception ARR by region, open value by stage.
+- Bottom: KPI operating pulse plus the deal-inspection queue.
+
+Live evidence:
+
+- 45 total visuals.
+- 15 shapes, 14 textboxes, 10 object-bearing cards, 3 slicers, 2 clustered bar
+  charts, and 1 table.
+- No card is under 76px high; no textbox is under 34px high.
+- `rw_validate --live` resolves all references against 102 measures.
+- `rw_dashboard_harness audit --source live --label front_page_consulting_v4`
+  leaves no front-page findings.

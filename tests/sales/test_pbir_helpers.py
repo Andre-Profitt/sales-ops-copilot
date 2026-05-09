@@ -4,6 +4,7 @@ from scripts.sales._pbir_helpers import (
     add_page,
     build_card_visual,
     build_card_visual_with_objects,
+    build_clustered_bar_chart_visual,
     build_matrix_visual,
     build_matrix_style_objects,
     build_rag_card_objects,
@@ -12,6 +13,7 @@ from scripts.sales._pbir_helpers import (
     build_table_style_objects,
     build_table_visual,
     build_textbox_visual,
+    build_zebra_bi_table_visual,
     ensure_pages,
     remove_page,
 )
@@ -134,6 +136,85 @@ def test_build_matrix_visual_axes():
     proj = config["singleVisual"]["projections"]
     assert "Rows" in proj and "Columns" in proj and "Values" in proj
     assert len(proj["Values"]) == 2
+
+
+def test_build_clustered_bar_chart_visual_has_category_and_measure():
+    vc = build_clustered_bar_chart_visual(
+        category_table="f_opportunity",
+        category_column="stage_name",
+        category_title="Stage",
+        measure_table="f_opportunity",
+        measure_name="Total Open Pipeline Value",
+        measure_title="Open Value",
+        x=20,
+        y=120,
+        w=500,
+        h=180,
+    )
+
+    config = json.loads(vc["config"])
+    sv = config["singleVisual"]
+    assert sv["visualType"] == "clusteredBarChart"
+    assert sv["projections"]["Category"][0]["queryRef"] == "f_opportunity.stage_name"
+    assert sv["projections"]["Y"][0]["queryRef"] == "f_opportunity.Total Open Pipeline Value"
+    select = sv["prototypeQuery"]["Select"]
+    assert "Column" in select[0] and select[0]["Column"]["Property"] == "stage_name"
+    assert "Measure" in select[1] and select[1]["Measure"]["Property"] == (
+        "Total Open Pipeline Value"
+    )
+    assert "objects" in sv
+
+
+def test_build_zebra_bi_table_visual_has_categories_values_and_no_license():
+    vc = build_zebra_bi_table_visual(
+        categories=[
+            {
+                "table": "f_stage_transition",
+                "field": "from_stage_name",
+                "title": "Stage",
+            }
+        ],
+        values=[
+            {
+                "table": "f_stage_transition",
+                "field": "Stage Forward Pct (LE)",
+                "title": "Forward %",
+            },
+            {
+                "table": "f_stage_transition",
+                "field": "Avg Days In Prior Stage (LE)",
+                "title": "Avg days",
+            },
+        ],
+        x=36,
+        y=104,
+        w=1208,
+        h=560,
+    )
+
+    config = json.loads(vc["config"])
+    sv = config["singleVisual"]
+    assert sv["visualType"] == "ZebraBITables98F88148E5424E949E69864664EE1860"
+    assert sv["projections"]["Category"][0]["queryRef"] == (
+        "f_stage_transition.from_stage_name"
+    )
+    assert sv["projections"]["Values"][0]["queryRef"] == (
+        "f_stage_transition.Stage Forward Pct (LE)"
+    )
+    assert sv["prototypeQuery"]["Select"][0]["Column"]["Property"] == "from_stage_name"
+    assert sv["prototypeQuery"]["Select"][1]["Measure"]["Property"] == (
+        "Stage Forward Pct (LE)"
+    )
+    assert "licenseSettings" not in sv["objects"]
+    query = json.loads(vc["query"])
+    binding = query["Commands"][0]["SemanticQueryDataShapeCommand"]["Binding"]
+    assert binding["Primary"]["Groupings"][0]["Projections"] == [0, 1, 2]
+    assert "Secondary" not in binding
+    transforms = json.loads(vc["dataTransforms"])
+    assert transforms["projectionOrdering"] == {"Category": [0], "Values": [1, 2]}
+    assert transforms["queryMetadata"]["Select"][0]["Name"] == (
+        "f_stage_transition.from_stage_name"
+    )
 
 
 def test_build_card_visual_basic_shape():

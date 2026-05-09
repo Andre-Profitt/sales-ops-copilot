@@ -188,8 +188,9 @@ These are Unicode — render natively in Power BI text fields without needing a 
 | Typography hierarchy (callout / title / label)                        | theme JSON `textClasses`                                               | Same file                                                     |
 | RAG inline coloring on table cells                                    | conditional formatting via `objects.values`                            | Per-visual; capture-and-generalize via `rw_capture_visual.py` |
 | Card RAG-tinted backgrounds (At Risk red, Watch amber, Healthy green) | per-visual `objects.background.color`                                  | Per-visual; capture                                           |
-| Compact $ format (`$2.5M`)                                            | measure `formatString` (e.g., `"$"#,0.0,,"M"` or `"$"#,0,"K"`)         | Update DAX measures                                           |
-| Section labels above visuals ("RISK BAND")                            | `textbox` visualType                                                   | Schema not captured yet — `_pbir_shapes.PENDING`              |
+| Compact $ format (`$2.5M`)                                            | measure `formatString` (e.g., `$#,0,,.0"M"` or `"$"#,0,"K"`)         | Update DAX measures                                           |
+| Section labels above visuals ("RISK BAND")                            | `textbox` visualType                                                   | Use sparingly; Desktop clips short boxes, so keep 34px+ high  |
+| Open-value stage graph                                                | `clusteredBarChart`                                                    | Helper available in `_pbir_helpers.py`                        |
 | Hero with progress bar                                                | composite of card + `basicShape` rectangles                            | Defer to Phase 2                                              |
 | Funnel chart                                                          | custom visualType `HorizontalFunnel...` (in fixture) or stock `funnel` | Capture + add builder                                         |
 
@@ -198,9 +199,9 @@ These are Unicode — render natively in Power BI text fields without needing a 
 ## Application path (in priority order)
 
 1. **Theme JSON** — biggest single visual upgrade. Apply via `config.themeCollection.customTheme` block in `report.json`. One push, every visual inherits.
-2. **Compact format strings on key measures** — `Total Closed Won ARR`, `Total Open Pipeline ARR`, `Total Open Pipeline Value`, etc.: switch `"$"#,0` → `"$"#,0.0,,"M"` so values render as `$2.5M` not `$2,547,381`.
-3. **Card consolidation** — pair count + ARR into single cards via `objects` shape. Browser-author one example, then apply via `build_card_visual_with_objects` across all tabs.
-4. **Section header textboxes** — capture `textbox` shape from a browser-authored example, add to `_pbir_shapes.SHAPES`, build `build_textbox_visual` helper, sprinkle one above each section per the mockups' "RISK BAND" / "CHANGE BUCKETS" / "DETAIL" labels.
+2. **Compact format strings on key measures** — `Total Closed Won ARR`, `Total Open Pipeline ARR`, `Total Open Pipeline Value`, etc.: switch `"$"#,0` → `$#,0,,.0"M"` so values render as `$2.5M` not `$2,547,381`.
+3. **Card consolidation** — avoid 20px standalone metric labels. Use larger native cards for value + category label unless a Desktop-authored combined-card shape is captured.
+4. **Section header textboxes** — use only a few high-value section labels. Minimum practical Desktop height is 34px; shorter boxes clipped during Desktop validation.
 5. **RAG conditional formatting on tables** — capture `objects.values` shape, build `build_table_visual_with_cf`.
 
 Steps 3-5 are browser-author + capture cycles using the harness already built (`rw_capture_visual.py`).

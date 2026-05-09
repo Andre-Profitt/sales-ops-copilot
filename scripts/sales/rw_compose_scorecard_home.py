@@ -1,9 +1,8 @@
 """Compose the front 'VP Ops Scorecard' page of rpt_vp_ops_scorecard.
 
-This replaces the legacy 26-card landing page with a GraphRAG-routed
-executive triage page. The KPI graph decides what earns front-page space:
-risk signals first, then high-impact operating lanes, then two data surfaces
-that point RW to the deeper tabs.
+This replaces the legacy 26-card landing page with an executive triage page.
+The KPI graph decides what earns front-page space, but the canvas stays
+business-facing: exceptions first, commercial engine second, deal evidence last.
 
 Run:
     python3 -m scripts.sales.rw_compose_scorecard_home
@@ -12,8 +11,7 @@ Run:
 from __future__ import annotations
 
 from scripts.sales._pbir_helpers import (
-    build_matrix_visual,
-    build_matrix_style_objects,
+    build_clustered_bar_chart_visual,
     build_rag_card_visual,
     build_shape_visual,
     build_slicer_visual,
@@ -38,12 +36,12 @@ BLUE = "#083EA7"
 MUTED = "#666666"
 LIGHT = "#f5f7fa"
 BORDER = "#dddddd"
-RED = "#cc3333"
-AMBER = "#dd8800"
-GREEN = "#339933"
-RED_TINT = "#ffeeee"
-AMBER_TINT = "#fff8e6"
-GREEN_TINT = "#eef9ee"
+RED = "#b3261e"
+AMBER = "#a86400"
+GREEN = "#2f7d32"
+RED_TINT = "#fff4f4"
+AMBER_TINT = "#fffbef"
+GREEN_TINT = "#f5fbf5"
 
 FRONT_PAGE_KPI_ROUTES = {
     "growth_arr": ("forecast_closed_won", "opp_win_rate"),
@@ -60,8 +58,8 @@ def _target_line(route: str) -> str:
         kpi = find_kpi(kpi_id)
         if kpi is None:
             raise RuntimeError(f"front-page KPI route {route!r} references missing {kpi_id!r}")
-        parts.append(f"{kpi.name}: {kpi.target_text}")
-    return " | ".join(parts)
+        parts.append(kpi.target_text)
+    return "Targets: " + " | ".join(parts)
 
 
 def _find_page(rj: dict) -> dict:
@@ -94,105 +92,35 @@ def _panel(
         )
 
 
-def _risk_panel(
+def _metric_card(
     section: dict,
     *,
+    table: str,
+    measure: str,
     title: str,
-    count_measure: str,
-    value_measure: str,
-    note: str,
     x: float,
+    y: float,
+    w: float,
+    h: float,
     tint: str,
     accent: str,
+    value_font_size: int,
 ) -> None:
-    _panel(section, x=x, y=100, w=300, h=140, fill=tint, line=accent, accent=accent)
-    section["visualContainers"].append(
-        build_textbox_visual(title, x=x + 16, y=110, w=270, h=20, font_size_pt=10, color=accent)
-    )
-    section["visualContainers"].append(
-        build_textbox_visual(
-            note,
-            x=x + 16,
-            y=130,
-            w=270,
-            h=16,
-            font_size_pt=8,
-            color=MUTED,
-            bold=False,
-        )
-    )
     section["visualContainers"].append(
         build_rag_card_visual(
-            "f_opportunity",
-            count_measure,
-            "Deals",
-            x=x + 16,
-            y=150,
-            w=126,
-            h=72,
+            table,
+            measure,
+            title,
+            x=x,
+            y=y,
+            w=w,
+            h=h,
             tint=tint,
             accent=accent,
-            value_font_size=28,
+            value_font_size=value_font_size,
+            label_font_size=10,
         )
     )
-    section["visualContainers"].append(
-        build_rag_card_visual(
-            "f_opportunity",
-            value_measure,
-            "ARR exposure",
-            x=x + 156,
-            y=150,
-            w=128,
-            h=72,
-            tint=tint,
-            accent=accent,
-            value_font_size=22,
-            display_units=1000000,
-        )
-    )
-
-
-def _lane_panel(
-    section: dict,
-    *,
-    title: str,
-    note: str,
-    x: float,
-    accent: str,
-    cards: tuple[tuple[str, str, str, int | None], tuple[str, str, str, int | None]],
-) -> None:
-    _panel(section, x=x, y=286, w=300, h=132, fill="#ffffff", line=BORDER, accent=accent)
-    section["visualContainers"].append(
-        build_textbox_visual(title, x=x + 16, y=296, w=270, h=20, font_size_pt=10, color=accent)
-    )
-    section["visualContainers"].append(
-        build_textbox_visual(
-            note,
-            x=x + 16,
-            y=316,
-            w=270,
-            h=16,
-            font_size_pt=8,
-            color=MUTED,
-            bold=False,
-        )
-    )
-    for i, (table, measure, card_title, units) in enumerate(cards):
-        section["visualContainers"].append(
-            build_rag_card_visual(
-                table,
-                measure,
-                card_title,
-                x=x + 16 + i * 140,
-                y=344,
-                w=126,
-                h=58,
-                tint="#ffffff",
-                accent=accent,
-                value_font_size=20,
-                display_units=units,
-            )
-        )
 
 
 def _compose(section: dict) -> None:
@@ -205,216 +133,262 @@ def _compose(section: dict) -> None:
     - No canvas overflow on a 1280x720 page.
     """
     section["visualContainers"].append(
+        build_shape_visual(x=20, y=16, w=1208, h=58, fill=NAVY, line=NAVY, z=40, radius=2)
+    )
+    section["visualContainers"].append(
         build_textbox_visual(
             "RW VP OPS CONTROL ROOM",
-            x=20,
-            y=12,
-            w=760,
-            h=28,
-            font_size_pt=16,
-            color=NAVY,
+            x=40,
+            y=22,
+            w=520,
+            h=38,
+            font_size_pt=17,
+            color="#ffffff",
         )
     )
     section["visualContainers"].append(
         build_textbox_visual(
-            "GraphRAG-routed front page: retrieve high-impact KPI graph signals, group by operating job, route diagnosis to detail tabs.",
-            x=20,
-            y=42,
-            w=920,
-            h=20,
+            "FY26 operating triage | EUR reporting currency | ARR and renewal ACV stay separated",
+            x=600,
+            y=30,
+            w=600,
+            h=34,
             font_size_pt=9,
-            color=MUTED,
+            color="#d8dbe8",
             bold=False,
         )
     )
 
     # Left rail: filters and operating contract.
-    _panel(section, x=20, y=80, w=220, h=230, fill=LIGHT, line=BORDER, accent=BLUE)
+    _panel(section, x=20, y=92, w=208, h=236, fill=LIGHT, line=BORDER, accent=BLUE)
     section["visualContainers"].append(
-        build_textbox_visual("FILTERS", x=36, y=90, w=180, h=18, font_size_pt=10, color=NAVY)
+        build_textbox_visual("FILTERS", x=36, y=106, w=172, h=36, font_size_pt=10, color=NAVY)
     )
     slicers = [
-        ("d_region", "region", "Region", 114),
-        ("d_calendar", "fiscal_quarter", "Fiscal Quarter", 180),
-        ("f_opportunity", "motion_type", "Motion", 246),
+        ("d_region", "region", "Region", 134),
+        ("d_calendar", "fiscal_quarter", "Fiscal Quarter", 198),
+        ("f_opportunity", "motion_type", "Motion", 262),
     ]
     for table, column, title, y in slicers:
         section["visualContainers"].append(
-            build_slicer_visual(table, column, title, x=36, y=y, w=188, h=54)
+            build_slicer_visual(table, column, title, x=36, y=y, w=176, h=50)
         )
 
-    _panel(section, x=20, y=330, w=220, h=350, fill="#ffffff", line=BORDER, accent=NAVY)
+    _panel(section, x=20, y=348, w=208, h=340, fill="#ffffff", line=BORDER, accent=NAVY)
     section["visualContainers"].append(
-        build_textbox_visual(
-            "GRAPHRAG ROUTING", x=36, y=342, w=180, h=18, font_size_pt=10, color=NAVY
-        )
+        build_textbox_visual("CONTRACT", x=36, y=364, w=172, h=36, font_size_pt=10, color=NAVY)
     )
     for text, y in [
-        ("31 target KPIs in KG", 374),
-        ("Live high-impact retrieval", 404),
-        ("ARR lane: Land + Expand", 434),
-        ("ACV lane: Renewal only", 464),
-        ("Cross-motion value labeled", 494),
-        ("Diagnosis stays on job tabs", 524),
+        ("ARR: Land + Expand", 414),
+        ("ACV: Renewal", 470),
+        ("No blended headline", 526),
+        ("Open Value is labeled", 582),
     ]:
         section["visualContainers"].append(
-            build_textbox_visual(text, x=36, y=y, w=180, h=18, font_size_pt=9, color=MUTED)
+            build_textbox_visual(text, x=36, y=y, w=172, h=40, font_size_pt=9, color=MUTED)
         )
 
-    # Top risk band. These are daily triage measures, not static scorecard KPIs.
+    # Top strip: one executive answer first, then the supporting RAG signals.
     section["visualContainers"].append(
         build_textbox_visual(
-            "OPERATING SIGNALS - what needs attention now",
-            x=260,
-            y=74,
-            w=960,
-            h=20,
+            "1. EXECUTIVE READ - LAND+EXPAND EXCEPTIONS",
+            x=248,
+            y=88,
+            w=980,
+            h=34,
             font_size_pt=10,
             color=MUTED,
         )
     )
-    _risk_panel(
+    _panel(section, x=248, y=126, w=980, h=116, fill="#ffffff", line=BORDER, accent=RED)
+    _metric_card(
         section,
-        title="AT RISK - slipped or backward",
-        count_measure="At Risk Opps Count",
-        value_measure="At Risk Opps ARR",
-        note="Late-stage slippage, regression, or inspection breach",
-        x=260,
+        table="f_opportunity",
+        measure="Exception ARR",
+        title="Exception ARR",
+        x=274,
+        y=150,
+        w=184,
+        h=76,
         tint=RED_TINT,
         accent=RED,
+        value_font_size=28,
     )
-    _risk_panel(
+    _metric_card(
         section,
-        title="WATCH - stalled motion",
-        count_measure="Watch Opps Count",
-        value_measure="Watch Opps ARR",
-        note="Stage 3-4 stalls and stalled open motion",
-        x=580,
+        table="f_opportunity",
+        measure="Exception Opps Count",
+        title="Exception deals",
+        x=474,
+        y=150,
+        w=132,
+        h=76,
+        tint=RED_TINT,
+        accent=RED,
+        value_font_size=28,
+    )
+    _metric_card(
+        section,
+        table="f_opportunity",
+        measure="At Risk Opps ARR",
+        title="At-risk ARR",
+        x=624,
+        y=150,
+        w=132,
+        h=76,
+        tint=RED_TINT,
+        accent=RED,
+        value_font_size=21,
+    )
+    _metric_card(
+        section,
+        table="f_opportunity",
+        measure="Watch Opps ARR",
+        title="Watch ARR",
+        x=774,
+        y=150,
+        w=132,
+        h=76,
         tint=AMBER_TINT,
         accent=AMBER,
+        value_font_size=21,
     )
-    _risk_panel(
+    _metric_card(
         section,
-        title="HEALTHY - forward movement",
-        count_measure="Healthy Moves Count",
-        value_measure="Healthy Moves ARR",
-        note="Forward progressions, new opps, or wins",
-        x=900,
+        table="f_opportunity",
+        measure="Healthy Moves ARR",
+        title="Forward ARR",
+        x=924,
+        y=150,
+        w=136,
+        h=76,
         tint=GREEN_TINT,
         accent=GREEN,
+        value_font_size=21,
     )
-
-    # GraphRAG-selected operating lanes from rw_kpi_graph.py.
-    section["visualContainers"].append(
-        build_textbox_visual(
-            "KPI LANES - high-impact signals from the RW KPI graph",
-            x=260,
-            y=258,
-            w=960,
-            h=20,
-            font_size_pt=10,
-            color=MUTED,
-        )
-    )
-    _lane_panel(
+    _metric_card(
         section,
-        title="GROWTH ARR",
-        note=_target_line("growth_arr"),
-        x=260,
-        accent=BLUE,
-        cards=(
-            ("f_opportunity", "Total Closed Won ARR", "Won ARR", 1000000),
-            ("f_opportunity", "Win Rate ARR", "Win rate", None),
-        ),
-    )
-    _lane_panel(
-        section,
-        title="PIPELINE DISCIPLINE",
-        note=_target_line("pipeline_discipline"),
-        x=580,
-        accent=AMBER,
-        cards=(
-            ("f_opportunity", "Total Open Pipeline ARR", "Open ARR", 1000000),
-            ("f_stage_transition", "Stage Forward Pct (LE)", "Stage fwd", None),
-        ),
-    )
-    _lane_panel(
-        section,
-        title="RENEWAL ACV",
-        note=_target_line("renewal_acv"),
-        x=900,
+        table="f_opportunity",
+        measure="Healthy Moves Count",
+        title="Forward moves",
+        x=1078,
+        y=150,
+        w=122,
+        h=76,
+        tint=GREEN_TINT,
         accent=GREEN,
-        cards=(
-            ("f_opportunity", "Renewal Retention Pct (Period)", "Retention", None),
-            ("f_opportunity", "Total Renewal ACV Won", "Won ACV", 1000000),
-        ),
+        value_font_size=24,
     )
 
-    # Bottom: real data surfaces, not another row of KPI cards.
-    _panel(section, x=252, y=432, w=476, h=256, fill="#ffffff", line=BORDER, accent=BLUE)
-    _panel(section, x=736, y=432, w=492, h=256, fill="#ffffff", line=BORDER, accent=NAVY)
+    # Middle band: chart-led diagnosis. Cards tell severity; charts tell where.
     section["visualContainers"].append(
         build_textbox_visual(
-            "PORTFOLIO MAP - open value by stage and motion",
-            x=260,
-            y=442,
-            w=460,
-            h=20,
+            "2. COMMERCIAL ENGINE - WHERE THE VALUE SITS",
+            x=248,
+            y=264,
+            w=980,
+            h=34,
+            font_size_pt=10,
+            color=MUTED,
+        )
+    )
+    _panel(section, x=248, y=302, w=480, h=194, fill="#ffffff", line=BORDER, accent=RED)
+    _panel(section, x=748, y=302, w=480, h=194, fill="#ffffff", line=BORDER, accent=BLUE)
+    section["visualContainers"].append(
+        build_textbox_visual(
+            "EXCEPTION ARR BY REGION",
+            x=264,
+            y=312,
+            w=440,
+            h=34,
             font_size_pt=10,
             color=MUTED,
         )
     )
     section["visualContainers"].append(
-        build_textbox_visual(
-            _target_line("portfolio_map"),
-            x=260,
-            y=462,
-            w=460,
-            h=14,
-            font_size_pt=8,
-            color=MUTED,
-            bold=False,
-        )
-    )
-    section["visualContainers"].append(
-        build_matrix_visual(
-            rows=[{"table": "f_opportunity", "field": "stage_name", "title": "Stage"}],
-            columns=[{"table": "f_opportunity", "field": "motion_type", "title": "Motion"}],
-            values=[
-                {
-                    "table": "f_opportunity",
-                    "field": "Total Open Pipeline Value",
-                    "title": "Open Value",
-                }
-            ],
-            x=260,
-            y=482,
-            w=460,
-            h=198,
-            objects=build_matrix_style_objects(),
+        build_clustered_bar_chart_visual(
+            category_table="d_region",
+            category_column="region",
+            category_title="Region",
+            measure_table="f_opportunity",
+            measure_name="Exception ARR",
+            measure_title="Exception ARR",
+            x=264,
+            y=348,
+            w=448,
+            h=132,
+            fill=RED,
         )
     )
     section["visualContainers"].append(
         build_textbox_visual(
-            "NEXT DEALS TO INSPECT - open pipeline by value",
-            x=744,
-            y=442,
-            w=476,
-            h=20,
+            "OPEN VALUE BY STAGE",
+            x=764,
+            y=312,
+            w=440,
+            h=34,
             font_size_pt=10,
             color=MUTED,
         )
     )
     section["visualContainers"].append(
+        build_clustered_bar_chart_visual(
+            category_table="f_opportunity",
+            category_column="stage_name",
+            category_title="Stage",
+            measure_table="f_opportunity",
+            measure_name="Total Open Pipeline Value",
+            measure_title="Open Value",
+            x=764,
+            y=348,
+            w=448,
+            h=132,
+            fill=BLUE,
+        )
+    )
+
+    # Bottom band: operating pulse plus named deal queue.
+    _panel(section, x=248, y=506, w=432, h=202, fill="#ffffff", line=BORDER, accent=NAVY)
+    _panel(section, x=700, y=506, w=528, h=202, fill="#ffffff", line=BORDER, accent=NAVY)
+    section["visualContainers"].append(
         build_textbox_visual(
-            _target_line("deal_inspection"),
-            x=744,
-            y=462,
-            w=476,
-            h=14,
-            font_size_pt=8,
+            "KPI OPERATING PULSE",
+            x=264,
+            y=516,
+            w=392,
+            h=34,
+            font_size_pt=10,
             color=MUTED,
-            bold=False,
+        )
+    )
+    for table, measure, title, x, y, accent, width in [
+        ("f_opportunity", "Total Closed Won ARR", "Won ARR", 264, 550, BLUE, 186),
+        ("f_opportunity", "Win Rate ARR", "Win rate", 464, 550, BLUE, 186),
+        ("f_stage_transition", "Stage Forward Pct (LE)", "Stage fwd", 264, 632, AMBER, 186),
+        ("f_opportunity", "Renewal Retention Pct (Period)", "Renewal retention", 464, 632, GREEN, 186),
+    ]:
+        _metric_card(
+            section,
+            table=table,
+            measure=measure,
+            title=title,
+            x=x,
+            y=y,
+            w=width,
+            h=76,
+            tint="#ffffff",
+            accent=accent,
+            value_font_size=18,
+        )
+    section["visualContainers"].append(
+        build_textbox_visual(
+            "DEAL INSPECTION QUEUE",
+            x=716,
+            y=516,
+            w=488,
+            h=34,
+            font_size_pt=10,
+            color=MUTED,
         )
     )
     section["visualContainers"].append(
@@ -442,10 +416,10 @@ def _compose(section: dict) -> None:
                     "title": "Open Value",
                 },
             ],
-            x=744,
-            y=482,
-            w=476,
-            h=198,
+            x=716,
+            y=556,
+            w=496,
+            h=132,
             objects=build_table_style_objects(),
         )
     )

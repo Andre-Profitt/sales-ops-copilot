@@ -108,7 +108,7 @@ def _compose(section: dict) -> None:
                 tint=tint,
                 accent=accent,
                 value_font_size=24,
-                display_units=1000000,
+                display_units=1,
             )
         )
 

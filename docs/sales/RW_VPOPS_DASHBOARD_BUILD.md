@@ -553,3 +553,229 @@ context and table/matrix finish.
 - Forecast still has plain cards/table.
 - What Changed still has plain change-bucket cards/table.
 - Stage Hygiene, Renewals, and Growth Mix are still empty.
+
+## 2026-05-09 — Front page consulting-pattern reset
+
+Desktop validation exposed a renderer truth the JSON audit missed: the prior
+front page was still not consulting grade because it depended on many short
+20-28px textboxes. Power BI Desktop clipped them, so the page looked busy even
+after the RAG/card styling pass.
+
+**Pattern reset:**
+
+- Reduced the front page from 69 visuals to 56 visuals.
+- Removed standalone metric-label textboxes from KPI panels.
+- Moved metric labels back into larger native card visuals:
+  - risk cards are 82px tall
+  - commercial-engine cards are 76px tall
+  - native card category labels are shown again
+- Kept only 18 standalone textboxes, all 34px+ high.
+- Added a dark executive header band.
+- Replaced the bottom matrix with a real `clusteredBarChart`:
+  `Total Open Pipeline Value` by `stage_name`.
+- Preserved the cardinal ARR/ACV rule:
+  - Growth ARR uses Land + Expand ARR measures.
+  - Renewal ACV uses Renewal-only ACV measures.
+  - `Total Open Pipeline Value` appears only in the explicitly labeled
+    cross-motion bottom chart/table context.
+
+**Code shipped:**
+
+- Added `build_clustered_bar_chart_visual` in `scripts/sales/_pbir_helpers.py`.
+- Rebuilt `scripts/sales/rw_compose_scorecard_home.py` around:
+  - dark title band
+  - left filter / contract rail
+  - three RAG exception panels
+  - three commercial engine panels
+  - open-value stage chart
+  - deal inspection table
+- Extended front-page tests to enforce:
+  - 56 visuals
+  - no card under 76px
+  - no textbox under 34px
+  - chart/table object blocks present
+
+**Live evidence:**
+
+- `python3 -m scripts.sales.rw_compose_scorecard_home` succeeded; front page now
+  has 56 visuals.
+- `python3 -m scripts.sales.rw_capture_visual --list --page "VP Ops Scorecard"`
+  confirms 21 `basicShape`, 18 `textbox`, 12 object-bearing cards, 3 slicers,
+  1 `clusteredBarChart`, and 1 `tableEx`.
+- `python3 -m scripts.sales.rw_validate --live` succeeded: 6 sections, 87 total
+  visualContainers, all measure refs resolve against 100 measures.
+- `python3 -m scripts.sales.rw_dashboard_harness audit --source live --label front_page_consulting_v3`
+  reports no front-page plain-card, plain-table, or canvas-overflow debt.
+- `python3 -m pytest tests/sales` succeeded: 31 passed.
+
+**Next visual debt:**
+
+- Desktop auth must be stable before screenshot-gating every iteration.
+- The bottom stage chart is intentionally simple; a future Desktop-authored
+  version should add explicit axis/label tuning if the renderer accepts it.
+
+## 2026-05-09 — Front page v4 exception-led pattern
+
+Andre's read was right: v3 fixed clipping but still read too much like a
+Power BI card layout. The v4 pass changes the pattern, not just the styling.
+
+**What changed:**
+
+- Rebuilt the front page from 56 visuals to 45 visuals.
+- Replaced the three equal RAG panels with one executive exception strip:
+  - `Exception ARR`
+  - `Exception Opps Count`
+  - At-risk / Watch / Forward supporting cards
+- Added two chart-led diagnosis panels:
+  - `Exception ARR` by `d_region[region]`
+  - `Total Open Pipeline Value` by `f_opportunity[stage_name]`
+- Moved operating KPIs into a compact pulse panel:
+  - Won ARR
+  - Win rate
+  - Stage-forward %
+  - Renewal retention
+- Kept the named deal-inspection queue as the bottom-right action surface.
+
+**Business-rule correction:**
+
+The ARR exception family now explicitly filters `motion_type IN { "Land",
+"Expand" }` for both counts and dollars. This prevents Renewal rows from
+inflating counts while ARR exposure remains Land+Expand only.
+
+New measures:
+
+- `Exception Opps Count = [At Risk Opps Count] + [Watch Opps Count]`
+- `Exception ARR = [At Risk Opps ARR] + [Watch Opps ARR]`
+
+Live model now has 102 measures.
+
+**Live evidence:**
+
+- `python3 -m scripts.sales.rw_push_semantic_model` succeeded; model update LRO
+  succeeded and refresh was enqueued.
+- `python3 -m scripts.sales.rw_compose_scorecard_home` succeeded; front page now
+  has 45 visuals and pre-flight resolved against 102 measures.
+- `python3 -m scripts.sales.rw_capture_visual --list --page "VP Ops Scorecard"`
+  confirms 15 `basicShape`, 14 `textbox`, 10 object-bearing cards, 3 slicers,
+  2 `clusteredBarChart`, and 1 `tableEx`.
+- `python3 -m scripts.sales.rw_validate --live` succeeded: 6 sections, 76 total
+  visualContainers, all measure refs resolve against 102 measures.
+- `python3 -m scripts.sales.rw_dashboard_harness audit --source live --label front_page_consulting_v4`
+  reports no front-page plain-card, plain-table, or canvas-overflow debt.
+
+## 2026-05-09 — Zebra BI lab direction
+
+Zebra BI research and the lab proof plan are captured in
+`docs/sales/RW_ZEBRA_BI_EVALUATION.md`. The downloaded PBIX/template graph and
+RW element map are captured in
+`docs/sales/RW_ZEBRA_BI_GRAPHRAG_ELEMENT_MAP.md`.
+
+Decision:
+
+- Test Zebra BI in the Desktop lab PBIP first, not the live report.
+- Use `Zebra BI Tables` as the first proof because RW's weakest surface is the
+  loose KPI/card-wall pattern; embedded variance tables should create the
+  strongest consultant-grade improvement fastest.
+- Use the Zebra `Sales Funnel` template as the pipeline/stage reference, the
+  `Sales Dashboard` template as the front-page reference, `Daily Sales Flash`
+  for `What Changed`, and `SaaS Sales` only for renewal/ARR-growth patterns.
+- Promote only if the lab PBIP and Fabric render prove custom visuals,
+  licensing, clipping, and ARR/ACV separation all hold.
+
+## 2026-05-09 — Zebra BI Stage Hygiene lab proof
+
+The first RW Zebra proof renders in Power BI Desktop against the live RW
+semantic model.
+
+**Harness shipped:**
+
+- `scripts/sales/rw_zebra_template_miner.py`
+  - Mines downloaded Zebra PBIX files for page, visual, projection-role, and
+    object-setting patterns.
+  - Drops `licenseSettings` from mined pattern output.
+  - Emits sanitized CSV / JSONL / JSON artifacts for GraphRAG-style mapping.
+- `build_zebra_bi_table_visual` in `scripts/sales/_pbir_helpers.py`
+  - Builds Zebra BI Tables visuals with `config`, `query`, and `dataTransforms`
+    blocks. The extra `query` / `dataTransforms` blocks are required; a visual
+    with only `config.projections` renders as an empty shell.
+- `scripts/sales/rw_apply_zebra_lab_proof.py`
+  - Applies the local Stage Hygiene proof to the Desktop lab PBIP.
+  - Copies Zebra custom visual packages from the downloaded Sales Funnel PBIX.
+  - Supports local-only license injection via `ZEBRA_BI_LICENSE_KEY`; the key is
+    not committed or written into repo docs/code.
+
+**Desktop proof:**
+
+- Lab PBIP:
+  `/Users/test/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard_zebra_lab.pbip`
+- Page: `Stage Hygiene`
+- Visual: Zebra BI Tables
+- Category:
+  - `f_stage_transition[from_stage_name]`
+- Values:
+  - `Stage Forward Pct (LE)`
+  - `Stage Backward Pct (LE)`
+  - `Avg Days In Prior Stage (LE)`
+  - `Total Stage Transitions`
+  - `Stage Moves ARR 7d`
+- Screenshot evidence:
+  `/Users/test/.frontier/artifacts/rw_zebra_stage_hygiene_lab_20260509.png`
+
+**Verification:**
+
+- `python3 -m pytest tests/sales/test_pbir_helpers.py tests/sales/test_rw_zebra_template_miner.py`
+  passed: 17 tests.
+- Desktop render after Parallels restart showed the Zebra table populated with
+  RW stage rows and totals, no Zebra license popup.
+
+## 2026-05-09 — Zebra BI Exceptions lab proof
+
+The second RW Zebra proof renders in Power BI Desktop against the live RW
+semantic model. This is the front-page candidate for replacing the current
+sprawled exception cards with one executive exception table.
+
+**Harness update:**
+
+- `build_zebra_bi_table_visual` now uses Zebra's simple-table binding grammar:
+  category and value projections are grouped under `Primary`. The earlier
+  native-table-style `Primary` / `Secondary` split opened in Desktop as an
+  empty Zebra shell.
+- `scripts/sales/rw_apply_zebra_lab_proof.py` preserves existing local Zebra
+  license settings in the Desktop lab when reapplying the proof, so the trial
+  key does not need to be passed around after first activation.
+
+**Desktop proof:**
+
+- Lab PBIP:
+  `/Users/test/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard_zebra_lab.pbip`
+- Page: `Zebra Exceptions`
+- Visual: Zebra BI Tables
+- Category:
+  - `d_region[region]`
+- Values:
+  - `Exception ARR`
+  - `Exception Opps Count`
+  - `At Risk Opps ARR`
+  - `Watch Opps ARR`
+- Screenshot evidence:
+  `/Users/test/.frontier/artifacts/rw_zebra_exceptions_lab_20260509.png`
+
+**Verification:**
+
+- `python3 -m pytest tests/sales/test_pbir_helpers.py tests/sales/test_rw_zebra_template_miner.py`
+  passed: 17 tests.
+- Local repo secret scan over `scripts/sales`, `tests/sales`, and `docs/sales`
+  passed: no Zebra trial token substring found.
+- Desktop render after Power BI restart showed the Zebra table populated with
+  RW region rows and totals, no Zebra license popup.
+- Business-rule check: `Exception ARR`, `At Risk Opps ARR`, and `Watch Opps ARR`
+  are Land+Expand ARR measures only. Renewal ACV is not present in this visual;
+  `Total Open Pipeline Value` remains the only explicitly labeled cross-motion
+  measure elsewhere.
+
+**Next proof:**
+
+Promote Zebra BI Tables into the actual VP Ops front-page redesign only after
+the production page layout is rebuilt around: one exception spine, one pipeline
+movement spine, and compact RAG scorecards. Do not keep the current wall of
+cards and merely swap visual types.

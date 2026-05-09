@@ -337,6 +337,383 @@ def build_matrix_visual(
     }
 
 
+ZEBRA_BI_TABLES_VISUAL_TYPE = "ZebraBITables98F88148E5424E949E69864664EE1860"
+
+
+def build_zebra_bi_table_visual(
+    *,
+    categories: list[dict],
+    values: list[dict],
+    x: float,
+    y: float,
+    w: float = 900,
+    h: float = 320,
+    visual_type: str = ZEBRA_BI_TABLES_VISUAL_TYPE,
+    show_grand_total: bool = True,
+    value_chart: int = 1,
+) -> dict:
+    """Construct a Zebra BI Tables visualContainer.
+
+    The shape is mined from Zebra BI's downloadable PBIX templates, then reduced
+    to the reusable, non-sensitive parts: visual type, projection roles,
+    prototypeQuery, and conservative object settings. It intentionally does not
+    embed a Zebra license key; activation belongs to the local Power BI/Zebra
+    account state.
+
+    categories: [{"table": str, "field": str, "title": str}]
+    values: [{"table": str, "field": str, "title": str}]
+    """
+    visual_name = uuid.uuid4().hex[:20]
+    aliases: dict[str, str] = {}
+    for item in categories + values:
+        aliases.setdefault(item["table"], chr(ord("a") + len(aliases)))
+
+    select = []
+    select_meta = []
+    projections = {"Category": [], "Values": []}
+    column_props: dict[str, dict] = {}
+
+    for projection_index, item in enumerate(categories):
+        alias = aliases[item["table"]]
+        query_ref = f"{item['table']}.{item['field']}"
+        select.append(
+            {
+                "Column": {
+                    "Expression": {"SourceRef": {"Source": alias}},
+                    "Property": item["field"],
+                },
+                "Name": query_ref,
+            }
+        )
+        projections["Category"].append({"queryRef": query_ref, "active": True})
+        column_props[query_ref] = {"displayName": item["title"]}
+        select_meta.append(
+            {
+                "displayName": item["title"],
+                "queryName": query_ref,
+                "role": "Category",
+                "projection": projection_index,
+                "kind": "column",
+                "table": item["table"],
+                "field": item["field"],
+            }
+        )
+
+    for value_index, item in enumerate(values, start=len(categories)):
+        alias = aliases[item["table"]]
+        query_ref = f"{item['table']}.{item['field']}"
+        select.append(
+            {
+                "Measure": {
+                    "Expression": {"SourceRef": {"Source": alias}},
+                    "Property": item["field"],
+                },
+                "Name": query_ref,
+            }
+        )
+        projections["Values"].append({"queryRef": query_ref})
+        column_props[query_ref] = {"displayName": item["title"]}
+        select_meta.append(
+            {
+                "displayName": item["title"],
+                "queryName": query_ref,
+                "role": "Values",
+                "projection": value_index,
+                "kind": "measure",
+                "table": item["table"],
+                "field": item["field"],
+            }
+        )
+
+    prototype_query = {
+        "Version": 2,
+        "From": [{"Name": alias, "Entity": tbl, "Type": 0} for tbl, alias in aliases.items()],
+        "Select": select,
+    }
+    all_projections = [item["projection"] for item in select_meta]
+    binding = {
+        "Primary": {"Groupings": [{"Projections": all_projections, "Subtotal": 2}]},
+        "DataReduction": {
+            "DataVolume": 3,
+            "Primary": {"Bottom": {"Count": 30000}},
+        },
+        "Version": 1,
+    }
+    object_settings = {
+        "version": [{"properties": {"version": _literal("7.4.1")}}],
+        "proFeaturesSettings": [{"properties": {"show": _literal(True)}}],
+        "chartSettings": [
+            {
+                "properties": {
+                    "showGrandTotal": _literal(show_grand_total),
+                    "showGridlines": _literal(False),
+                    "firstTimeShowingColumnAdder": _literal(False),
+                    "valueChart": _literal(value_chart),
+                }
+            }
+        ],
+        "titleSettings": [{"properties": {"show": _literal(False)}}],
+    }
+    data_transforms = {
+        "objects": object_settings,
+        "projectionOrdering": {
+            "Category": [item["projection"] for item in select_meta if item["role"] == "Category"],
+            "Values": [item["projection"] for item in select_meta if item["role"] == "Values"],
+        },
+        "projectionActiveItems": {
+            "Category": [
+                {"queryRef": item["queryName"], "suppressConcat": False}
+                for item in select_meta
+                if item["role"] == "Category"
+            ]
+        },
+        "queryMetadata": {
+            "Select": [
+                {
+                    "Restatement": item["displayName"],
+                    "Name": item["queryName"],
+                    "Type": 2048 if item["kind"] == "column" else 1,
+                }
+                for item in select_meta
+            ]
+        },
+        "visualElements": [
+            {
+                "DataRoles": [
+                    {
+                        "Name": item["role"],
+                        "Projection": item["projection"],
+                        "isActive": item["role"] == "Category",
+                    }
+                    for item in select_meta
+                ]
+            }
+        ],
+        "selects": [
+            {
+                "displayName": item["displayName"],
+                "queryName": item["queryName"],
+                "roles": {item["role"]: True},
+                "type": {
+                    "category": None,
+                    "underlyingType": 1 if item["kind"] == "column" else 259,
+                },
+                "expr": {
+                    ("Column" if item["kind"] == "column" else "Measure"): {
+                        "Expression": {"SourceRef": {"Entity": item["table"]}},
+                        "Property": item["field"],
+                    }
+                },
+            }
+            for item in select_meta
+        ],
+        "expansionStates": [
+            {
+                "roles": ["Category"],
+                "levels": [
+                    {"queryRefs": [item["queryName"]], "isPinned": True}
+                    for item in select_meta
+                    if item["role"] == "Category"
+                ],
+                "root": {"identityValues": None},
+            }
+        ],
+    }
+
+    config = {
+        "name": visual_name,
+        "layouts": [
+            {
+                "id": 0,
+                "position": {
+                    "x": x,
+                    "y": y,
+                    "z": 820,
+                    "width": w,
+                    "height": h,
+                    "tabOrder": 820,
+                },
+            }
+        ],
+        "singleVisual": {
+            "visualType": visual_type,
+            "projections": projections,
+            "prototypeQuery": prototype_query,
+            "columnProperties": column_props,
+            "expansionStates": data_transforms["expansionStates"],
+            "drillFilterOtherVisuals": True,
+            "objects": object_settings,
+        },
+    }
+    return {
+        "config": json.dumps(config),
+        "query": json.dumps(
+            {
+                "Commands": [
+                    {
+                        "SemanticQueryDataShapeCommand": {
+                            "Query": prototype_query,
+                            "Binding": binding,
+                            "ExecutionMetricsKind": 1,
+                        }
+                    }
+                ]
+            }
+        ),
+        "dataTransforms": json.dumps(data_transforms),
+        "filters": "[]",
+        "height": h,
+        "width": w,
+        "x": x,
+        "y": y,
+        "z": 820,
+    }
+
+
+def build_clustered_bar_chart_visual(
+    *,
+    category_table: str,
+    category_column: str,
+    category_title: str,
+    measure_table: str,
+    measure_name: str,
+    measure_title: str,
+    x: float,
+    y: float,
+    w: float = 520,
+    h: float = 220,
+    fill: str = "#083EA7",
+) -> dict:
+    """Construct a clusteredBarChart for one category column and one measure."""
+    visual_name = uuid.uuid4().hex[:20]
+    aliases: dict[str, str] = {}
+    aliases.setdefault(category_table, "c")
+    aliases.setdefault(measure_table, "m" if category_table != measure_table else "c")
+    category_alias = aliases[category_table]
+    measure_alias = aliases[measure_table]
+    category_ref = f"{category_table}.{category_column}"
+    measure_ref = f"{measure_table}.{measure_name}"
+
+    measure_expr = {
+        "Measure": {
+            "Expression": {"SourceRef": {"Source": measure_alias}},
+            "Property": measure_name,
+        }
+    }
+    config = {
+        "name": visual_name,
+        "layouts": [
+            {
+                "id": 0,
+                "position": {
+                    "x": x,
+                    "y": y,
+                    "z": 800,
+                    "width": w,
+                    "height": h,
+                    "tabOrder": 800,
+                },
+            }
+        ],
+        "singleVisual": {
+            "visualType": "clusteredBarChart",
+            "projections": {
+                "Category": [{"queryRef": category_ref, "active": True}],
+                "Y": [{"queryRef": measure_ref}],
+            },
+            "prototypeQuery": {
+                "Version": 2,
+                "From": [
+                    {"Name": alias, "Entity": tbl, "Type": 0} for tbl, alias in aliases.items()
+                ],
+                "Select": [
+                    {
+                        "Column": {
+                            "Expression": {"SourceRef": {"Source": category_alias}},
+                            "Property": category_column,
+                        },
+                        "Name": category_ref,
+                    },
+                    {**measure_expr, "Name": measure_ref},
+                ],
+                "OrderBy": [{"Direction": 2, "Expression": measure_expr}],
+            },
+            "columnProperties": {
+                category_ref: {"displayName": category_title},
+                measure_ref: {"displayName": measure_title},
+            },
+            "drillFilterOtherVisuals": True,
+            "objects": {
+                "legend": [{"properties": {"show": _literal(False)}}],
+                "categoryAxis": [
+                    {
+                        "properties": {
+                            "labelColor": _solid_color("#252423"),
+                            "fontSize": _literal(9),
+                            "showAxisTitle": _literal(False),
+                        }
+                    }
+                ],
+                "valueAxis": [
+                    {
+                        "properties": {
+                            "labelColor": _solid_color("#666666"),
+                            "fontSize": _literal(9),
+                            "showAxisTitle": _literal(False),
+                        }
+                    }
+                ],
+                "labels": [
+                    {
+                        "properties": {
+                            "show": _literal(True),
+                            "color": _solid_color("#252423"),
+                            "fontSize": _literal(9),
+                            "labelDisplayUnits": _literal(1000000.0),
+                            "labelPrecision": _literal(1),
+                        }
+                    }
+                ],
+                "dataPoint": [
+                    {
+                        "properties": {
+                            "fill": _solid_color(fill),
+                        }
+                    }
+                ],
+            },
+            "vcObjects": {
+                "title": [{"properties": {"show": _literal(False)}}],
+                "visualHeader": [{"properties": {"show": _literal(False)}}],
+                "border": [
+                    {
+                        "properties": {
+                            "show": _literal(False),
+                        }
+                    }
+                ],
+                "background": [
+                    {
+                        "properties": {
+                            "show": _literal(False),
+                            "transparency": _literal(100.0),
+                        }
+                    }
+                ],
+            },
+        },
+    }
+    return {
+        "config": json.dumps(config),
+        "filters": "[]",
+        "height": h,
+        "width": w,
+        "x": x,
+        "y": y,
+        "z": 800,
+    }
+
+
 def build_textbox_visual(
     text: str,
     x: float,
@@ -690,7 +1067,8 @@ def build_rag_card_objects(
     label_color: str = "#666666",
     value_font_size: int = 28,
     label_font_size: int = 10,
-    display_units: int | None = None,
+    display_units: int | None = 1,
+    show_category_label: bool = True,
 ) -> dict:
     """Return a conservative legacy-card objects block for RAG KPI cards.
 
@@ -730,7 +1108,7 @@ def build_rag_card_objects(
         "categoryLabels": [
             {
                 "properties": {
-                    "show": _literal(True),
+                    "show": _literal(show_category_label),
                     "color": _solid_color(label_color),
                     "fontSize": _literal(str(label_font_size)),
                     "fontFamily": _literal("Segoe UI"),
@@ -755,7 +1133,8 @@ def build_rag_card_visual(
     label_color: str = "#666666",
     value_font_size: int = 28,
     label_font_size: int = 10,
-    display_units: int | None = None,
+    display_units: int | None = 1,
+    show_category_label: bool = True,
 ) -> dict:
     """Construct a card with the RW RAG visual treatment attached."""
     return build_card_visual_with_objects(
@@ -774,5 +1153,6 @@ def build_rag_card_visual(
             value_font_size=value_font_size,
             label_font_size=label_font_size,
             display_units=display_units,
+            show_category_label=show_category_label,
         ),
     )

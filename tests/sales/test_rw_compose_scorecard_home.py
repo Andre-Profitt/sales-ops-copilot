@@ -9,7 +9,7 @@ def test_front_page_compose_is_structured_and_within_canvas():
     _compose(section)
 
     visuals = section["visualContainers"]
-    assert len(visuals) == 65
+    assert len(visuals) == 45
     assert all(v["x"] + v["width"] <= 1280 for v in visuals)
     assert all(v["y"] + v["height"] <= 720 for v in visuals)
 
@@ -22,19 +22,31 @@ def test_front_page_compose_is_structured_and_within_canvas():
         if sv["visualType"] == "card" and "objects" in sv:
             object_bearing_cards += 1
 
-    assert types.count("card") == 12
-    assert object_bearing_cards == 12
-    assert types.count("basicShape") == 20
-    assert types.count("textbox") == 28
+    assert types.count("card") == 10
+    assert object_bearing_cards == 10
+    assert types.count("basicShape") == 15
+    assert types.count("textbox") == 14
     assert types.count("slicer") == 3
-    assert "pivotTable" in types
+    assert types.count("clusteredBarChart") == 2
     assert "tableEx" in types
 
     for visual in visuals:
         config = json.loads(visual["config"])
         sv = config["singleVisual"]
-        if sv["visualType"] in {"pivotTable", "tableEx"}:
+        if sv["visualType"] in {"clusteredBarChart", "tableEx"}:
             assert "objects" in sv
+
+        if sv["visualType"] == "textbox":
+            assert visual["height"] >= 34
+
+        if sv["visualType"] == "card":
+            assert visual["height"] >= 76
+            labels = sv["objects"]["labels"]
+            units = labels[0]["properties"].get("labelDisplayUnits")
+            assert units is not None
+            assert units["expr"]["Literal"]["Value"] == "1.0D"
+            category = sv["objects"]["categoryLabels"][0]["properties"]["show"]
+            assert category["expr"]["Literal"]["Value"] == "true"
 
 
 def test_front_page_kpi_routes_resolve_against_graph():

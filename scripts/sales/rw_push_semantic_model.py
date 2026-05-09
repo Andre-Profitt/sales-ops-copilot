@@ -157,7 +157,7 @@ def build_model_bim() -> dict:
                         f"CALCULATETABLE ( VALUES ( f_stage_transition[opp_id] ), f_stage_transition[transition_at] >= {since} ), "
                         "f_opportunity[opp_id] ) )"
                     ),
-                    "formatString": '"$"#,0.0,,"M"',
+                    "formatString": '$#,0,,.0"M"',
                     "description": f"ARR of opps with any stage move in the last {label} window.",
                 }
             )
@@ -171,19 +171,19 @@ def build_model_bim() -> dict:
         {
             "name": "Total Closed Won ARR",
             "expression": 'CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), f_opportunity[is_won] = TRUE(), f_opportunity[motion_type] IN { "Land", "Expand" } )',
-            "formatString": '"$"#,0.0,,"M"',
+            "formatString": '$#,0,,.0"M"',
             "description": "RW KPI: forecast_closed_won. ARR field, Land+Expand only.",
         },
         {
             "name": "Total Open Pipeline ARR",
             "expression": 'CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), f_opportunity[is_closed] = FALSE(), f_opportunity[motion_type] IN { "Land", "Expand" } )',
-            "formatString": '"$"#,0.0,,"M"',
+            "formatString": '$#,0,,.0"M"',
             "description": "RW KPI: pipeline_coverage_3x (numerator). Open L+E ARR.",
         },
         {
             "name": "Total Closed Lost ARR",
             "expression": 'CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), f_opportunity[is_closed] = TRUE(), f_opportunity[is_won] = FALSE(), f_opportunity[motion_type] IN { "Land", "Expand" } )',
-            "formatString": '"$"#,0.0,,"M"',
+            "formatString": '$#,0,,.0"M"',
         },
         # Win rate
         {
@@ -202,7 +202,7 @@ def build_model_bim() -> dict:
         {
             "name": "Avg Deal Size Won",
             "expression": 'CALCULATE ( AVERAGE ( f_opportunity[arr_org_ccy] ), f_opportunity[is_won] = TRUE(), f_opportunity[motion_type] IN { "Land", "Expand" } )',
-            "formatString": '"$"#,0.0,,"M"',
+            "formatString": '$#,0,,.0"M"',
             "description": "RW KPI: closed_won_avg_deal_size. Target >$500K (verify with Richard).",
         },
         {
@@ -226,7 +226,7 @@ def build_model_bim() -> dict:
         {
             "name": "Stage 3 Plus ARR",
             "expression": 'CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), f_opportunity[is_closed] = FALSE(), f_opportunity[motion_type] IN { "Land", "Expand" }, NOT ( f_opportunity[stage_name] IN { "1. Prospecting", "2. Discovery" } ) )',
-            "formatString": '"$"#,0.0,,"M"',
+            "formatString": '$#,0,,.0"M"',
             "description": "RW KPI: stage3_acv_value (proxy). Stage 3+ open ARR.",
         },
         {
@@ -236,7 +236,7 @@ def build_model_bim() -> dict:
                 "f_opportunity[is_closed] = FALSE(), "
                 'f_opportunity[stage_name] IN { "3 - Engagement", "4 - Shortlisted", "5 - Preferred", "6 - Contracting", "7 - Sales Ops QC" } )'
             ),
-            "formatString": '"$"#,0.0,,"M"',
+            "formatString": '$#,0,,.0"M"',
             "description": "S3+ open ACV (companion to Stage 3 Plus ARR; covers Renewal motion via ACV field). Real stage-name list verified vs OpportunityStage.",
         },
         # ── Forecast tab support ───────────────────────────────────────
@@ -258,7 +258,7 @@ def build_model_bim() -> dict:
                 "f_opportunity[acv_org_ccy], f_opportunity[arr_org_ccy] ) ), "
                 "f_opportunity[is_closed] = FALSE() )"
             ),
-            "formatString": '"$"#,0.0,,"M"',
+            "formatString": '$#,0,,.0"M"',
             "description": (
                 "Open pipeline value combining ARR (Land+Expand) and ACV (Renewal) per "
                 "SimCorp business rules — never blend, but render in one column when "
@@ -269,7 +269,7 @@ def build_model_bim() -> dict:
         {
             "name": "Partner ARR",
             "expression": 'CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), f_opportunity[is_closed] = FALSE(), f_opportunity[lead_source] = "Partner", f_opportunity[motion_type] IN { "Land", "Expand" } )',
-            "formatString": '"$"#,0.0,,"M"',
+            "formatString": '$#,0,,.0"M"',
         },
         {
             "name": "Partner Pct",
@@ -281,13 +281,13 @@ def build_model_bim() -> dict:
         {
             "name": "Total Renewal ACV Won",
             "expression": 'CALCULATE ( SUM ( f_opportunity[acv_org_ccy] ), f_opportunity[is_won] = TRUE(), f_opportunity[motion_type] = "Renewal" )',
-            "formatString": '"$"#,0.0,,"M"',
+            "formatString": '$#,0,,.0"M"',
             "description": "RW KPI: renewals_mom_trend. ACV field, Renewal only.",
         },
         {
             "name": "Total Renewal ACV Lost",
             "expression": 'CALCULATE ( SUM ( f_opportunity[acv_org_ccy] ), f_opportunity[is_closed] = TRUE(), f_opportunity[is_won] = FALSE(), f_opportunity[motion_type] = "Renewal" )',
-            "formatString": '"$"#,0.0,,"M"',
+            "formatString": '$#,0,,.0"M"',
             "description": "RW KPI: lost_arr_quarterly. ACV field, Renewal lost.",
         },
         {
@@ -307,7 +307,7 @@ def build_model_bim() -> dict:
         {
             "name": "Source ARR Won",
             "expression": 'CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), f_opportunity[is_won] = TRUE(), f_opportunity[motion_type] IN { "Land", "Expand" } )',
-            "formatString": '"$"#,0.0,,"M"',
+            "formatString": '$#,0,,.0"M"',
             "description": "RW KPI: opp_source_effectiveness — slice by [lead_source] for per-source ARR.",
         },
         {
@@ -319,7 +319,7 @@ def build_model_bim() -> dict:
         {
             "name": "Total Land Won ARR",
             "expression": 'CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), f_opportunity[is_won] = TRUE(), f_opportunity[motion_type] = "Land" )',
-            "formatString": '"$"#,0.0,,"M"',
+            "formatString": '$#,0,,.0"M"',
             "description": "RW KPI: new_customer_reporting (Land-only Won ARR). Slice by region × month.",
         },
         {
@@ -332,7 +332,7 @@ def build_model_bim() -> dict:
         {
             "name": "Closed Won ARR LY",
             "expression": "CALCULATE ( [Total Closed Won ARR], SAMEPERIODLASTYEAR ( d_calendar[date] ) )",
-            "formatString": '"$"#,0.0,,"M"',
+            "formatString": '$#,0,,.0"M"',
             "description": "Same-period prior fiscal year. Pairs with Total Closed Won ARR for YoY math.",
         },
         {
@@ -344,7 +344,7 @@ def build_model_bim() -> dict:
         {
             "name": "Renewal ACV Won LY",
             "expression": "CALCULATE ( [Total Renewal ACV Won], SAMEPERIODLASTYEAR ( d_calendar[date] ) )",
-            "formatString": '"$"#,0.0,,"M"',
+            "formatString": '$#,0,,.0"M"',
         },
         {
             "name": "Renewal ACV YoY Pct",
@@ -355,7 +355,7 @@ def build_model_bim() -> dict:
         {
             "name": "Pipeline ARR LY",
             "expression": "CALCULATE ( [Total Open Pipeline ARR], SAMEPERIODLASTYEAR ( d_calendar[date] ) )",
-            "formatString": '"$"#,0.0,,"M"',
+            "formatString": '$#,0,,.0"M"',
         },
         {
             "name": "Pipeline ARR YoY Pct",
@@ -371,7 +371,7 @@ def build_model_bim() -> dict:
         {
             "name": "Closed Won ARR LY YTD",
             "expression": "CALCULATE ( [Total Closed Won ARR], REMOVEFILTERS ( d_calendar ), DATESBETWEEN ( d_calendar[date], DATE ( YEAR ( TODAY () ) - 1, 1, 1 ), DATE ( YEAR ( TODAY () ) - 1, MONTH ( TODAY () ), DAY ( TODAY () ) ) ) )",
-            "formatString": '"$"#,0.0,,"M"',
+            "formatString": '$#,0,,.0"M"',
             "description": "Closed Won ARR for Jan 1 -> same-day prior year. Apples-to-apples vs current-YTD.",
         },
         {
@@ -383,7 +383,7 @@ def build_model_bim() -> dict:
         {
             "name": "Renewal ACV LY YTD",
             "expression": "CALCULATE ( [Total Renewal ACV Won], REMOVEFILTERS ( d_calendar ), DATESBETWEEN ( d_calendar[date], DATE ( YEAR ( TODAY () ) - 1, 1, 1 ), DATE ( YEAR ( TODAY () ) - 1, MONTH ( TODAY () ), DAY ( TODAY () ) ) ) )",
-            "formatString": '"$"#,0.0,,"M"',
+            "formatString": '$#,0,,.0"M"',
         },
         {
             "name": "Renewal ACV YTD YoY Pct",
@@ -412,7 +412,7 @@ def build_model_bim() -> dict:
         {
             "name": "Land Closed Won ARR",
             "expression": 'CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), f_opportunity[is_won] = TRUE(), f_opportunity[motion_type] = "Land" )',
-            "formatString": '"$"#,0.0,,"M"',
+            "formatString": '$#,0,,.0"M"',
             "description": "Land-only Won ARR. Excludes Expand and Renewal.",
         },
         {
@@ -430,7 +430,7 @@ def build_model_bim() -> dict:
         {
             "name": "Expand Closed Won ARR",
             "expression": 'CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), f_opportunity[is_won] = TRUE(), f_opportunity[motion_type] = "Expand" )',
-            "formatString": '"$"#,0.0,,"M"',
+            "formatString": '$#,0,,.0"M"',
             "description": "Expand-only Won ARR. Existing-customer growth motion.",
         },
         {
@@ -453,11 +453,12 @@ def build_model_bim() -> dict:
                 "COUNTROWS ( "
                 "FILTER ( f_opportunity, "
                 "f_opportunity[is_closed] = FALSE() && "
+                'f_opportunity[motion_type] IN { "Land", "Expand" } && '
                 "DATEDIFF ( f_opportunity[last_stage_change_date], TODAY(), DAY ) > 14 "
                 ") )"
             ),
             "formatString": "#,0",
-            "description": "Open opps with no stage movement in >14 days (Watch threshold).",
+            "description": "Open Land+Expand opps with no stage movement in >14 days (Watch threshold).",
         },
         {
             "name": "Stalled Open Opps ARR 14d",
@@ -465,11 +466,12 @@ def build_model_bim() -> dict:
                 "CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), "
                 "FILTER ( f_opportunity, "
                 "f_opportunity[is_closed] = FALSE() && "
+                'f_opportunity[motion_type] IN { "Land", "Expand" } && '
                 "DATEDIFF ( f_opportunity[last_stage_change_date], TODAY(), DAY ) > 14 "
                 ") )"
             ),
-            "formatString": '"$"#,0.0,,"M"',
-            "description": "Open ARR for opps stalled >14 days.",
+            "formatString": '$#,0,,.0"M"',
+            "description": "Open Land+Expand ARR for opps stalled >14 days.",
         },
         {
             "name": "Stalled Open Opps Count 21d",
@@ -477,11 +479,12 @@ def build_model_bim() -> dict:
                 "COUNTROWS ( "
                 "FILTER ( f_opportunity, "
                 "f_opportunity[is_closed] = FALSE() && "
+                'f_opportunity[motion_type] IN { "Land", "Expand" } && '
                 "DATEDIFF ( f_opportunity[last_stage_change_date], TODAY(), DAY ) > 21 "
                 ") )"
             ),
             "formatString": "#,0",
-            "description": "Open opps with no stage movement in >21 days (At-risk threshold).",
+            "description": "Open Land+Expand opps with no stage movement in >21 days (At-risk threshold).",
         },
         {
             "name": "Stalled Open Opps ARR 21d",
@@ -489,11 +492,12 @@ def build_model_bim() -> dict:
                 "CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), "
                 "FILTER ( f_opportunity, "
                 "f_opportunity[is_closed] = FALSE() && "
+                'f_opportunity[motion_type] IN { "Land", "Expand" } && '
                 "DATEDIFF ( f_opportunity[last_stage_change_date], TODAY(), DAY ) > 21 "
                 ") )"
             ),
-            "formatString": '"$"#,0.0,,"M"',
-            "description": "Open ARR for opps stalled >21 days.",
+            "formatString": '$#,0,,.0"M"',
+            "description": "Open Land+Expand ARR for opps stalled >21 days.",
         },
         # ── Risk classification (Tab 1 What Changed risk band) ──────────────
         # Stage 5+ open = IN {"5 - Preferred","6 - Contracting","7 - Sales Ops QC"}.
@@ -505,12 +509,13 @@ def build_model_bim() -> dict:
                 "COUNTROWS ( "
                 "FILTER ( f_opportunity, "
                 "f_opportunity[is_closed] = FALSE() && "
+                'f_opportunity[motion_type] IN { "Land", "Expand" } && '
                 'f_opportunity[stage_name] IN { "5 - Preferred", "6 - Contracting", "7 - Sales Ops QC" } && '
                 "DATEDIFF ( f_opportunity[last_stage_change_date], TODAY(), DAY ) > 21 "
                 ") )"
             ),
             "formatString": "#,0",
-            "description": "At Risk: Stage 5+ open AND stalled >21d.",
+            "description": "At Risk: Stage 5+ open Land+Expand AND stalled >21d.",
         },
         {
             "name": "At Risk Opps ARR",
@@ -518,12 +523,13 @@ def build_model_bim() -> dict:
                 "CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), "
                 "FILTER ( f_opportunity, "
                 "f_opportunity[is_closed] = FALSE() && "
+                'f_opportunity[motion_type] IN { "Land", "Expand" } && '
                 'f_opportunity[stage_name] IN { "5 - Preferred", "6 - Contracting", "7 - Sales Ops QC" } && '
                 "DATEDIFF ( f_opportunity[last_stage_change_date], TODAY(), DAY ) > 21 "
                 ") )"
             ),
-            "formatString": '"$"#,0.0,,"M"',
-            "description": "ARR exposed in At Risk bucket (Stage 5+ stalled >21d).",
+            "formatString": '$#,0,,.0"M"',
+            "description": "Land+Expand ARR exposed in At Risk bucket (Stage 5+ stalled >21d).",
         },
         {
             "name": "Watch Opps Count",
@@ -531,12 +537,13 @@ def build_model_bim() -> dict:
                 "COUNTROWS ( "
                 "FILTER ( f_opportunity, "
                 "f_opportunity[is_closed] = FALSE() && "
+                'f_opportunity[motion_type] IN { "Land", "Expand" } && '
                 'f_opportunity[stage_name] IN { "3 - Engagement", "4 - Shortlisted" } && '
                 "DATEDIFF ( f_opportunity[last_stage_change_date], TODAY(), DAY ) > 14 "
                 ") )"
             ),
             "formatString": "#,0",
-            "description": "Watch: Stage 3-4 open AND stalled >14d.",
+            "description": "Watch: Stage 3-4 open Land+Expand AND stalled >14d.",
         },
         {
             "name": "Watch Opps ARR",
@@ -544,34 +551,49 @@ def build_model_bim() -> dict:
                 "CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), "
                 "FILTER ( f_opportunity, "
                 "f_opportunity[is_closed] = FALSE() && "
+                'f_opportunity[motion_type] IN { "Land", "Expand" } && '
                 'f_opportunity[stage_name] IN { "3 - Engagement", "4 - Shortlisted" } && '
                 "DATEDIFF ( f_opportunity[last_stage_change_date], TODAY(), DAY ) > 14 "
                 ") )"
             ),
-            "formatString": '"$"#,0.0,,"M"',
-            "description": "ARR exposed in Watch bucket (Stage 3-4 stalled >14d).",
+            "formatString": '$#,0,,.0"M"',
+            "description": "Land+Expand ARR exposed in Watch bucket (Stage 3-4 stalled >14d).",
+        },
+        {
+            "name": "Exception Opps Count",
+            "expression": "[At Risk Opps Count] + [Watch Opps Count]",
+            "formatString": "#,0",
+            "description": "Land+Expand exception count: At Risk + Watch. Keeps count universe aligned to ARR exposure.",
+        },
+        {
+            "name": "Exception ARR",
+            "expression": "[At Risk Opps ARR] + [Watch Opps ARR]",
+            "formatString": '$#,0,,.0"M"',
+            "description": "Land+Expand ARR exception exposure: At Risk + Watch.",
         },
         {
             "name": "Healthy Moves Count",
             "expression": (
                 "CALCULATE ( COUNTROWS ( f_stage_transition ), "
+                'f_opportunity[motion_type] IN { "Land", "Expand" }, '
                 'f_stage_transition[direction] = "forward", '
                 "f_stage_transition[transition_at] >= TODAY() - 7 )"
             ),
             "formatString": "#,0",
-            "description": "Forward stage moves in the last 7 days.",
+            "description": "Land+Expand forward stage moves in the last 7 days.",
         },
         {
             "name": "Healthy Moves ARR",
             "expression": (
                 "CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), "
+                'f_opportunity[motion_type] IN { "Land", "Expand" }, '
                 "TREATAS ( "
                 'CALCULATETABLE ( VALUES ( f_stage_transition[opp_id] ), f_stage_transition[direction] = "forward", '
                 "f_stage_transition[transition_at] >= TODAY() - 7 ), "
                 "f_opportunity[opp_id] ) )"
             ),
-            "formatString": '"$"#,0.0,,"M"',
-            "description": "ARR of opps with a forward stage move in the last 7 days.",
+            "formatString": '$#,0,,.0"M"',
+            "description": "Land+Expand ARR of opps with a forward stage move in the last 7 days.",
         },
         # Window-bound deltas (Tab 1 What Changed) — 3 families × 3 windows = 9 measures.
         # Slips family deferred — requires f_ofh_close_date table not in current ETL.
