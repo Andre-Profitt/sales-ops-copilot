@@ -24,12 +24,10 @@ from scripts.sales._pbir_helpers import (
 )
 
 DEFAULT_LAB_ROOT = (
-    Path.home()
-    / "Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip"
+    Path.home() / "Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip"
 )
 DEFAULT_SOURCE_PBIX = (
-    Path.home()
-    / "Downloads/rw-zebra-bi-template-research-20260509/pbix-test/"
+    Path.home() / "Downloads/rw-zebra-bi-template-research-20260509/pbix-test/"
     "sales-funnel-power-bi-template__sales-pipeline-crm-template__"
     "Zebra BI - CRM Sales pipeline demo v2.pbix"
 )
@@ -205,6 +203,24 @@ def apply_stage_hygiene_proof(report: dict) -> None:
     ]
 
 
+def apply_spine_rebuild_to_main_page(report: dict) -> None:
+    """Apply the PR1 front-page rebuild to the main 'VP Ops Scorecard' section
+    in the lab PBIP. Imports the live composer to keep the binding source of
+    truth in one place.
+    """
+    from scripts.sales.rw_compose_scorecard_home import PAGE, _compose
+
+    section = next(
+        (s for s in report["sections"] if s.get("displayName") == PAGE),
+        None,
+    )
+    if section is None:
+        raise RuntimeError(
+            f"lab PBIP has no section with displayName={PAGE!r}; cannot apply spine rebuild"
+        )
+    _compose(section)
+
+
 def apply_zebra_exceptions_proof(report: dict) -> None:
     section = zebra_exceptions_page(report)
     section["visualContainers"] = [
@@ -274,9 +290,7 @@ def reorder_proof_pages(report: dict) -> None:
     exceptions = zebra_exceptions_page(report)
     stage = stage_hygiene_page(report)
     proof_pages = [exceptions, stage]
-    reordered = proof_pages + [
-        s for s in report.get("sections", []) if s not in proof_pages
-    ]
+    reordered = proof_pages + [s for s in report.get("sections", []) if s not in proof_pages]
     for ordinal, page in enumerate(reordered):
         page["ordinal"] = ordinal
     report["sections"] = reordered
@@ -347,6 +361,7 @@ def apply_lab_proof(lab_root: Path, source_pbix: Path) -> Path:
     ensure_resource_packages(report)
     apply_stage_hygiene_proof(report)
     apply_zebra_exceptions_proof(report)
+    apply_spine_rebuild_to_main_page(report)
     reorder_proof_pages(report)
     if license_key := os.environ.get("ZEBRA_BI_LICENSE_KEY"):
         inject_local_license(report, license_key)
