@@ -13,6 +13,7 @@ Run:
 from __future__ import annotations
 
 from scripts.sales._pbir_helpers import (
+    ZEBRA_BI_TABLES_VISUAL_TYPE,
     build_clustered_bar_chart_visual,
     build_rag_card_visual,
     build_shape_visual,
@@ -20,6 +21,7 @@ from scripts.sales._pbir_helpers import (
     build_table_style_objects,
     build_table_visual,
     build_textbox_visual,
+    build_zebra_bi_table_visual,
 )
 from scripts.sales.rw_add_visual import (
     REPORT_ID,
@@ -123,6 +125,83 @@ def _metric_card(
             label_font_size=10,
         )
     )
+
+
+KPI_STRIP_MEASURES = [
+    "Total Closed Won ARR",
+    "Win Rate ARR",
+    "Stage Forward Pct (LE)",
+    "Renewal Retention Pct (Period)",
+]
+
+
+def _build_exception_spine() -> dict:
+    """Zebra BI Tables: regional exception view.
+
+    Lifts the binding pattern verbatim from
+    rw_apply_zebra_lab_proof.apply_zebra_exceptions_proof, with positions
+    re-anchored to the live VP Ops Scorecard layout zone (y=80, h=264).
+
+    Value order is positional — Zebra Tables uses it for IBCS column grouping.
+    Do not reorder without re-rendering against the live model.
+    """
+    return build_zebra_bi_table_visual(
+        visual_type=ZEBRA_BI_TABLES_VISUAL_TYPE,
+        categories=[
+            {"table": "d_region", "field": "region", "title": "Region"},
+        ],
+        values=[
+            {"table": "f_opportunity", "field": "Exception ARR", "title": "Exception ARR"},
+            {"table": "f_opportunity", "field": "Exception Opps Count", "title": "Exception opps"},
+            {"table": "f_opportunity", "field": "At Risk Opps ARR", "title": "At-risk ARR"},
+            {"table": "f_opportunity", "field": "Watch Opps ARR", "title": "Watch ARR"},
+        ],
+        x=0,
+        y=80,
+        w=1280,
+        h=264,
+    )
+
+
+def _build_movement_spine_placeholder() -> dict:
+    """Placeholder textbox for the movement spine (Task 3)."""
+    return build_textbox_visual(
+        "MOVEMENT SPINE — placeholder",
+        x=0,
+        y=360,
+        w=1280,
+        h=224,
+        font_size_pt=10,
+        color=MUTED,
+    )
+
+
+def _build_kpi_strip() -> list[dict]:
+    """Four native KPI cards across the bottom strip (Task 4)."""
+    cards = []
+    kpi_defs = [
+        ("f_opportunity", KPI_STRIP_MEASURES[0], "Won ARR"),
+        ("f_opportunity", KPI_STRIP_MEASURES[1], "Win rate"),
+        ("f_stage_transition", KPI_STRIP_MEASURES[2], "Stage fwd"),
+        ("f_opportunity", KPI_STRIP_MEASURES[3], "Renewal retention"),
+    ]
+    for i, (table, measure, title) in enumerate(kpi_defs):
+        cards.append(
+            build_rag_card_visual(
+                table,
+                measure,
+                title,
+                x=i * 320,
+                y=600,
+                w=320,
+                h=120,
+                tint="#ffffff",
+                accent=BLUE,
+                value_font_size=18,
+                label_font_size=10,
+            )
+        )
+    return cards
 
 
 def _compose(section: dict) -> None:
