@@ -108,6 +108,20 @@ SHAPES: dict[str, VisualShape] = {
             "SalesManager fixture textboxes plus scripts/workforce/wf_push_report.py."
         ),
     ),
+    "basicShape": VisualShape(
+        visual_type="basicShape",
+        select_kinds=(),
+        projection_keys=(),
+        builder="build_shape_visual",
+        verified_at="2026-05-09",
+        source_report_id="tests/sales/fixtures/salesmanager_report.json",
+        requires_aliases=False,
+        notes=(
+            "Static rectangle shape for dashboard panels and backgrounds. "
+            "Captured from SalesManager fixture and used when visual container "
+            "background objects are not reliable enough for visible card tinting."
+        ),
+    ),
 }
 
 
@@ -139,7 +153,6 @@ PENDING: tuple[str, ...] = (
     "waterfallChart",
     "treemap",
     "actionButton",
-    "basicShape",
     "image",
 )
 

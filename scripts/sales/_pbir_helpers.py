@@ -9,6 +9,22 @@ import json
 import uuid
 
 
+def _literal(value: str | int | float | bool) -> dict:
+    if isinstance(value, bool):
+        encoded = "true" if value else "false"
+    elif isinstance(value, int):
+        encoded = f"{value}L"
+    elif isinstance(value, float):
+        encoded = f"{value}D"
+    else:
+        encoded = f"'{value}'"
+    return {"expr": {"Literal": {"Value": encoded}}}
+
+
+def _solid_color(color: str) -> dict:
+    return {"solid": {"color": _literal(color)}}
+
+
 def build_card_visual(
     measure_table: str,
     measure_name: str,
@@ -383,6 +399,97 @@ def build_textbox_visual(
     }
 
 
+def build_shape_visual(
+    x: float,
+    y: float,
+    w: float,
+    h: float,
+    *,
+    fill: str,
+    line: str | None = None,
+    z: int = 100,
+    radius: int = 0,
+) -> dict:
+    """Construct a basicShape rectangle visualContainer.
+
+    Shape config is based on the verified SalesManager fixture and is used for
+    visible dashboard panels behind cards when card-level background objects are
+    not honored consistently by the Power BI renderer.
+    """
+    visual_name = uuid.uuid4().hex[:20]
+    line_color = line or fill
+    config = {
+        "name": visual_name,
+        "layouts": [
+            {
+                "id": 0,
+                "position": {
+                    "x": x,
+                    "y": y,
+                    "z": z,
+                    "width": w,
+                    "height": h,
+                    "tabOrder": z,
+                },
+            }
+        ],
+        "singleVisual": {
+            "visualType": "basicShape",
+            "drillFilterOtherVisuals": True,
+            "objects": {
+                "general": [
+                    {
+                        "properties": {
+                            "shapeType": _literal("rectangle"),
+                        }
+                    }
+                ],
+                "fill": [
+                    {
+                        "properties": {
+                            "fillColor": _solid_color(fill),
+                        }
+                    }
+                ],
+                "line": [
+                    {
+                        "properties": {
+                            "lineColor": _solid_color(line_color),
+                            "weight": _literal(1.0 if line else 0.0),
+                        }
+                    }
+                ],
+            },
+            "vcObjects": {
+                "visualHeader": [
+                    {
+                        "properties": {
+                            "show": _literal(False),
+                        }
+                    }
+                ],
+                "border": [
+                    {
+                        "properties": {
+                            "show": _literal(False),
+                            "radius": _literal(float(radius)),
+                        }
+                    }
+                ],
+            },
+        },
+    }
+    return {
+        "config": json.dumps(config),
+        "filters": "[]",
+        "height": h,
+        "width": w,
+        "x": x,
+        "y": y,
+        "z": z,
+    }
+
+
 def _new_section(name: str, display_name: str, ordinal: int) -> dict:
     return {
         "name": name,
@@ -453,3 +560,99 @@ def build_card_visual_with_objects(
         config["singleVisual"]["objects"] = objects
         vc["config"] = json.dumps(config)
     return vc
+
+
+def build_rag_card_objects(
+    *,
+    tint: str,
+    accent: str,
+    value_color: str = "#222222",
+    label_color: str = "#666666",
+    value_font_size: int = 28,
+    label_font_size: int = 10,
+    display_units: int | None = None,
+) -> dict:
+    """Return a conservative legacy-card objects block for RAG KPI cards.
+
+    The labels/categoryLabels shape is based on the verified SalesManager card
+    fixture. The background/border objects use standard Power BI container
+    object names and are intentionally small so Desktop/Fabric can drop unknown
+    subproperties without breaking the visual.
+    """
+    label_props = {
+        "color": _solid_color(value_color),
+        "fontSize": _literal(str(value_font_size)),
+        "fontFamily": _literal("Segoe UI Semibold"),
+    }
+    if display_units is not None:
+        label_props["labelDisplayUnits"] = _literal(float(display_units))
+
+    return {
+        "background": [
+            {
+                "properties": {
+                    "show": _literal(True),
+                    "color": _solid_color(tint),
+                    "transparency": _literal(0.0),
+                }
+            }
+        ],
+        "border": [
+            {
+                "properties": {
+                    "show": _literal(True),
+                    "color": _solid_color(accent),
+                    "radius": _literal(2),
+                }
+            }
+        ],
+        "labels": [{"properties": label_props}],
+        "categoryLabels": [
+            {
+                "properties": {
+                    "show": _literal(True),
+                    "color": _solid_color(label_color),
+                    "fontSize": _literal(str(label_font_size)),
+                    "fontFamily": _literal("Segoe UI"),
+                }
+            }
+        ],
+    }
+
+
+def build_rag_card_visual(
+    measure_table: str,
+    measure_name: str,
+    display_title: str,
+    x: float,
+    y: float,
+    w: float = 280,
+    h: float = 110,
+    *,
+    tint: str,
+    accent: str,
+    value_color: str = "#222222",
+    label_color: str = "#666666",
+    value_font_size: int = 28,
+    label_font_size: int = 10,
+    display_units: int | None = None,
+) -> dict:
+    """Construct a card with the RW RAG visual treatment attached."""
+    return build_card_visual_with_objects(
+        measure_table=measure_table,
+        measure_name=measure_name,
+        display_title=display_title,
+        x=x,
+        y=y,
+        w=w,
+        h=h,
+        objects=build_rag_card_objects(
+            tint=tint,
+            accent=accent,
+            value_color=value_color,
+            label_color=label_color,
+            value_font_size=value_font_size,
+            label_font_size=label_font_size,
+            display_units=display_units,
+        ),
+    )

@@ -11,7 +11,13 @@ Run:
 
 from __future__ import annotations
 
-from scripts.sales._pbir_helpers import build_card_visual, build_table_visual, build_textbox_visual
+from scripts.sales._pbir_helpers import (
+    build_card_visual,
+    build_rag_card_visual,
+    build_shape_visual,
+    build_table_visual,
+    build_textbox_visual,
+)
 from scripts.sales.rw_add_visual import (
     REPORT_ID,
     WORKSPACE_ID,
@@ -59,18 +65,51 @@ def _compose(section: dict) -> None:
     # Combine into one card via objects block in a follow-up after we
     # capture the right shape via rw_capture_visual.
     risk_band = [
-        ("At Risk Opps Count", "At Risk Opps ARR", "At Risk", 20),
-        ("Watch Opps Count", "Watch Opps ARR", "Watch", 360),
-        ("Healthy Moves Count", "Healthy Moves ARR", "Healthy", 700),
+        ("At Risk Opps Count", "At Risk Opps ARR", "At Risk", 20, "#ffeeee", "#cc3333"),
+        ("Watch Opps Count", "Watch Opps ARR", "Watch", 360, "#fff8e6", "#dd8800"),
+        ("Healthy Moves Count", "Healthy Moves ARR", "Healthy", 700, "#eef9ee", "#339933"),
     ]
-    for count_msr, arr_msr, title, x in risk_band:
+    for count_msr, arr_msr, title, x, tint, accent in risk_band:
         section["visualContainers"].append(
-            build_card_visual(
-                "f_opportunity", count_msr, f"{title} - count", x=x, y=42, w=320, h=78
+            build_shape_visual(
+                x=x - 4,
+                y=38,
+                w=328,
+                h=146,
+                fill=tint,
+                line=accent,
+                z=100,
+                radius=4,
             )
         )
         section["visualContainers"].append(
-            build_card_visual("f_opportunity", arr_msr, f"{title} - ARR", x=x, y=124, w=320, h=56)
+            build_rag_card_visual(
+                "f_opportunity",
+                count_msr,
+                f"{title} - count",
+                x=x,
+                y=42,
+                w=320,
+                h=78,
+                tint=tint,
+                accent=accent,
+                value_font_size=28,
+            )
+        )
+        section["visualContainers"].append(
+            build_rag_card_visual(
+                "f_opportunity",
+                arr_msr,
+                f"{title} - ARR",
+                x=x,
+                y=124,
+                w=320,
+                h=56,
+                tint=tint,
+                accent=accent,
+                value_font_size=24,
+                display_units=1000000,
+            )
         )
 
     # ── Phase 2: Change buckets (3 of 4 spec'd; Slips deferred) ──

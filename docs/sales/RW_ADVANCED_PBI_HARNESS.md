@@ -90,6 +90,19 @@ hand-rolling undocumented `singleVisual.objects` blocks.
 - Table conditional formatting for threshold-crossable cells.
 - Matrix header/row formatting for the Forecast Stage x Motion grid.
 
+## Visible RAG Fallback
+
+Power BI may accept card `background` / `border` objects in `report.json` but
+still render a stale or visually unchanged card in Desktop/Service. For status
+bands that must visibly change, use a `basicShape` rectangle behind the card
+pair as the panel treatment, then keep card-internal objects for typography.
+
+The first implementation is on `What Changed`:
+
+- three tinted `basicShape` panels behind At Risk / Watch / Healthy
+- six count/ARR cards with RAG object blocks
+- live page now has 18 visuals instead of 15
+
 ## Guardrail
 
 ARR and ACV still never blend. ARR is Land + Expand only. ACV is Renewal only.

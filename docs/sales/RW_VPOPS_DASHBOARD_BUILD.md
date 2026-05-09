@@ -422,3 +422,45 @@ advanced visual finish.
 - This harness makes Desktop the renderer authority and Python the production
   compiler, which is the right path for RAG cards, combined cards, table
   conditional formatting, and richer matrix styling.
+
+## 2026-05-09 — First RAG visual upgrade on What Changed
+
+First enterprise-visual slice shipped against the live report. The initial
+card-internal RAG object push was accepted by Fabric and visible in
+`rw_capture_visual` as object-bearing cards, but the open Desktop copy stayed
+stale and Power BI may still drop some card background/border subproperties at
+render. To make the change visible and renderer-resilient, the risk band now
+uses explicit tinted `basicShape` panels behind the card pairs.
+
+**Shipped:**
+
+- Added `build_rag_card_objects` and `build_rag_card_visual` in
+  `scripts/sales/_pbir_helpers.py`.
+  - Uses verified legacy-card typography object keys (`labels`,
+    `categoryLabels`) from the SalesManager fixture.
+  - Adds conservative `background` and `border` objects for card-level RAG
+    treatment.
+- Added `build_shape_visual` for static panel rectangles based on the verified
+  `basicShape` shape from `tests/sales/fixtures/salesmanager_report.json`.
+- Registered `basicShape` in `scripts/sales/_pbir_shapes.py` and removed it from
+  `PENDING`.
+- Updated `scripts/sales/rw_compose_what_changed.py` so the risk band now has:
+  - At Risk panel: tint `#ffeeee`, accent `#cc3333`
+  - Watch panel: tint `#fff8e6`, accent `#dd8800`
+  - Healthy panel: tint `#eef9ee`, accent `#339933`
+  - RAG object blocks attached to the six count/ARR cards.
+
+**Live evidence:**
+
+- `python3 -m scripts.sales.rw_compose_what_changed` succeeded.
+- `python3 -m scripts.sales.rw_capture_visual --list --page "What Changed"`
+  shows 18 visuals: 3 `basicShape` panels, 6 RAG object-bearing risk cards, 5
+  change-bucket cards, 3 textboxes, and 1 detail table.
+- `python3 -m scripts.sales.rw_validate --live` succeeded: 6 sections, 57
+  visualContainers, all measure refs resolve against 100 measures.
+- `python3 -m pytest tests/sales` succeeded: 27 passed.
+
+**Note:**
+
+The Desktop PBIP must be regenerated/reopened to inspect the latest live push.
+An already-open Desktop copy will not update automatically.

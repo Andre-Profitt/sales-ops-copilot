@@ -5,6 +5,9 @@ from scripts.sales._pbir_helpers import (
     build_card_visual,
     build_card_visual_with_objects,
     build_matrix_visual,
+    build_rag_card_objects,
+    build_rag_card_visual,
+    build_shape_visual,
     build_table_visual,
     build_textbox_visual,
     ensure_pages,
@@ -47,6 +50,37 @@ def test_build_card_visual_with_objects_no_block_falls_through():
     )
     config = json.loads(vc["config"])
     assert "objects" not in config["singleVisual"]
+
+
+def test_build_rag_card_objects_has_status_treatment():
+    objects = build_rag_card_objects(tint="#ffeeee", accent="#cc3333")
+
+    assert objects["background"][0]["properties"]["color"]["solid"]["color"]["expr"][
+        "Literal"
+    ]["Value"] == "'#ffeeee'"
+    assert objects["border"][0]["properties"]["color"]["solid"]["color"]["expr"][
+        "Literal"
+    ]["Value"] == "'#cc3333'"
+    assert objects["labels"][0]["properties"]["fontSize"]["expr"]["Literal"]["Value"] == "'28'"
+
+
+def test_build_rag_card_visual_attaches_rag_objects():
+    vc = build_rag_card_visual(
+        "f_opportunity",
+        "At Risk Opps Count",
+        "At Risk - count",
+        x=20,
+        y=42,
+        w=320,
+        h=78,
+        tint="#ffeeee",
+        accent="#cc3333",
+    )
+
+    config = json.loads(vc["config"])
+    objects = config["singleVisual"]["objects"]
+    assert config["singleVisual"]["visualType"] == "card"
+    assert {"background", "border", "labels", "categoryLabels"} <= set(objects)
 
 
 def test_add_page_appends_section(empty_report):
@@ -160,3 +194,18 @@ def test_build_textbox_visual_static_label():
     ][0]
     assert run["value"] == "RISK BAND - only what needs attention"
     assert run["textStyle"]["fontSize"] == "10pt"
+
+
+def test_build_shape_visual_panel_shape():
+    vc = build_shape_visual(x=16, y=38, w=328, h=146, fill="#ffeeee", line="#cc3333", z=100)
+
+    assert vc["z"] == 100
+    config = json.loads(vc["config"])
+    assert config["singleVisual"]["visualType"] == "basicShape"
+    objects = config["singleVisual"]["objects"]
+    assert objects["general"][0]["properties"]["shapeType"]["expr"]["Literal"][
+        "Value"
+    ] == "'rectangle'"
+    assert objects["fill"][0]["properties"]["fillColor"]["solid"]["color"]["expr"][
+        "Literal"
+    ]["Value"] == "'#ffeeee'"
