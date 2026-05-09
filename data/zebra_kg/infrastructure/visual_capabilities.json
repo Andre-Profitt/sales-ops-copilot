@@ -1,0 +1,473 @@
+{
+  "ZebraBITables98F88148E5424E949E69864664EE1860": {
+    "guid": "ZebraBITables98F88148E5424E949E69864664EE1860",
+    "displayName": "Zebra BI Tables",
+    "name": "ZebraBITables",
+    "version": "7.8.0.22130630320",
+    "apiVersion": "5.10.0",
+    "supportUrl": "https://zebrabi.com/pbi-help",
+    "dataRoles": [
+      {
+        "name": "Category",
+        "kind": "Grouping",
+        "displayName": "Category"
+      },
+      {
+        "name": "Group",
+        "kind": "Grouping",
+        "displayName": "Group"
+      },
+      {
+        "name": "Values",
+        "kind": "GroupingOrMeasure",
+        "displayName": "Values"
+      },
+      {
+        "name": "PreviousYear",
+        "kind": "GroupingOrMeasure",
+        "displayName": "Previous Year"
+      },
+      {
+        "name": "Plan",
+        "kind": "GroupingOrMeasure",
+        "displayName": "Plan"
+      },
+      {
+        "name": "Forecast",
+        "kind": "GroupingOrMeasure",
+        "displayName": "Forecast"
+      },
+      {
+        "name": "Tooltips",
+        "kind": "Measure",
+        "displayName": "Tooltips"
+      },
+      {
+        "name": "Comments",
+        "kind": "Measure",
+        "displayName": "Comments"
+      },
+      {
+        "name": "Filters",
+        "kind": "Measure",
+        "displayName": "Filters"
+      },
+      {
+        "name": "CategoryClass",
+        "kind": "Measure",
+        "displayName": "Category class"
+      }
+    ],
+    "object_groups": [
+      "general",
+      "proFeaturesSettings",
+      "chartSettings",
+      "coreSettings",
+      "annotationLayerSettings",
+      "titleSettings",
+      "groupTitleSettings",
+      "dataLabelSettings",
+      "categorySettings",
+      "legendHeaderSettings",
+      "commentBoxSettings",
+      "designSettings",
+      "interactionSettings",
+      "previewSettings",
+      "drillSettings",
+      "licenseSettings",
+      "sortSettings",
+      "version",
+      "categoriesMetadata",
+      "graphDataSettings",
+      "groupsMetadata",
+      "averageLineSettings",
+      "constantLineSettings",
+      "medianLineSettings",
+      "percentileLineSettings",
+      "migrationLog"
+    ],
+    "dataViewMappings_count": 1,
+    "first_template": "annual-comparative-statement-power-bi-template"
+  },
+  "waterfall0221D8FBE40445C1A4E598AA8EF8B506": {
+    "guid": "waterfall0221D8FBE40445C1A4E598AA8EF8B506",
+    "displayName": "Zebra BI Charts",
+    "name": "ZebraBICharts",
+    "version": "7.8.1.24122259016",
+    "apiVersion": "5.10.0",
+    "supportUrl": "https://zebrabi.com/pbi-help",
+    "dataRoles": [
+      {
+        "name": "Category",
+        "kind": "Grouping",
+        "displayName": "Category"
+      },
+      {
+        "name": "Group",
+        "kind": "Grouping",
+        "displayName": "Group"
+      },
+      {
+        "name": "Values",
+        "kind": "GroupingOrMeasure",
+        "displayName": "Values"
+      },
+      {
+        "name": "PreviousYear",
+        "kind": "GroupingOrMeasure",
+        "displayName": "Previous Year"
+      },
+      {
+        "name": "Plan",
+        "kind": "GroupingOrMeasure",
+        "displayName": "Plan"
+      },
+      {
+        "name": "Forecast",
+        "kind": "GroupingOrMeasure",
+        "displayName": "Forecast"
+      },
+      {
+        "name": "Tooltips",
+        "kind": "Measure",
+        "displayName": "Tooltips"
+      },
+      {
+        "name": "Comments",
+        "kind": "Measure",
+        "displayName": "Comments"
+      },
+      {
+        "name": "Filters",
+        "kind": "Measure",
+        "displayName": "Filters"
+      }
+    ],
+    "object_groups": [
+      "general",
+      "coreSettings",
+      "proFeaturesSettings",
+      "chartSettings",
+      "titleSettings",
+      "groupTitleSettings",
+      "dataLabelSettings",
+      "dotChartDataLabelSettings",
+      "categorySettings",
+      "legendHeaderSettings",
+      "commentBoxSettings",
+      "annotationLayerSettings",
+      "conditionalVarianceSettings",
+      "designSettings",
+      "stackedChartSettings",
+      "multipleLayout",
+      "differenceHighlightSettings",
+      "axisBreakSettings",
+      "interactionSettings",
+      "previewSettings",
+      "licenseSettings",
+      "chartType",
+      "visualCreatedVersion",
+      "categoriesMetadata",
+      "groupsMetadata"
+    ],
+    "dataViewMappings_count": 1,
+    "first_template": "annual-comparative-statement-power-bi-template"
+  },
+  "zebraBiCards8085D508EB994C8081CA47C85ABD7C26": {
+    "guid": "zebraBiCards8085D508EB994C8081CA47C85ABD7C26",
+    "displayName": "Zebra BI Cards",
+    "name": "zebraBiCards",
+    "version": "7.4.0.14906484778",
+    "apiVersion": "5.10.0",
+    "supportUrl": "https://zebrabi.com/pbi-help",
+    "dataRoles": [
+      {
+        "name": "Category",
+        "kind": "Grouping",
+        "displayName": "Category (trend)"
+      },
+      {
+        "name": "Group",
+        "kind": "Grouping",
+        "displayName": "Group (KPIs)"
+      },
+      {
+        "name": "Values",
+        "kind": "GroupingOrMeasure",
+        "displayName": "Values"
+      },
+      {
+        "name": "PreviousYear",
+        "kind": "Measure",
+        "displayName": "Previous Year"
+      },
+      {
+        "name": "Plan",
+        "kind": "Measure",
+        "displayName": "Plan"
+      },
+      {
+        "name": "Forecast",
+        "kind": "Measure",
+        "displayName": "Forecast"
+      },
+      {
+        "name": "Tooltips",
+        "kind": "Measure",
+        "displayName": "Tooltips"
+      },
+      {
+        "name": "Comments",
+        "kind": "Measure",
+        "displayName": "Comments"
+      },
+      {
+        "name": "KPI Descriptions",
+        "kind": "Measure",
+        "displayName": "KPI Descriptions"
+      }
+    ],
+    "object_groups": [
+      "customData",
+      "grid",
+      "card",
+      "dataLabels",
+      "design",
+      "legend",
+      "license",
+      "interactions"
+    ],
+    "dataViewMappings_count": 1,
+    "first_template": "annual-comparative-statement-power-bi-template"
+  },
+  "ZebraBITablesBAE31B370F254F808553548EFB35BFA5": {
+    "guid": "ZebraBITablesBAE31B370F254F808553548EFB35BFA5",
+    "displayName": "Zebra BI Tables 7.0.1",
+    "name": "ZebraBITables",
+    "version": "7.0.1.0",
+    "apiVersion": "5.4.0",
+    "supportUrl": "https://zebrabi.com/pbi-help",
+    "dataRoles": [
+      {
+        "name": "Category",
+        "kind": "Grouping",
+        "displayName": "Category"
+      },
+      {
+        "name": "Group",
+        "kind": "Grouping",
+        "displayName": "Group"
+      },
+      {
+        "name": "Values",
+        "kind": "GroupingOrMeasure",
+        "displayName": "Values"
+      },
+      {
+        "name": "PreviousYear",
+        "kind": "GroupingOrMeasure",
+        "displayName": "Previous Year"
+      },
+      {
+        "name": "Plan",
+        "kind": "GroupingOrMeasure",
+        "displayName": "Plan"
+      },
+      {
+        "name": "Forecast",
+        "kind": "GroupingOrMeasure",
+        "displayName": "Forecast"
+      },
+      {
+        "name": "Tooltips",
+        "kind": "Measure",
+        "displayName": "Tooltips"
+      },
+      {
+        "name": "Comments",
+        "kind": "Measure",
+        "displayName": "Comments"
+      },
+      {
+        "name": "Filters",
+        "kind": "Measure",
+        "displayName": "Filters"
+      }
+    ],
+    "object_groups": [
+      "general",
+      "proFeaturesSettings",
+      "chartSettings",
+      "coreSettings",
+      "annotationLayerSettings",
+      "titleSettings",
+      "groupTitleSettings",
+      "dataLabelSettings",
+      "categorySettings",
+      "legendHeaderSettings",
+      "commentBoxSettings",
+      "designSettings",
+      "interactionSettings",
+      "licenseSettings",
+      "sortSettings",
+      "version",
+      "categoriesMetadata",
+      "groupsMetadata",
+      "averageLineSettings",
+      "constantLineSettings",
+      "medianLineSettings",
+      "percentileLineSettings"
+    ],
+    "dataViewMappings_count": 1,
+    "first_template": "athletic-footwear-benchmarking-financial-analysis-template"
+  },
+  "waterfall6C9ED82ABD1F44C4A0D590CE01EB5EE7": {
+    "guid": "waterfall6C9ED82ABD1F44C4A0D590CE01EB5EE7",
+    "displayName": "Zebra BI Charts",
+    "name": "ZebraBICharts",
+    "version": "7.1.1.1",
+    "apiVersion": "5.4.0",
+    "supportUrl": "https://zebrabi.com/pbi-help",
+    "dataRoles": [
+      {
+        "name": "Category",
+        "kind": "Grouping",
+        "displayName": "Category"
+      },
+      {
+        "name": "Group",
+        "kind": "Grouping",
+        "displayName": "Group"
+      },
+      {
+        "name": "Values",
+        "kind": "GroupingOrMeasure",
+        "displayName": "Values"
+      },
+      {
+        "name": "PreviousYear",
+        "kind": "GroupingOrMeasure",
+        "displayName": "Previous Year"
+      },
+      {
+        "name": "Plan",
+        "kind": "GroupingOrMeasure",
+        "displayName": "Plan"
+      },
+      {
+        "name": "Forecast",
+        "kind": "GroupingOrMeasure",
+        "displayName": "Forecast"
+      },
+      {
+        "name": "Tooltips",
+        "kind": "Measure",
+        "displayName": "Tooltips"
+      },
+      {
+        "name": "Comments",
+        "kind": "Measure",
+        "displayName": "Comments"
+      },
+      {
+        "name": "Filters",
+        "kind": "Measure",
+        "displayName": "Filters"
+      }
+    ],
+    "object_groups": [
+      "general",
+      "coreSettings",
+      "proFeaturesSettings",
+      "chartSettings",
+      "titleSettings",
+      "groupTitleSettings",
+      "dataLabelSettings",
+      "dotChartDataLabelSettings",
+      "categorySettings",
+      "legendHeaderSettings",
+      "commentBoxSettings",
+      "annotationLayerSettings",
+      "designSettings",
+      "stackedChartSettings",
+      "multipleLayout",
+      "differenceHighlightSettings",
+      "axisBreakSettings",
+      "interactionSettings",
+      "licenseSettings",
+      "chartType",
+      "visualCreatedVersion",
+      "categoriesMetadata",
+      "groupsMetadata"
+    ],
+    "dataViewMappings_count": 1,
+    "first_template": "food-beverage-financial-analysis-benchmarking-powerbi-template"
+  },
+  "zebraBiCards2C860CFAA9944091B75F0DBD117F20FA": {
+    "guid": "zebraBiCards2C860CFAA9944091B75F0DBD117F20FA",
+    "displayName": "Zebra BI Cards",
+    "name": "zebraBiCards",
+    "version": "1.7.0.0",
+    "apiVersion": "3.8.0",
+    "supportUrl": "https://zebrabi.com/pbi-help",
+    "dataRoles": [
+      {
+        "name": "Category",
+        "kind": "Grouping",
+        "displayName": "Category (trend)"
+      },
+      {
+        "name": "Group",
+        "kind": "Grouping",
+        "displayName": "Group (KPIs)"
+      },
+      {
+        "name": "Values",
+        "kind": "GroupingOrMeasure",
+        "displayName": "Values"
+      },
+      {
+        "name": "PreviousYear",
+        "kind": "Measure",
+        "displayName": "Previous Year"
+      },
+      {
+        "name": "Plan",
+        "kind": "Measure",
+        "displayName": "Plan"
+      },
+      {
+        "name": "Forecast",
+        "kind": "Measure",
+        "displayName": "Forecast"
+      },
+      {
+        "name": "Tooltips",
+        "kind": "Measure",
+        "displayName": "Tooltips"
+      },
+      {
+        "name": "Comments",
+        "kind": "Measure",
+        "displayName": "Comments"
+      },
+      {
+        "name": "KPI Descriptions",
+        "kind": "Measure",
+        "displayName": "KPI Descriptions"
+      }
+    ],
+    "object_groups": [
+      "customData",
+      "grid",
+      "card",
+      "dataLabels",
+      "design",
+      "legend",
+      "license",
+      "interactions"
+    ],
+    "dataViewMappings_count": 1,
+    "first_template": "food-beverage-financial-analysis-benchmarking-powerbi-template"
+  }
+}

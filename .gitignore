@@ -36,3 +36,8 @@ data/zebra_kg_rw/*.json
 data/zebra_kg/schemas/*/
 !data/zebra_kg/README.md
 !data/zebra_kg_rw/README.md
+
+# track:rw — zebra infrastructure miner outputs.
+# Heavy / IP-bearing extracts stay local; curated atlases are committed.
+data/zebra_kg/infrastructure/raw_configs.jsonl
+data/zebra_kg/infrastructure/visual_packages.json
