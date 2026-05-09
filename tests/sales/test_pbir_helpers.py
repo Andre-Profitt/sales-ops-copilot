@@ -5,9 +5,11 @@ from scripts.sales._pbir_helpers import (
     build_card_visual,
     build_card_visual_with_objects,
     build_matrix_visual,
+    build_matrix_style_objects,
     build_rag_card_objects,
     build_rag_card_visual,
     build_shape_visual,
+    build_table_style_objects,
     build_table_visual,
     build_textbox_visual,
     ensure_pages,
@@ -153,6 +155,7 @@ def test_build_card_visual_basic_shape():
 
 
 def test_build_table_visual_columns():
+    objects = build_table_style_objects()
     vc = build_table_visual(
         name="commit_risk_table",
         columns=[
@@ -169,9 +172,11 @@ def test_build_table_visual_columns():
         y=400,
         w=900,
         h=240,
+        objects=objects,
     )
     config = json.loads(vc["config"])
     assert config["singleVisual"]["visualType"] == "tableEx"
+    assert config["singleVisual"]["objects"] == objects
     assert len(config["singleVisual"]["prototypeQuery"]["Select"]) == 3
     sel = config["singleVisual"]["prototypeQuery"]["Select"]
     assert "Column" in sel[0] and sel[0]["Column"]["Property"] == "opp_name"
@@ -209,3 +214,12 @@ def test_build_shape_visual_panel_shape():
     assert objects["fill"][0]["properties"]["fillColor"]["solid"]["color"]["expr"][
         "Literal"
     ]["Value"] == "'#ffeeee'"
+
+
+def test_build_matrix_style_objects_has_table_chrome():
+    objects = build_matrix_style_objects()
+
+    assert {"grid", "columnHeaders", "rowHeaders", "values"} <= set(objects)
+    assert objects["columnHeaders"][0]["properties"]["backColor"]["solid"]["color"]["expr"][
+        "Literal"
+    ]["Value"] == "'#f0f0f0'"

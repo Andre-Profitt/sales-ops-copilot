@@ -511,3 +511,45 @@ overflowing the 1280 x 720 canvas, and no decision hierarchy.
 
 - The front-page table is still audit-flagged as a plain `tableEx`; capture a
   renderer-authored table formatting / conditional-formatting object block next.
+
+## 2026-05-09 — Front page sophistication pass
+
+The second front-page pass moved beyond layout cleanup into explicit graph-backed
+context and table/matrix finish.
+
+**Shipped:**
+
+- Added conservative table/matrix formatting object helpers in
+  `scripts/sales/_pbir_helpers.py`:
+  - `build_table_style_objects`
+  - `build_matrix_style_objects`
+- Extended `build_table_visual` and `build_matrix_visual` to accept
+  `singleVisual.objects` and `vcObjects`.
+- Updated `scripts/sales/rw_compose_scorecard_home.py` so front-page lanes
+  resolve KPI IDs from `scripts/sales/rw_kpi_graph.py`:
+  - Growth ARR: `forecast_closed_won`, `opp_win_rate`
+  - Pipeline Discipline: `pipeline_coverage_3x`, `stage_conversion`
+  - Renewal ACV: `renewal_retention_rate`, `renewals_mom_trend`
+  - Portfolio map: `stage_conversion`, `pipeline_coverage_3x`
+  - Deal inspection: `opp_age`, `forecast_accuracy`
+- Added target-context microcopy from the graph into each lane.
+- Added framed bottom panels for the portfolio matrix and inspection table.
+
+**Live evidence:**
+
+- `python3 -m scripts.sales.rw_compose_scorecard_home` succeeded; front page now
+  has 65 visuals.
+- `python3 -m scripts.sales.rw_capture_visual --list --page "VP Ops Scorecard"`
+  shows both the `pivotTable` and `tableEx` as object-bearing (`*cf*`).
+- `python3 -m scripts.sales.rw_validate --live` succeeded: 6 sections, 96
+  visualContainers, all measure refs resolve against 100 measures.
+- `python3 -m scripts.sales.rw_dashboard_harness audit --source live --label front_page_sophisticated`
+  no longer reports any front-page plain-card, plain-table, or canvas-overflow
+  findings.
+- `python3 -m pytest tests/sales` succeeded: 30 passed.
+
+**Remaining report debt:**
+
+- Forecast still has plain cards/table.
+- What Changed still has plain change-bucket cards/table.
+- Stage Hygiene, Renewals, and Growth Mix are still empty.

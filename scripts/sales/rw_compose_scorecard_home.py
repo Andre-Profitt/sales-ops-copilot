@@ -13,9 +13,11 @@ from __future__ import annotations
 
 from scripts.sales._pbir_helpers import (
     build_matrix_visual,
+    build_matrix_style_objects,
     build_rag_card_visual,
     build_shape_visual,
     build_slicer_visual,
+    build_table_style_objects,
     build_table_visual,
     build_textbox_visual,
 )
@@ -27,6 +29,7 @@ from scripts.sales.rw_add_visual import (
     push_report,
 )
 from scripts.sales.rw_validate import fetch_measures_by_table, validate_visual_dict
+from scripts.sales.rw_kpi_graph import find_kpi
 
 PAGE = "VP Ops Scorecard"
 
@@ -41,6 +44,24 @@ GREEN = "#339933"
 RED_TINT = "#ffeeee"
 AMBER_TINT = "#fff8e6"
 GREEN_TINT = "#eef9ee"
+
+FRONT_PAGE_KPI_ROUTES = {
+    "growth_arr": ("forecast_closed_won", "opp_win_rate"),
+    "pipeline_discipline": ("pipeline_coverage_3x", "stage_conversion"),
+    "renewal_acv": ("renewal_retention_rate", "renewals_mom_trend"),
+    "portfolio_map": ("stage_conversion", "pipeline_coverage_3x"),
+    "deal_inspection": ("opp_age", "forecast_accuracy"),
+}
+
+
+def _target_line(route: str) -> str:
+    parts = []
+    for kpi_id in FRONT_PAGE_KPI_ROUTES[route]:
+        kpi = find_kpi(kpi_id)
+        if kpi is None:
+            raise RuntimeError(f"front-page KPI route {route!r} references missing {kpi_id!r}")
+        parts.append(f"{kpi.name}: {kpi.target_text}")
+    return " | ".join(parts)
 
 
 def _find_page(rj: dict) -> dict:
@@ -79,6 +100,7 @@ def _risk_panel(
     title: str,
     count_measure: str,
     value_measure: str,
+    note: str,
     x: float,
     tint: str,
     accent: str,
@@ -86,6 +108,18 @@ def _risk_panel(
     _panel(section, x=x, y=100, w=300, h=140, fill=tint, line=accent, accent=accent)
     section["visualContainers"].append(
         build_textbox_visual(title, x=x + 16, y=110, w=270, h=20, font_size_pt=10, color=accent)
+    )
+    section["visualContainers"].append(
+        build_textbox_visual(
+            note,
+            x=x + 16,
+            y=130,
+            w=270,
+            h=16,
+            font_size_pt=8,
+            color=MUTED,
+            bold=False,
+        )
     )
     section["visualContainers"].append(
         build_rag_card_visual(
@@ -122,6 +156,7 @@ def _lane_panel(
     section: dict,
     *,
     title: str,
+    note: str,
     x: float,
     accent: str,
     cards: tuple[tuple[str, str, str, int | None], tuple[str, str, str, int | None]],
@@ -130,6 +165,18 @@ def _lane_panel(
     section["visualContainers"].append(
         build_textbox_visual(title, x=x + 16, y=296, w=270, h=20, font_size_pt=10, color=accent)
     )
+    section["visualContainers"].append(
+        build_textbox_visual(
+            note,
+            x=x + 16,
+            y=316,
+            w=270,
+            h=16,
+            font_size_pt=8,
+            color=MUTED,
+            bold=False,
+        )
+    )
     for i, (table, measure, card_title, units) in enumerate(cards):
         section["visualContainers"].append(
             build_rag_card_visual(
@@ -137,12 +184,12 @@ def _lane_panel(
                 measure,
                 card_title,
                 x=x + 16 + i * 140,
-                y=334,
+                y=344,
                 w=126,
-                h=66,
+                h=58,
                 tint="#ffffff",
                 accent=accent,
-                value_font_size=22,
+                value_font_size=20,
                 display_units=units,
             )
         )
@@ -170,7 +217,7 @@ def _compose(section: dict) -> None:
     )
     section["visualContainers"].append(
         build_textbox_visual(
-            "GraphRAG-routed front page: risk first, KPI lanes second, detail pages for diagnosis.",
+            "GraphRAG-routed front page: retrieve high-impact KPI graph signals, group by operating job, route diagnosis to detail tabs.",
             x=20,
             y=42,
             w=920,
@@ -204,10 +251,11 @@ def _compose(section: dict) -> None:
     )
     for text, y in [
         ("31 target KPIs in KG", 374),
-        ("High-impact live signals only", 404),
+        ("Live high-impact retrieval", 404),
         ("ARR lane: Land + Expand", 434),
         ("ACV lane: Renewal only", 464),
-        ("Details live on job tabs", 494),
+        ("Cross-motion value labeled", 494),
+        ("Diagnosis stays on job tabs", 524),
     ]:
         section["visualContainers"].append(
             build_textbox_visual(text, x=36, y=y, w=180, h=18, font_size_pt=9, color=MUTED)
@@ -230,6 +278,7 @@ def _compose(section: dict) -> None:
         title="AT RISK - slipped or backward",
         count_measure="At Risk Opps Count",
         value_measure="At Risk Opps ARR",
+        note="Late-stage slippage, regression, or inspection breach",
         x=260,
         tint=RED_TINT,
         accent=RED,
@@ -239,6 +288,7 @@ def _compose(section: dict) -> None:
         title="WATCH - stalled motion",
         count_measure="Watch Opps Count",
         value_measure="Watch Opps ARR",
+        note="Stage 3-4 stalls and stalled open motion",
         x=580,
         tint=AMBER_TINT,
         accent=AMBER,
@@ -248,6 +298,7 @@ def _compose(section: dict) -> None:
         title="HEALTHY - forward movement",
         count_measure="Healthy Moves Count",
         value_measure="Healthy Moves ARR",
+        note="Forward progressions, new opps, or wins",
         x=900,
         tint=GREEN_TINT,
         accent=GREEN,
@@ -268,6 +319,7 @@ def _compose(section: dict) -> None:
     _lane_panel(
         section,
         title="GROWTH ARR",
+        note=_target_line("growth_arr"),
         x=260,
         accent=BLUE,
         cards=(
@@ -278,6 +330,7 @@ def _compose(section: dict) -> None:
     _lane_panel(
         section,
         title="PIPELINE DISCIPLINE",
+        note=_target_line("pipeline_discipline"),
         x=580,
         accent=AMBER,
         cards=(
@@ -288,6 +341,7 @@ def _compose(section: dict) -> None:
     _lane_panel(
         section,
         title="RENEWAL ACV",
+        note=_target_line("renewal_acv"),
         x=900,
         accent=GREEN,
         cards=(
@@ -297,6 +351,8 @@ def _compose(section: dict) -> None:
     )
 
     # Bottom: real data surfaces, not another row of KPI cards.
+    _panel(section, x=252, y=432, w=476, h=256, fill="#ffffff", line=BORDER, accent=BLUE)
+    _panel(section, x=736, y=432, w=492, h=256, fill="#ffffff", line=BORDER, accent=NAVY)
     section["visualContainers"].append(
         build_textbox_visual(
             "PORTFOLIO MAP - open value by stage and motion",
@@ -306,6 +362,18 @@ def _compose(section: dict) -> None:
             h=20,
             font_size_pt=10,
             color=MUTED,
+        )
+    )
+    section["visualContainers"].append(
+        build_textbox_visual(
+            _target_line("portfolio_map"),
+            x=260,
+            y=462,
+            w=460,
+            h=14,
+            font_size_pt=8,
+            color=MUTED,
+            bold=False,
         )
     )
     section["visualContainers"].append(
@@ -320,9 +388,10 @@ def _compose(section: dict) -> None:
                 }
             ],
             x=260,
-            y=470,
+            y=482,
             w=460,
-            h=210,
+            h=198,
+            objects=build_matrix_style_objects(),
         )
     )
     section["visualContainers"].append(
@@ -334,6 +403,18 @@ def _compose(section: dict) -> None:
             h=20,
             font_size_pt=10,
             color=MUTED,
+        )
+    )
+    section["visualContainers"].append(
+        build_textbox_visual(
+            _target_line("deal_inspection"),
+            x=744,
+            y=462,
+            w=476,
+            h=14,
+            font_size_pt=8,
+            color=MUTED,
+            bold=False,
         )
     )
     section["visualContainers"].append(
@@ -362,9 +443,10 @@ def _compose(section: dict) -> None:
                 },
             ],
             x=744,
-            y=470,
+            y=482,
             w=476,
-            h=210,
+            h=198,
+            objects=build_table_style_objects(),
         )
     )
 

@@ -45,3 +45,22 @@ The new page is a control room, not a metric dump:
 
 The deeper tabs remain the detail layer: What Changed, Forecast, Stage Hygiene,
 Renewals, and Growth Mix.
+
+## Sophistication Pass
+
+The follow-up pass made the front page graph-backed and visually denser without
+returning to a card wall:
+
+- front-page lanes now resolve explicit KPI IDs from `scripts/sales/rw_kpi_graph.py`
+- each KPI lane carries target context from the graph
+- each risk band carries a short operating definition
+- bottom matrix/table sit in framed panels with accent rails
+- `pivotTable` and `tableEx` now carry conservative formatting object blocks
+
+Live evidence after the pass:
+
+- `VP Ops Scorecard` has 65 visuals
+- bottom `pivotTable` and `tableEx` both show `*cf*` in `rw_capture_visual`
+- front page no longer appears in the harness audit as plain-card, plain-table,
+  or canvas-overflow debt
+- live report validates at 96 visualContainers / 100 measures
