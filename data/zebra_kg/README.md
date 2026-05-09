@@ -12,7 +12,8 @@ Spec: `docs/superpowers/specs/2026-05-09-zebra-bi-knowledge-graph-design.md`.
 
 All four files are gitignored. Regenerate with:
 
-````bash
+````
+```bash
 python3 -m scripts.sales.rw_zebra_kg_datamodel \
   --source-dir ~/Downloads/rw-zebra-bi-template-research-20260509/files \
   --analysis-dir ~/Downloads/rw-zebra-bi-template-research-20260509/analysis \
