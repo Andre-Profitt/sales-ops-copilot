@@ -1,0 +1,1884 @@
+{
+  "zebraBiCards8085D508EB994C8081CA47C85ABD7C26": {
+    "name": "Zebra BI Cards",
+    "version": "7.4.0.14906484778",
+    "apiVersion": "5.10.0",
+    "dataRoles": [
+      {
+        "name": "Category",
+        "kind": "Grouping",
+        "preferredTypes": null
+      },
+      {
+        "name": "Group",
+        "kind": "Grouping",
+        "preferredTypes": null
+      },
+      {
+        "name": "Values",
+        "kind": "GroupingOrMeasure",
+        "preferredTypes": null
+      },
+      {
+        "name": "PreviousYear",
+        "kind": "Measure",
+        "preferredTypes": null
+      },
+      {
+        "name": "Plan",
+        "kind": "Measure",
+        "preferredTypes": null
+      },
+      {
+        "name": "Forecast",
+        "kind": "Measure",
+        "preferredTypes": null
+      },
+      {
+        "name": "Tooltips",
+        "kind": "Measure",
+        "preferredTypes": null
+      },
+      {
+        "name": "Comments",
+        "kind": "Measure",
+        "preferredTypes": null
+      },
+      {
+        "name": "KPI Descriptions",
+        "kind": "Measure",
+        "preferredTypes": null
+      }
+    ],
+    "object_groups": {
+      "customData": {
+        "displayName": null,
+        "property_count": 8,
+        "property_types": {
+          "groupData": "text",
+          "customCards": "text",
+          "gridData": "text",
+          "rowsData": "text",
+          "uniformData": "text",
+          "dataVersion": "integer",
+          "migrations": "text",
+          "version": "text"
+        }
+      },
+      "grid": {
+        "displayName": "Grid",
+        "property_count": 13,
+        "property_types": {
+          "cardsInRow": "numeric",
+          "gutterSize": "numeric",
+          "suppressNullCards": "bool",
+          "layoutPreset": "enum[3]",
+          "cardSort": "enum[6]",
+          "ascendingSort": "bool",
+          "sortScenario": "enum[3]",
+          "rowsTitleWidthType": "enum[2]",
+          "rowsTitleWidth": "numeric",
+          "compactCards": "bool",
+          "gridData": "text",
+          "rowsData": "text",
+          "dataVersion": "integer"
+        }
+      },
+      "card": {
+        "displayName": "Card",
+        "property_count": 31,
+        "property_types": {
+          "cardShadow": "enum[3]",
+          "cardBackgroundColor": "fill",
+          "cardColorHighlight": "fill",
+          "cardBorderColor": "fill",
+          "varianceType": "enum[8]",
+          "cardTotalMode": "enum[3]",
+          "customVarianceName": "bool",
+          "cardDefaultChartType": "enum[4]",
+          "suppressChart": "bool",
+          "nullsAsZeros": "bool",
+          "cardDefaultAxisBreak": "bool",
+          "wrapTitle": "bool",
+          "sumACandFC": "bool",
+          "compareLabelPreset": "enum[3]",
+          "compareLabel": "text",
+          "cardPadding": "numeric",
+          "cardDefaultInvert": "bool",
+          "cardIcon": "enum[3]",
+          "cardVarianceCap": "formatting",
+          "cardTitleFontFamily": "formatting",
+          "cardTitleFontSize": "numeric",
+          "cardTitleFontColor": "fill",
+          "cardValueFontFamily": "formatting",
+          "cardValueFontSize": "numeric",
+          "cardValueFontColor": "fill",
+          "cardVarianceFontFamily": "formatting",
+          "cardVarianceFontSize": "numeric",
+          "cardVarianceFontColor": "fill",
+          "cardChartLabelFontFamily": "formatting",
+          "cardChartLabelFontSize": "numeric",
+          "cardChartLabelFontColor": "fill"
+        }
+      },
+      "dataLabels": {
+        "displayName": "Data labels",
+        "property_count": 6,
+        "property_types": {
+          "numberFormat": "enum[6]",
+          "percentagePointLabelPreset": "enum[3]",
+          "customPercentagePointLabel": "text",
+          "useBasisPoints": "bool",
+          "basisPointLabelPreset": "enum[4]",
+          "customBasisPointLabel": "text"
+        }
+      },
+      "design": {
+        "displayName": "Design",
+        "property_count": 21,
+        "property_types": {
+          "style": "enum[7]",
+          "positiveColor": "fill",
+          "negativeColor": "fill",
+          "neutralColor": "fill",
+          "markerColor": "fill",
+          "lineColor": "fill",
+          "axisColor": "fill",
+          "gridlineColor": "fill",
+          "dotChartColor": "fill",
+          "highlightColor": "fill",
+          "useCustomScenarioColors": "bool",
+          "previousYearColor": "fill",
+          "planColor": "fill",
+          "forecastColor": "fill",
+          "applyPatterns": "bool",
+          "dotChartLineTransparency": "formatting",
+          "areaNeutralOpacity": "formatting",
+          "areaActualOpacity": "formatting",
+          "areaVarianceOpacity": "formatting",
+          "lightenOverlapped": "bool",
+          "varianceDisplayType": "enum[2]"
+        }
+      },
+      "legend": {
+        "displayName": "Legend",
+        "property_count": 17,
+        "property_types": {
+          "show": "bool",
+          "actual": "text",
+          "previousYear": "text",
+          "forecast": "text",
+          "plan": "text",
+          "actualPreviousYear": "text",
+          "actualPreviousYearPercent": "text",
+          "actualForecast": "text",
+          "actualForecastPercent": "text",
+          "actualPlan": "text",
+          "actualPlanPercent": "text",
+          "forecastPreviousYear": "text",
+          "forecastPreviousYearPercent": "text",
+          "previousYearPlan": "text",
+          "previousYearPlanPercent": "text",
+          "forecastPlan": "text",
+          "forecastPlanPercent": "text"
+        }
+      },
+      "license": {
+        "displayName": "About",
+        "property_count": 5,
+        "property_types": {
+          "product": "text",
+          "version": "text",
+          "licensedTo": "text",
+          "validUntil": "text",
+          "licenseKey": "text"
+        }
+      },
+      "interactions": {
+        "displayName": "Interaction",
+        "property_count": 12,
+        "property_types": {
+          "show": "bool",
+          "viewModeToolbar": "bool",
+          "viewModeCardToolbar": "bool",
+          "viewModeCardToolbarFocusMode": "bool",
+          "viewModeCardToolbarDrillThrough": "bool",
+          "viewModeFocusModeToolbar": "bool",
+          "viewModeValueToggle": "bool",
+          "viewModeVarianceCalculation": "bool",
+          "viewModeChartSlider": "bool",
+          "viewModeResize": "bool",
+          "viewModeMoveCards": "bool",
+          "viewModeGrouping": "bool"
+        }
+      }
+    },
+    "enums_decoded": {
+      "grid": {
+        "layoutPreset": [
+          [
+            "custom-layout",
+            "Custom"
+          ],
+          [
+            "rows-layout",
+            "Rows"
+          ],
+          [
+            "uniform-layout",
+            "Uniform"
+          ]
+        ],
+        "cardSort": [
+          [
+            "default-sort",
+            "Default"
+          ],
+          [
+            "custom-sort",
+            "Custom"
+          ],
+          [
+            "relative-sort",
+            "Relative variance"
+          ],
+          [
+            "absolute-sort",
+            "Absolute variance"
+          ],
+          [
+            "value-sort",
+            "Value"
+          ],
+          [
+            "title-sort",
+            "Title"
+          ]
+        ],
+        "sortScenario": [
+          [
+            "PreviousYear",
+            "Previous Year"
+          ],
+          [
+            "Plan",
+            "Plan"
+          ],
+          [
+            "Forecast",
+            "Forecast"
+          ]
+        ],
+        "rowsTitleWidthType": [
+          [
+            "auto",
+            "Auto"
+          ],
+          [
+            "fixed",
+            "Fixed"
+          ]
+        ]
+      },
+      "card": {
+        "cardShadow": [
+          [
+            "no-shadow",
+            "Flat"
+          ],
+          [
+            "regular-shadow",
+            "Default"
+          ],
+          [
+            "max-shadow",
+            "Elevated"
+          ]
+        ],
+        "varianceType": [
+          [
+            "1",
+            "Relative"
+          ],
+          [
+            "0",
+            "Absolute"
+          ],
+          [
+            "2",
+            "Both variances"
+          ],
+          [
+            "3",
+            "Number and both variances"
+          ],
+          [
+            "4",
+            "Number and absolute variance"
+          ],
+          [
+            "5",
+            "Number and relative variance"
+          ],
+          [
+            "6",
+            "Number"
+          ],
+          [
+            "7",
+            "None"
+          ]
+        ],
+        "cardTotalMode": [
+          [
+            "0",
+            "Total"
+          ],
+          [
+            "1",
+            "Last category"
+          ],
+          [
+            "2",
+            "YTD"
+          ]
+        ],
+        "cardDefaultChartType": [
+          [
+            "0",
+            "Waterfall"
+          ],
+          [
+            "3",
+            "Column"
+          ],
+          [
+            "1",
+            "Area"
+          ],
+          [
+            "4",
+            "Line"
+          ]
+        ],
+        "compareLabelPreset": [
+          [
+            "delta",
+            "Δ"
+          ],
+          [
+            "vs",
+            "vs"
+          ],
+          [
+            "custom",
+            "Custom"
+          ]
+        ],
+        "cardIcon": [
+          [
+            "circle",
+            "Circle"
+          ],
+          [
+            "circle-arrow",
+            "Circle with arrow"
+          ],
+          [
+            "triangle",
+            "Triangle"
+          ]
+        ]
+      },
+      "dataLabels": {
+        "numberFormat": [
+          [
+            "Auto",
+            "Auto"
+          ],
+          [
+            "None",
+            "None"
+          ],
+          [
+            "K",
+            "Thousands"
+          ],
+          [
+            "M",
+            "Millions"
+          ],
+          [
+            "G",
+            "Billions"
+          ],
+          [
+            "P",
+            "Percentage (%)"
+          ]
+        ],
+        "percentagePointLabelPreset": [
+          [
+            "pp",
+            "pp"
+          ],
+          [
+            "pps",
+            "pps"
+          ],
+          [
+            "custom",
+            "Custom"
+          ]
+        ],
+        "basisPointLabelPreset": [
+          [
+            "bp",
+            "bp"
+          ],
+          [
+            "bps",
+            "bps"
+          ],
+          [
+            "bips",
+            "bips"
+          ],
+          [
+            "custom",
+            "Custom"
+          ]
+        ]
+      },
+      "design": {
+        "style": [
+          [
+            "-1",
+            "COMPANY_STYLE_NAME"
+          ],
+          [
+            "0",
+            "Zebra"
+          ],
+          [
+            "1",
+            "Zebra Light"
+          ],
+          [
+            "2",
+            "Dr. Hichert"
+          ],
+          [
+            "3",
+            "Power BI"
+          ],
+          [
+            "5",
+            "Colorblind-friendly"
+          ],
+          [
+            "4",
+            "Custom"
+          ]
+        ],
+        "varianceDisplayType": [
+          [
+            "0",
+            "Bar"
+          ],
+          [
+            "1",
+            "Arrow"
+          ]
+        ]
+      }
+    },
+    "supportsHighlight": false,
+    "privileges": [
+      {
+        "name": "ExportContent",
+        "essential": true
+      },
+      {
+        "name": "LocalStorage",
+        "essential": true
+      },
+      {
+        "name": "WebAccess",
+        "essential": false,
+        "parameters": [
+          "https://flagsmithzebra.eastus.cloudapp.azure.com",
+          "wss://app.powerbi.com:8080"
+        ]
+      }
+    ]
+  },
+  "ZebraBITables98F88148E5424E949E69864664EE1860": {
+    "name": "Zebra BI Tables",
+    "version": "7.8.0.22130630320",
+    "apiVersion": "5.10.0",
+    "dataRoles": [
+      {
+        "name": "Category",
+        "kind": "Grouping",
+        "preferredTypes": null
+      },
+      {
+        "name": "Group",
+        "kind": "Grouping",
+        "preferredTypes": null
+      },
+      {
+        "name": "Values",
+        "kind": "GroupingOrMeasure",
+        "preferredTypes": null
+      },
+      {
+        "name": "PreviousYear",
+        "kind": "GroupingOrMeasure",
+        "preferredTypes": null
+      },
+      {
+        "name": "Plan",
+        "kind": "GroupingOrMeasure",
+        "preferredTypes": null
+      },
+      {
+        "name": "Forecast",
+        "kind": "GroupingOrMeasure",
+        "preferredTypes": null
+      },
+      {
+        "name": "Tooltips",
+        "kind": "Measure",
+        "preferredTypes": null
+      },
+      {
+        "name": "Comments",
+        "kind": "Measure",
+        "preferredTypes": null
+      },
+      {
+        "name": "Filters",
+        "kind": "Measure",
+        "preferredTypes": null
+      },
+      {
+        "name": "CategoryClass",
+        "kind": "Measure",
+        "preferredTypes": null
+      }
+    ],
+    "object_groups": {
+      "general": {
+        "displayName": null,
+        "property_count": 1,
+        "property_types": {
+          "formatString": "formatting"
+        }
+      },
+      "proFeaturesSettings": {
+        "displayName": "Pro features",
+        "property_count": 1,
+        "property_types": {
+          "show": "bool"
+        }
+      },
+      "chartSettings": {
+        "displayName": "Chart settings",
+        "property_count": 52,
+        "property_types": {
+          "invert": "bool",
+          "suppressNulls": "bool",
+          "suppressZeros": "bool",
+          "suppressAbsoluteVariances": "bool",
+          "suppressEmptyColumns": "bool",
+          "showAsTable": "bool",
+          "types": "enum[8]",
+          "groupsInColumns": "bool",
+          "columnSettings": "text",
+          "highlightedCategories": "text",
+          "highlightedCategoriesCustomColors": "text",
+          "valueHeader": "text",
+          "referenceHeader": "text",
+          "secondReferenceHeader": "text",
+          "thirdReferenceHeader": "text",
+          "absoluteDifferenceHeader": "text",
+          "secondAbsoluteDifferenceHeader": "text",
+          "thirdAbsoluteDifferenceHeader": "text",
+          "relativeDifferenceHeader": "text",
+          "secondRelativeDifferenceHeader": "text",
+          "thirdRelativeDifferenceHeader": "text",
+          "showGridlines": "bool",
+          "gridlineDensity": "integer",
+          "showMajorGridlines": "bool",
+          "showGridlinesTable": "bool",
+          "gridlineDensityTable": "integer",
+          "showPrefixes": "bool",
+          "showTotals": "enum[3]",
+          "showColumnTotals": "bool",
+          "columnTotalLabels": "text",
+          "showGrandTotal": "bool",
+          "showChartOnGrandTotal": "bool",
+          "grandTotalLabel": "text",
+          "freezeGrandTotal": "bool",
+          "grandTotalGap": "bool",
+          "showColumnGrandTotal": "bool",
+          "columnGrandTotalLabel": "text",
+          "limitOutliers": "bool",
+          "minOutlierValue": "numeric",
+          "maxOutlierValue": "numeric",
+          "absoluteChart": "enum[3]",
+          "valueChart": "enum[4]",
+          "relativeChart": "enum[2]",
+          "minChartWidth": "numeric",
+          "scaleGroupsResizeFactorsChartView": "text",
+          "scaleGroupsResizeFactorsTableView": "text",
+          "columnTotalEmphasize": "text",
+          "columnTotalEmphasizeTable": "text",
+          "groupsCollapsed": "text",
+          "firstTimeShowingColumnAdder": "bool",
+          "calculations": "text",
+          "relativeVarianceCalculation": "enum[2]"
+        }
+      },
+      "coreSettings": {
+        "displayName": "Core settings",
+        "property_count": 1,
+        "property_types": {
+          "forceVisualRefreshTimestamp": "integer"
+        }
+      },
+      "annotationLayerSettings": {
+        "displayName": "Annotation layer",
+        "property_count": 3,
+        "property_types": {
+          "annotationsStorageConfig": "text",
+          "annotationHighlights": "text",
+          "annotationComments": "text"
+        }
+      },
+      "titleSettings": {
+        "displayName": "Title",
+        "property_count": 11,
+        "property_types": {
+          "show": "bool",
+          "text": "text",
+          "wrapLongTitle": "bool",
+          "alignment": "formatting",
+          "fontSize": "formatting",
+          "fontColor": "fill",
+          "fontFamily": "formatting",
+          "freeze": "bool",
+          "fontWeight": "text",
+          "fontStyle": "text",
+          "delta": "text"
+        }
+      },
+      "groupTitleSettings": {
+        "displayName": "Group title",
+        "property_count": 6,
+        "property_types": {
+          "fontSize": "formatting",
+          "fontColor": "fill",
+          "alignment": "formatting",
+          "fontFamily": "formatting",
+          "displayOptions": "enum[3]",
+          "width": "numeric"
+        }
+      },
+      "dataLabelSettings": {
+        "displayName": "Data labels",
+        "property_count": 21,
+        "property_types": {
+          "show": "bool",
+          "fontColor": "fill",
+          "suppressLargeRelativeVariance": "bool",
+          "suppressLargeRelativeVarianceValue": "numeric",
+          "units": "enum[7]",
+          "showUnits": "enum[3]",
+          "decimalPlaces": "integer",
+          "decimalPlacesPercentage": "integer",
+          "percentagePointDecimals": "integer",
+          "percentageInLabel": "bool",
+          "negativeValuesFormat": "enum[2]",
+          "rightAlignNumbers": "bool",
+          "useBasisPointsFormat": "bool",
+          "basisPointUnit": "text",
+          "suppressRelativeVariancePercentageValues": "bool",
+          "percentagePointUnit": "text",
+          "suppressSmallValues": "bool",
+          "fontSize": "formatting",
+          "fontFamily": "formatting",
+          "integratedDifferenceLabel": "enum[3]",
+          "labelBackgroundTransparency": "integer"
+        }
+      },
+      "categorySettings": {
+        "displayName": "Categories",
+        "property_count": 12,
+        "property_types": {
+          "show": "bool",
+          "freeze": "bool",
+          "displayOptions": "enum[3]",
+          "width": "numeric",
+          "rowHeight": "enum[6]",
+          "height": "numeric",
+          "customIndent": "numeric",
+          "gapBetweenColumnsPercent": "integer",
+          "showTopNForm": "bool",
+          "topNOtherLabel": "text",
+          "showTopNCategories": "bool",
+          "topNSettings": "text"
+        }
+      },
+      "legendHeaderSettings": {
+        "displayName": "Headers",
+        "property_count": 157,
+        "property_types": {
+          "valueHeader": "text",
+          "referenceHeader": "text",
+          "secondReferenceHeader": "text",
+          "thirdReferenceHeader": "text",
+          "absoluteDifferenceHeader": "text",
+          "secondAbsoluteDifferenceHeader": "text",
+          "thirdAbsoluteDifferenceHeader": "text",
+          "relativeDifferenceHeader": "text",
+          "secondRelativeDifferenceHeader": "text",
+          "thirdRelativeDifferenceHeader": "text",
+          "additionalMeasure1Header": "text",
+          "additionalMeasure2Header": "text",
+          "additionalMeasure3Header": "text",
+          "additionalMeasure4Header": "text",
+          "additionalMeasure5Header": "text",
+          "additionalMeasure6Header": "text",
+          "additionalMeasure7Header": "text",
+          "additionalMeasure8Header": "text",
+          "additionalMeasure9Header": "text",
+          "additionalMeasure10Header": "text",
+          "additionalMeasure11Header": "text",
+          "additionalMeasure12Header": "text",
+          "additionalMeasure13Header": "text",
+          "additionalMeasure14Header": "text",
+          "additionalMeasure15Header": "text",
+          "additionalMeasure16Header": "text",
+          "additionalMeasure17Header": "text",
+          "additionalMeasure18Header": "text",
+          "additionalMeasure19Header": "text",
+          "additionalMeasure20Header": "text",
+          "columnCalculation1Header": "text",
+          "columnCalculation2Header": "text",
+          "columnCalculation3Header": "text",
+          "columnCalculation4Header": "text",
+          "columnCalculation5Header": "text",
+          "previousYear": "text",
+          "actual": "text",
+          "forecast": "text",
+          "forecast2": "text",
+          "forecast3": "text",
+          "plan": "text",
+          "plan2": "text",
+          "plan3": "text",
+          "actual-previousYear": "text",
+          "actual-previousYear-percent": "text",
+          "previousYear-actual": "text",
+          "previousYear-actual-percent": "text",
+          "actual-forecast": "text",
+          "actual-forecast-percent": "text",
+          "forecast-actual": "text",
+          "forecast-actual-percent": "text",
+          "actual-plan": "text",
+          "actual-plan-percent": "text",
+          "plan-actual": "text",
+          "plan-actual-percent": "text",
+          "previousYear-forecast": "text",
+          "previousYear-forecast-percent": "text",
+          "forecast-previousYear": "text",
+          "forecast-previousYear-percent": "text",
+          "previousYear-plan": "text",
+          "previousYear-plan-percent": "text",
+          "plan-previousYear": "text",
+          "plan-previousYear-percent": "text",
+          "forecast-plan": "text",
+          "forecast-plan-percent": "text",
+          "plan-forecast": "text",
+          "plan-forecast-percent": "text",
+          "actual-plan2": "text",
+          "actual-plan2-percent": "text",
+          "actual-plan3": "text",
+          "actual-plan3-percent": "text",
+          "actual-forecast2": "text",
+          "actual-forecast2-percent": "text",
+          "actual-forecast3": "text",
+          "actual-forecast3-percent": "text",
+          "plan2-actual": "text",
+          "plan2-actual-percent": "text",
+          "plan3-actual": "text",
+          "plan3-actual-percent": "text",
+          "forecast2-actual": "text",
+          "forecast2-actual-percent": "text",
+          "forecast3-actual": "text",
+          "forecast3-actual-percent": "text",
+          "plan2-previousYear": "text",
+          "plan2-previousYear-percent": "text",
+          "plan3-previousYear": "text",
+          "plan3-previousYear-percent": "text",
+          "forecast2-previousYear": "text",
+          "forecast2-previousYear-percent": "text",
+          "forecast3-previousYear": "text",
+          "forecast3-previousYear-percent": "text",
+          "previousYear-plan2": "text",
+          "previousYear-plan2-percent": "text",
+          "previousYear-plan3": "text",
+          "previousYear-plan3-percent": "text",
+          "previousYear-forecast2": "text",
+          "previousYear-forecast2-percent": "text",
+          "previousYear-forecast3": "text",
+          "previousYear-forecast3-percent": "text",
+          "forecast-plan2": "text",
+          "forecast-plan2-percent": "text",
+          "forecast-plan3": "text",
+          "forecast-plan3-percent": "text",
+          "forecast2-plan": "text",
+          "forecast2-plan-percent": "text",
+          "forecast2-plan2": "text",
+          "forecast2-plan2-percent": "text",
+          "forecast2-plan3": "text",
+          "forecast2-plan3-percent": "text",
+          "forecast3-plan": "text",
+          "forecast3-plan-percent": "text",
+          "forecast3-plan2": "text",
+          "forecast3-plan2-percent": "text",
+          "forecast3-plan3": "text",
+          "forecast3-plan3-percent": "text",
+          "plan-forecast2": "text",
+          "plan-forecast2-percent": "text",
+          "plan-forecast3": "text",
+          "plan-forecast3-percent": "text",
+          "plan2-forecast": "text",
+          "plan2-forecast-percent": "text",
+          "plan2-forecast2": "text",
+          "plan2-forecast2-percent": "text",
+          "plan2-forecast3": "text",
+          "plan2-forecast3-percent": "text",
+          "plan3-forecast": "text",
+          "plan3-forecast-percent": "text",
+          "plan3-forecast2": "text",
+          "plan3-forecast2-percent": "text",
+          "plan3-forecast3": "text",
+          "plan3-forecast3-percent": "text",
+          "forecast-forecast2": "text",
+          "forecast-forecast2-percent": "text",
+          "forecast-forecast3": "text",
+          "forecast-forecast3-percent": "text",
+          "forecast2-forecast": "text",
+          "forecast2-forecast-percent": "text",
+          "forecast2-forecast3": "text",
+          "forecast2-forecast3-percent": "text",
+          "forecast3-forecast": "text",
+          "forecast3-forecast-percent": "text",
+          "forecast3-forecast2": "text",
+          "forecast3-forecast2-percent": "text",
+          "plan-plan2": "text",
+          "plan-plan2-percent": "text",
+          "plan-plan3": "text",
+          "plan-plan3-percent": "text",
+          "plan2-plan": "text",
+          "plan2-plan-percent": "text",
+          "plan2-plan3": "text",
+          "plan2-plan3-percent": "text",
+          "plan3-plan": "text",
+          "plan3-plan-percent": "text",
+          "plan3-plan2": "text",
+          "plan3-plan2-percent": "text",
+          "freeze": "bool",
+          "useMeasureNamesInEligibleHeaders": "bool"
+        }
+      },
+      "commentBoxSettings": {
+        "displayName": "Comment box",
+        "property_count": 25,
+        "property_types": {
+          "show": "bool",
+          "placement": "enum[4]",
+          "listHorizontal": "bool",
+          "size": "text",
+          "customTitleStyle": "bool",
+          "fontSizeTitle": "integer",
+          "fontFamilyTitle": "formatting",
+          "fontColorTitle": "fill",
+          "customTextStyle": "bool",
+          "fontSizeText": "integer",
+          "fontFamilyText": "formatting",
+          "fontColorText": "fill",
+          "padding": "integer",
+          "itemsMargin": "integer",
+          "borderWidth": "integer",
+          "borderColor": "fill",
+          "borderRadius": "integer",
+          "shadow": "bool",
+          "backgroundColor": "fill",
+          "title": "enum[5]",
+          "showVariance": "enum[3]",
+          "varianceIcon": "enum[3]",
+          "commentMarkersDataProperties": "text",
+          "plotCommentsHierarchically": "bool",
+          "automaticCommentBox": "bool"
+        }
+      },
+      "designSettings": {
+        "displayName": "Design",
+        "property_count": 20,
+        "property_types": {
+          "style": "enum[7]",
+          "positiveColor": "fill",
+          "negativeColor": "fill",
+          "neutralVarianceColor": "fill",
+          "neutralColor": "fill",
+          "markerColor": "fill",
+          "lineColor": "fill",
+          "axisColor": "fill",
+          "gridlineColor": "fill",
+          "majorGridlineColor": "fill",
+          "highlightColor": "fill",
+          "useCustomScenarioColors": "bool",
+          "previousYearColor": "fill",
+          "planColor": "fill",
+          "plan2Color": "fill",
+          "plan3Color": "fill",
+          "forecastColor": "fill",
+          "applyPatterns": "bool",
+          "lightenOverlapped": "bool",
+          "varianceDisplayType": "enum[2]"
+        }
+      },
+      "interactionSettings": {
+        "displayName": "Interaction",
+        "property_count": 19,
+        "property_types": {
+          "show": "bool",
+          "allowChartChange": "bool",
+          "allowSliderChange": "bool",
+          "allowVarianceCalculationChange": "bool",
+          "allowSortChange": "bool",
+          "allowExpandCollapseChange": "bool",
+          "allowExpandCollapseRowsChange": "bool",
+          "allowExpandCollapseColumnsChange": "bool",
+          "allowColumnOrderChange": "bool",
+          "allowColumnRenamingAndDesign": "bool",
+          "allowHidingAndAddingColumns": "bool",
+          "allowTextMeasureColumnResize": "bool",
+          "focusModeFontZoomPercentage": "integer",
+          "enableMeasureDrillThrough": "bool",
+          "allowInteractiveCommentBox": "bool",
+          "hoverHighlightType": "enum[3]",
+          "hoverRowColor": "fill",
+          "hoverRowColorOpacity": "numeric",
+          "allowExcelExport": "bool"
+        }
+      },
+      "previewSettings": {
+        "displayName": "Preview features",
+        "property_count": 4,
+        "property_types": {
+          "brandImagesFeature": "bool",
+          "calculationCorrectionFeature": "bool",
+          "migrationsLog": "text",
+          "activationLog": "text"
+        }
+      },
+      "drillSettings": {
+        "displayName": "Data loading",
+        "property_count": 2,
+        "property_types": {
+          "loadStrategy": "enum[2]",
+          "migrationState": "text"
+        }
+      },
+      "licenseSettings": {
+        "displayName": "About",
+        "property_count": 8,
+        "property_types": {
+          "product": "text",
+          "version": "text",
+          "licensedTo": "text",
+          "daysRemaining": "text",
+          "validUntil": "text",
+          "disabledInViewMode": "bool",
+          "licenseKey": "text",
+          "lastLicenseCheck": "text"
+        }
+      },
+      "sortSettings": {
+        "displayName": "sortSettings",
+        "property_count": 4,
+        "property_types": {
+          "columnName": "text",
+          "chartSort": "enum[3]",
+          "categorySort": "enum[3]",
+          "sortReferenceChart": "numeric"
+        }
+      },
+      "version": {
+        "displayName": "Version",
+        "property_count": 1,
+        "property_types": {
+          "version": "text"
+        }
+      },
+      "categoriesMetadata": {
+        "displayName": "Categories metadata",
+        "property_count": 22,
+        "property_types": {
+          "collapsedVirtually": "text",
+          "displayAsInvertCategories": "text",
+          "invertedHierarchies": "text",
+          "invertCalculationCategories": "text",
+          "invertCalculationCategoriesValues": "text",
+          "invertTotalCalculationCategories": "text",
+          "resultCalculationCategories": "text",
+          "flatResultCalculationCategories": "text",
+          "skipCalculationCategories": "text",
+          "userChangedExpandCollapse": "bool",
+          "userOverrides": "text",
+          "highlighted": "text",
+          "highlightedCustomColors": "text",
+          "addedFormulas": "text",
+          "categoryFormatSettings": "text",
+          "dataVersion": "text",
+          "results": "text",
+          "skipped": "text",
+          "flatResults": "text",
+          "inverted": "text",
+          "invertedTotals": "text",
+          "collapsed": "text"
+        }
+      },
+      "graphDataSettings": {
+        "displayName": "Graph data",
+        "property_count": 1,
+        "property_types": {
+          "transformationMap": "text"
+        }
+      },
+      "groupsMetadata": {
+        "displayName": "Groups metadata",
+        "property_count": 2,
+        "property_types": {
+          "inverted": "text",
+          "names": "text"
+        }
+      },
+      "averageLineSettings": {
+        "displayName": "Average line",
+        "property_count": 12,
+        "property_types": {
+          "show": "bool",
+          "fill": "fill",
+          "style": "enum[3]",
+          "transparency": "numeric",
+          "showLabel": "bool",
+          "labelColor": "fill",
+          "labelTextOption": "enum[3]",
+          "labelText": "text",
+          "horizontalPosition": "enum[2]",
+          "verticalPosition": "enum[2]",
+          "units": "enum[6]",
+          "decimalPlaces": "numeric"
+        }
+      },
+      "constantLineSettings": {
+        "displayName": "Constant line",
+        "property_count": 13,
+        "property_types": {
+          "show": "bool",
+          "value": "numeric",
+          "fill": "fill",
+          "style": "enum[3]",
+          "transparency": "numeric",
+          "showLabel": "bool",
+          "labelColor": "fill",
+          "labelTextOption": "enum[3]",
+          "labelText": "text",
+          "horizontalPosition": "enum[2]",
+          "verticalPosition": "enum[2]",
+          "units": "enum[6]",
+          "decimalPlaces": "numeric"
+        }
+      },
+      "medianLineSettings": {
+        "displayName": "Median line",
+        "property_count": 12,
+        "property_types": {
+          "show": "bool",
+          "fill": "fill",
+          "style": "enum[3]",
+          "transparency": "numeric",
+          "showLabel": "bool",
+          "labelColor": "fill",
+          "labelTextOption": "enum[3]",
+          "labelText": "text",
+          "horizontalPosition": "enum[2]",
+          "verticalPosition": "enum[2]",
+          "units": "enum[6]",
+          "decimalPlaces": "numeric"
+        }
+      },
+      "percentileLineSettings": {
+        "displayName": "Percentile line",
+        "property_count": 13,
+        "property_types": {
+          "show": "bool",
+          "fill": "fill",
+          "style": "enum[3]",
+          "percentile": "numeric",
+          "transparency": "numeric",
+          "showLabel": "bool",
+          "labelColor": "fill",
+          "labelTextOption": "enum[3]",
+          "labelText": "text",
+          "horizontalPosition": "enum[2]",
+          "verticalPosition": "enum[2]",
+          "units": "enum[6]",
+          "decimalPlaces": "numeric"
+        }
+      },
+      "migrationLog": {
+        "displayName": "Migration Log",
+        "property_count": 4,
+        "property_types": {
+          "isMigrating": "bool",
+          "startAutoMigrateV74": "bool",
+          "optInArray": "text",
+          "migrations": "text"
+        }
+      }
+    },
+    "enums_decoded": {
+      "chartSettings": {
+        "types": [
+          [
+            "Actual / Absolute / Relative",
+            "Responsive"
+          ],
+          [
+            "Integrated",
+            "Integrated variance"
+          ],
+          [
+            "Absolute",
+            "Absolute variance"
+          ],
+          [
+            "Relative",
+            "Relative variance"
+          ],
+          [
+            "Absolute / Relative",
+            "Absolute / Relative"
+          ],
+          [
+            "Actual / Absolute",
+            "Actual / Absolute"
+          ],
+          [
+            "Actual / Relative",
+            "Actual / Relative"
+          ],
+          [
+            "Actual",
+            "Actual"
+          ]
+        ],
+        "showTotals": [
+          [
+            "0",
+            "Above"
+          ],
+          [
+            "1",
+            "Below"
+          ],
+          [
+            "2",
+            "Above, hide values"
+          ]
+        ],
+        "absoluteChart": [
+          [
+            "0",
+            "Bar chart"
+          ],
+          [
+            "1",
+            "Waterfall"
+          ],
+          [
+            "2",
+            "Calculation waterfall"
+          ]
+        ],
+        "valueChart": [
+          [
+            "0",
+            "Bar chart"
+          ],
+          [
+            "1",
+            "Overlapped bar chart"
+          ],
+          [
+            "2",
+            "Waterfall chart"
+          ],
+          [
+            "3",
+            "Side by side waterfall"
+          ]
+        ],
+        "relativeChart": [
+          [
+            "0",
+            "Plus minus dot chart"
+          ],
+          [
+            "1",
+            "Sized dots chart"
+          ]
+        ],
+        "relativeVarianceCalculation": [
+          [
+            "0",
+            "Financial calculation"
+          ],
+          [
+            "1",
+            "Mathematical calculation"
+          ]
+        ]
+      },
+      "groupTitleSettings": {
+        "displayOptions": [
+          [
+            "0",
+            "Auto"
+          ],
+          [
+            "1",
+            "Size to data"
+          ],
+          [
+            "2",
+            "Fixed"
+          ]
+        ]
+      },
+      "dataLabelSettings": {
+        "units": [
+          [
+            "Auto",
+            "Auto"
+          ],
+          [
+            "None",
+            "None"
+          ],
+          [
+            "K",
+            "Thousands"
+          ],
+          [
+            "M",
+            "Millions"
+          ],
+          [
+            "G",
+            "Billions"
+          ],
+          [
+            "P",
+            "Percentage (%)"
+          ],
+          [
+            "PowerBI",
+            "Power BI"
+          ]
+        ],
+        "showUnits": [
+          [
+            "0",
+            "Data labels"
+          ],
+          [
+            "1",
+            "Title"
+          ],
+          [
+            "2",
+            "None"
+          ]
+        ],
+        "negativeValuesFormat": [
+          [
+            "0",
+            "Minus sign | -123.4"
+          ],
+          [
+            "1",
+            "Parenthesis | (123.4)"
+          ]
+        ],
+        "integratedDifferenceLabel": [
+          [
+            "0",
+            "Relative"
+          ],
+          [
+            "1",
+            "Absolute"
+          ],
+          [
+            "2",
+            "Relative and Absolute"
+          ]
+        ]
+      },
+      "categorySettings": {
+        "displayOptions": [
+          [
+            "0",
+            "Auto"
+          ],
+          [
+            "1",
+            "Full"
+          ],
+          [
+            "2",
+            "Fixed"
+          ]
+        ],
+        "rowHeight": [
+          [
+            "0",
+            "Auto"
+          ],
+          [
+            "1",
+            "Font sized"
+          ],
+          [
+            "2",
+            "Font sized x1.1"
+          ],
+          [
+            "3",
+            "Font sized x1.5"
+          ],
+          [
+            "4",
+            "Stretch"
+          ],
+          [
+            "5",
+            "Fixed"
+          ]
+        ]
+      },
+      "commentBoxSettings": {
+        "placement": [
+          [
+            "0",
+            "Right"
+          ],
+          [
+            "1",
+            "Left"
+          ],
+          [
+            "2",
+            "Above"
+          ],
+          [
+            "3",
+            "Below"
+          ]
+        ],
+        "title": [
+          [
+            "0",
+            "Off"
+          ],
+          [
+            "1",
+            "Title"
+          ],
+          [
+            "2",
+            "Title, value"
+          ],
+          [
+            "3",
+            "Title, value, variances"
+          ],
+          [
+            "4",
+            "Title, variances"
+          ]
+        ],
+        "showVariance": [
+          [
+            "0",
+            "Absolute variance"
+          ],
+          [
+            "1",
+            "Relative variance"
+          ],
+          [
+            "2",
+            "Absolute and relative variance"
+          ]
+        ],
+        "varianceIcon": [
+          [
+            "0",
+            "Circle"
+          ],
+          [
+            "1",
+            "Circle with arrow"
+          ],
+          [
+            "2",
+            "Triangle"
+          ]
+        ]
+      },
+      "designSettings": {
+        "style": [
+          [
+            "-1",
+            "COMPANY_STYLE_NAME"
+          ],
+          [
+            "0",
+            "Zebra"
+          ],
+          [
+            "1",
+            "Zebra Light"
+          ],
+          [
+            "2",
+            "Dr. Hichert"
+          ],
+          [
+            "3",
+            "Power BI"
+          ],
+          [
+            "5",
+            "Colorblind-friendly"
+          ],
+          [
+            "4",
+            "Custom"
+          ]
+        ],
+        "varianceDisplayType": [
+          [
+            "0",
+            "Bar"
+          ],
+          [
+            "1",
+            "Arrow"
+          ]
+        ]
+      },
+      "interactionSettings": {
+        "hoverHighlightType": [
+          [
+            "highlighting",
+            "Highlighting"
+          ],
+          [
+            "bold",
+            "Bold"
+          ],
+          [
+            "none",
+            "None"
+          ]
+        ]
+      },
+      "drillSettings": {
+        "loadStrategy": [
+          [
+            "drill",
+            "Importing, live connections and drill down"
+          ],
+          [
+            "no_drill",
+            "DirectQuery and ragged hierarchies"
+          ]
+        ]
+      },
+      "sortSettings": {
+        "chartSort": [
+          [
+            "0",
+            "None"
+          ],
+          [
+            "1",
+            "Descending"
+          ],
+          [
+            "2",
+            "Ascending"
+          ]
+        ],
+        "categorySort": [
+          [
+            "0",
+            "None"
+          ],
+          [
+            "1",
+            "Descending"
+          ],
+          [
+            "2",
+            "Ascending"
+          ]
+        ]
+      },
+      "averageLineSettings": {
+        "style": [
+          [
+            "8,4",
+            "Dashed"
+          ],
+          [
+            "",
+            "Solid"
+          ],
+          [
+            "2,4",
+            "Dotted"
+          ]
+        ],
+        "labelTextOption": [
+          [
+            "0",
+            "Name and value"
+          ],
+          [
+            "1",
+            "Value"
+          ],
+          [
+            "2",
+            "Name"
+          ]
+        ],
+        "horizontalPosition": [
+          [
+            "0",
+            "Left"
+          ],
+          [
+            "1",
+            "Right"
+          ]
+        ],
+        "verticalPosition": [
+          [
+            "0",
+            "Above"
+          ],
+          [
+            "1",
+            "Below"
+          ]
+        ],
+        "units": [
+          [
+            "Auto",
+            "Auto"
+          ],
+          [
+            "None",
+            "None"
+          ],
+          [
+            "K",
+            "Thousands"
+          ],
+          [
+            "M",
+            "Millions"
+          ],
+          [
+            "G",
+            "Billions"
+          ],
+          [
+            "P",
+            "Percentage (%)"
+          ]
+        ]
+      },
+      "constantLineSettings": {
+        "style": [
+          [
+            "8,4",
+            "Dashed"
+          ],
+          [
+            "",
+            "Solid"
+          ],
+          [
+            "2,4",
+            "Dotted"
+          ]
+        ],
+        "labelTextOption": [
+          [
+            "0",
+            "Name and value"
+          ],
+          [
+            "1",
+            "Value"
+          ],
+          [
+            "2",
+            "Name"
+          ]
+        ],
+        "horizontalPosition": [
+          [
+            "0",
+            "Left"
+          ],
+          [
+            "1",
+            "Right"
+          ]
+        ],
+        "verticalPosition": [
+          [
+            "0",
+            "Above"
+          ],
+          [
+            "1",
+            "Below"
+          ]
+        ],
+        "units": [
+          [
+            "Auto",
+            "Auto"
+          ],
+          [
+            "None",
+            "None"
+          ],
+          [
+            "K",
+            "Thousands"
+          ],
+          [
+            "M",
+            "Millions"
+          ],
+          [
+            "G",
+            "Billions"
+          ],
+          [
+            "P",
+            "Percentage (%)"
+          ]
+        ]
+      },
+      "medianLineSettings": {
+        "style": [
+          [
+            "8,4",
+            "Dashed"
+          ],
+          [
+            "",
+            "Solid"
+          ],
+          [
+            "2,4",
+            "Dotted"
+          ]
+        ],
+        "labelTextOption": [
+          [
+            "0",
+            "Name and value"
+          ],
+          [
+            "1",
+            "Value"
+          ],
+          [
+            "2",
+            "Name"
+          ]
+        ],
+        "horizontalPosition": [
+          [
+            "0",
+            "Left"
+          ],
+          [
+            "1",
+            "Right"
+          ]
+        ],
+        "verticalPosition": [
+          [
+            "0",
+            "Above"
+          ],
+          [
+            "1",
+            "Below"
+          ]
+        ],
+        "units": [
+          [
+            "Auto",
+            "Auto"
+          ],
+          [
+            "None",
+            "None"
+          ],
+          [
+            "K",
+            "Thousands"
+          ],
+          [
+            "M",
+            "Millions"
+          ],
+          [
+            "G",
+            "Billions"
+          ],
+          [
+            "P",
+            "Percentage (%)"
+          ]
+        ]
+      },
+      "percentileLineSettings": {
+        "style": [
+          [
+            "8,4",
+            "Dashed"
+          ],
+          [
+            "",
+            "Solid"
+          ],
+          [
+            "2,4",
+            "Dotted"
+          ]
+        ],
+        "labelTextOption": [
+          [
+            "0",
+            "Name and value"
+          ],
+          [
+            "1",
+            "Value"
+          ],
+          [
+            "2",
+            "Name"
+          ]
+        ],
+        "horizontalPosition": [
+          [
+            "0",
+            "Left"
+          ],
+          [
+            "1",
+            "Right"
+          ]
+        ],
+        "verticalPosition": [
+          [
+            "0",
+            "Above"
+          ],
+          [
+            "1",
+            "Below"
+          ]
+        ],
+        "units": [
+          [
+            "Auto",
+            "Auto"
+          ],
+          [
+            "None",
+            "None"
+          ],
+          [
+            "K",
+            "Thousands"
+          ],
+          [
+            "M",
+            "Millions"
+          ],
+          [
+            "G",
+            "Billions"
+          ],
+          [
+            "P",
+            "Percentage (%)"
+          ]
+        ]
+      }
+    },
+    "supportsHighlight": false,
+    "privileges": [
+      {
+        "name": "ExportContent",
+        "essential": true
+      },
+      {
+        "name": "LocalStorage",
+        "essential": true
+      },
+      {
+        "name": "WebAccess",
+        "essential": false,
+        "parameters": [
+          "https://flagsmithzebra.eastus.cloudapp.azure.com",
+          "wss://app.powerbi.com:8080",
+          "https://graph.microsoft.com/*"
+        ]
+      }
+    ]
+  }
+}

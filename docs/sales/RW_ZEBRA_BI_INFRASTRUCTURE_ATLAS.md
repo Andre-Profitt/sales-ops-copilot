@@ -277,3 +277,186 @@ This atlas is the input to PR9 — a properly-scoped native rebuild that uses th
 - Atlases (this analysis): `data/zebra_kg/infrastructure/*.json`
 - Miner: `scripts/sales/rw_zebra_kg_infra_miner.py`
 - Analyzer: `scripts/sales/rw_zebra_kg_infra_analyzer.py`
+
+---
+
+## 11. The complete Zebra API surface (deep `pbiviz.json` capabilities probe)
+
+Beyond observed usage — this section captures everything Zebra's custom-visual API ACCEPTS, decoded from `Zebra BI Tables v7.8.0 / API 5.10.0`'s `capabilities.json` + property type schemas. **All enum values are now mapped to human labels** (vs. inferred from frequencies in §4).
+
+Atlas artifact: `data/zebra_kg/infrastructure/zebra_api_atlas.json` (46 KB, structured per-property schema).
+
+### 11.1 The 26 declared object groups (Tables)
+
+Capabilities exposes 26 object groups; templates only use 20. The 6 unused-in-templates groups:
+
+- `constantLineSettings` — vertical/horizontal reference lines at a fixed value
+- `graphDataSettings` — likely transformation map for input data
+- `medianLineSettings` — median reference line on charts
+- `percentileLineSettings` — percentile reference lines (e.g., P25/P75)
+- `coreSettings` — single property `forceVisualRefreshTimestamp` (cache invalidation)
+- `previewSettings` — preview-feature toggles (`brandImagesFeature`, `calculationCorrectionFeature`)
+
+### 11.2 The 8 IBCS chart-shape enum (`chartSettings.types`)
+
+This is THE rendering-mode axis we never decoded:
+
+| `types` value | Display name | Implication |
+|---|---|---|
+| `Actual / Absolute / Relative` | **Responsive** | Chart auto-adapts based on data shape (Zebra default) |
+| `Integrated` | **Integrated variance** | AC bar with PY/PL reference markers inline |
+| `Absolute` | **Absolute variance** | Show only the AC−PY delta column |
+| `Relative` | **Relative variance** | Show only the (AC−PY)/PY % column |
+| `Absolute / Relative` | Absolute / Relative | Side-by-side delta + delta-% |
+| `Actual / Absolute` | Actual / Absolute | AC value + AC−PY delta |
+| `Actual / Relative` | Actual / Relative | AC value + (AC−PY)/PY % |
+| `Actual` | Actual | AC value only |
+
+### 11.3 Chart sub-type enums (`chartSettings.{value,absolute,relative}Chart`)
+
+The actual visual shape per chart axis:
+
+| Setting | Code | Shape |
+|---|---|---|
+| `valueChart` | 0 | Bar chart |
+| `valueChart` | 1 | Overlapped bar chart (AC bar overlaid with PL outlined bar) |
+| `valueChart` | 2 | Waterfall chart |
+| `valueChart` | 3 | Side by side waterfall |
+| `absoluteChart` | 0 | Bar chart |
+| `absoluteChart` | 1 | Waterfall |
+| `absoluteChart` | 2 | Calculation waterfall |
+| `relativeChart` | 0 | Plus minus dot chart |
+| `relativeChart` | 1 | Sized dots chart |
+
+### 11.4 Variance calculation (`chartSettings.relativeVarianceCalculation`)
+
+| Code | Method |
+|---|---|
+| 0 | **Financial calculation** *(IBCS-correct default)* |
+| 1 | Mathematical calculation |
+
+Financial calc handles negatives via "absolute denominator" rule (variance is (AC−PY)/|PY| not (AC−PY)/PY) which keeps signs sane when PY is negative. This is an IBCS convention.
+
+### 11.5 Variance display (`designSettings.varianceDisplayType`)
+
+| Code | Display |
+|---|---|
+| 0 | **Bar** (data bar showing variance magnitude) |
+| 1 | **Arrow** (▲/▼ glyph with color) |
+
+Native equivalents: bars via `dataBars` CF; arrows via DAX-returned Unicode + CF font color.
+
+### 11.6 The 7 Zebra design-style presets (`designSettings.style`)
+
+| Code | Style | What it is |
+|---|---|---|
+| -1 | COMPANY_STYLE_NAME | placeholder for org-deployed custom |
+| **0** | **Zebra** | Default (Zebra brand IBCS) |
+| 1 | Zebra Light | High-contrast variant |
+| **2** | **Dr. Hichert** | The IBCS standards body chair's preset — strict-IBCS |
+| 3 | Power BI | Native PBI theme defaults |
+| 5 | Colorblind-friendly | Accessibility palette |
+| 4 | Custom | User-defined |
+
+The presence of "Dr. Hichert" confirms Zebra implements **the canonical IBCS standard** (not just a Zebra-flavored interpretation).
+
+### 11.7 Comment box (`commentBoxSettings`) — the annotation system
+
+Settings worth lifting:
+
+- `placement` (Right/Left/Above/Below) — where annotations dock
+- `title` enum (5 values): Off / Title / Title+value / Title+value+variances / Title+variances
+- `showVariance` enum (3): Absolute / Relative / Both
+- **`varianceIcon`** (3): Circle / Circle with arrow / Triangle ◢
+
+Native equivalent: textboxes positioned next to data cells with DAX measures bound to populated KPI text. Triangle is the Zebra-default IBCS variance glyph.
+
+### 11.8 Interaction settings (`interactionSettings`) — runtime controls
+
+19 boolean toggles + 1 enum + 2 numerics. The user-facing features Zebra exposes in viewing mode:
+
+- `allowChartChange` — viewer can switch chart type
+- `allowVarianceCalculationChange` — viewer can flip financial↔mathematical
+- `allowExpandCollapseChange` (and ...Rows / ...Columns variants) — drill in/out
+- `allowColumnOrderChange` / `allowColumnRenamingAndDesign` / `allowHidingAndAddingColumns`
+- `enableMeasureDrillThrough`
+- `allowInteractiveCommentBox`
+- `allowExcelExport`
+- `hoverHighlightType` enum: Highlighting / Bold / None
+
+These are runtime-customization affordances. Native PBI doesn't have a unified "user can change these knobs at view time" mechanism — they'd need bookmarks + buttons + filters wired manually.
+
+### 11.9 The `legendHeaderSettings` block — 157 comparison-header properties
+
+This is the **complete IBCS variance vocabulary**: every comparison column Zebra can render has a header text property. Counting:
+
+- **Base scenarios (8):** actual, previousYear, plan, plan2, plan3, forecast, forecast2, forecast3
+- **Pairwise abs deltas (~50):** every (X, Y) pair in both directions — `actual-plan`, `plan-actual`, `actual-plan2`, etc.
+- **Pairwise relative deltas (~50):** same set with `-percent` suffix
+- **20 additional measure headers** (`additionalMeasure1Header` … `additionalMeasure20Header`) — for Tooltips role
+- **5 column calculation headers** — for custom DAX-driven calculation columns
+
+This means Zebra natively supports **3 plans + 3 forecasts + actual + previousYear** simultaneously. RW's typical scenario projection (AC + PY + PL) is the simplest case; the API was built for organizations doing rolling forecasts (FC1/FC2/FC3 by quarter) with multi-version planning.
+
+### 11.10 dataLabelSettings — number formatting controls
+
+| Setting | Codes |
+|---|---|
+| `units` | Auto / None / K (Thousands) / M (Millions) / G (Billions) / P (Percentage) / PowerBI |
+| `showUnits` | 0=Data labels / 1=Title / 2=None |
+| `negativeValuesFormat` | 0 = Minus sign `-123.4` / 1 = Parenthesis `(123.4)` |
+| `integratedDifferenceLabel` | 0=Relative / 1=Absolute / 2=Both |
+
+Plus: `useBasisPointsFormat` (basis-points display for finance), `percentageInLabel`, `rightAlignNumbers`, `suppressSmallValues`.
+
+### 11.11 The 4 reference-line types
+
+Tables exposes 4 separate object groups for analytical reference lines:
+
+- `averageLineSettings` (the mean)
+- `medianLineSettings` (the median)
+- `percentileLineSettings` (configurable: `percentile` numeric)
+- `constantLineSettings` (fixed value, e.g., target threshold)
+
+Each has the same property shape: show / fill / style (Dashed/Solid/Dotted) / transparency / showLabel / labelColor / labelTextOption / labelText / horizontalPosition / verticalPosition / units / decimalPlaces.
+
+Native PBI has analytics lines (mean/median/min/max) but more limited. RW could replicate via DAX measures (`Avg of [AC]`, `P75 of [AC]`) + a separate visual.
+
+### 11.12 The categorySettings TopN system
+
+| Setting | Effect |
+|---|---|
+| `showTopNForm` | Render the TopN slider |
+| `topNOtherLabel` | Bucket label for "Other" |
+| `showTopNCategories` | Show the count selector |
+| `topNSettings` | (text — JSON-encoded TopN config: per-row direction, value, etc.) |
+
+Native equivalent: visual-level Top N filter on the tableEx (built-in PBI feature). 100% functional fidelity.
+
+---
+
+## 12. The complete native rebuild rule book
+
+With §11 decoded, every Zebra config primitive has a definitive native equivalent (or a known absence). PR9's translator should:
+
+1. **For each Zebra Tables visualContainer**, read:
+   - `chartSettings.types` → drives visual shape choice (matrix vs tableEx vs waterfallChart)
+   - `chartSettings.columnSettings` → drives per-column DAX synthesis
+   - `chartSettings.absoluteChart`/`valueChart`/`relativeChart` → drives sub-type
+   - `designSettings.style` → drives theme JSON selection
+   - `categorySettings.topNSettings` → drives Top N visual filter
+   - `interactionSettings.*` → drives bookmark+button affordances (or accept loss)
+   - `commentBoxSettings.*` → drives annotation textbox composite (or accept loss)
+
+2. **Generate DAX measures into the dataset** for every comparison key declared in `columnSettings`. Pattern: for each `<x>-<y>` key, author `[X] - [Y]`; for each `<x>-<y>-percent` key, author `DIVIDE([X]-[Y], [Y])` — using **financial calculation rule** (`/ABS([Y])`) when `relativeVarianceCalculation=0`.
+
+3. **Build native tableEx** with columns in IBCS order, applying:
+   - `dataBars` CF on AC column with `max` field-driven from PL/PY (whichever is the reference per scaleGroup)
+   - Font color CF per scenario (using `designSettings.previousYearColor`/`planColor`/`forecastColor` from the chosen style)
+   - Variance arrow column via `[Variance Icon]` DAX measure returning Unicode `▲▼→`
+
+4. **For Cards**: build composite — header textbox + AC value card + variance Unicode-arrow textbox + sparkline (native sparkline support) per KPI, arranged in a grid per the Zebra `grid.layout` setting.
+
+5. **For Waterfalls**: native `waterfallChart` with `differenceHighlightSettings` colors mapped to the chosen style's positiveColor/negativeColor.
+
+This is the systematic rule book. Atlas decoded; rebuild path is now mechanical, not exploratory.
