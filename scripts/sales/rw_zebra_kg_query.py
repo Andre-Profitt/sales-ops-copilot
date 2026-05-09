@@ -48,6 +48,20 @@ def load_tokens(kg_dir: Path) -> list[dict[str, Any]]:
     return json.loads(path.read_text())
 
 
+def load_dax_patterns(kg_dir: Path) -> dict:
+    path = kg_dir / "dax_patterns.json"
+    if not path.exists():
+        return {"patterns": {}}
+    return json.loads(path.read_text())
+
+
+def load_topology(kg_dir: Path) -> dict:
+    path = kg_dir / "topology_patterns.json"
+    if not path.exists():
+        return {"per_template": {}, "summary": {}}
+    return json.loads(path.read_text())
+
+
 def load_bindings(rw_dir: Path) -> list[dict[str, Any]]:
     return _read_jsonl(rw_dir / "bindings.jsonl")
 
@@ -137,6 +151,23 @@ def main() -> None:
         action="store_true",
         help="RW binding overlay status summary + rows",
     )
+    parser.add_argument(
+        "--list-dax-patterns",
+        action="store_true",
+        help="List all DAX patterns from dax_patterns.json sorted by match count",
+    )
+    parser.add_argument(
+        "--dax-pattern",
+        type=str,
+        default=None,
+        help="Print canonical example + samples for a named DAX pattern",
+    )
+    parser.add_argument(
+        "--topology",
+        type=str,
+        default=None,
+        help="Print topology classification for a template_slug (or 'summary' for cross-template)",
+    )
 
     args = parser.parse_args()
 
@@ -166,7 +197,45 @@ def main() -> None:
         _print(bindings, args.format)
         return
 
-    parser.error("nothing to do — pass --measures, --tokens, --tokens-for, or --rw-status")
+    if args.list_dax_patterns:
+        atlas = load_dax_patterns(args.kg_dir.expanduser())
+        rows = [
+            {"pattern": name, "match_count": p["match_count"], "templates": len(p["templates"])}
+            for name, p in atlas.get("patterns", {}).items()
+        ]
+        rows.sort(key=lambda r: -r["match_count"])
+        _print(rows, args.format)
+        return
+
+    if args.dax_pattern:
+        atlas = load_dax_patterns(args.kg_dir.expanduser())
+        p = atlas.get("patterns", {}).get(args.dax_pattern)
+        if p is None:
+            parser.error(f"unknown DAX pattern {args.dax_pattern!r}; try --list-dax-patterns")
+        json.dump(p, sys.stdout, indent=2, ensure_ascii=False)
+        sys.stdout.write("\n")
+        return
+
+    if args.topology:
+        topo = load_topology(args.kg_dir.expanduser())
+        if args.topology == "summary":
+            json.dump(topo.get("summary", {}), sys.stdout, indent=2, ensure_ascii=False)
+            sys.stdout.write("\n")
+            return
+        per = topo.get("per_template", {}).get(args.topology)
+        if per is None:
+            parser.error(
+                f"unknown template {args.topology!r}; "
+                f"available: {sorted(topo.get('per_template', {}).keys())[:5]}..."
+            )
+        json.dump(per, sys.stdout, indent=2, ensure_ascii=False)
+        sys.stdout.write("\n")
+        return
+
+    parser.error(
+        "nothing to do — pass --measures, --tokens, --tokens-for, "
+        "--rw-status, --list-dax-patterns, --dax-pattern, or --topology"
+    )
 
 
 if __name__ == "__main__":
