@@ -103,7 +103,9 @@ def test_zebra_card_recipe_yields_card():
     assert config["singleVisual"]["visualType"] == "card"
 
 
-def test_textbox_passes_through():
+def test_textbox_recipe_drops():
+    """Native types in a recipe drop — Recipe path is for translation, not
+    passthrough preservation. (Real PBIX textboxes go through swap_layout.)"""
     v = _vr(
         "textbox",
         position={"x": 0, "y": 0, "w": 1280, "h": 64},
@@ -111,22 +113,19 @@ def test_textbox_passes_through():
     )
     recipe = Recipe(source_template="t", source_page="p", visuals=[v])
     visuals = emit.emit_native_visuals(recipe, {})
-    assert len(visuals) == 1
-    config = json.loads(visuals[0]["config"])
-    assert config["singleVisual"]["visualType"] == "textbox"
+    assert visuals == []
 
 
-def test_waterfall_emits_placeholder_textbox():
+def test_waterfall_without_bindings_drops():
+    """Waterfall now translates to a real native waterfallChart when it has
+    Category + Values bindings. Without bindings it drops — no v1 placeholder."""
     v = _vr(
         "waterfall0221D8FBE40445C1A4E598AA8EF8B506",
         position={"x": 0, "y": 360, "w": 1280, "h": 224},
     )
     recipe = Recipe(source_template="t", source_page="p", visuals=[v])
     visuals = emit.emit_native_visuals(recipe, {})
-    # Waterfall should emit a placeholder textbox in v1, not a real bridge
-    assert len(visuals) == 1
-    config = json.loads(visuals[0]["config"])
-    assert config["singleVisual"]["visualType"] == "textbox"
+    assert visuals == []
 
 
 def test_unsupported_visual_dropped():
