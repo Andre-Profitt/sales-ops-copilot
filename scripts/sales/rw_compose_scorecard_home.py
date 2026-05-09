@@ -1,8 +1,10 @@
+# REBUILD IN PROGRESS — see docs/superpowers/specs/2026-05-09-vp-ops-front-page-spine-rebuild-design.md
+# DO NOT MODIFY UNTIL THE PR1 REBUILD MERGES. Removed in Task 7.
+
 """Compose the front 'VP Ops Scorecard' page of rpt_vp_ops_scorecard.
 
-This replaces the legacy 26-card landing page with an executive triage page.
-The KPI graph decides what earns front-page space, but the canvas stays
-business-facing: exceptions first, commercial engine second, deal evidence last.
+PR1 layout (see spec): exception spine + movement-spine placeholder +
+4-card KPI strip. Replaces the prior 45-visualContainer card wall.
 
 Run:
     python3 -m scripts.sales.rw_compose_scorecard_home
@@ -365,7 +367,15 @@ def _compose(section: dict) -> None:
         ("f_opportunity", "Total Closed Won ARR", "Won ARR", 264, 550, BLUE, 186),
         ("f_opportunity", "Win Rate ARR", "Win rate", 464, 550, BLUE, 186),
         ("f_stage_transition", "Stage Forward Pct (LE)", "Stage fwd", 264, 632, AMBER, 186),
-        ("f_opportunity", "Renewal Retention Pct (Period)", "Renewal retention", 464, 632, GREEN, 186),
+        (
+            "f_opportunity",
+            "Renewal Retention Pct (Period)",
+            "Renewal retention",
+            464,
+            632,
+            GREEN,
+            186,
+        ),
     ]:
         _metric_card(
             section,
