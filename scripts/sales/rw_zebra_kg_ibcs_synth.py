@@ -66,3 +66,52 @@ def synthesize_dax(spec: ColumnSpec, catalog: MeasureCatalog) -> str | None:
         body = f"DIVIDE([{names[0]}] - [{names[1]}], ABS([{names[1]}]))"
         return f"({body}) * -1" if spec.is_cost else body
     return None
+
+
+_KNOWN_SCENARIOS = ("AC", "PY", "PL", "FC")
+_NON_AC_ORDER = ("PY", "PL", "FC")
+
+
+def synthesize_ibcs_columns(
+    scenarios: set[str],
+    is_cost: bool = False,
+) -> list[ColumnSpec]:
+    """Generate the canonical IBCS column set for a scenario combination.
+
+    Encodes Zebra atlas §3 column synthesis rule: pair (AC, Y) projections
+    auto-derive `<AC>-<Y>` (delta, format_code=1) and `<AC>-<Y> %` (relative,
+    format_code=2). Variance pairs only emit when AC is present.
+
+    Order: all known absolutes (AC, PY, PL, FC) in canonical order, then each
+    (AC, Y) pair's delta + relative for Y in (PY, PL, FC).
+
+    Unknown scenarios are silently dropped.
+    """
+    present = [s for s in _KNOWN_SCENARIOS if s in scenarios]
+    out: list[ColumnSpec] = [
+        ColumnSpec(name=s, role="absolute", base=(s,), format_code=0, is_cost=is_cost)
+        for s in present
+    ]
+    if "AC" not in present:
+        return out
+    for y in _NON_AC_ORDER:
+        if y in present:
+            out.append(
+                ColumnSpec(
+                    name=f"AC-{y}",
+                    role="delta",
+                    base=("AC", y),
+                    format_code=1,
+                    is_cost=is_cost,
+                )
+            )
+            out.append(
+                ColumnSpec(
+                    name=f"AC-{y} %",
+                    role="relative",
+                    base=("AC", y),
+                    format_code=2,
+                    is_cost=is_cost,
+                )
+            )
+    return out

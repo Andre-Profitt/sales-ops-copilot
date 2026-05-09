@@ -62,3 +62,61 @@ def test_synthesize_dax_missing_scenario_returns_none():
     cat = MeasureCatalog(by_scenario={"AC": "ARR_AC"}, measure_to_table={"ARR_AC": "Measures"})
     spec = ColumnSpec(name="PY", role="absolute", base=("PY",), format_code=0)
     assert synthesize_dax(spec, cat) is None
+
+
+from scripts.sales.rw_zebra_kg_ibcs_synth import synthesize_ibcs_columns
+
+
+def test_synthesize_ibcs_columns_single_scenario():
+    cols = synthesize_ibcs_columns({"AC"})
+    assert [c.name for c in cols] == ["AC"]
+    assert [c.role for c in cols] == ["absolute"]
+
+
+def test_synthesize_ibcs_columns_ac_py_emits_delta_and_relative():
+    cols = synthesize_ibcs_columns({"AC", "PY"})
+    assert [c.name for c in cols] == ["AC", "PY", "AC-PY", "AC-PY %"]
+    assert [c.role for c in cols] == ["absolute", "absolute", "delta", "relative"]
+    assert [c.format_code for c in cols] == [0, 0, 1, 2]
+
+
+def test_synthesize_ibcs_columns_ac_pl_pair():
+    cols = synthesize_ibcs_columns({"AC", "PL"})
+    assert [c.name for c in cols] == ["AC", "PL", "AC-PL", "AC-PL %"]
+
+
+def test_synthesize_ibcs_columns_three_way_emits_pairs_in_canonical_order():
+    cols = synthesize_ibcs_columns({"AC", "PY", "PL"})
+    names = [c.name for c in cols]
+    # AC absolutes first, then PY, then PL, then AC-PY pair, then AC-PL pair
+    assert names == [
+        "AC",
+        "PY",
+        "PL",
+        "AC-PY",
+        "AC-PY %",
+        "AC-PL",
+        "AC-PL %",
+    ]
+
+
+def test_synthesize_ibcs_columns_includes_fc_pair_last():
+    cols = synthesize_ibcs_columns({"AC", "FC"})
+    assert [c.name for c in cols] == ["AC", "FC", "AC-FC", "AC-FC %"]
+
+
+def test_synthesize_ibcs_columns_unknown_scenario_dropped():
+    cols = synthesize_ibcs_columns({"AC", "XYZ"})
+    assert [c.name for c in cols] == ["AC"]
+
+
+def test_synthesize_ibcs_columns_propagates_is_cost_flag():
+    cols = synthesize_ibcs_columns({"AC", "PY"}, is_cost=True)
+    assert all(c.is_cost is True for c in cols)
+
+
+def test_synthesize_ibcs_columns_no_ac_returns_only_absolutes():
+    """Variance pairs only synthesized when AC is present."""
+    cols = synthesize_ibcs_columns({"PY", "PL"})
+    assert [c.name for c in cols] == ["PY", "PL"]
+    assert all(c.role == "absolute" for c in cols)
