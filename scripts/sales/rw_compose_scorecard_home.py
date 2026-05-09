@@ -1,6 +1,3 @@
-# REBUILD IN PROGRESS — see docs/superpowers/specs/2026-05-09-vp-ops-front-page-spine-rebuild-design.md
-# DO NOT MODIFY UNTIL THE PR1 REBUILD MERGES. Removed in Task 7.
-
 """Compose the front 'VP Ops Scorecard' page of rpt_vp_ops_scorecard.
 
 PR1 layout (see spec): exception spine + movement-spine placeholder +

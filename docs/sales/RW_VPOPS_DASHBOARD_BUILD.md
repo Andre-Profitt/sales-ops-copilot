@@ -779,3 +779,65 @@ Promote Zebra BI Tables into the actual VP Ops front-page redesign only after
 the production page layout is rebuilt around: one exception spine, one pipeline
 movement spine, and compact RAG scorecards. Do not keep the current wall of
 cards and merely swap visual types.
+
+
+## VP Ops Scorecard front-page spine rebuild — PR1 (2026-05-09)
+
+PR1 of the spine rebuild replaces the 45-visualContainer card wall with two
+spines + a 4-card KPI strip. Exception spine uses Codex's lab-proven Zebra BI
+Tables binding pattern (commit `303bc6b`) lifted into
+`scripts/sales/rw_compose_scorecard_home.py:_build_exception_spine`. Movement
+spine is a textbox placeholder pending PR2's ARR-7d measure authoring.
+
+**Layout (sums to 720):**
+
+| Zone                            | y   | h   |
+| ------------------------------- | --- | --- |
+| Page title (textbox)            | 0   | 64  |
+| Exception spine (Zebra Tables)  | 80  | 264 |
+| Movement-spine placeholder      | 360 | 224 |
+| KPI strip (4 native cards)      | 600 | 120 |
+
+**Bindings:**
+
+- Exception spine values (positional, locked by
+  `test_exception_spine_value_order_matches_lab_proof`):
+  `Exception ARR`, `Exception Opps Count`, `At Risk Opps ARR`,
+  `Watch Opps ARR`. All Land+Expand only — `motion_type IN { "Land", "Expand" }`
+  is enforced at the deployed-measure layer.
+- KPI strip measures: `Total Closed Won ARR` (f_opportunity),
+  `Win Rate ARR` (f_opportunity), `Stage Forward Pct (LE)` (f_stage_transition),
+  `Renewal Retention Pct (Period)` (f_opportunity). The retention card is
+  Renewal-side ACV; cardinal rule preserved (compute layer, not display layer).
+
+**Verification:**
+
+- `python3 -m pytest tests/sales/` → all sales tests passing (10 new + 54
+  pre-existing).
+- Live report id `d7362a11-f3dd-4bd1-a69a-68c941c2598b` in workspace
+  `b66233d5-9d4a-44ba-89a8-b70206d98ae7`. Pre-flight resolved all measure
+  refs against 102 deployed measures.
+- Pre-push snapshot of the 45-visual state preserved at
+  `~/.frontier/artifacts/rw_vpops_pre_pr1_20260509.json` (rollback-safe).
+
+**Live promote entry point:**
+
+The correct CLI is `python3 -m scripts.sales.rw_compose_scorecard_home`
+(fetches → composes → pushes the full report.json). `rw_push_report.py:deploy()`
+is a *bootstrap-only* script that pushes a minimal empty report — using it for
+the spine push will wipe the page. The plan originally pointed at
+`rw_push_report.py`; learned this the hard way during PR1 deploy and rolled
+back from snapshot. Future RW front-page deploys must use
+`rw_compose_scorecard_home`.
+
+**Deferred to PR2:**
+
+- Movement waterfall — needs 4 new ARR-7d measures: `New Opps ARR 7d`,
+  `Closed Won ARR 7d`, `Closed Lost ARR 7d`, `Backward Moves ARR 7d`.
+- Gate-violation exception column — needs 1 new measure
+  `Commercial Approval Gate Exception ARR` joining f_opportunity to
+  `Stage_20_Approval__c`. sfkg confirms 257 SF reports / 28 dashboards already
+  use that field, so the underlying data is sound.
+- Zebra Cards binding pattern — current PR1 strip uses native cards; sparklines
+  + variance arrows wait for the Cards binding to be authored against the live
+  semantic model.
