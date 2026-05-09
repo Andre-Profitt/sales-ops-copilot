@@ -383,3 +383,42 @@ formatting and shape capture.
 - Combined count plus ARR card shape, if one Desktop visual can represent it
   cleanly.
 - Table cell conditional-formatting shape for threshold-crossable columns.
+
+## 2026-05-09 — Advanced Desktop-to-PBIR harness
+
+Andre called out the real issue after opening the report in Desktop: the live
+dashboard is still basically a valid wall of Power BI cards. The missing piece
+was not more hand-authored measures; it was a proper Desktop-to-code harness for
+advanced visual finish.
+
+**Shipped:**
+
+- Added `scripts/sales/rw_dashboard_harness.py`.
+  - `snapshot` saves live/Desktop/path `report.json` plus inventory.
+  - `inventory` writes visual inventory JSON/CSV with page, visual name, type,
+    fields, object keys, coordinates, and stable hashes.
+  - `audit` flags basic-finish gaps such as empty pages, plain cards, plain
+    tables, and canvas overflow.
+  - `diff` compares a pre-edit snapshot to the saved Desktop PBIP and can emit
+    candidate visual/object JSON for promotion into `_pbir_shapes.py` and
+    `_pbir_helpers.py`.
+  - `extract` pulls a specific live/Desktop/path visual or just its
+    `singleVisual.objects` block.
+- Added `docs/sales/RW_ADVANCED_PBI_HARNESS.md` with the new capture workflow.
+
+**Operating loop:**
+
+1. `python3 -m scripts.sales.rw_dashboard_harness snapshot --source live --label before_rag_card`
+2. Format one representative visual in Power BI Desktop.
+3. Save the PBIP.
+4. `python3 -m scripts.sales.rw_dashboard_harness diff --before output/rw_dashboard_harness/snapshots/before_rag_card.report.json --after-desktop --emit-candidates`
+5. Promote the captured renderer-valid shape into the PBIR helpers/composers.
+
+**Why this matters:**
+
+- The prior REST-safe pass could only clean up layout and section labels.
+- The Desktop lab alone proved the report could open, but did not make visual
+  iteration systematic.
+- This harness makes Desktop the renderer authority and Python the production
+  compiler, which is the right path for RAG cards, combined cards, table
+  conditional formatting, and richer matrix styling.
