@@ -332,3 +332,54 @@ Path chosen: **Path C — ship the cleanest possible Power BI report via REST**.
 - RAG-tinted card backgrounds, combined count+ARR cards, and table cell conditional formatting. Do not hand-roll these `objects` blocks; capture a renderer-validated shape via PBI Desktop/Windows or a browser-authored Fabric edit, then generalize it.
 
 **Tests:** `python3 -m pytest tests/sales` — 20 passed.
+
+## 2026-05-09 — Parallels Power BI Desktop lab enabled
+
+Path chosen: **Path A support lane**, with one adjustment. Do not depend on the
+Windows VM accessing SimCorp-local data. Pull the live report definition from
+Fabric on the Mac, place it in the Parallels shared folder as a PBIP-style
+Desktop lab, then use Windows Power BI Desktop only for renderer-validated
+formatting and shape capture.
+
+**Shipped:**
+
+- Installed Power BI Desktop in the `Windows 11` Parallels VM and verified
+  `PBIDesktop.exe` at `C:\Program Files\Microsoft Power BI Desktop\bin\PBIDesktop.exe`.
+- Added `scripts/sales/rw_pbi_desktop_lab.py`.
+  - Regenerates `/Users/test/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_live_pbip/`
+    from Fabric `getDefinition`.
+  - Writes a minimal `.pbip` wrapper plus the live `definition.pbir`,
+    `report.json`, and `.platform` parts.
+  - Rewrites a small CSV fixture for isolated Desktop formatting experiments.
+  - Can launch Desktop via an interactive Windows scheduled task with `--launch`.
+- Added `docs/sales/RW_PBI_DESKTOP_FORMATTING_LAB.md` with the exact runbook,
+  verified paths, capture targets, and deferred blockers.
+
+**Verified:**
+
+- Fabric `getDefinition` succeeds for `rpt_vp_ops_scorecard`.
+- The live report definition currently contains only `definition.pbir`,
+  `report.json`, and `.platform`.
+- Power BI REST PBIX export is blocked with HTTP 403 for this tenant/report.
+  Last captured request id: `7cd9881f-5899-435b-817a-700de204804d`.
+- The VM can launch Power BI Desktop through Task Scheduler, but the VM was at
+  the Windows lock screen during the PBIP-open test. Interactive formatting
+  still requires signing into Windows.
+
+**Decision record:**
+
+- Path A remains the right next execution path because captured Desktop/Fabric
+  shapes are the only low-risk route for RAG card backgrounds and table
+  conditional formatting.
+- Treat Desktop as a manual renderer/capture lab, not an automation surface.
+  Parallels/macOS UI automation was not reliable enough for end-to-end clicking.
+- Path B is still visually fastest but changes the medium away from Fabric.
+  Path C already shipped the REST-safe polish; continuing to hand-roll unknown
+  `singleVisual.objects` would be slower and riskier than capture.
+
+**Next capture targets:**
+
+- RAG card tint/accent/title/value/secondary-line shape.
+- Combined count plus ARR card shape, if one Desktop visual can represent it
+  cleanly.
+- Table cell conditional-formatting shape for threshold-crossable columns.
