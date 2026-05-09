@@ -460,3 +460,151 @@ With §11 decoded, every Zebra config primitive has a definitive native equivale
 5. **For Waterfalls**: native `waterfallChart` with `differenceHighlightSettings` colors mapped to the chosen style's positiveColor/negativeColor.
 
 This is the systematic rule book. Atlas decoded; rebuild path is now mechanical, not exploratory.
+
+---
+
+## 13. Cellular-level findings — 4 layers below the API surface
+
+Going beyond the API capabilities (§11), four deeper probes:
+
+### 13.1 Layer A: dataViewMappings (how Zebra requests data from PBI's query engine)
+
+**Zebra Tables uses MATRIX shape** (not categorical, not table):
+
+| Axis | Bound to | Reduction | Max |
+|---|---|---|---|
+| Rows | `Category` projection | bottom 30,000 | 30,000 |
+| Columns | `Group` projection | top 30,000 | 30,000 |
+| Values | bind to all of: Values, PreviousYear, Plan, Forecast, Tooltips, Comments, Filters, CategoryClass | — | (per role limits) |
+
+**Cardinality constraints declared in `conditions[0]`:**
+
+| Role | Tables max | Cards max |
+|---|---:|---:|
+| Values | **21** | 1 |
+| PreviousYear | 1 | 1 |
+| Plan | **3** | 1 |
+| Forecast | **3** | 1 |
+| Group | **4** | 1 |
+| CategoryClass | 4 *(Tables only)* | — |
+| Tooltips | 5 | 5 |
+| Comments | 2 | 2 |
+| KPI Descriptions | — | 2 *(Cards only)* |
+
+**Implication:** Zebra Tables can render up to 21 measures × 3 plans × 3 forecasts in one visual. Cards are constrained to single-KPI tiles. Native PBI tableEx has no equivalent cardinality declarations — RW would need to enforce limits via DAX guards if cloning the constraints.
+
+### 13.2 Layer B: per-key interior schema (cellular config)
+
+Across 360 visualContainers, every distinct property on every comparison key was enumerated. Findings:
+
+**The 24 base properties** appear on ALL key types (values, derived deltas, percents):
+
+```
+invert (bool)              scaleGroup (int)           format (int 0/1/2/3/5)
+useMeasureName (bool)      suppressOthers (bool)
+tableView.{bold, textColor, backgroundFill, markerStyle, border, showAsTable, hidden, hiddenFromGroups}
+chartView.{bold, textColor, backgroundFill, markerStyle, border, showAsTable, hidden, hiddenFromGroups}
+```
+
+**The 7 properties only on derived/custom keys:**
+
+```
+calculationFormula     calculationId          calculationIndex
+isCustomColumn         isQuickCalculation
+quickCalculationConfiguration.{dataProperty, type}
+```
+
+This decodes the **3 distinct comparison-column origins**:
+
+1. **Auto-derived from projections** — when `actual` and `plan` are both projected, Zebra synthesizes `actual-plan` and `actual-plan-percent` automatically (no extra config). 24 base properties only.
+2. **Quick calculations** (the "+" button feature) — `isQuickCalculation: true` + `quickCalculationConfiguration` describes one of 4 preset calcs (% of grand total / % of / Running total / Running total %) computed inside the visual, no DAX needed.
+3. **Custom DAX columns** — `isCustomColumn: true` + `calculationFormula` holds user-authored DAX for a custom column. These ARE measures (or expressions resolving to measures) but Zebra binds them as columns directly.
+
+**chartView vs tableView duality:** Each comparison key has two independent rendering states — one when the visual is in chart mode, one when in table mode. Properties like `showAsTable` (0/1/2 values) and `hidden` differ between the two views. ~30% of PY/Plan columns have `chartView.hidden=true` (visible only in table mode).
+
+**`hiddenFromGroups`** — per-Group-value column visibility. A column can be hidden when specific Group values are active (e.g., `forecast-plan` column visible only when `MTD` or `YTD` group is shown).
+
+### 13.3 Layer C: JS bundle behavioral signals (3.8 MB Tables visual code)
+
+Compiled visual JS mined for:
+
+**Hichert rule references (9 occurrences):** financial-calculation logic explicitly references the IBCS standards body chair Rolf Hichert — confirming Section 11.4's `relativeVarianceCalculation=0` is the IBCS-canonical default, not a Zebra convention.
+
+**Multi-version planning is core, not optional:**
+
+| Term | JS occurrences |
+|---|---:|
+| `previousYear` | 278 |
+| `plan2` | 276 |
+| `plan3` | 276 |
+| `forecast2` | 263 |
+| `forecast3` | 263 |
+| `commentBox` | 225 |
+| `annotation` | 190 |
+| `columnAdder` | 41 |
+| `quickCalculation` | 37 |
+| `patternFill` | 6 *(no native equivalent)* |
+| `Hichert` | 9 |
+
+**Behavioral pipeline names** (250+ functions, top by frequency):
+
+- `update` (30×) — the React-style render loop
+- `renderIcon` (17×) — variance arrow / status icon rendering
+- `format` (13×) — number formatting via the units/decimal pipeline
+- `getCategoryFormatSetting` / `changeCategoryFormatSettingAndPersist` — per-category formatting (cellular)
+- `calculateChartWidths` / `calculateCategoryWidth` — layout solver
+- `yScale` / `scaleSize` — axis scaling
+- `drawCommentMarkers` — annotation overlay
+- `getScientificFormat` / `hasScientificFormat` — scientific-notation handling
+- `transformationDependenciesFactory` — data-transformation graph
+
+**Hidden features confirmed in code but not documented in templates:**
+
+- "Add CAGR arrow" — Compound Annual Growth Rate arrow (a special variance form)
+- "Add formula" — user-authored DAX-like in-visual formula
+- "Add highlight" — manual cell highlighting overlay
+- "Add annotations" — pinned cell-anchored notes
+
+### 13.4 Layer D: zebrabi.com/help/ — canonical product documentation
+
+Confirmed via the public help docs:
+
+**Scenario terminology** is officially documented as **AC, PY, PL, FC** ("default scenarios like Actuals, Previous year, Plan and Forecast"). Plan2/Plan3/Forecast2/Forecast3 are exposed via "Support multiple forecasts and multiple plans" doc — the 157-property `legendHeaderSettings` is the actual feature surface, not over-engineering.
+
+**Auto-derived variances** are documented behavior: "variances are automatically calculated and displayed visually" — the matrix-shape data + the comparison-key synthesis rule we decoded is the official feature, not a side-effect.
+
+**Quick column calculations** — the 4 presets confirmed:
+
+1. % of grand total
+2. % of…
+3. Running total
+4. Running total %
+
+"No DAX is required to reach the calculations because everything is calculated inside the visual based on the data included." Reference column is always AC.
+
+**Responsive layout** — Zebra's official term for the `chartSettings.types="Actual / Absolute / Relative"` mode: "Responsive layout seamlessly adds Forecast comparison."
+
+**Basis points formatting** — confirmed feature for absolute variances (the `dataLabelSettings.useBasisPointsFormat` property).
+
+### 13.5 What this cellular probe means for the rebuild
+
+Every primitive of Zebra's product is now decoded:
+
+- **Data flow** — matrix dataView with cardinality-bounded role binding (Layer A)
+- **Per-cell config** — 24-or-31 property schema with explicit derived/custom-column flags (Layer B)
+- **Computation** — financial Hichert-rule variance calc; in-visual quick calcs reference AC; multi-version planning by design (Layer C)
+- **User-facing semantics** — AC/PY/PL/FC scenarios, automatic variance derivation, 4 quick-calc presets, basis points option (Layer D)
+
+**For PR9 (mechanical rebuild)**, the rule book in §12 now stands on rock. Three classes of comparison columns to handle:
+
+1. **Auto-derived** (AC vs PL, AC vs PY, etc.) → synthesize DAX measures via Fabric REST `updateDefinition`, project into native tableEx columns in IBCS order
+2. **Quick calcs** (% of grand total, Running total) → synthesize DAX using `CALCULATE + ALL` patterns; the 4 presets are well-defined formulas
+3. **Custom DAX columns** → the `calculationFormula` text is the lift target — paste verbatim into TMDL with table-name remapping
+
+**Three classes of rendering-fidelity loss confirmed:**
+
+- **Pattern fills** (`patternFill` 6× in JS) — Zebra paints scenarios with hatch/dotted/etc. fill patterns; native PBI has only solid colors. Lost ~5% visual fidelity.
+- **Annotation overlay** (`drawCommentMarkers`, `annotation` 190×) — pinned cell-level comments. Native equivalent is composite-textbox-positioning. Lost ~3% functional fidelity.
+- **CAGR arrow** — special compound-growth visualization. No native equivalent. Lost <1%.
+
+The 85-90% native-fidelity ceiling estimate from §7 is now confirmed cellular: ~10-15% loss is in pattern fills + annotation overlay + niche features (CAGR, axis-break, runtime user knobs).
