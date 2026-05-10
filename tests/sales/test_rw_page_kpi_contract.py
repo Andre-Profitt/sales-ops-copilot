@@ -164,6 +164,87 @@ def test_what_changed_top_risk_cards_use_zebra_object_bearing_card_grammar():
         assert {"background", "border", "labels", "categoryLabels"} <= set(objects)
 
 
+def test_stage_hygiene_visual_qa_has_no_medium_plus_findings():
+    report = compose_report({"sections": []})
+    stage_hygiene = _page(report, "Stage Hygiene")
+
+    result = audit_report({"sections": [stage_hygiene]})
+    findings = [f for f in result["findings"] if f["severity"] in {"medium", "high", "critical"}]
+    card_count = sum(1 for vc in stage_hygiene["visualContainers"] if _visual_type(vc) == "card")
+
+    assert card_count < 8
+    assert findings == []
+
+
+def test_stage_hygiene_uses_native_visual_types_only():
+    report = compose_report({"sections": []})
+    stage_hygiene = _page(report, "Stage Hygiene")
+    visual_types = {_visual_type(vc) for vc in stage_hygiene["visualContainers"]}
+
+    assert visual_types <= {"basicShape", "card", "tableEx", "textbox"}
+    assert not any(kind.startswith("ZebraBI") for kind in visual_types)
+
+
+def test_stage_hygiene_hero_and_process_cards_use_zebra_native_card_grammar():
+    report = compose_report({"sections": []})
+    stage_hygiene = _page(report, "Stage Hygiene")
+    cards = [_single_visual(vc) for vc in stage_hygiene["visualContainers"] if _visual_type(vc) == "card"]
+
+    assert len(cards) == 7
+    for card in cards:
+        objects = card.get("objects") or {}
+        assert objects["stylePreset"] == {
+            "source": "zebra-visual-dna",
+            "pattern": "stage-hygiene-process-kpi-card",
+            "visual_intent": "Stage Hygiene hero/process KPI",
+        }
+        assert objects["zebraGrammar"]["schema"] == "rw-zebra-native-transfer.visualObjectGrammar.v1"
+        assert {"background", "border", "labels", "categoryLabels"} <= set(objects)
+
+
+def test_stage_hygiene_stage_and_detail_tables_use_zebra_ibcs_table_grammar():
+    report = compose_report({"sections": []})
+    stage_hygiene = _page(report, "Stage Hygiene")
+    stage_tables = [
+        _single_visual(vc)
+        for vc in stage_hygiene["visualContainers"]
+        if _visual_type(vc) == "tableEx" and "Stage Forward Pct (LE)" in vc["config"]
+    ]
+    detail_tables = [
+        _single_visual(vc)
+        for vc in stage_hygiene["visualContainers"]
+        if _visual_type(vc) == "tableEx" and "Stage 4 Forward Pct" in vc["config"]
+    ]
+
+    assert len(stage_tables) == 1
+    assert len(detail_tables) == 1
+    stage_table = stage_tables[0]
+    assert list(stage_table["columnProperties"]) == [
+        "f_stage_transition.from_stage_name",
+        "f_stage_transition.Stage Forward Pct (LE)",
+        "f_stage_transition.Stage Backward Pct (LE)",
+        "f_stage_transition.Avg Days In Prior Stage (LE)",
+        "f_stage_transition.Total Stage Transitions",
+        "f_stage_transition.Stage Moves ARR 7d",
+    ]
+    stage_objects = stage_table.get("objects") or {}
+    assert stage_objects["stylePreset"] == {
+        "source": "zebra-visual-dna",
+        "pattern": "stage-hygiene-variance-table",
+        "visual_intent": "stage conversion and time-in-stage table",
+    }
+    assert stage_objects["zebraGrammar"]["schema"] == "rw-zebra-native-transfer.columnGrammar.v1"
+    assert "dataBars" in stage_objects
+
+    detail_objects = detail_tables[0].get("objects") or {}
+    assert detail_objects["stylePreset"] == {
+        "source": "zebra-visual-dna",
+        "pattern": "detail-ledger",
+        "visual_intent": "detail ledger",
+    }
+    assert detail_objects["zebraGrammar"]["schema"] == "rw-zebra-native-transfer.columnGrammar.v1"
+
+
 def test_arr_and_renewal_acv_contracts_stay_separate_by_page():
     renewal_measures = {
         "Total Open Renewal ACV",

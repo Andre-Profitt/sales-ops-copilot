@@ -1337,3 +1337,24 @@ Applied the deeper Zebra visual-DNA grammar to the real RW `What Changed` page o
 
 No Fabric publish was performed.  This is intentionally a one-page proof that Zebra extraction can improve RW native emitters without reintroducing custom visuals or blending ARR/Renewal ACV guardrails.
 
+## 2026-05-10 — Stage Hygiene Zebra-native transfer application
+
+Applied the proven Zebra-native grammar pattern to exactly one additional RW page: `Stage Hygiene`.
+
+**Shipped:**
+
+- Kept the required Stage Hygiene KPI contract intact: forward rate, backward rate, stage aging, Land cycle, L+E cycle, Stage Conversion Matrix, and the Stage 3 forward proxy all remain present.
+- Replaced the Stage Hygiene hero/process cards with object-bearing native card grammar (`stage-hygiene-process-kpi-card`) using the same safe Zebra visual-DNA lineage metadata as the What Changed proof.
+- Converted the Stage Conversion Matrix into a native `tableEx` diagnostic table in IBCS order: stage, forward %, backward %, average days, moves, and 7-day ARR moved.
+- Added native data-bar metadata only to the supported `Stage Moves ARR 7d` measure to carry Zebra marker/scale intent without inventing unsupported variance fields.
+- Kept Stage 4 Bottleneck Detail as a dense native detail-ledger table with Zebra/IBCS column grammar.
+- Did not broaden the change to Forecast, Renewals, or Growth Mix.
+
+**Lab verification:**
+
+- `python3 -m scripts.sales.rw_apply_zebra_lab_proof` regenerated the local Desktop PBIP.
+- `python3 -m scripts.sales.rw_dashboard_harness visual-qa --source path --path ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json --label rw_stage_hygiene_zebra_native --fail-on medium --markdown docs/sales/RW_DASHBOARD_VISUAL_QA.md` returned 0 findings.
+- Focused contract tests now assert Stage Hygiene native visual types, no medium+ visual QA debt, object-bearing card grammar, and Zebra/IBCS table grammar.
+
+No Fabric publish was performed.  ARR remains Land+Expand only, Renewal ACV remains Renewal only, and no custom visuals were introduced to the native Stage Hygiene page.
+

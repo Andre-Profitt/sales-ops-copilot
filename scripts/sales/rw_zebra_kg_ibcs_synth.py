@@ -280,6 +280,32 @@ def zebra_detail_table_objects() -> dict:
     )
 
 
+def zebra_stage_hygiene_table_objects(*, max_field: str, databar_column: str, accent: str = "#2B5C8A") -> dict:
+    """Stage conversion/time-in-stage table style derived from Zebra variance grammar.
+
+    This is intentionally tableEx-oriented, not a broad framework abstraction:
+    Stage Hygiene needs a compact IBCS scan table where forward/backward rates,
+    average age, transition counts, and moved ARR keep deterministic order, while
+    a native data bar carries the Zebra scaleGroup/bullet-bar intent for the real
+    ARR movement measure.
+    """
+    objects = build_table_style_objects(
+        header_fill="#EAF0F7",
+        header_text="#1A1D31",
+        row_text="#202124",
+        grid="#D8DEE8",
+        font_size=8,
+    )
+    objects = _with_zebra_transfer_metadata(
+        objects,
+        pattern="stage-hygiene-variance-table",
+        visual_intent="stage conversion and time-in-stage table",
+        grammar_schema="rw-zebra-native-transfer.columnGrammar.v1",
+    )
+    objects["dataBars"] = build_databar_cf_objects(databar_column, max_field, accent)
+    return objects
+
+
 def zebra_card_style_objects(*, value_font_size: int = 18, label_font_size: int = 8, accent: str = "#083EA7") -> dict:
     return {
         "background": [{"properties": {"show": _card_literal(True), "color": _card_color("#FFFFFF"), "transparency": _card_literal(0)}}],

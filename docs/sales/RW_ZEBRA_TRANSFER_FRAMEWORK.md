@@ -182,10 +182,21 @@ The first RW-native application is deliberately narrow: the `What Changed` page.
 - the opportunity queue remains a detail ledger with dense table styling, not a replacement card stack;
 - no custom visual types, custom visual packages, fallback textboxes, or cross-motion ARR/Renewal blends are introduced.
 
+### Applied RW proof: Stage Hygiene
+
+The second RW-native application is also deliberately one page: `Stage Hygiene`.  The page keeps its original RW KPI contract and measures, including the Stage 3 forward proxy label, but now applies the Zebra-native grammar where it maps to real process diagnostics:
+
+- the seven hero/process KPI cards use object-bearing native card grammar with `stage-hygiene-process-kpi-card` lineage, preserving RAG/accent treatment without custom visuals;
+- the stage conversion/time-in-stage section is a native `tableEx` in deterministic IBCS order: stage, forward %, backward %, average days, move count, and 7-day ARR moved;
+- the 7-day ARR moved measure carries native data-bar metadata to represent Zebra `markerStyle`/`scaleGroup` intent only where an actual measure supports it;
+- the Stage 4 bottleneck detail stays a dense native detail ledger, not another card stack;
+- no Forecast, Renewals, or Growth Mix page behavior is changed in this pass.
+
 Reusable helpers live in `scripts/sales/rw_zebra_kg_ibcs_synth.py`:
 
 - `zebra_native_card_objects()`
 - `zebra_compact_movement_ledger_objects()`
+- `zebra_stage_hygiene_table_objects()`
 - `zebra_detail_table_objects()`
 
 These helpers attach only safe lineage metadata (`stylePreset`, `zebraGrammar`) and native Power BI object groups.  They do not persist raw Zebra object payloads or license/activation material.
