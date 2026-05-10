@@ -21,6 +21,7 @@ Usage:
     python3 -m scripts.sales.rw_dashboard_harness semantic-filter --source path --path <report.json>
     python3 -m scripts.sales.rw_dashboard_harness data-surface-flow --source path --path <report.json>
     python3 -m scripts.sales.rw_dashboard_harness enterprise-standard --source path --path <report.json>
+    python3 -m scripts.sales.rw_dashboard_harness pbi-graph --source path --path <report.json>
     python3 -m scripts.sales.rw_dashboard_harness kpi-checklist
     python3 -m scripts.sales.rw_dashboard_harness diff --before <snapshot.json> --after-desktop
     python3 -m scripts.sales.rw_dashboard_harness extract --source desktop --page "What Changed" --name e337
@@ -618,6 +619,34 @@ def cmd_enterprise_standard(args: argparse.Namespace) -> None:
     raise SystemExit(1 if blocking else 0)
 
 
+def cmd_pbi_graph(args: argparse.Namespace) -> None:
+    from scripts.sales.rw_pbi_knowledge_graph import (
+        DEFAULT_MARKDOWN,
+        SEVERITY_ORDER,
+        build_pbi_knowledge_graph,
+        write_outputs,
+    )
+
+    report = load_report(args.source, args.path)
+    label = slug(args.label or f"{args.source}_{timestamp()}")
+    graph = build_pbi_knowledge_graph(report, source=args.source, label=label)
+    markdown_path = args.markdown or DEFAULT_MARKDOWN
+    json_path, md_path = write_outputs(
+        graph,
+        out_dir=args.out_dir / "pbi_knowledge_graph",
+        markdown_path=markdown_path,
+        label=label,
+    )
+    counts = graph["summary"]["cleanup_counts"]
+    print(f"pbi knowledge graph json: {json_path}")
+    print(f"pbi knowledge graph markdown: {md_path}")
+    print(
+        f"verdict={graph['summary']['verdict']} "
+        f"nodes={graph['summary']['node_count']} edges={graph['summary']['edge_count']} "
+        + " ".join(f"{severity}={counts[severity]}" for severity in SEVERITY_ORDER)
+    )
+
+
 def cmd_kpi_checklist(args: argparse.Namespace) -> None:
     from scripts.sales.rw_kpi_coverage_checklist import DEFAULT_MARKDOWN, write_outputs
 
@@ -788,6 +817,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="Exit non-zero when an enterprise-standard finding at this severity or higher is present.",
     )
     p_enterprise.set_defaults(func=cmd_enterprise_standard)
+
+    p_pbi_graph = sub.add_parser(
+        "pbi-graph", help="Build report/page/visual/KPI/semantic knowledge graph"
+    )
+    add_source_args(p_pbi_graph)
+    p_pbi_graph.add_argument("--markdown", type=Path, help="Markdown report path")
+    p_pbi_graph.set_defaults(func=cmd_pbi_graph)
 
     p_kpi_checklist = sub.add_parser(
         "kpi-checklist", help="Write RW KPI expected-vs-BI coverage checklist"

@@ -1572,6 +1572,43 @@ Andre asked for a direct checklist of RW-expected KPIs versus what the current B
 
 ARR remains Land + Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
 
+## 2026-05-10 — Power BI artifact knowledge graph
+
+Built an executable knowledge graph of the current RW Power BI report artifact so the dashboard can be inspected tab-by-tab instead of by screenshots alone.
+
+**Added:**
+
+- `scripts/sales/rw_pbi_knowledge_graph.py`
+- `tests/sales/test_rw_pbi_knowledge_graph.py`
+- `docs/sales/RW_PBI_KNOWLEDGE_GRAPH.md`
+- `rw_dashboard_harness pbi-graph` for rerunning the graph with the rest of the report gates
+
+**Current live graph snapshot:**
+
+- Source: live Fabric report
+- Pages: 7
+- Visuals: 126
+- Semantic model: 9 tables, 124 measures, 11 relationships
+- BI surface usage: 52 measures, 16 columns
+- RW KPI contract coverage: 29 placed KPIs from 31 canonical RW KPIs
+- Graph size: 417 nodes, 987 edges
+
+**Cleanup findings now visible in one place:**
+
+- `Forecast` still has real data/model blockers for 3x pipeline coverage and true forecast accuracy.
+- `Growth Mix` still needs a trusted Synergy flag.
+- Report-level model debt remains for stage/forecast transition-date roles.
+- One-off revenue and synergy-in-pipe remain source/model gaps.
+
+**Verification:**
+
+- `python3 -m ruff check scripts/sales/rw_pbi_knowledge_graph.py tests/sales/test_rw_pbi_knowledge_graph.py` passed.
+- `python3 -m pytest tests/sales/test_rw_pbi_knowledge_graph.py -q` passed: 4 passed.
+- `python3 -m scripts.sales.rw_dashboard_harness pbi-graph --source path --path ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json --label rw_current_pbi_kg --markdown docs/sales/RW_PBI_KNOWLEDGE_GRAPH.md` generated a local-lab graph.
+- `python3 -m scripts.sales.rw_dashboard_harness pbi-graph --source live --label rw_live_pbi_kg --markdown docs/sales/RW_PBI_KNOWLEDGE_GRAPH.md` generated the committed live-report graph.
+
+No Fabric publish was performed.
+
 ## 2026-05-10 — Stage order, unit, and zero-value hardening
 
 Andre flagged three executive-trust issues: mixed units, non-business stage ordering, and suspect zeros on Renewals/Growth Mix.  This pass made those checks executable and pushed the stage-order fix into OneLake, the semantic model, and the live report.
