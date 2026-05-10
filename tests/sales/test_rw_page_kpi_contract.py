@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 
 from scripts.sales.rw_compose_all_pages import compose_report, validate_contract_pages
+from scripts.sales.rw_dashboard_harness import audit
 from scripts.sales.rw_page_kpi_contract import PAGE_KPI_CONTRACTS, required_measures
 
 
@@ -37,6 +38,17 @@ def test_target_pages_use_only_native_power_bi_visual_types():
                 unexpected.append((page, visual_type))
 
     assert unexpected == []
+
+
+def test_target_pages_have_no_plain_card_or_plain_table_visual_debt():
+    report = compose_report({"sections": []})
+    findings = [
+        finding
+        for finding in audit(report)
+        if finding.startswith("[plain-card]") or finding.startswith("[plain-table]")
+    ]
+
+    assert findings == []
 
 
 def test_total_open_pipeline_value_is_the_only_cross_motion_measure():

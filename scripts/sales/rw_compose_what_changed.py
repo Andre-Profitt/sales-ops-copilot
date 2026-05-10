@@ -12,9 +12,9 @@ Run:
 from __future__ import annotations
 
 from scripts.sales._pbir_helpers import (
-    build_card_visual,
     build_rag_card_visual,
     build_shape_visual,
+    build_table_style_objects,
     build_table_visual,
     build_textbox_visual,
 )
@@ -120,15 +120,92 @@ def _compose(section: dict) -> None:
     # Slips defers until f_ofh_close_date ETL ships
     # (see docs/sales/RW_VPOPS_DASHBOARD_BUILD.md Foundation Phase).
     change_buckets = [
-        # (table, measure, title, x, y, w, h)
-        ("f_stage_transition", "Stage Moves Count 7d", "Stage Moves (7d)", 20, 228, 240, 72),
-        ("f_stage_transition", "Stage Moves ARR 7d", "Stage Moves (7d) - ARR", 20, 305, 240, 54),
-        ("f_opportunity", "New Opps Count 7d", "New Opps (7d)", 280, 228, 240, 90),
-        ("f_opportunity", "Closed Won Count 7d", "Won (7d)", 540, 228, 240, 90),
-        ("f_opportunity", "Closed Lost Count 7d", "Lost (7d)", 800, 228, 240, 90),
+        # (table, measure, title, x, y, w, h, tint, accent, value_color, units)
+        (
+            "f_stage_transition",
+            "Stage Moves Count 7d",
+            "Stage Moves (7d)",
+            20,
+            228,
+            240,
+            72,
+            "#F4F7FB",
+            "#2B5C8A",
+            "#1A1D31",
+            None,
+        ),
+        (
+            "f_stage_transition",
+            "Stage Moves ARR 7d",
+            "Stage Moves (7d) - ARR",
+            20,
+            305,
+            240,
+            54,
+            "#F4F7FB",
+            "#2B5C8A",
+            "#1A1D31",
+            1000000,
+        ),
+        (
+            "f_opportunity",
+            "New Opps Count 7d",
+            "New Opps (7d)",
+            280,
+            228,
+            240,
+            90,
+            "#F4F7FB",
+            "#2B5C8A",
+            "#1A1D31",
+            None,
+        ),
+        (
+            "f_opportunity",
+            "Closed Won Count 7d",
+            "Won (7d)",
+            540,
+            228,
+            240,
+            90,
+            "#EEF9EE",
+            "#3B8A3E",
+            "#1F6F3B",
+            None,
+        ),
+        (
+            "f_opportunity",
+            "Closed Lost Count 7d",
+            "Lost (7d)",
+            800,
+            228,
+            240,
+            90,
+            "#FFEEEE",
+            "#C33A32",
+            "#B3261E",
+            None,
+        ),
     ]
-    for tbl, msr, title, x, y, w, h in change_buckets:
-        section["visualContainers"].append(build_card_visual(tbl, msr, title, x=x, y=y, w=w, h=h))
+    for tbl, msr, title, x, y, w, h, tint, accent, value_color, units in change_buckets:
+        section["visualContainers"].append(
+            build_rag_card_visual(
+                tbl,
+                msr,
+                title,
+                x=x,
+                y=y,
+                w=w,
+                h=h,
+                tint=tint,
+                accent=accent,
+                value_color=value_color,
+                label_color="#5C6670",
+                value_font_size=22 if h >= 72 else 18,
+                label_font_size=8,
+                display_units=units,
+            )
+        )
 
     # ── Phase 3: Detail table ──────────────────────────────────
     section["visualContainers"].append(
@@ -175,6 +252,13 @@ def _compose(section: dict) -> None:
             y=414,
             w=1200,
             h=280,
+            objects=build_table_style_objects(
+                header_fill="#EEF2F6",
+                header_text="#1A1D31",
+                row_text="#202124",
+                grid="#E3E7EE",
+                font_size=8,
+            ),
         )
     )
 

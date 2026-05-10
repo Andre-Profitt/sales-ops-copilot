@@ -20,8 +20,10 @@ Run:
 from __future__ import annotations
 
 from scripts.sales._pbir_helpers import (
-    build_card_visual,
     build_matrix_visual,
+    build_matrix_style_objects,
+    build_rag_card_visual,
+    build_table_style_objects,
     build_table_visual,
     build_textbox_visual,
 )
@@ -35,6 +37,38 @@ from scripts.sales.rw_add_visual import (
 from scripts.sales.rw_validate import fetch_measures_by_table, validate_visual_dict
 
 PAGE = "Forecast"
+
+
+def _kpi_card(
+    table: str,
+    measure: str,
+    title: str,
+    *,
+    x: float,
+    y: float,
+    w: float,
+    h: float,
+    tint: str = "#F4F7FB",
+    accent: str = "#2B5C8A",
+    value_color: str = "#1A1D31",
+    display_units: int | None = None,
+) -> dict:
+    return build_rag_card_visual(
+        table,
+        measure,
+        title,
+        x=x,
+        y=y,
+        w=w,
+        h=h,
+        tint=tint,
+        accent=accent,
+        value_color=value_color,
+        label_color="#5C6670",
+        value_font_size=24 if h >= 90 else 20,
+        label_font_size=9,
+        display_units=display_units,
+    )
 
 
 def _find_page(rj: dict) -> dict:
@@ -68,13 +102,19 @@ def _compose(section: dict) -> None:
     # Days remaining. Quota dependency unmet — substitute with
     # Open Pipeline Value (cross-motion) + Closed Won ARR.
     hero = [
-        ("f_opportunity", "Days Remaining In FQ", "Days Remaining (FQ)", 20),
-        ("f_opportunity", "Total Open Pipeline Value", "Open Pipeline (cross-motion)", 420),
-        ("f_opportunity", "Total Closed Won ARR", "Closed Won ARR (FY26)", 820),
+        ("f_opportunity", "Days Remaining In FQ", "Days Remaining (FQ)", 20, None),
+        (
+            "f_opportunity",
+            "Total Open Pipeline Value",
+            "Open Pipeline (cross-motion)",
+            420,
+            1000000,
+        ),
+        ("f_opportunity", "Total Closed Won ARR", "Closed Won ARR (FY26)", 820, 1000000),
     ]
-    for tbl, msr, title, x in hero:
+    for tbl, msr, title, x, display_units in hero:
         section["visualContainers"].append(
-            build_card_visual(tbl, msr, title, x=x, y=42, w=380, h=96)
+            _kpi_card(tbl, msr, title, x=x, y=42, w=380, h=96, display_units=display_units)
         )
 
     # ── Stage × motion matrix ──────────────────────────────────
@@ -100,6 +140,13 @@ def _compose(section: dict) -> None:
             y=182,
             w=1200,
             h=210,
+            objects=build_matrix_style_objects(
+                header_fill="#EEF2F6",
+                header_text="#1A1D31",
+                row_text="#202124",
+                grid="#E3E7EE",
+                font_size=8,
+            ),
         )
     )
 
@@ -108,19 +155,57 @@ def _compose(section: dict) -> None:
         build_textbox_visual("FORECAST DISCIPLINE - movement quality", x=20, y=408, w=1200, h=24)
     )
     discipline = [
-        ("f_forecast_transition", "Forecast Slip Pct", "Slip Rate", 20),
-        ("f_forecast_transition", "Forecast Slips", "Total Slips (qtr)", 320),
-        ("f_forecast_transition", "Forecast Upgrades", "Total Upgrades (qtr)", 620),
+        (
+            "f_forecast_transition",
+            "Forecast Slip Pct",
+            "Slip Rate",
+            20,
+            "#FFEEEE",
+            "#C33A32",
+            "#B3261E",
+        ),
+        (
+            "f_forecast_transition",
+            "Forecast Slips",
+            "Total Slips (qtr)",
+            320,
+            "#FFF8E6",
+            "#D98A00",
+            "#1A1D31",
+        ),
+        (
+            "f_forecast_transition",
+            "Forecast Upgrades",
+            "Total Upgrades (qtr)",
+            620,
+            "#EEF9EE",
+            "#3B8A3E",
+            "#1F6F3B",
+        ),
         (
             "f_forecast_transition",
             "Avg Days In Forecast Category",
             "Avg Days In Category",
             920,
+            "#F4F7FB",
+            "#2B5C8A",
+            "#1A1D31",
         ),
     ]
-    for tbl, msr, title, x in discipline:
+    for tbl, msr, title, x, tint, accent, value_color in discipline:
         section["visualContainers"].append(
-            build_card_visual(tbl, msr, title, x=x, y=436, w=280, h=80)
+            _kpi_card(
+                tbl,
+                msr,
+                title,
+                x=x,
+                y=436,
+                w=280,
+                h=80,
+                tint=tint,
+                accent=accent,
+                value_color=value_color,
+            )
         )
 
     # ── Commit-risk table ──────────────────────────────────────
@@ -175,6 +260,13 @@ def _compose(section: dict) -> None:
             y=560,
             w=1200,
             h=145,
+            objects=build_table_style_objects(
+                header_fill="#EEF2F6",
+                header_text="#1A1D31",
+                row_text="#202124",
+                grid="#E3E7EE",
+                font_size=8,
+            ),
         )
     )
 

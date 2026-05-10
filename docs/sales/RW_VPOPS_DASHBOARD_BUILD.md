@@ -1044,3 +1044,47 @@ Total: 7 sections, 105 visualContainers.
 This checkpoint updates the local Desktop lab and repo compiler only. The live
 production RW report was not pushed in this pass; promote with
 `python3 -m scripts.sales.rw_compose_all_pages` after Desktop visual review.
+
+
+## Zebra Native Polish Pass v1 - Plain Visual Debt Removed (2026-05-09)
+
+Follow-up to the all-page KPI targeting pass. The page inventory showed the
+remaining "old Power BI" feel was concentrated in `Forecast` and `What Changed`:
+plain cards and unstyled `tableEx` visuals, while the newer pages already used
+object-bearing cards/tables.
+
+**Shipped:**
+
+- Replaced all plain `Forecast` cards with object-bearing native RAG cards.
+- Added renderer-safe matrix/table styling objects to the `Forecast` stage x
+  motion matrix and commit-risk table.
+- Replaced all plain `What Changed` change-bucket cards with object-bearing
+  native RAG cards.
+- Added renderer-safe table styling objects to the `What Changed` detail table.
+- Added a test gate that runs the dashboard harness audit against the compiled
+  target pages and fails on `[plain-card]` or `[plain-table]` findings.
+
+**Lab audit result:**
+
+```bash
+python3 -m scripts.sales.rw_dashboard_harness audit \
+  --source path \
+  --path ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json \
+  --label rw_kpi_lab_zebra_polish_v1
+```
+
+Result: `no findings`.
+
+**Verification:**
+
+- `python3 -m scripts.sales.rw_apply_zebra_lab_proof` regenerated the Desktop
+  lab PBIP report JSON.
+- `python3 -m scripts.sales.rw_validate --file ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json`
+  succeeded: all refs resolve against 102 deployed measures.
+- `.venv/bin/pytest tests/sales -q` succeeded: 168 passed, 1 skipped.
+
+**Remaining polish gate:**
+
+The code-level visual debt gate is now clean. The next gate is Desktop
+screenshot review for spacing, clipping, and whether the native Zebra-pattern
+pages actually read at consulting grade.
