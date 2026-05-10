@@ -58,7 +58,9 @@ def _compose(section: dict) -> None:
     """
     # ── Phase 1: Risk band ──────────────────────────────────────
     section["visualContainers"].append(
-        build_textbox_visual("Exception Movement", x=20, y=12, w=1200, h=24)
+        build_textbox_visual(
+            "Exception Movement", x=20, y=12, w=1200, h=28, font_size_pt=18, color="#1A1D31"
+        )
     )
     # Hero cards. ARR shown via a separate small card under each count
     # — a single card hosts one Measure per the current builder.
@@ -107,14 +109,15 @@ def _compose(section: dict) -> None:
                 h=56,
                 tint=tint,
                 accent=accent,
-                value_font_size=24,
+                value_font_size=18,
+                label_font_size=8,
                 display_units=1,
             )
         )
 
     # ── Phase 2: Change buckets (3 of 4 spec'd; Slips deferred) ──
     section["visualContainers"].append(
-        build_textbox_visual("7-Day Operating Movement", x=20, y=198, w=1200, h=24)
+        build_textbox_visual("7-Day Operating Movement", x=20, y=198, w=1200, h=24, font_size_pt=12, color="#1A1D31")
     )
     # Spec calls for Stage Moves · Slips · New Opps · Closed.
     # Slips defers until f_ofh_close_date ETL ships
@@ -128,7 +131,7 @@ def _compose(section: dict) -> None:
             20,
             228,
             240,
-            72,
+            90,
             "#F4F7FB",
             "#2B5C8A",
             "#1A1D31",
@@ -139,9 +142,9 @@ def _compose(section: dict) -> None:
             "Stage Moves ARR 7d",
             "Stage Moves (7d) - ARR",
             20,
-            305,
+            322,
             240,
-            54,
+            56,
             "#F4F7FB",
             "#2B5C8A",
             "#1A1D31",
@@ -210,7 +213,7 @@ def _compose(section: dict) -> None:
     # ── Phase 3: Detail table ──────────────────────────────────
     section["visualContainers"].append(
         build_textbox_visual(
-            "Top Open ARR Movement Queue", x=20, y=386, w=1200, h=24
+            "Top Open ARR Movement Queue", x=20, y=386, w=1200, h=24, font_size_pt=12, color="#1A1D31"
         )
     )
     # Open opps by Open Pipeline ARR. Spec's "Change" + "Risk class"
