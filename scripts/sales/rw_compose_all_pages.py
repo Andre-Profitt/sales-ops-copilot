@@ -55,7 +55,7 @@ def compose_report(rj: dict) -> dict:
         section["height"] = 720.0
         section["width"] = 1280.0
         _load_composer(module_name)(section)
-        append_filter_bar(section, explorer=page == "RW KPI Explorer")
+        append_filter_bar(section, page=page)
     for ordinal, section in enumerate(rj.get("sections", [])):
         section["ordinal"] = ordinal
     return rj

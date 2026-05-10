@@ -15,6 +15,7 @@ Usage:
     python3 -m scripts.sales.rw_dashboard_harness inventory --source desktop --page "What Changed"
     python3 -m scripts.sales.rw_dashboard_harness audit --source desktop
     python3 -m scripts.sales.rw_dashboard_harness visual-qa --source path --path <report.json>
+    python3 -m scripts.sales.rw_dashboard_harness semantic-filter --source path --path <report.json>
     python3 -m scripts.sales.rw_dashboard_harness diff --before <snapshot.json> --after-desktop
     python3 -m scripts.sales.rw_dashboard_harness extract --source desktop --page "What Changed" --name e337
 """
@@ -450,6 +451,32 @@ def cmd_visual_qa(args: argparse.Namespace) -> None:
     raise SystemExit(exit_code_for(result, args.fail_on))
 
 
+def cmd_semantic_filter(args: argparse.Namespace) -> None:
+    from scripts.sales.rw_semantic_filter_audit import (
+        DEFAULT_MARKDOWN,
+        SEVERITY_RANK,
+        audit_semantic_filter_flow,
+        write_markdown,
+    )
+
+    report = load_report(args.source, args.path)
+    result = audit_semantic_filter_flow(report=report)
+    label = slug(args.label or f"{args.source}_{timestamp()}")
+    json_path = args.out_dir / "semantic_filter" / f"{label}.semantic_filter.json"
+    markdown_path = args.markdown or DEFAULT_MARKDOWN
+    write_json(json_path, result)
+    write_markdown(result, markdown_path)
+    print(f"semantic filter json: {json_path}")
+    print(f"semantic filter markdown: {markdown_path}")
+    print(
+        f"verdict={result['verdict']} "
+        + " ".join(f"{severity}={result['counts'][severity]}" for severity in SEVERITY_RANK)
+    )
+    threshold = SEVERITY_RANK[args.fail_on]
+    blocking = [f for f in result["findings"] if SEVERITY_RANK[f["severity"]] >= threshold]
+    raise SystemExit(1 if blocking else 0)
+
+
 def cmd_diff(args: argparse.Namespace) -> None:
     before = load_report_from_path(args.before)
     after = load_report_from_path(resolve_after_path(args))
@@ -532,6 +559,19 @@ def build_parser() -> argparse.ArgumentParser:
         help="Exit non-zero when a finding at this severity or higher is present.",
     )
     p_visual_qa.set_defaults(func=cmd_visual_qa)
+
+    p_semantic_filter = sub.add_parser(
+        "semantic-filter", help="Run semantic-model/page-filter flow gate"
+    )
+    add_source_args(p_semantic_filter)
+    p_semantic_filter.add_argument("--markdown", type=Path, help="Markdown report path")
+    p_semantic_filter.add_argument(
+        "--fail-on",
+        choices=("info", "low", "medium", "high", "critical"),
+        default="high",
+        help="Exit non-zero when a finding at this severity or higher is present.",
+    )
+    p_semantic_filter.set_defaults(func=cmd_semantic_filter)
 
     p_diff = sub.add_parser("diff", help="Diff two report.json files")
     p_diff.add_argument("--before", type=Path, required=True)

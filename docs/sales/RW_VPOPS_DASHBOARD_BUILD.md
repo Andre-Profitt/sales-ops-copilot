@@ -1432,3 +1432,37 @@ Desktop review found the native report was still too static: the KPI pages had t
 - `python3 -m pytest tests/sales -q` passed: 221 passed, 1 skipped.
 
 No Fabric publish was performed.  This is still a local Desktop lab upgrade until reviewed in Parallels.
+
+## 2026-05-10 — Executive semantic/filter-flow hardening
+
+Reviewing the data schema and page filter behavior showed the visual layer was ahead of the information architecture.  The shared slicer bar was putting `Motion` on every page, while the ARR and Renewal ACV measures intentionally enforce motion in DAX.  That can make a slicer look available even when the KPI correctly ignores it, which is not acceptable for an executive report.
+
+**Shipped:**
+
+- Replaced the universal page filter bar with an executable page-filter policy in `scripts/sales/rw_filter_bar.py`.
+- Executive pages now expose only stable context slicers:
+  - Region
+  - Close FQ
+- `Motion` is no longer a page-level slicer.  Motion appears only as a labeled visual axis/measure family where cross-motion comparison is explicit.
+- `RW KPI Explorer` keeps Region, Close FQ, and Stage for interactive slicing; it still avoids `Total Open Pipeline Value`.
+- Added `scripts/sales/rw_semantic_filter_audit.py` plus a `rw_dashboard_harness semantic-filter` command.
+- Added `docs/sales/RW_SEMANTIC_FILTER_ARCHITECTURE.md` to record the page-filter contract, relationship flow, and remaining model debt.
+- Updated the KPI intelligence docs to reflect the new filter policy.
+
+**Architecture verdict:**
+
+- Current lab is guarded for executive inspection: no high/critical semantic-filter findings.
+- Remaining medium model debt:
+  - Add canonical `d_stage` / stage order for opportunity-stage visuals.
+  - Add explicit transition-date roles before exposing stage-move or forecast-move period slicers.
+
+**Lab verification:**
+
+- `python3 -m scripts.sales.rw_apply_zebra_lab_proof` regenerated the local lab PBIP.
+- `python3 -m scripts.sales.rw_validate --file ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json` passed with 8 sections, 124 visualContainers, and all measure refs resolved.
+- `python3 -m scripts.sales.rw_dashboard_harness audit --source path --path ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json --label rw_semantic_filter_policy` returned no findings.
+- `python3 -m scripts.sales.rw_dashboard_harness visual-qa --source path --path ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json --label rw_semantic_filter_policy --fail-on medium --markdown docs/sales/RW_DASHBOARD_VISUAL_QA.md` returned 0 findings.
+- `python3 -m scripts.sales.rw_dashboard_harness semantic-filter --source path --path ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json --label rw_semantic_filter_policy --fail-on high --markdown docs/sales/RW_SEMANTIC_FILTER_ARCHITECTURE.md` passed with medium=3, high=0, critical=0.
+- `python3 -m pytest tests/sales -q` passed: 222 passed, 1 skipped.
+
+No Fabric publish was performed.  ARR remains Land+Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.

@@ -14,6 +14,8 @@ from scripts.sales.rw_page_kpi_contract import (
     required_measures,
     validate_decision_contracts,
 )
+from scripts.sales.rw_filter_bar import FILTER_REFS_BY_PAGE, FORBIDDEN_MOTION_SLICER_REF
+from scripts.sales.rw_semantic_filter_audit import audit_semantic_filter_flow
 
 
 def _single_visual(vc: dict) -> dict:
@@ -59,7 +61,7 @@ def test_target_pages_use_only_native_power_bi_visual_types():
     assert unexpected == []
 
 
-def test_target_pages_have_common_slice_controls():
+def test_target_pages_follow_page_specific_slice_controls():
     report = compose_report({"sections": []})
 
     for page in PAGE_KPI_CONTRACTS:
@@ -69,11 +71,8 @@ def test_target_pages_have_common_slice_controls():
             if _visual_type(vc) == "slicer"
         ]
         refs = {slicer["projections"]["Values"][0]["queryRef"] for slicer in slicers}
-        assert refs >= {
-            "d_region.region",
-            "d_calendar.fiscal_quarter",
-            "f_opportunity.motion_type",
-        }, page
+        assert refs == FILTER_REFS_BY_PAGE[page], page
+        assert FORBIDDEN_MOTION_SLICER_REF not in refs, page
 
 
 def test_kpi_explorer_adds_slice_and_dice_views_without_arr_acv_blend():
@@ -81,14 +80,26 @@ def test_kpi_explorer_adds_slice_and_dice_views_without_arr_acv_blend():
     explorer = _page(report, "RW KPI Explorer")
     encoded = "\n".join(vc["config"] for vc in explorer["visualContainers"])
 
-    assert sum(1 for vc in explorer["visualContainers"] if _visual_type(vc) == "slicer") == 4
+    assert sum(1 for vc in explorer["visualContainers"] if _visual_type(vc) == "slicer") == 3
     assert "d_region.region" in encoded
     assert "d_calendar.fiscal_quarter" in encoded
-    assert "f_opportunity.motion_type" in encoded
     assert "f_opportunity.stage_name" in encoded
     assert "Total Open Pipeline ARR" in encoded
     assert "Total Open Renewal ACV" in encoded
     assert "Total Open Pipeline Value" not in encoded
+
+
+def test_semantic_filter_audit_blocks_motion_slicer_policy_regression():
+    report = compose_report({"sections": []})
+    result = audit_semantic_filter_flow(report=report)
+
+    assert result["counts"]["critical"] == 0
+    assert result["counts"]["high"] == 0
+    assert {finding["id"] for finding in result["findings"]} >= {
+        "stage_dimension",
+        "transition_date_role:f_stage_transition",
+        "transition_date_role:f_forecast_transition",
+    }
 
 
 def test_target_pages_have_no_plain_card_or_plain_table_visual_debt():

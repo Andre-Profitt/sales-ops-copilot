@@ -42,8 +42,8 @@ Source-data upgrades; these need ETL/source-field work before a real dashboard v
 
 The generated report also includes a native `RW KPI Explorer` page for interactive analysis outside the executive narrative tabs.
 
-- Common slicers on every RW page: Region, Fiscal quarter, Motion.
-- Explorer-only slicer: Stage.
+- Executive page slicers: Region and Close FQ. Motion is not a page slicer because ARR/Renewal ACV measures enforce motion in DAX.
+- Explorer-only slicer: Stage. Motion appears as visual columns where comparison is explicit.
 - Explorer views: Land + Expand ARR mix, Renewal ACV exposure, Stage conversion diagnostics, Growth mix and new-customer signal.
 - ARR and Renewal ACV remain separate in the explorer; it does not use `Total Open Pipeline Value`.
 
