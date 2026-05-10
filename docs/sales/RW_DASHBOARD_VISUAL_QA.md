@@ -1,11 +1,11 @@
 # RW Dashboard Visual QA
 
-Generated: 2026-05-10T23:24:15Z
+Generated: 2026-05-10T23:46:46Z
 
 ## Summary
 
 - Pages audited: 8
-- Visuals audited: 188
+- Visuals audited: 192
 - Findings: 0
 - Severity counts: info=0, low=0, medium=0, high=0, critical=0
 

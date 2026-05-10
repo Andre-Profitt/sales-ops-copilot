@@ -1,14 +1,14 @@
 # RW Cross-Graph Upgrade Target Plan
 
-Generated: `2026-05-10T23:20:27Z`
+Generated: `2026-05-10T23:48:02Z`
 
 This compares three graphs: Zebra template/visual grammar, the live RW Power BI artifact graph, and the RW KPI coverage graph. The target is not more cosmetic styling; it is a better executive operating system with Zebra-grade scenario, variance, and bridge semantics.
 
 ## Readout
 
 - Live PBI graph verdict: `needs_source_or_model_work`
-- Live PBI footprint: `7` pages, `126` visuals
-- PBI cleanup counts: `{'info': 0, 'low': 0, 'medium': 5, 'high': 4, 'critical': 0}`
+- Live PBI footprint: `8` pages, `192` visuals
+- PBI cleanup counts: `{'info': 0, 'low': 0, 'medium': 4, 'high': 4, 'critical': 0}`
 - Zebra mined visual corpus: `360` visuals
 - RW KPI surface: `26` clean out of `31` KPIs
 - Target plan: `2` P0, `4` P1, `2` P2
@@ -17,9 +17,9 @@ This compares three graphs: Zebra template/visual grammar, the live RW Power BI 
 
 | Signal | Evidence | Meaning |
 | --- | --- | --- |
-| `bridge_gap` | Live PBI has 0 native waterfall/bridge visuals; Zebra corpus has 140/360 waterfall visuals. | RW pages are not yet using Zebra's bridge/decomposition grammar for executive variance stories. |
-| `card_weight` | Live PBI card share is 34/126; Zebra card share is 74/360. | Cards are acceptable for a KPI spine, but the target state should move more meaning into variance tables and bridges. |
-| `ibcs_table_base` | Live PBI already has 16 native table/matrix visuals and Zebra has 146 table visuals. | The native tableEx path is the right base; the next lift is scenario columns, variance deltas, and action-ledger ordering. |
+| `bridge_gap` | Live PBI has 1 native waterfall/bridge visuals; Zebra corpus has 140/360 waterfall visuals. | RW pages are not yet using Zebra's bridge/decomposition grammar for executive variance stories. |
+| `card_weight` | Live PBI card share is 39/192; Zebra card share is 74/360. | Cards are acceptable for a KPI spine, but the target state should move more meaning into variance tables and bridges. |
+| `ibcs_table_base` | Live PBI already has 20 native table/matrix visuals and Zebra has 146 table visuals. | The native tableEx path is the right base; the next lift is scenario columns, variance deltas, and action-ledger ordering. |
 
 ## Zebra Patterns To Transfer
 

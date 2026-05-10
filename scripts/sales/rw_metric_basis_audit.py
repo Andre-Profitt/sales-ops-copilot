@@ -110,6 +110,7 @@ LAND_EXPAND_ARR_MEASURES = {
     "Stage Moves ARR 7d",
     "Stage Moves ARR FQTD",
     "Avg Deal Size Won",
+    "Source ARR Won",
 }
 
 

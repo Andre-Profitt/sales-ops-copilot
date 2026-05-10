@@ -463,6 +463,8 @@ def test_arr_and_renewal_acv_contracts_stay_separate_by_page():
         "One-Off Revenue Opp Count",
         "PS ARR Attach Pct",
         "SaaS YoY Growth Pct",
+        "Source ARR Won",
+        "Source Win Rate",
     }
 
     assert set(PAGE_KPI_CONTRACTS["Renewals"].measures) == renewal_measures
@@ -501,6 +503,27 @@ def test_growth_mix_uses_native_waterfall_bridge_not_basic_bar_only():
     assert bridge["objects"]["labels"][0]["properties"]["labelDisplayUnits"]["expr"][
         "Literal"
     ]["Value"] == "1D"
+
+
+def test_growth_mix_uses_native_heatmaps_for_motion_and_source_mix():
+    report = compose_report({"sections": []})
+    growth_mix = _page(report, "Growth Mix")
+    matrices = [
+        _single_visual(vc)
+        for vc in growth_mix["visualContainers"]
+        if _visual_type(vc) == "pivotTable"
+    ]
+
+    assert len(matrices) >= 2
+    encoded = json.dumps(matrices)
+    assert "f_opportunity.motion_type" in encoded
+    assert "f_opportunity.lead_source" in encoded
+    assert "f_opportunity.Source ARR Won" in encoded
+    assert "f_opportunity.Source Win Rate" in encoded
+    assert all(matrix["objects"]["dataBars"]["values"] for matrix in matrices)
+    patterns = {matrix["objects"]["stylePreset"]["pattern"] for matrix in matrices}
+    assert "growth-region-motion-heatmap" in patterns
+    assert "growth-source-region-heatmap" in patterns
 
 
 def test_contract_gate_catches_missing_required_primary_kpi():

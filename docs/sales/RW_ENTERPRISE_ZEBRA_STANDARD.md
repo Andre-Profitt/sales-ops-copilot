@@ -40,7 +40,7 @@ This is the governing standard for getting the RW Power BI dashboard to Zebra-na
 | Stage Hygiene | 9 | 9 | 100% |
 | Renewals | 9 | 9 | 100% |
 | Product Retention | 8 | 8 | 100% |
-| Growth Mix | 8 | 8 | 100% |
+| Growth Mix | 9 | 9 | 100% |
 | RW KPI Explorer | 4 | 4 | 100% |
 
 ## Systematic Upgrade Backlog

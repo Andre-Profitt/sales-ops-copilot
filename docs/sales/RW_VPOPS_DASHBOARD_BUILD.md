@@ -1572,6 +1572,42 @@ Andre asked for a direct checklist of RW-expected KPIs versus what the current B
 
 ARR remains Land + Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
 
+## 2026-05-10 - Native visual vocabulary audit and Growth Mix v2
+
+Desktop review called out that the dashboard still felt underpowered versus native Power BI/Zebra BI patterns.  This pass added an executable native-visual upgrade audit and applied the first page-level upgrade to `Growth Mix`.
+
+**Shipped:**
+
+- Added `scripts/sales/rw_native_visual_upgrade_audit.py` plus `rw_dashboard_harness visual-upgrade`.
+- The audit ranks where the report is still underusing native visual grammar:
+  - `waterfallChart` for bridges/decomposition.
+  - `pivotTable + dataBars` for heatmaps and variance matrices.
+  - `tableEx + Zebra detail grammar` for action ledgers.
+  - neutral Zebra-native cards only for the KPI spine.
+- Reworked `Growth Mix` from one bridge plus flat tables into:
+  - native contribution bridge: Region -> Open ARR (Land + Expand).
+  - native Region x Motion heatmap for Open ARR and Partner ARR.
+  - native Source x Region heatmap using `Source ARR Won`, `Source Win Rate`, and Land won count.
+  - dense Product / Acquired Mix ledger for won tier, Axioma ARR, one-off revenue, SaaS YoY, and PS attach.
+- Corrected the Growth Mix KPI contract so opportunity-source effectiveness is backed by `Source ARR Won` and `Source Win Rate`, not a partner proxy.
+
+**Verification:**
+
+- `python3 -m pytest tests/sales/test_rw_page_kpi_contract.py tests/sales/test_rw_native_visual_upgrade_audit.py tests/sales/test_rw_enterprise_standard_audit.py -q` passed: 38 passed.
+- Regenerated local PBIP with `python3 -m scripts.sales.rw_apply_zebra_lab_proof`.
+- `rw_validate` passed: 8 sections, 192 visualContainers, all measure refs resolve.
+- Harness audit returned no findings.
+- Visual QA returned 0 findings at `--fail-on medium`.
+- Unit policy returned 0 findings.
+- Metric-basis audit returned 0 findings.
+- Native visual-upgrade audit now has no high/critical findings; remaining mediums are next-page work on Renewals and VP Ops Scorecard bar-to-bridge/heatmap upgrades.
+
+**Still not enterprise complete:**
+
+- Enterprise standard still reports the real data/model blockers: quota/target denominator, forecast snapshot accuracy, and trusted Synergy.  Those are not visual defects.
+
+ARR remains Land + Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
+
 ## 2026-05-10 - Native unit, heatmap, and bridge hardening
 
 Desktop review found three visible executive-quality defects: Growth Mix value labels could render as malformed K/M strings, Product Retention did not read as a true heatmap, and Growth Mix was still using a plain regional bar where a native bridge/decomposition visual is a better Zebra-style fit.

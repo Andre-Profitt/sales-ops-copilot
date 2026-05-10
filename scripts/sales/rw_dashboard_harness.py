@@ -21,6 +21,7 @@ Usage:
     python3 -m scripts.sales.rw_dashboard_harness semantic-filter --source path --path <report.json>
     python3 -m scripts.sales.rw_dashboard_harness data-surface-flow --source path --path <report.json>
     python3 -m scripts.sales.rw_dashboard_harness enterprise-standard --source path --path <report.json>
+    python3 -m scripts.sales.rw_dashboard_harness visual-upgrade --source path --path <report.json>
     python3 -m scripts.sales.rw_dashboard_harness pbi-graph --source path --path <report.json>
     python3 -m scripts.sales.rw_dashboard_harness kpi-checklist
     python3 -m scripts.sales.rw_dashboard_harness diff --before <snapshot.json> --after-desktop
@@ -619,6 +620,33 @@ def cmd_enterprise_standard(args: argparse.Namespace) -> None:
     raise SystemExit(1 if blocking else 0)
 
 
+def cmd_visual_upgrade(args: argparse.Namespace) -> None:
+    from scripts.sales.rw_native_visual_upgrade_audit import (
+        DEFAULT_MARKDOWN,
+        SEVERITY_RANK,
+        audit_native_visual_upgrades,
+        write_markdown,
+    )
+
+    report = load_report(args.source, args.path)
+    result = audit_native_visual_upgrades(report)
+    label = slug(args.label or f"{args.source}_{timestamp()}")
+    json_path = args.out_dir / "visual_upgrade" / f"{label}.visual_upgrade.json"
+    markdown_path = args.markdown or DEFAULT_MARKDOWN
+    write_json(json_path, result)
+    write_markdown(result, markdown_path)
+    counts = result["summary"]["severity_counts"]
+    print(f"visual upgrade json: {json_path}")
+    print(f"visual upgrade markdown: {markdown_path}")
+    print(
+        f"findings={result['summary']['finding_count']} "
+        + " ".join(f"{severity}={counts[severity]}" for severity in SEVERITY_RANK)
+    )
+    threshold = SEVERITY_RANK[args.fail_on]
+    blocking = [f for f in result["findings"] if SEVERITY_RANK[f["severity"]] >= threshold]
+    raise SystemExit(1 if blocking else 0)
+
+
 def cmd_pbi_graph(args: argparse.Namespace) -> None:
     from scripts.sales.rw_pbi_knowledge_graph import (
         DEFAULT_MARKDOWN,
@@ -817,6 +845,19 @@ def build_parser() -> argparse.ArgumentParser:
         help="Exit non-zero when an enterprise-standard finding at this severity or higher is present.",
     )
     p_enterprise.set_defaults(func=cmd_enterprise_standard)
+
+    p_visual_upgrade = sub.add_parser(
+        "visual-upgrade", help="Rank native/Zebra visual vocabulary upgrade opportunities"
+    )
+    add_source_args(p_visual_upgrade)
+    p_visual_upgrade.add_argument("--markdown", type=Path, help="Markdown report path")
+    p_visual_upgrade.add_argument(
+        "--fail-on",
+        choices=("info", "low", "medium", "high", "critical"),
+        default="critical",
+        help="Exit non-zero when a visual-upgrade finding at this severity or higher is present.",
+    )
+    p_visual_upgrade.set_defaults(func=cmd_visual_upgrade)
 
     p_pbi_graph = sub.add_parser(
         "pbi-graph", help="Build report/page/visual/KPI/semantic knowledge graph"
