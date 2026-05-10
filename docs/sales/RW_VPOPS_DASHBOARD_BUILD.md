@@ -1609,6 +1609,38 @@ Built an executable knowledge graph of the current RW Power BI report artifact s
 
 No Fabric publish was performed.
 
+## 2026-05-10 — Cross-graph upgrade target plan
+
+Compared the Zebra template/visual grammar graph, the live RW Power BI artifact graph, and the RW KPI coverage graph to identify the next upgrade targets.
+
+**Added:**
+
+- `scripts/sales/rw_cross_graph_upgrade_plan.py`
+- `tests/sales/test_rw_cross_graph_upgrade_plan.py`
+- `docs/sales/RW_CROSS_GRAPH_UPGRADE_TARGET_PLAN.md`
+
+**Key readout:**
+
+- Live PBI has 0 native waterfall/bridge visuals; the mined Zebra corpus has 140 waterfall visuals out of 360.
+- Live PBI already has 16 native table/matrix visuals; the next lift is scenario columns, variance deltas, bridge logic, and action-ledger ordering.
+- Visual styling is not the top blocker.  Data/model gaps are blocking the consultant-grade Zebra patterns.
+
+**Ranked targets:**
+
+1. `P0` Forecast scenario spine: quota/target, forecast snapshots, real pipeline coverage and forecast accuracy.
+2. `P0` Growth Mix trusted segmentation: Synergy flag and one-off/non-recurring source.
+3. `P1` Renewals active-base bridge: indexation/uplift and renewal-base bridge.
+4. `P1` movement date roles: stage/forecast transition-date semantics.
+5. `P1` VP Ops Scorecard driver tree: move from scorecard tile surface to driver-path surface.
+6. `P2` RW KPI Explorer contract and safe slice/dice governance.
+7. `P2` expand Zebra exemplar mining beyond the sales-funnel template.
+
+**Verification:**
+
+- `python3 -m ruff check scripts/sales/rw_cross_graph_upgrade_plan.py tests/sales/test_rw_cross_graph_upgrade_plan.py` passed.
+- `python3 -m pytest tests/sales/test_rw_cross_graph_upgrade_plan.py -q` passed: 2 passed.
+- `python3 -m scripts.sales.rw_cross_graph_upgrade_plan` generated the markdown and JSON plan.
+
 ## 2026-05-10 — Stage order, unit, and zero-value hardening
 
 Andre flagged three executive-trust issues: mixed units, non-business stage ordering, and suspect zeros on Renewals/Growth Mix.  This pass made those checks executable and pushed the stage-order fix into OneLake, the semantic model, and the live report.
