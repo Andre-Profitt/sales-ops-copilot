@@ -18,6 +18,7 @@ Usage:
     python3 -m scripts.sales.rw_dashboard_harness unit-policy --source path --path <report.json>
     python3 -m scripts.sales.rw_dashboard_harness semantic-filter --source path --path <report.json>
     python3 -m scripts.sales.rw_dashboard_harness data-surface-flow --source path --path <report.json>
+    python3 -m scripts.sales.rw_dashboard_harness enterprise-standard --source path --path <report.json>
     python3 -m scripts.sales.rw_dashboard_harness diff --before <snapshot.json> --after-desktop
     python3 -m scripts.sales.rw_dashboard_harness extract --source desktop --page "What Changed" --name e337
 """
@@ -525,6 +526,32 @@ def cmd_data_surface_flow(args: argparse.Namespace) -> None:
     raise SystemExit(1 if blocking else 0)
 
 
+def cmd_enterprise_standard(args: argparse.Namespace) -> None:
+    from scripts.sales.rw_enterprise_standard_audit import (
+        DEFAULT_MARKDOWN,
+        SEVERITY_RANK,
+        audit_enterprise_standard,
+        write_markdown,
+    )
+
+    report = load_report(args.source, args.path)
+    result = audit_enterprise_standard(report=report)
+    label = slug(args.label or f"{args.source}_{timestamp()}")
+    json_path = args.out_dir / "enterprise_standard" / f"{label}.enterprise_standard.json"
+    markdown_path = args.markdown or DEFAULT_MARKDOWN
+    write_json(json_path, result)
+    write_markdown(result, markdown_path)
+    print(f"enterprise standard json: {json_path}")
+    print(f"enterprise standard markdown: {markdown_path}")
+    print(
+        f"verdict={result['verdict']} "
+        + " ".join(f"{severity}={result['counts'][severity]}" for severity in SEVERITY_RANK)
+    )
+    threshold = SEVERITY_RANK[args.fail_on]
+    blocking = [f for f in result["findings"] if SEVERITY_RANK[f["severity"]] >= threshold]
+    raise SystemExit(1 if blocking else 0)
+
+
 def cmd_diff(args: argparse.Namespace) -> None:
     before = load_report_from_path(args.before)
     after = load_report_from_path(resolve_after_path(args))
@@ -639,6 +666,19 @@ def build_parser() -> argparse.ArgumentParser:
         help="Exit non-zero when a KPI-flow finding at this severity or higher is present.",
     )
     p_data_surface.set_defaults(func=cmd_data_surface_flow)
+
+    p_enterprise = sub.add_parser(
+        "enterprise-standard", help="Run consolidated Zebra/consultant-grade readiness gate"
+    )
+    add_source_args(p_enterprise)
+    p_enterprise.add_argument("--markdown", type=Path, help="Markdown report path")
+    p_enterprise.add_argument(
+        "--fail-on",
+        choices=("info", "low", "medium", "high", "critical"),
+        default="critical",
+        help="Exit non-zero when an enterprise-standard finding at this severity or higher is present.",
+    )
+    p_enterprise.set_defaults(func=cmd_enterprise_standard)
 
     p_diff = sub.add_parser("diff", help="Diff two report.json files")
     p_diff.add_argument("--before", type=Path, required=True)

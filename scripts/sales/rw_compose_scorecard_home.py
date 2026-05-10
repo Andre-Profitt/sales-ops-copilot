@@ -13,12 +13,10 @@ from __future__ import annotations
 import json
 
 from scripts.sales._pbir_helpers import (
+    build_card_visual_with_objects,
     build_clustered_bar_chart_visual,
-    build_matrix_style_objects,
     build_matrix_visual,
-    build_rag_card_visual,
     build_shape_visual,
-    build_table_style_objects,
     build_table_visual,
     build_textbox_visual,
 )
@@ -30,6 +28,11 @@ from scripts.sales.rw_add_visual import (
     push_report,
 )
 from scripts.sales.rw_validate import fetch_measures_by_table, validate_visual_dict
+from scripts.sales.rw_zebra_kg_ibcs_synth import (
+    zebra_exception_ledger_objects,
+    zebra_native_card_objects,
+    zebra_stage_hygiene_table_objects,
+)
 
 PAGE = "VP Ops Scorecard"
 CANVAS_W = 1280
@@ -91,6 +94,44 @@ def _with_title(vc: dict, title: str) -> dict:
     ]
     vc["config"] = json.dumps(config)
     return vc
+
+
+def _zebra_card_visual(
+    *,
+    table: str,
+    measure: str,
+    title: str,
+    x: float,
+    y: float,
+    w: float,
+    h: float,
+    tint: str,
+    accent: str,
+    value_color: str,
+    value_font_size: int,
+    label_font_size: int,
+    pattern: str,
+    visual_intent: str,
+) -> dict:
+    return build_card_visual_with_objects(
+        measure_table=table,
+        measure_name=measure,
+        display_title=title,
+        x=x,
+        y=y,
+        w=w,
+        h=h,
+        objects=zebra_native_card_objects(
+            pattern=pattern,
+            visual_intent=visual_intent,
+            tint=tint,
+            accent=accent,
+            value_color=value_color,
+            label_color=accent,
+            value_font_size=value_font_size,
+            label_font_size=label_font_size,
+        ),
+    )
 
 
 def _build_header() -> list[dict]:
@@ -157,13 +198,7 @@ def _build_exception_spine() -> dict:
         y=258,
         w=736,
         h=210,
-        objects=build_table_style_objects(
-            header_fill="#EEF2F6",
-            header_text="#1A1D31",
-            row_text="#202124",
-            grid="#E3E7EE",
-            font_size=9,
-        ),
+        objects=zebra_exception_ledger_objects(),
     )
 
 
@@ -209,14 +244,14 @@ def _build_kpi_strip() -> list[dict]:
         ),
     ]
     out: list[dict] = []
-    for i, (table, measure, title, tint, accent, value_color, display_units) in enumerate(cards):
+    for i, (table, measure, title, tint, accent, value_color, _display_units) in enumerate(cards):
         x = MARGIN + i * (card_w + GAP)
         out.append(build_shape_visual(x=x, y=88, w=card_w, h=116, fill="#FFFFFF", line="#D8DEE8", z=30, radius=2))
         out.append(
-            build_rag_card_visual(
-                measure_table=table,
-                measure_name=measure,
-                display_title=title,
+            _zebra_card_visual(
+                table=table,
+                measure=measure,
+                title=title,
                 x=x,
                 y=88,
                 w=card_w,
@@ -224,10 +259,10 @@ def _build_kpi_strip() -> list[dict]:
                 tint=tint,
                 accent=accent,
                 value_color=value_color,
-                label_color="#5C6670",
                 value_font_size=24,
                 label_font_size=9,
-                display_units=display_units,
+                pattern="vp-ops-scorecard-hero-card",
+                visual_intent="executive KPI strip",
             )
         )
     return out
@@ -296,12 +331,9 @@ def _build_stage_hygiene_panel() -> list[dict]:
         y=540,
         w=736,
         h=140,
-        objects=build_matrix_style_objects(
-            header_fill="#EEF2F6",
-            header_text="#1A1D31",
-            row_text="#202124",
-            grid="#E3E7EE",
-            font_size=8,
+        objects=zebra_stage_hygiene_table_objects(
+            max_field="f_stage_transition.Stage Moves ARR 7d",
+            databar_column="f_stage_transition.Stage Moves ARR 7d",
         ),
     )
     return [
@@ -348,17 +380,17 @@ def _build_movement_pulse() -> list[dict]:
     out: list[dict] = [_panel(804, 508, 452, 188)]
     tile_w = 204
     tile_h = 60
-    for i, (table, measure, title, tint, accent, display_units) in enumerate(specs):
+    for i, (table, measure, title, tint, accent, _display_units) in enumerate(specs):
         col = i % 2
         row = i // 2
         x = 820 + col * (tile_w + 12)
         y = 540 + row * (tile_h + 10)
         out.append(build_shape_visual(x=x, y=y, w=tile_w, h=tile_h, fill="#FFFFFF", line="#D8DEE8", z=30, radius=2))
         out.append(
-            build_rag_card_visual(
-                measure_table=table,
-                measure_name=measure,
-                display_title=title,
+            _zebra_card_visual(
+                table=table,
+                measure=measure,
+                title=title,
                 x=x,
                 y=y,
                 w=tile_w,
@@ -366,10 +398,10 @@ def _build_movement_pulse() -> list[dict]:
                 tint=tint,
                 accent=accent,
                 value_color="#1A1D31",
-                label_color="#5C6670",
                 value_font_size=18,
                 label_font_size=8,
-                display_units=display_units,
+                pattern="vp-ops-scorecard-movement-pulse-card",
+                visual_intent="7-day movement pulse",
             )
         )
     return out

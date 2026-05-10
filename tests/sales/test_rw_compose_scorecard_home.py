@@ -26,6 +26,10 @@ def _visual_type(vc: dict) -> str:
     return json.loads(vc["config"])["singleVisual"]["visualType"]
 
 
+def _objects(vc: dict) -> dict:
+    return json.loads(vc["config"])["singleVisual"].get("objects", {})
+
+
 @pytest.fixture(autouse=True)
 def _stub_fetch_measures_by_table(monkeypatch):
     """Autouse: stub fetch_measures_by_table so composer tests don't hit live
@@ -106,6 +110,8 @@ def test_exception_spine_is_native_tableex():
     sv = config["singleVisual"]
     assert sv["visualType"] == "tableEx"
     assert "objects" in sv
+    assert sv["objects"]["stylePreset"]["source"] == "zebra-visual-dna"
+    assert sv["objects"]["zebraGrammar"]["schema"] == "rw-zebra-native-transfer.columnGrammar.v1"
 
 
 def test_exception_spine_column_order_matches_lab_proof():
@@ -153,6 +159,7 @@ def test_kpi_strip_yields_four_cards():
     assert len(visuals) == 8
     assert len(cards) == 4
     assert len(shapes) == 4
+    assert all(_objects(card)["stylePreset"]["pattern"] == "vp-ops-scorecard-hero-card" for card in cards)
 
 
 def test_kpi_strip_x_positions_are_evenly_spaced():
@@ -195,6 +202,8 @@ def test_stage_hygiene_panel_uses_native_matrix():
         "Avg Days In Prior Stage (LE)",
         "Stage Moves ARR 7d",
     ]
+    assert sv["objects"]["stylePreset"]["source"] == "zebra-visual-dna"
+    assert sv["objects"]["zebraGrammar"]["schema"] == "rw-zebra-native-transfer.columnGrammar.v1"
 
 
 def test_movement_pulse_measures_are_existing_contract():
@@ -206,6 +215,10 @@ def test_movement_pulse_measures_are_existing_contract():
     ]
     cards = [v for v in _build_movement_pulse() if _visual_type(v) == "card"]
     assert len(cards) == 4
+    assert all(
+        _objects(card)["stylePreset"]["pattern"] == "vp-ops-scorecard-movement-pulse-card"
+        for card in cards
+    )
 
 
 # ---------- contract: page name ----------
