@@ -867,3 +867,34 @@ Decision: do not bulk-republish this path as "polished." Next work is either a
 Zebra-fidelity lab that preserves full PBIX `Report/Layout` and custom visual
 packages, or a smaller RW-native redesign that deliberately lifts selected Zebra
 patterns into the VP Ops dashboard.
+
+
+## Zebra Fidelity Lab - Sales Funnel Specimen — 2026-05-09
+
+The bridge is now narrowed to one high-fidelity specimen:
+`sales-funnel-power-bi-template`.
+
+Reference doc: `docs/sales/RW_ZEBRA_FIDELITY_LAB_SALES_FUNNEL.md`.
+
+Live lab report:
+https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/02edc230-461b-4ffb-b1cc-cb9e067fa66a
+
+Engineering gate:
+
+- Source PBIX: 6 pages, 104 visualContainers, 19 resource parts.
+- Published report: `zbr_fidelity_sales-funnel-power-bi-template`.
+- Published semantic model: `sm_zbr_fidelity_sales-funnel-power-bi-template`.
+- Live round-trip verify: 6/6 pages, 104/104 visuals, 19/19 resources,
+  semantic model binding present.
+
+Correct command:
+
+```bash
+.venv/bin/python -m scripts.sales.rw_zebra_kg_fidelity_publish \
+  --verify-live \
+  --template sales-funnel-power-bi-template
+```
+
+Scale rule: do not add more Zebra templates until this one passes visual review
+in Fabric/Desktop. The learning target is renderer fidelity and reusable bridge
+rules, not bulk count.

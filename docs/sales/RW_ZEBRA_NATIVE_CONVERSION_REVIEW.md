@@ -188,3 +188,23 @@ The current Path B native bulk publisher should be treated as a foundation
 artifact, not the final reviewable output. The next publish should be a
 Zebra-fidelity lab or a smaller RW-native redesign batch, not another blind
 20-template native approximation.
+
+## One-Template Fidelity Pivot
+
+The fidelity lane is now intentionally narrowed to one specimen:
+`sales-funnel-power-bi-template`.
+
+Reference:
+`docs/sales/RW_ZEBRA_FIDELITY_LAB_SALES_FUNNEL.md`.
+
+This specimen preserves the full source PBIX report frame and has passed the
+live Fabric round-trip gate:
+
+- 6/6 pages preserved.
+- 104/104 visualContainers preserved.
+- 19/19 static/custom visual resource parts preserved.
+- Semantic model binding present in `definition.pbir`.
+- 0 unresolved measure refs before publish.
+
+This is the bridge quality bar. Other templates should only be added one at a
+time after passing the same source, live round-trip, and visual review gates.
