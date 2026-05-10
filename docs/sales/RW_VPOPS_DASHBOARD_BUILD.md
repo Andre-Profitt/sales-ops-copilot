@@ -1572,6 +1572,31 @@ Andre asked for a direct checklist of RW-expected KPIs versus what the current B
 
 ARR remains Land+Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
 
+## 2026-05-10 — Salesforce source probe for no-proxy RW KPI coverage
+
+Andre asked whether Salesforce has more source data that can close the proxy gaps.  Added a read-only, repeatable source probe:
+
+- Script: `scripts/sales/rw_salesforce_gap_source_probe.py`
+- Report: `docs/sales/RW_SALESFORCE_GAP_SOURCE_PROBE.md`
+- JSON: `output/rw_dashboard_harness/salesforce_gap_source_probe/rw_salesforce_gap_source_probe.json`
+
+**Source verdict:**
+
+- Bridgeable now from Salesforce:
+  - `existing_arr_run_rate`: `Apttus_Config2__AssetLineItem__c` has 97,586 current active/non-expired asset rows and ARR sum 418.2M.
+  - `business_at_risk`: active asset ARR can join to `Account.Risk_of_Potential_Termination__c`; High/Medium risk active ARR sums to 106.5M.
+  - `one_off_revenues`: Opportunity already has populated one-off/non-recurring fields; current FY PS non-recurring sums to 223.2M.
+- Source exists but is not production-solid yet:
+  - `pipeline_coverage_3x`: `ForecastingQuota` exists but only through 2023-10-01; current FY Opportunity quota fields are empty.
+  - `forecast_accuracy`: `ForecastingItem` and `ForecastingFact` exist, but they are current-state forecast objects.  True accuracy needs an as-of snapshot table.
+  - `synergy_deals_won` / `synergy_deals_pipe`: five Salesforce Synergy reports exist, but they use `Opportunity Name contains "Synergy"` and currently return zero totals.  This is report-defined, not field-grade.
+- Still blocked:
+  - `indexation_arr_growth`: asset renewal adjustment fields exist, but `renewal_adj_count=0`; need a different populated uplift/indexation source.
+
+**Engineering move:**
+
+Stage `f_asset_line_item` first to replace the renewal opp-risk proxy with active-base ARR and to unlock existing ARR run-rate.  Then stage one-off fields/line items.  Start forecast snapshots now.  Do not count pipeline coverage, indexation, or Synergy as clean until the current denominator / uplift source / trusted Synergy definition is confirmed.
+
 ## 2026-05-10 — Zebra schema architecture benchmark
 
 Follow-up review used Zebra's extracted semantic schemas, not just the visual DNA layer, to inform RW model/filter quality.  The goal was to make the architecture critique evidence-backed: how do polished Zebra templates actually structure dimensions, date roles, scenarios, KPI metadata, and relationships?
