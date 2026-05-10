@@ -168,6 +168,8 @@ def build_databar_cf_objects(
 
 from scripts.sales._pbir_helpers import (  # noqa: E402
     build_card_visual_with_objects,
+    build_rag_card_objects,
+    build_table_style_objects,
     build_textbox_visual,
 )
 
@@ -184,6 +186,98 @@ def _card_literal(value: str | int | bool) -> dict:
 
 def _card_color(color: str) -> dict:
     return {"solid": {"color": _card_literal(color)}}
+
+
+ZEBRA_TRANSFER_SAFE_GROUPS = [
+    "chartSettings",
+    "coreSettings",
+    "dataLabelSettings",
+    "titleSettings",
+]
+
+
+def _with_zebra_transfer_metadata(objects: dict, *, pattern: str, visual_intent: str, grammar_schema: str) -> dict:
+    """Attach safe Zebra-DNA lineage metadata to native visual objects.
+
+    The metadata is deliberately tiny and contains no raw Zebra object payloads;
+    it records which reusable grammar drove the native formatting so downstream
+    audits can distinguish Zebra-derived styling from generic native defaults.
+    """
+    enriched = dict(objects)
+    enriched["stylePreset"] = {
+        "source": "zebra-visual-dna",
+        "pattern": pattern,
+        "visual_intent": visual_intent,
+    }
+    enriched["zebraGrammar"] = {
+        "schema": grammar_schema,
+        "safe_groups": ZEBRA_TRANSFER_SAFE_GROUPS,
+    }
+    return enriched
+
+
+def zebra_native_card_objects(
+    *,
+    pattern: str = "composite-risk-kpi-card",
+    visual_intent: str = "KPI strip",
+    tint: str,
+    accent: str,
+    value_color: str = "#222222",
+    label_color: str = "#666666",
+    value_font_size: int = 28,
+    label_font_size: int = 10,
+    display_units: int | None = 1,
+) -> dict:
+    """Zebra-card-inspired native card object grammar for RW pages."""
+    return _with_zebra_transfer_metadata(
+        build_rag_card_objects(
+            tint=tint,
+            accent=accent,
+            value_color=value_color,
+            label_color=label_color,
+            value_font_size=value_font_size,
+            label_font_size=label_font_size,
+            display_units=display_units,
+        ),
+        pattern=pattern,
+        visual_intent=visual_intent,
+        grammar_schema="rw-zebra-native-transfer.visualObjectGrammar.v1",
+    )
+
+
+def zebra_compact_movement_ledger_objects(*, max_field: str, databar_column: str, accent: str = "#083EA7") -> dict:
+    """Compact tableEx style for movement-ledger scans derived from Zebra tables."""
+    objects = build_table_style_objects(
+        header_fill="#EAF0F7",
+        header_text="#1A1D31",
+        row_text="#202124",
+        grid="#D8DEE8",
+        font_size=9,
+    )
+    objects = _with_zebra_transfer_metadata(
+        objects,
+        pattern="compact-movement-ledger",
+        visual_intent="movement table",
+        grammar_schema="rw-zebra-native-transfer.columnGrammar.v1",
+    )
+    objects["dataBars"] = build_databar_cf_objects(databar_column, max_field, accent)
+    return objects
+
+
+def zebra_detail_table_objects() -> dict:
+    """Dense opportunity-queue table style derived from the Zebra detail-ledger grammar."""
+    return _with_zebra_transfer_metadata(
+        build_table_style_objects(
+            header_fill="#F3F6FA",
+            header_text="#1A1D31",
+            row_text="#202124",
+            grid="#E3E7EE",
+            font_size=8,
+        ),
+        pattern="detail-ledger",
+        visual_intent="detail ledger",
+        grammar_schema="rw-zebra-native-transfer.columnGrammar.v1",
+    )
 
 
 def zebra_card_style_objects(*, value_font_size: int = 18, label_font_size: int = 8, accent: str = "#083EA7") -> dict:

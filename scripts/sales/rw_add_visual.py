@@ -13,7 +13,6 @@ import json
 import time
 
 import requests
-from azure.identity import AzureCliCredential
 
 from scripts.sales._pbir_helpers import (
     build_card_visual,
@@ -43,6 +42,8 @@ def _b64(s: str | dict) -> str:
 
 
 def _token() -> str:
+    from azure.identity import AzureCliCredential
+
     return AzureCliCredential().get_token("https://api.fabric.microsoft.com/.default").token
 
 

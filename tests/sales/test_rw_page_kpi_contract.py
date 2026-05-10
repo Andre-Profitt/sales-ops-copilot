@@ -16,8 +16,12 @@ from scripts.sales.rw_page_kpi_contract import (
 )
 
 
+def _single_visual(vc: dict) -> dict:
+    return json.loads(vc["config"])["singleVisual"]
+
+
 def _visual_type(vc: dict) -> str:
-    return json.loads(vc["config"])["singleVisual"]["visualType"]
+    return _single_visual(vc)["visualType"]
 
 
 def _page(report: dict, display_name: str) -> dict:
@@ -94,6 +98,70 @@ def test_what_changed_visual_qa_has_no_wall_of_cards():
 
     assert card_count < 8
     assert findings == []
+
+
+def test_what_changed_uses_native_visual_types_only():
+    report = compose_report({"sections": []})
+    what_changed = _page(report, "What Changed")
+    visual_types = {_visual_type(vc) for vc in what_changed["visualContainers"]}
+
+    assert visual_types <= {"basicShape", "card", "tableEx", "textbox"}
+    assert not any(kind.startswith("ZebraBI") for kind in visual_types)
+
+
+def test_what_changed_applies_zebra_native_table_grammar_to_movement_ledger():
+    report = compose_report({"sections": []})
+    what_changed = _page(report, "What Changed")
+    ledgers = [
+        _single_visual(vc)
+        for vc in what_changed["visualContainers"]
+        if "Stage Moves Count 7d" in vc["config"]
+    ]
+
+    assert len(ledgers) == 1
+    ledger = ledgers[0]
+    assert ledger["visualType"] in {"tableEx", "pivotTable"}
+    assert list(ledger["columnProperties"]) == [
+        "f_stage_transition.Stage Moves Count 7d",
+        "f_stage_transition.Stage Moves ARR 7d",
+        "f_opportunity.New Opps Count 7d",
+        "f_opportunity.Closed Won Count 7d",
+        "f_opportunity.Closed Lost Count 7d",
+    ]
+    objects = ledger.get("objects") or {}
+    assert objects["stylePreset"] == {
+        "source": "zebra-visual-dna",
+        "pattern": "compact-movement-ledger",
+        "visual_intent": "movement table",
+    }
+    assert objects["zebraGrammar"]["schema"] == "rw-zebra-native-transfer.columnGrammar.v1"
+    assert "dataBars" in objects
+
+
+def test_what_changed_top_risk_cards_use_zebra_object_bearing_card_grammar():
+    report = compose_report({"sections": []})
+    what_changed = _page(report, "What Changed")
+    risk_cards = [
+        _single_visual(vc)
+        for vc in what_changed["visualContainers"]
+        if _visual_type(vc) == "card" and any(token in vc["config"] for token in ("At Risk", "Watch", "Healthy"))
+    ]
+
+    assert len(risk_cards) == 6
+    for card in risk_cards:
+        objects = card.get("objects") or {}
+        assert objects["stylePreset"] == {
+            "source": "zebra-visual-dna",
+            "pattern": "composite-risk-kpi-card",
+            "visual_intent": "KPI strip",
+        }
+        assert objects["zebraGrammar"]["safe_groups"] == [
+            "chartSettings",
+            "coreSettings",
+            "dataLabelSettings",
+            "titleSettings",
+        ]
+        assert {"background", "border", "labels", "categoryLabels"} <= set(objects)
 
 
 def test_arr_and_renewal_acv_contracts_stay_separate_by_page():

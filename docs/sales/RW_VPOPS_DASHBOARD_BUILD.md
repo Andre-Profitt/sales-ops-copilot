@@ -1331,4 +1331,9 @@ This pass tightened the native RW dashboard around Richard Wyeth's actual VP Ops
 - Stage Hygiene Stage 3 compliance card is labeled as proxy until Commercial Approval compliance is modeled.
 
 **Business rule preserved:** ARR remains Land + Expand only; Renewal ACV remains Renewal-only. `Total Open Pipeline Value` is the only explicitly labeled cross-motion value measure.
+## 2026-05-10 — What Changed Zebra-native transfer application
+
+Applied the deeper Zebra visual-DNA grammar to the real RW `What Changed` page only.  The top exception band still uses the same ARR-only risk measures, but each card now carries explicit Zebra-derived native card object metadata (`stylePreset.source = zebra-visual-dna`) on top of the existing RAG background/border/label treatment.  The 7-day movement ledger remains a native `tableEx`, not a card wall, and now uses the reusable compact movement-ledger object grammar with Zebra column-grammar lineage and data-bar hints.  The open movement queue keeps its native detail table role with the same supported fields/measures and a reusable detail-ledger style.
+
+No Fabric publish was performed.  This is intentionally a one-page proof that Zebra extraction can improve RW native emitters without reintroducing custom visuals or blending ARR/Renewal ACV guardrails.
 

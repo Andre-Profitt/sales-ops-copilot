@@ -32,7 +32,6 @@ import sys
 import time
 
 import requests
-from azure.identity import AzureCliCredential
 
 from scripts.sales.rw_inventory_measures import fetch_measures_by_table
 
@@ -42,6 +41,8 @@ FABRIC = "https://api.fabric.microsoft.com"
 
 
 def _token() -> str:
+    from azure.identity import AzureCliCredential
+
     return AzureCliCredential().get_token("https://api.fabric.microsoft.com/.default").token
 
 

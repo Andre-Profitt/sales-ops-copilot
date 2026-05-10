@@ -172,6 +172,24 @@ The RW page mapping uses the learned native equivalents:
 - Charts retain semantic role and spacing rather than being used as decorative approximations.
 - Static section furniture remains a first-class transfer artifact.
 
+
+### Applied RW proof: What Changed
+
+The first RW-native application is deliberately narrow: the `What Changed` page.  It uses the sales-funnel Zebra DNA as grammar, not as a direct visual copy:
+
+- top exception-band cards keep the existing RW measures (`At Risk`, `Watch`, `Healthy` count/ARR) but use Zebra-card-style native object metadata and RAG treatment so they are auditable as `composite-risk-kpi-card` rather than plain cards;
+- the 7-day movement section remains one native `tableEx` movement ledger, preserving Zebra table principles: deterministic column order, compact grid/header styling, and data-bar/scale hints via `columnGrammar.v1`;
+- the opportunity queue remains a detail ledger with dense table styling, not a replacement card stack;
+- no custom visual types, custom visual packages, fallback textboxes, or cross-motion ARR/Renewal blends are introduced.
+
+Reusable helpers live in `scripts/sales/rw_zebra_kg_ibcs_synth.py`:
+
+- `zebra_native_card_objects()`
+- `zebra_compact_movement_ledger_objects()`
+- `zebra_detail_table_objects()`
+
+These helpers attach only safe lineage metadata (`stylePreset`, `zebraGrammar`) and native Power BI object groups.  They do not persist raw Zebra object payloads or license/activation material.
+
 ## Business guardrails
 
 These are encoded in visual QA and repeated in transfer artifacts:

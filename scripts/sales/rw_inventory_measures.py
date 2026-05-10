@@ -14,7 +14,6 @@ import base64
 import time
 
 import requests
-from azure.identity import AzureCliCredential
 
 WORKSPACE_ID = "b66233d5-9d4a-44ba-89a8-b70206d98ae7"
 SEMANTIC_MODEL_ID = "3c58b5dd-b321-4aaa-a5cd-fb73e474edbb"
@@ -22,6 +21,8 @@ FABRIC = "https://api.fabric.microsoft.com"
 
 
 def _token() -> str:
+    from azure.identity import AzureCliCredential
+
     return AzureCliCredential().get_token("https://api.fabric.microsoft.com/.default").token
 
 

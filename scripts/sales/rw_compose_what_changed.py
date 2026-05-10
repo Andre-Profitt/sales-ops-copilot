@@ -12,20 +12,16 @@ Run:
 from __future__ import annotations
 
 from scripts.sales._pbir_helpers import (
-    build_rag_card_visual,
+    build_card_visual_with_objects,
     build_shape_visual,
-    build_table_style_objects,
     build_table_visual,
     build_textbox_visual,
 )
-from scripts.sales.rw_add_visual import (
-    REPORT_ID,
-    WORKSPACE_ID,
-    _token,
-    get_current_report_json,
-    push_report,
+from scripts.sales.rw_zebra_kg_ibcs_synth import (
+    zebra_compact_movement_ledger_objects,
+    zebra_detail_table_objects,
+    zebra_native_card_objects,
 )
-from scripts.sales.rw_validate import fetch_measures_by_table, validate_visual_dict
 
 PAGE = "What Changed"
 
@@ -85,7 +81,7 @@ def _compose(section: dict) -> None:
             )
         )
         section["visualContainers"].append(
-            build_rag_card_visual(
+            build_card_visual_with_objects(
                 "f_opportunity",
                 count_msr,
                 f"{title} - count",
@@ -93,13 +89,17 @@ def _compose(section: dict) -> None:
                 y=42,
                 w=320,
                 h=78,
-                tint=tint,
-                accent=accent,
-                value_font_size=28,
+                objects=zebra_native_card_objects(
+                    tint=tint,
+                    accent=accent,
+                    value_font_size=28,
+                    label_font_size=9,
+                    display_units=1,
+                ),
             )
         )
         section["visualContainers"].append(
-            build_rag_card_visual(
+            build_card_visual_with_objects(
                 "f_opportunity",
                 arr_msr,
                 f"{title} - ARR",
@@ -107,11 +107,13 @@ def _compose(section: dict) -> None:
                 y=124,
                 w=320,
                 h=56,
-                tint=tint,
-                accent=accent,
-                value_font_size=18,
-                label_font_size=8,
-                display_units=1,
+                objects=zebra_native_card_objects(
+                    tint=tint,
+                    accent=accent,
+                    value_font_size=18,
+                    label_font_size=8,
+                    display_units=1,
+                ),
             )
         )
 
@@ -163,12 +165,10 @@ def _compose(section: dict) -> None:
             y=228,
             w=1020,
             h=150,
-            objects=build_table_style_objects(
-                header_fill="#EEF2F6",
-                header_text="#1A1D31",
-                row_text="#202124",
-                grid="#D8DEE8",
-                font_size=9,
+            objects=zebra_compact_movement_ledger_objects(
+                max_field="f_stage_transition.Stage Moves ARR 7d",
+                databar_column="Stage Moves ARR 7d",
+                accent="#083EA7",
             ),
         )
     )
@@ -218,18 +218,21 @@ def _compose(section: dict) -> None:
             y=414,
             w=1200,
             h=280,
-            objects=build_table_style_objects(
-                header_fill="#EEF2F6",
-                header_text="#1A1D31",
-                row_text="#202124",
-                grid="#E3E7EE",
-                font_size=8,
-            ),
+            objects=zebra_detail_table_objects(),
         )
     )
 
 
 def main() -> None:
+    from scripts.sales.rw_add_visual import (
+        REPORT_ID,
+        WORKSPACE_ID,
+        _token,
+        get_current_report_json,
+        push_report,
+    )
+    from scripts.sales.rw_validate import fetch_measures_by_table, validate_visual_dict
+
     print(f"composing {PAGE!r} on rpt_vp_ops_scorecard")
     token = _token()
     print("  fetching report.json...")
