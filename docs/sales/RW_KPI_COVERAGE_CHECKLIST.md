@@ -5,7 +5,7 @@ Generated from `scripts/sales/rw_kpi_graph.py`, `rw_dashboard_intelligence.py`, 
 ## Coverage Answer
 
 - RW expected KPIs: 31
-- Cleanly covered on BI: 23 / 31
+- Cleanly covered on BI: 25 / 31
 - Usable on BI including partial/proxy coverage: 29 / 31
 - Not dependable yet: 2 / 31
 - Model/measure gaps: 1
@@ -37,7 +37,7 @@ Checklist legend: `[x]` covered, `[~]` partial/proxy on BI, `[ ]` not dependable
 | [x] | `partner_opps_pct` | Partner Opportunities; target 20% of pipeline | MEDIUM | land_expand | Covered | Growth Mix | Partner ARR, Partner Pct | Keep in page QA; tighten visual treatment if Desktop review flags it. |
 | [x] | `renewal_retention_rate` | Renewals per quarter detailing term length; target 95% retention | HIGH | renewal | Covered | VP Ops Scorecard, Renewals | Renewal Retention Pct (Period) | Keep in page QA; tighten visual treatment if Desktop review flags it. |
 | [x] | `renewals_mom_trend` | Renewals by month over year; target Track & Trend | HIGH | renewal | Covered | Renewals | Total Open Renewal ACV, Total Renewal ACV Won | Keep in page QA; tighten visual treatment if Desktop review flags it. |
-| [~] | `existing_arr_run_rate` | Existing ARR (Run Rate) Indexed; target Track & Monitor | HIGH | renewal | Partial/proxy on BI | Renewals | missing: Existing ARR Run Rate | Needs Asset/Subscription base; keep as Renewals caveat until staged. |
+| [x] | `existing_arr_run_rate` | Existing ARR (Run Rate) Indexed; target Track & Monitor | HIGH | renewal | Covered | Renewals | Existing ARR Run Rate | Keep in page QA; tighten visual treatment if Desktop review flags it. |
 | [~] | `indexation_arr_growth` | ARR growth attributed to indexation by Quarter; target 2-3% annually | MEDIUM | renewal | Partial/proxy on BI | Renewals | missing: Indexation ARR Growth | Needs indexation/contract uplift field; keep as Renewals caveat until staged. |
 | [x] | `ilf_arr_pipeline` | ILF ARR Pipes By Quarter; target $X Million | HIGH | land_expand | Covered | Growth Mix | Open Expand ARR | Keep in page QA; tighten visual treatment if Desktop review flags it. |
 | [x] | `alf_arr_pipeline` | ALF ARR By Quarter; target $X Million | HIGH | land_expand | Covered | Growth Mix | Open Land ARR | Keep in page QA; tighten visual treatment if Desktop review flags it. |
@@ -46,7 +46,7 @@ Checklist legend: `[x]` covered, `[~]` partial/proxy on BI, `[ ]` not dependable
 | [~] | `synergy_deals_won` | Synergy deals close won; target 10 deals/quarter | HIGH | land_expand | Partial/proxy on BI | Growth Mix | Total Land Won Count; missing: Synergy Deals Won | Needs synergy flag; current Growth Mix page uses Land won count as a proxy. |
 | [ ] | `synergy_deals_pipe` | Synergy deals in pipe; target 30 deals/quarter | MEDIUM | land_expand | Model/measure gap | - | missing: Synergy Deals Pipeline | Needs synergy flag; then add open/won synergy strip to Growth Mix. |
 | [x] | `lost_arr_quarterly` | Lost ARR By Quarter (with reason); target <5% annually | HIGH | renewal | Covered | Renewals | Total Renewal ACV Lost | Keep in page QA; tighten visual treatment if Desktop review flags it. |
-| [~] | `business_at_risk` | Business At Risk By Quarter; target <10% of ARR | HIGH | renewal | Partial/proxy on BI | Renewals | missing: Business At Risk ARR | Keep in page QA; Renewal risk now uses Opportunity risk assessment level. |
+| [x] | `business_at_risk` | Business At Risk By Quarter; target <10% of ARR | HIGH | renewal | Covered | Renewals | Business At Risk ARR | Keep in page QA; tighten visual treatment if Desktop review flags it. |
 | [ ] | `one_off_revenues` | One Off Revenues by Quarter; target Track & Monitor | MEDIUM | all | Source-data gap | - | missing: One Off Revenues | Needs one-off/PS product fields; likely Product/Pricing future page. |
 | [x] | `ps_arr_attach` | PS ARR by Quarter; target 15% attach rate | MEDIUM | land_expand | Covered | Growth Mix | PS ARR Attach Pct | Keep in page QA; tighten visual treatment if Desktop review flags it. |
 | [x] | `saas_arr_yoy_growth` | SaaS ARR by Quarter; target Growth >20% YoY | HIGH | all | Covered | Growth Mix | SaaS YoY Growth Pct | Keep in page QA; tighten visual treatment if Desktop review flags it. |
@@ -55,18 +55,14 @@ Checklist legend: `[x]` covered, `[~]` partial/proxy on BI, `[ ]` not dependable
 
 - `pipeline_coverage_3x` (HIGH, land_expand): Add quota denominator and true 3x coverage ratio; current Forecast page shows the open-pipeline numerator.
 - `forecast_accuracy` (HIGH, land_expand): Add real ForecastingItem/snapshot accuracy; current Forecast page only shows slips/upgrades movement proxies.
-- `existing_arr_run_rate` (HIGH, renewal): Needs Asset/Subscription base; keep as Renewals caveat until staged.
 - `synergy_deals_won` (HIGH, land_expand): Needs synergy flag; current Growth Mix page uses Land won count as a proxy.
-- `business_at_risk` (HIGH, renewal): Keep in page QA; Renewal risk now uses Opportunity risk assessment level.
 
 ## Partial/Proxy BI Coverage
 
 - `pipeline_coverage_3x` (HIGH, land_expand): Add quota denominator and true 3x coverage ratio; current Forecast page shows the open-pipeline numerator.
 - `forecast_accuracy` (HIGH, land_expand): Add real ForecastingItem/snapshot accuracy; current Forecast page only shows slips/upgrades movement proxies.
-- `existing_arr_run_rate` (HIGH, renewal): Needs Asset/Subscription base; keep as Renewals caveat until staged.
 - `indexation_arr_growth` (MEDIUM, renewal): Needs indexation/contract uplift field; keep as Renewals caveat until staged.
 - `synergy_deals_won` (HIGH, land_expand): Needs synergy flag; current Growth Mix page uses Land won count as a proxy.
-- `business_at_risk` (HIGH, renewal): Keep in page QA; Renewal risk now uses Opportunity risk assessment level.
 
 ## Model/Measure Gaps
 

@@ -77,11 +77,11 @@ NEXT_SURFACE: dict[str, str] = {
     "cross_sell_to_acquired": "Keep in page QA; Axioma Order Inflow is now modeled from Opportunity.",
     "synergy_deals_won": "Needs synergy flag; current Growth Mix page uses Land won count as a proxy.",
     "lost_arr_quarterly": "Add to Renewals as loss waterfall / reason table.",
-    "business_at_risk": "Keep in page QA; Renewal risk now uses Opportunity risk assessment level.",
+    "business_at_risk": "Keep in page QA; active-base ARR risk now comes from Apttus Asset Line Item joined to Account termination risk.",
     "one_off_revenues": "Needs one-off/PS product fields; likely Product/Pricing future page.",
     "ps_arr_attach": "Keep in page QA; PS recurring ACV is now modeled from Opportunity.",
     "saas_arr_yoy_growth": "Keep in page QA; SaaS ACV/ARR field is now modeled from Opportunity.",
-    "existing_arr_run_rate": "Needs Asset/Subscription base; keep as Renewals caveat until staged.",
+    "existing_arr_run_rate": "Keep in page QA; active installed ARR run-rate now comes from Apttus Asset Line Item.",
     "indexation_arr_growth": "Needs indexation/contract uplift field; keep as Renewals caveat until staged.",
 }
 

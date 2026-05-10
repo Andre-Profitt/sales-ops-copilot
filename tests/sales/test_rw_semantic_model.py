@@ -52,6 +52,17 @@ def test_open_renewal_and_growth_measures_do_not_depend_on_closed_won_only():
     )
 
 
+def test_active_asset_arr_measures_stay_out_of_renewal_acv_opportunity_proxy():
+    measures = _measure_map()
+
+    assert "f_asset_line_item[asset_arr_org_ccy]" in measures["Existing ARR Run Rate"]["expression"]
+    assert "REMOVEFILTERS ( d_calendar )" in measures["Existing ARR Run Rate"]["expression"]
+    assert 'f_asset_line_item[termination_risk] IN { "High", "Medium" }' in measures[
+        "Business At Risk ARR"
+    ]["expression"]
+    assert "f_opportunity[acv_org_ccy]" not in measures["Business At Risk ARR"]["expression"]
+
+
 def test_partner_arr_matches_partner_substrings_not_exact_only():
     expression = _measure_map()["Partner ARR"]["expression"]
 

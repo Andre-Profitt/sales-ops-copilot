@@ -1,6 +1,6 @@
 # RW VP Ops Scorecard — Power BI build (browser)
 
-This doc began as the curated browser-side build spec for Power BI Service. Current state: the semantic model is live with **106 DAX measures**, the Desktop lab PBIP has six KPI-targeted RW pages, and the current dashboard coverage truth table is generated at `docs/sales/RW_DASHBOARD_KPI_INTELLIGENCE.md`.
+This doc began as the curated browser-side build spec for Power BI Service. Current state: the semantic model is live with **124 DAX measures**, the generated RW report has KPI-targeted executive pages plus the KPI Explorer, and the current dashboard coverage truth table is generated at `docs/sales/RW_DASHBOARD_KPI_INTELLIGENCE.md`.
 
 Source of truth for KPI definitions, targets, motion filters, and caveats: `scripts/sales/rw_kpi_graph.py`. Source of truth for current dashboard/page coverage, proxy status, missing measures, and next actions: `scripts/sales/rw_dashboard_intelligence.py`.
 
@@ -1571,6 +1571,54 @@ Andre asked for a direct checklist of RW-expected KPIs versus what the current B
 - `saas_arr_yoy_growth`: SaaS deployment/product flag.
 
 ARR remains Land+Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
+
+## 2026-05-10 — Active asset ARR base staged for Renewals
+
+The previous Renewal page still used opportunity ACV as a proxy for business-at-risk exposure.  Salesforce has an installed-base source: `Apttus_Config2__AssetLineItem__c` with converted active asset ARR and account termination-risk context.  This pass staged that source and replaced the Renewal proxy with explicit active-base ARR measures.
+
+**Staged source:**
+
+- Added `f_asset_line_item` from active, non-expired Apttus asset line items.
+- Switched the Salesforce extraction to Bulk API 2.0 after the normal `sf data query` path capped the asset pull at 50,000 rows.
+- Loaded `97,586` active asset rows x `21` columns into Lakehouse `lkh_sales_kpis_rw`.
+- Unioned opportunity accounts with asset accounts in `d_account` so installed-base context can slice by account/region without changing the ARR/ACV opportunity facts.
+
+**New semantic model surface:**
+
+- Added Direct Lake table `f_asset_line_item`.
+- Added relationships from asset line items to account, region, and asset end date.
+- Added five active-base measures:
+  - `Existing ARR Run Rate`
+  - `Existing ARR Expiring In Period`
+  - `Business At Risk ARR`
+  - `Business At Risk Pct`
+  - `Active Asset Line Count`
+- Live model inventory now shows `124` measures across four measure-bearing tables.
+
+**Renewals page changes:**
+
+- Replaced `Business At Risk ACV` proxy usage with `Business At Risk ARR`.
+- Added `Active ARR` and `Risk ARR` cards from the installed-base asset table.
+- Reworked the regional exposure visual and risk detail ledger to use active asset ARR, account risk, product family, and asset end date.
+- Kept Renewal opportunity ACV separate from active-base ARR.  Land/Expand opportunity ARR remains excluded from Renewals.
+
+**Coverage impact:**
+
+- Cleanly covered on BI: `23 / 31` -> `25 / 31`
+- Usable on BI including partial/proxy: `29 / 31`
+- Partial/proxy: `6` -> `4`
+- Model/measure gaps: `1`
+- Source-data gaps: `1`
+
+**Live verification:**
+
+- `python3 -m scripts.sales.sf_to_fabric_rw` passed and loaded `f_asset_line_item`.
+- `python3 -m scripts.sales.rw_push_semantic_model` passed against `sm_sales_kpis_rw`.
+- `python3 -m scripts.sales.rw_compose_all_pages` pushed the live report: https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/d7362a11-f3dd-4bd1-a69a-68c941c2598b
+- `python3 -m scripts.sales.rw_validate --live` passed with `124` measures, `7` sections, `126` visuals, and all measure refs resolved.
+- Live audit, visual QA, semantic-filter, data-surface-flow, enterprise-standard, and unit-policy gates passed at their configured thresholds.
+
+Remaining non-clean KPI work is now concentrated in target/forecast/synergy/source gaps rather than Renewal installed-base ARR.
 
 ## 2026-05-10 — Salesforce source probe for no-proxy RW KPI coverage
 

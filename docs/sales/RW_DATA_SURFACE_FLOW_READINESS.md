@@ -7,11 +7,11 @@ No, the dashboard is not fully done yet. It is guarded and inspectable, but the 
 ## What We Have
 
 - Canonical KPI graph: `31` RW KPIs.
-- Cleanly surfaced KPIs: `23`.
-- Surfaced partial/proxy KPIs: `6`.
+- Cleanly surfaced KPIs: `25`.
+- Surfaced partial/proxy KPIs: `4`.
 - Model/measure gaps: `1`.
 - Source-data gaps: `1`.
-- Semantic model: `7` tables, `119` measures, `7` relationships.
+- Semantic model: `8` tables, `124` measures, `10` relationships.
 - Page contract: `6` executive pages covering `29` KPI IDs.
 - Unit policy: `EUR M`; visual display-unit scaling is forbidden.
 - Guardrails: ARR/Renewal ACV separation, page-specific slicer policy, unit policy, visual QA, semantic-filter audit, Zebra visual/schema benchmarks.
@@ -35,9 +35,7 @@ No, the dashboard is not fully done yet. It is guarded and inspectable, but the 
 | --- | --- | --- | --- | --- | --- |
 | `pipeline_coverage_3x` | surfaced_partial | Forecast | `Total Open Pipeline ARR` | `Pipeline Coverage Ratio` | Add quota denominator and true 3x coverage ratio; current Forecast page shows the open-pipeline numerator. |
 | `forecast_accuracy` | surfaced_partial | Forecast | `Forecast Slip Pct`, `Forecast Slips`, `Forecast Upgrades` | `Forecast Accuracy` | Add real ForecastingItem/snapshot accuracy; current Forecast page only shows slips/upgrades movement proxies. |
-| `existing_arr_run_rate` | surfaced_partial | Renewals | - | `Existing ARR Run Rate` | Needs Asset/Subscription base; keep as Renewals caveat until staged. |
 | `synergy_deals_won` | surfaced_partial | Growth Mix | `Total Land Won Count` | `Synergy Deals Won` | Needs synergy flag; current Growth Mix page uses Land won count as a proxy. |
-| `business_at_risk` | surfaced_partial | Renewals | - | `Business At Risk ARR` | Keep in page QA; Renewal risk now uses Opportunity risk assessment level. |
 
 ## Medium Flow Gaps
 

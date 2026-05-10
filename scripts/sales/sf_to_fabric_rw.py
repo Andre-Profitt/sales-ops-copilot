@@ -1,4 +1,4 @@
-"""Stage SF Opportunity / Account / User detail rows into Fabric Lakehouse
+"""Stage SF Opportunity / Asset / Account / User detail rows into Fabric Lakehouse
 `lkh_sales_kpis_rw` for Richard Wyeth's VP Ops scorecard.
 
 Detail-row staging (not pre-aggregated) so Power BI slicers — Region,
@@ -11,6 +11,7 @@ Output Lakehouse:
 
 Tables written:
   f_opportunity      (fact: open + closed deals; one row per opp)
+  f_asset_line_item  (fact: active/non-expired installed ARR base)
   d_account          (dim: account, region, country, industry)
   d_user             (dim: owner identity + role for region pivots)
   d_region           (small dim: 7 distinct Region__c values)
@@ -85,6 +86,44 @@ FROM Account
 WHERE Id IN (SELECT AccountId FROM Opportunity WHERE (CloseDate = LAST_N_FISCAL_YEARS:3 OR CloseDate = THIS_FISCAL_YEAR))
 """
 
+SOQL_ASSET = """
+SELECT
+    Id, Name,
+    Apttus_Config2__AccountId__c,
+    Apttus_Config2__AccountId__r.Name,
+    Apttus_Config2__AccountId__r.Region__c,
+    Apttus_Config2__AccountId__r.BillingCountry,
+    Apttus_Config2__AccountId__r.Industry,
+    Apttus_Config2__AccountId__r.Risk_of_Potential_Termination__c,
+    Apttus_Config2__AssetStatus__c,
+    Apttus_Config2__IsInactive__c,
+    Apttus_Config2__StartDate__c,
+    Apttus_Config2__EndDate__c,
+    Apttus_Config2__ProductId__c,
+    Apttus_Config2__ProductId__r.Name,
+    APTS_Product_Family__c,
+    APTS_Product_Area__c,
+    APTS_Product_Type__c,
+    CurrencyIsoCode,
+    convertCurrency(APTS_Asset_Line_Item_ARR__c),
+    APTS_Renewal_Scope__c
+FROM Apttus_Config2__AssetLineItem__c
+WHERE Apttus_Config2__IsInactive__c = false
+  AND Apttus_Config2__EndDate__c >= TODAY
+"""
+
+SOQL_ASSET_ACCOUNT = """
+SELECT Id, Name, Region__c, BillingCountry, Industry, OwnerId, Type,
+       Axioma_Client__c, Risk_of_Potential_Termination__c
+FROM Account
+WHERE Id IN (
+    SELECT Apttus_Config2__AccountId__c
+    FROM Apttus_Config2__AssetLineItem__c
+    WHERE Apttus_Config2__IsInactive__c = false
+      AND Apttus_Config2__EndDate__c >= TODAY
+)
+"""
+
 SOQL_USER = """
 SELECT Id, Name, Title, Department, IsActive, UserRole.Name, UserRole.DeveloperName
 FROM User
@@ -93,18 +132,27 @@ WHERE Id IN (SELECT OwnerId FROM Opportunity WHERE (CloseDate = LAST_N_FISCAL_YE
 
 
 def _run_soql(query: str, target_csv: pathlib.Path) -> int:
-    """Bulk-export SOQL to CSV via sf CLI. Returns row count."""
+    """Bulk-export SOQL to CSV via Bulk API 2.0. Returns row count."""
     proc = subprocess.run(
         [
             "sf",
             "data",
-            "query",
-            "-o",
+            "export",
+            "bulk",
+            "--target-org",
             SF_ORG,
-            "-q",
+            "--api-version",
+            "66.0",
+            "--query",
             " ".join(query.split()),
-            "-r",
+            "--output-file",
+            str(target_csv),
+            "--result-format",
             "csv",
+            "--wait",
+            "30",
+            "--line-ending",
+            "LF",
         ],
         capture_output=True,
         text=True,
@@ -112,9 +160,8 @@ def _run_soql(query: str, target_csv: pathlib.Path) -> int:
     )
     if proc.returncode != 0:
         print("  SF query failed:", proc.stderr[:500], file=sys.stderr)
-        raise RuntimeError("sf data query failed")
-    target_csv.write_text(proc.stdout)
-    n = sum(1 for _ in proc.stdout.splitlines()) - 1
+        raise RuntimeError("sf data export bulk failed")
+    n = sum(1 for _ in target_csv.read_text().splitlines()) - 1
     return max(0, n)
 
 
@@ -133,8 +180,15 @@ def transform(stage: pathlib.Path) -> dict[str, pd.DataFrame]:
         f"CREATE TABLE raw_acc AS SELECT * FROM read_csv_auto('{stage / 'account.csv'}', sample_size=20000)"
     )
     con.execute(
+        f"CREATE TABLE raw_asset AS SELECT * FROM read_csv_auto('{stage / 'asset.csv'}', sample_size=20000)"
+    )
+    con.execute(
+        f"CREATE TABLE raw_asset_acc AS SELECT * FROM read_csv_auto('{stage / 'asset_account.csv'}', sample_size=20000)"
+    )
+    con.execute(
         f"CREATE TABLE raw_usr AS SELECT * FROM read_csv_auto('{stage / 'user.csv'}', sample_size=20000)"
     )
+    con.execute("CREATE TABLE raw_acc_all AS SELECT * FROM raw_acc UNION SELECT * FROM raw_asset_acc")
 
     f_opp = con.execute("""
         SELECT
@@ -173,6 +227,32 @@ def transform(stage: pathlib.Path) -> dict[str, pd.DataFrame]:
         FROM raw_opp
     """).fetch_df()
 
+    f_asset = con.execute("""
+        SELECT
+            "Id" as asset_line_item_id,
+            "Name" as asset_name,
+            "Apttus_Config2__AccountId__c" as account_id,
+            "Apttus_Config2__AccountId__r.Name" as account_name,
+            "Apttus_Config2__AccountId__r.Region__c" as region,
+            "Apttus_Config2__AccountId__r.BillingCountry" as billing_country,
+            "Apttus_Config2__AccountId__r.Industry" as industry,
+            "Apttus_Config2__AccountId__r.Risk_of_Potential_Termination__c" as termination_risk,
+            "Apttus_Config2__AssetStatus__c" as asset_status,
+            CAST("Apttus_Config2__IsInactive__c" AS BOOLEAN) as is_inactive,
+            CAST("Apttus_Config2__StartDate__c" AS DATE) as asset_start_date,
+            CAST("Apttus_Config2__EndDate__c" AS DATE) as asset_end_date,
+            "Apttus_Config2__ProductId__c" as product_id,
+            "Apttus_Config2__ProductId__r.Name" as product_name,
+            "APTS_Product_Family__c" as product_family,
+            "APTS_Product_Area__c" as product_area,
+            "APTS_Product_Type__c" as product_type,
+            "CurrencyIsoCode" as native_currency,
+            CAST("APTS_Asset_Line_Item_ARR__c" AS DOUBLE) as asset_arr_org_ccy,
+            "APTS_Renewal_Scope__c" as renewal_scope,
+            TRUE as is_active_base
+        FROM raw_asset
+    """).fetch_df()
+
     d_acc = con.execute("""
         SELECT
             "Id" as account_id,
@@ -184,7 +264,7 @@ def transform(stage: pathlib.Path) -> dict[str, pd.DataFrame]:
             "Type" as account_type,
             CAST("Axioma_Client__c" AS BOOLEAN) as axioma_client,
             "Risk_of_Potential_Termination__c" as termination_risk
-        FROM raw_acc
+        FROM raw_acc_all
     """).fetch_df()
 
     d_usr = con.execute("""
@@ -209,7 +289,9 @@ def transform(stage: pathlib.Path) -> dict[str, pd.DataFrame]:
         "United Kingdom & Ireland",
         "Middle East & Africa",
     ]
-    regions_in_data = sorted(set(f_opp["region"].dropna().tolist()))
+    region_values = set(f_opp["region"].dropna().tolist())
+    region_values.update(f_asset["region"].dropna().tolist())
+    regions_in_data = sorted(region_values)
     ordered = [r for r in region_order if r in regions_in_data] + [
         r for r in regions_in_data if r not in region_order
     ]
@@ -229,8 +311,14 @@ def transform(stage: pathlib.Path) -> dict[str, pd.DataFrame]:
     f_opp["won_value_tier"] = f_opp["arr_org_ccy"].apply(_value_tier)
 
     # Date dim spanning data window
-    min_d = pd.to_datetime(f_opp["close_date"]).min()
-    max_d = pd.to_datetime(f_opp["close_date"]).max()
+    min_d = min(
+        pd.to_datetime(f_opp["close_date"]).min(),
+        pd.to_datetime(f_asset["asset_start_date"]).min(),
+    )
+    max_d = max(
+        pd.to_datetime(f_opp["close_date"]).max(),
+        pd.to_datetime(f_asset["asset_end_date"]).max(),
+    )
     if pd.isna(min_d) or pd.isna(max_d):
         date_range = pd.date_range("2023-01-01", "2026-12-31", freq="D")
     else:
@@ -253,6 +341,7 @@ def transform(stage: pathlib.Path) -> dict[str, pd.DataFrame]:
 
     return {
         "f_opportunity": f_opp,
+        "f_asset_line_item": f_asset,
         "d_account": d_acc,
         "d_user": d_usr,
         "d_region": d_region,
@@ -316,11 +405,15 @@ def write_to_onelake(lakehouse_id: str, frames: dict[str, pd.DataFrame]) -> None
 def main() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         stage = pathlib.Path(tmp)
-        print("Step 1/4: SF bulk export (Opportunity, Account, User)...")
+        print("Step 1/4: SF bulk export (Opportunity, Asset, Account, User)...")
         n_opp = _run_soql(SOQL_OPP, stage / "opp.csv")
         print(f"  Opportunity: {n_opp:,} rows")
         n_acc = _run_soql(SOQL_ACCOUNT, stage / "account.csv")
-        print(f"  Account: {n_acc:,} rows")
+        print(f"  Opportunity Account: {n_acc:,} rows")
+        n_asset = _run_soql(SOQL_ASSET, stage / "asset.csv")
+        print(f"  Asset Line Item: {n_asset:,} rows")
+        n_asset_acc = _run_soql(SOQL_ASSET_ACCOUNT, stage / "asset_account.csv")
+        print(f"  Asset Account: {n_asset_acc:,} rows")
         n_usr = _run_soql(SOQL_USER, stage / "user.csv")
         print(f"  User: {n_usr:,} rows")
 

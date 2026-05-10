@@ -47,6 +47,13 @@ TEXT_TYPES = {"textbox"}
 ZEBRA_TYPES = {"ZebraBITables98F88148E5424E949E69864664EE1860"}
 NATIVE_VISUAL_TYPES = CARD_TYPES | TABLE_TYPES | TEXT_TYPES | {"basicShape", "clusteredBarChart", "slicer"}
 ACCENT_COLORS = {"#2B5C8A", "#3B8A3E", "#C33A32", "#D98A00", "#083EA7", "#CC3333", "#DD8800", "#339933"}
+RENEWAL_BASE_ARR_MEASURES = {
+    "Existing ARR Run Rate",
+    "Existing ARR Expiring In Period",
+    "Business At Risk ARR",
+    "Business At Risk Pct",
+    "Active Asset Line Count",
+}
 NEUTRAL_COLORS = {"#D8DEE8", "#E3E7EE", "#EEF2F6", "#FFFFFF", "#F4F7FB"}
 PASTEL_STATUS_FILLS = {"#FFEEEE", "#FFF8E6", "#EEF9EE"}
 ACCENT_COLORS = {color.upper() for color in ACCENT_COLORS}
@@ -535,15 +542,23 @@ def audit_arr_acv_guardrails(page: str, vc: dict) -> list[dict]:
     has_renewal_acv = bool(re.search(r"Renewal\s+ACV", joined, re.IGNORECASE))
     issues: list[dict] = []
     if page == "Renewals" and has_arr:
+        illegal_arr = [
+            measure
+            for measure in measures
+            if re.search(r"\bARR\b", measure, re.IGNORECASE)
+            and measure not in RENEWAL_BASE_ARR_MEASURES
+        ]
+        if not illegal_arr and set(measures).intersection(RENEWAL_BASE_ARR_MEASURES):
+            return issues
         issues.append(
             finding(
                 code="arr_acv_guardrail",
                 severity="critical",
                 page=page,
                 visual=vc,
-                message="Renewals page references ARR. Renewal ACV must remain Renewal-only.",
-                evidence={"measures": measures},
-                recommendation="Replace ARR measure with Renewal ACV measure or move the visual to a Land/Expand page.",
+                message="Renewals page references non-active-base ARR. Renewal ACV must remain Renewal-only.",
+                evidence={"measures": measures, "illegal": illegal_arr},
+                recommendation="Use only Renewal ACV measures or the explicitly allowed active-base ARR measures on Renewals.",
             )
         )
     if page in {"Growth Mix", "Stage Hygiene", "What Changed", "VP Ops Scorecard"} and has_renewal_acv:

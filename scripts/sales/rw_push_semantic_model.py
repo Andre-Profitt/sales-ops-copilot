@@ -1,13 +1,14 @@
 """Create the `sm_sales_kpis_rw` semantic model in Fabric.
 
-Direct Lake on `lkh_sales_kpis_rw`. 5 tables, 4 relationships, 15 DAX
+Direct Lake on `lkh_sales_kpis_rw`. Includes Opportunity, stage/forecast
+transition facts, and active Apttus asset line items for renewal-base ARR.
 measures in Phase 1 (the subset of the 31 RW KPIs that's computable
 from Opportunity + Account + User alone — no OFH, Approval, or Asset
 data yet). Region slicer-ready via d_region.
 
 Phase 2 (deferred): add OpportunityFieldHistory for stage_conversion +
 time_in_stage, ApprovalProcess for commercial-approval timing, and
-Asset/Subscription for existing_arr_run_rate + indexation.
+Asset/Subscription for indexation.
 
 Same Fabric REST pattern as scripts/workforce/wf_push_semantic_model.py.
 
@@ -957,6 +958,59 @@ def build_model_bim() -> dict:
         },
     ]
 
+    # Active Apttus asset base. These are ARR measures over installed assets,
+    # not Renewal-opportunity ACV, so they intentionally live on a separate fact.
+    asset_measures = [
+        {
+            "name": "Existing ARR Run Rate",
+            "expression": (
+                "CALCULATE ( "
+                "SUM ( f_asset_line_item[asset_arr_org_ccy] ), "
+                "f_asset_line_item[is_active_base] = TRUE(), "
+                "REMOVEFILTERS ( d_calendar ) )"
+            ),
+            "formatString": 'EUR #,0,,.0"M";(EUR #,0,,.0"M");"-"',
+            "description": "RW KPI: existing_arr_run_rate. Current active/non-expired installed ARR base from Apttus Asset Line Item; not Renewal ACV.",
+        },
+        {
+            "name": "Existing ARR Expiring In Period",
+            "expression": (
+                "CALCULATE ( "
+                "SUM ( f_asset_line_item[asset_arr_org_ccy] ), "
+                "f_asset_line_item[is_active_base] = TRUE() )"
+            ),
+            "formatString": 'EUR #,0,,.0"M";(EUR #,0,,.0"M");"-"',
+            "description": "Active installed ARR filtered by asset end date / selected renewal period.",
+        },
+        {
+            "name": "Business At Risk ARR",
+            "expression": (
+                "CALCULATE ( "
+                "SUM ( f_asset_line_item[asset_arr_org_ccy] ), "
+                "f_asset_line_item[is_active_base] = TRUE(), "
+                'f_asset_line_item[termination_risk] IN { "High", "Medium" } )'
+            ),
+            "formatString": 'EUR #,0,,.0"M";(EUR #,0,,.0"M");"-"',
+            "description": "RW KPI: business_at_risk. Active installed ARR where Account termination risk is High or Medium; replaces Renewal-opportunity ACV proxy.",
+        },
+        {
+            "name": "Business At Risk Pct",
+            "expression": "DIVIDE ( [Business At Risk ARR], [Existing ARR Run Rate] )",
+            "formatString": "0.0%",
+            "description": "At-risk active ARR as a share of current installed ARR run-rate.",
+        },
+        {
+            "name": "Active Asset Line Count",
+            "expression": (
+                "CALCULATE ( "
+                "COUNTROWS ( f_asset_line_item ), "
+                "f_asset_line_item[is_active_base] = TRUE() )"
+            ),
+            "formatString": "#,0",
+            "description": "Active/non-expired Apttus asset line count.",
+        },
+    ]
+
     return {
         "name": MODEL_NAME,
         "compatibilityLevel": 1604,
@@ -1091,6 +1145,34 @@ def build_model_bim() -> dict:
                     "partitions": [dl_partition("f_forecast_transition")],
                     "measures": forecast_measures,
                 },
+                {
+                    "name": "f_asset_line_item",
+                    "columns": [
+                        col("asset_line_item_id", "string", key=True),
+                        col("asset_name", "string"),
+                        col("account_id", "string"),
+                        col("account_name", "string"),
+                        col("region", "string"),
+                        col("billing_country", "string"),
+                        col("industry", "string"),
+                        col("termination_risk", "string"),
+                        col("asset_status", "string"),
+                        col("is_inactive", "boolean"),
+                        col("asset_start_date", "dateTime", fmt="yyyy-mm-dd"),
+                        col("asset_end_date", "dateTime", fmt="yyyy-mm-dd"),
+                        col("product_id", "string"),
+                        col("product_name", "string"),
+                        col("product_family", "string"),
+                        col("product_area", "string"),
+                        col("product_type", "string"),
+                        col("native_currency", "string"),
+                        col("asset_arr_org_ccy", "double"),
+                        col("renewal_scope", "string"),
+                        col("is_active_base", "boolean"),
+                    ],
+                    "partitions": [dl_partition("f_asset_line_item")],
+                    "measures": asset_measures,
+                },
             ],
             "relationships": [
                 {
@@ -1133,6 +1215,30 @@ def build_model_bim() -> dict:
                     "toColumn": "date",
                     "crossFilteringBehavior": "oneDirection",
                     "isActive": False,  # second relationship to date dim — activated by USERELATIONSHIP for "New Opps Created"
+                },
+                {
+                    "name": "rel_asset_account",
+                    "fromTable": "f_asset_line_item",
+                    "fromColumn": "account_id",
+                    "toTable": "d_account",
+                    "toColumn": "account_id",
+                    "crossFilteringBehavior": "oneDirection",
+                },
+                {
+                    "name": "rel_asset_region",
+                    "fromTable": "f_asset_line_item",
+                    "fromColumn": "region",
+                    "toTable": "d_region",
+                    "toColumn": "region",
+                    "crossFilteringBehavior": "oneDirection",
+                },
+                {
+                    "name": "rel_asset_end_date",
+                    "fromTable": "f_asset_line_item",
+                    "fromColumn": "asset_end_date",
+                    "toTable": "d_calendar",
+                    "toColumn": "date",
+                    "crossFilteringBehavior": "oneDirection",
                 },
                 {
                     "name": "rel_forecast_opp",

@@ -54,6 +54,9 @@ These checks are informed by the Zebra schema corpus, not just local RW preferen
 | `rel_opp_region` | `f_opportunity.region` | `d_region.region` | `oneDirection` | `True` |
 | `rel_opp_close_date` | `f_opportunity.close_date` | `d_calendar.date` | `oneDirection` | `True` |
 | `rel_opp_created_date` | `f_opportunity.created_date` | `d_calendar.date` | `oneDirection` | `False` |
+| `rel_asset_account` | `f_asset_line_item.account_id` | `d_account.account_id` | `oneDirection` | `True` |
+| `rel_asset_region` | `f_asset_line_item.region` | `d_region.region` | `oneDirection` | `True` |
+| `rel_asset_end_date` | `f_asset_line_item.asset_end_date` | `d_calendar.date` | `oneDirection` | `True` |
 | `rel_forecast_opp` | `f_forecast_transition.opp_id` | `f_opportunity.opp_id` | `oneDirection` | `True` |
 | `rel_stage_opp` | `f_stage_transition.opp_id` | `f_opportunity.opp_id` | `oneDirection` | `True` |
 

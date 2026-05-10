@@ -143,6 +143,17 @@ def test_visual_qa_enforces_arr_acv_guardrails():
                 tint="#F4F7FB",
                 accent="#2B5C8A",
             ),
+            build_rag_card_visual(
+                "f_asset_line_item",
+                "Existing ARR Run Rate",
+                "Active ARR",
+                x=304,
+                y=60,
+                w=260,
+                h=96,
+                tint="#F4F7FB",
+                accent="#083EA7",
+            ),
         ],
     )
     growth_page = _report(
@@ -167,6 +178,10 @@ def test_visual_qa_enforces_arr_acv_guardrails():
     findings = result["findings"]
     assert sum(1 for f in findings if f["code"] == "arr_acv_guardrail") == 2
     assert all(f["severity"] == "critical" for f in findings if f["code"] == "arr_acv_guardrail")
+    assert not any(
+        f["code"] == "arr_acv_guardrail" and f["evidence"]["measures"] == ["Existing ARR Run Rate"]
+        for f in findings
+    )
 
 
 def test_visual_qa_writes_json_and_markdown(tmp_path: Path):

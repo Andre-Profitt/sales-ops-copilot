@@ -5,8 +5,8 @@ Generated from `scripts/sales/rw_kpi_graph.py`, `rw_page_kpi_contract.py`, and t
 ## Rollup
 
 - Total RW KPIs: 31
-- Surfaced cleanly on dashboard pages: 23
-- Surfaced but still partial: 6
+- Surfaced cleanly on dashboard pages: 25
+- Surfaced but still partial: 4
 - Model-available but not clearly surfaced: 0
 - Partial data or measure gap: 1
 - Source-data gap: 1
@@ -23,11 +23,9 @@ Fast page-only upgrades; the model already has the measure, but the dashboard do
 Semantic/model upgrades; a page exists or the KPI is close, but the current visual is still proxy/incomplete:
 - `pipeline_coverage_3x`: Add quota denominator and true 3x coverage ratio; current Forecast page shows the open-pipeline numerator.
 - `forecast_accuracy`: Add real ForecastingItem/snapshot accuracy; current Forecast page only shows slips/upgrades movement proxies.
-- `existing_arr_run_rate`: Needs Asset/Subscription base; keep as Renewals caveat until staged.
 - `indexation_arr_growth`: Needs indexation/contract uplift field; keep as Renewals caveat until staged.
 - `synergy_deals_won`: Needs synergy flag; current Growth Mix page uses Land won count as a proxy.
 - `synergy_deals_pipe`: Needs synergy flag; then add open/won synergy strip to Growth Mix.
-- `business_at_risk`: Keep in page QA; Renewal risk now uses Opportunity risk assessment level.
 
 Source-data upgrades; these need ETL/source-field work before a real dashboard visual can be trusted:
 - `one_off_revenues`: Needs one-off/PS product fields; likely Product/Pricing future page.
@@ -121,7 +119,7 @@ The page contract is executable via `scripts/sales/rw_page_kpi_contract.py`; tes
 - Primary KPIs: `renewal_retention_rate`, `renewals_mom_trend`, `lost_arr_quarterly`
 - Secondary diagnostics: `business_at_risk`, `existing_arr_run_rate`, `indexation_arr_growth`
 - Required motion guardrail: `renewal_acv`
-- Caveat: Renewal ACV only. Land and Expand ARR are excluded from this page.
+- Caveat: Renewal opportunity ACV and active-base ARR are separated. Land and Expand new-business ARR are excluded from this page.
 
 | KPI | Measure | Role | Motion | Data status | Label |
 | --- | --- | --- | --- | --- | --- |
@@ -129,10 +127,10 @@ The page contract is executable via `scripts/sales/rw_page_kpi_contract.py`; tes
 | `renewal_retention_rate` | `Renewal Retention Pct (Period)` | hero KPI | `renewal_acv` | partial | Retention |
 | `renewals_mom_trend` | `Total Renewal ACV Won` | hero KPI | `renewal_acv` | clean | Won renewal ACV |
 | `lost_arr_quarterly` | `Total Renewal ACV Lost` | hero KPI | `renewal_acv` | partial | Lost renewal ACV |
-| `business_at_risk` | `Business At Risk ACV` | hero KPI | `renewal_acv` | proxy | Business at risk proxy |
-| `renewals_mom_trend` | `Total Open Renewal ACV` | bridge/waterfall | `renewal_acv` | clean | Open Renewal ACV by Region |
-| `lost_arr_quarterly` | `Total Renewal ACV Lost` | detail table | `renewal_acv` | partial | Renewal Pressure Table |
-| `existing_arr_run_rate` | `Existing ARR Run Rate` | detail table | `renewal_acv` | missing source data | Existing ARR Run Rate |
+| `existing_arr_run_rate` | `Existing ARR Run Rate` | hero KPI | `renewal_base_arr` | clean | Active ARR base |
+| `business_at_risk` | `Business At Risk ARR` | hero KPI | `renewal_base_arr` | clean | Business at risk ARR |
+| `business_at_risk` | `Business At Risk ARR` | bridge/waterfall | `renewal_base_arr` | clean | At-risk active ARR by Region |
+| `existing_arr_run_rate` | `Existing ARR Expiring In Period` | detail table | `renewal_base_arr` | clean | Active Asset ARR Detail |
 | `indexation_arr_growth` | `Indexation ARR Growth` | detail table | `renewal_acv` | missing source data | Indexation ARR Growth |
 
 ### Growth Mix
@@ -181,7 +179,7 @@ The page contract is executable via `scripts/sales/rw_page_kpi_contract.py`; tes
 | `partner_opps_pct` | MEDIUM | land_expand | exists | surfaced | Growth Mix | Partner ARR, Partner Pct | Keep in page QA; tighten visual treatment if Desktop review flags it. |
 | `renewal_retention_rate` | HIGH | renewal | partial | surfaced | VP Ops Scorecard, Renewals | Renewal Retention Pct (Period) | Keep in page QA; tighten visual treatment if Desktop review flags it. |
 | `renewals_mom_trend` | HIGH | renewal | exists | surfaced | Renewals | Total Open Renewal ACV, Total Renewal ACV Won | Keep in page QA; tighten visual treatment if Desktop review flags it. |
-| `existing_arr_run_rate` | HIGH | renewal | missing | surfaced_partial | Renewals | - (missing: Existing ARR Run Rate) | Needs Asset/Subscription base; keep as Renewals caveat until staged. |
+| `existing_arr_run_rate` | HIGH | renewal | exists | surfaced | Renewals | Existing ARR Run Rate | Keep in page QA; tighten visual treatment if Desktop review flags it. |
 | `indexation_arr_growth` | MEDIUM | renewal | missing | surfaced_partial | Renewals | - (missing: Indexation ARR Growth) | Needs indexation/contract uplift field; keep as Renewals caveat until staged. |
 | `ilf_arr_pipeline` | HIGH | land_expand | partial | surfaced | Growth Mix | Open Expand ARR | Keep in page QA; tighten visual treatment if Desktop review flags it. |
 | `alf_arr_pipeline` | HIGH | land_expand | partial | surfaced | Growth Mix | Open Land ARR | Keep in page QA; tighten visual treatment if Desktop review flags it. |
@@ -190,7 +188,7 @@ The page contract is executable via `scripts/sales/rw_page_kpi_contract.py`; tes
 | `synergy_deals_won` | HIGH | land_expand | partial | surfaced_partial | Growth Mix | Total Land Won Count (missing: Synergy Deals Won) | Needs synergy flag; current Growth Mix page uses Land won count as a proxy. |
 | `synergy_deals_pipe` | MEDIUM | land_expand | partial | partial_data_or_measure_gap | - | - (missing: Synergy Deals Pipeline) | Needs synergy flag; then add open/won synergy strip to Growth Mix. |
 | `lost_arr_quarterly` | HIGH | renewal | exists | surfaced | Renewals | Total Renewal ACV Lost | Keep in page QA; tighten visual treatment if Desktop review flags it. |
-| `business_at_risk` | HIGH | renewal | partial | surfaced_partial | Renewals | - (missing: Business At Risk ARR) | Keep in page QA; Renewal risk now uses Opportunity risk assessment level. |
+| `business_at_risk` | HIGH | renewal | exists | surfaced | Renewals | Business At Risk ARR | Keep in page QA; tighten visual treatment if Desktop review flags it. |
 | `one_off_revenues` | MEDIUM | all | missing | source_data_gap | - | - (missing: One Off Revenues) | Needs one-off/PS product fields; likely Product/Pricing future page. |
 | `ps_arr_attach` | MEDIUM | land_expand | exists | surfaced | Growth Mix | PS ARR Attach Pct | Keep in page QA; tighten visual treatment if Desktop review flags it. |
 | `saas_arr_yoy_growth` | HIGH | all | exists | surfaced | Growth Mix | SaaS YoY Growth Pct | Keep in page QA; tighten visual treatment if Desktop review flags it. |
@@ -199,6 +197,4 @@ The page contract is executable via `scripts/sales/rw_page_kpi_contract.py`; tes
 
 - `pipeline_coverage_3x`: Add quota denominator and true 3x coverage ratio; current Forecast page shows the open-pipeline numerator.
 - `forecast_accuracy`: Add real ForecastingItem/snapshot accuracy; current Forecast page only shows slips/upgrades movement proxies.
-- `existing_arr_run_rate`: Needs Asset/Subscription base; keep as Renewals caveat until staged.
 - `synergy_deals_won`: Needs synergy flag; current Growth Mix page uses Land won count as a proxy.
-- `business_at_risk`: Keep in page QA; Renewal risk now uses Opportunity risk assessment level.

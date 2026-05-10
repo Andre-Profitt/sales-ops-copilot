@@ -1,8 +1,8 @@
 {
   "rollup": {
     "total_kpis": 31,
-    "surfaced": 23,
-    "surfaced_partial": 6,
+    "surfaced": 25,
+    "surfaced_partial": 4,
     "model_available_not_surfaced": 0,
     "partial_data_or_measure_gap": 1,
     "source_data_gap": 1
@@ -348,7 +348,7 @@
         "indexation_arr_growth"
       ],
       "required_motion_guardrail": "renewal_acv",
-      "caveat": "Renewal ACV only. Land and Expand ARR are excluded from this page.",
+      "caveat": "Renewal opportunity ACV and active-base ARR are separated. Land and Expand new-business ARR are excluded from this page.",
       "placements": [
         {
           "kpi_id": "renewals_mom_trend",
@@ -391,44 +391,44 @@
           "missing_measure": ""
         },
         {
-          "kpi_id": "business_at_risk",
-          "measure": "Business At Risk ACV",
+          "kpi_id": "existing_arr_run_rate",
+          "measure": "Existing ARR Run Rate",
           "visual_role": "hero KPI",
-          "motion_guardrail": "renewal_acv",
-          "data_status": "proxy",
-          "label": "Business at risk proxy",
-          "secondary": true,
-          "missing_measure": "Business At Risk ARR"
-        },
-        {
-          "kpi_id": "renewals_mom_trend",
-          "measure": "Total Open Renewal ACV",
-          "visual_role": "bridge/waterfall",
-          "motion_guardrail": "renewal_acv",
+          "motion_guardrail": "renewal_base_arr",
           "data_status": "clean",
-          "label": "Open Renewal ACV by Region",
-          "secondary": false,
+          "label": "Active ARR base",
+          "secondary": true,
           "missing_measure": ""
         },
         {
-          "kpi_id": "lost_arr_quarterly",
-          "measure": "Total Renewal ACV Lost",
-          "visual_role": "detail table",
-          "motion_guardrail": "renewal_acv",
-          "data_status": "partial",
-          "label": "Renewal Pressure Table",
-          "secondary": false,
+          "kpi_id": "business_at_risk",
+          "measure": "Business At Risk ARR",
+          "visual_role": "hero KPI",
+          "motion_guardrail": "renewal_base_arr",
+          "data_status": "clean",
+          "label": "Business at risk ARR",
+          "secondary": true,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "business_at_risk",
+          "measure": "Business At Risk ARR",
+          "visual_role": "bridge/waterfall",
+          "motion_guardrail": "renewal_base_arr",
+          "data_status": "clean",
+          "label": "At-risk active ARR by Region",
+          "secondary": true,
           "missing_measure": ""
         },
         {
           "kpi_id": "existing_arr_run_rate",
-          "measure": "Existing ARR Run Rate",
+          "measure": "Existing ARR Expiring In Period",
           "visual_role": "detail table",
-          "motion_guardrail": "renewal_acv",
-          "data_status": "missing source data",
-          "label": "Existing ARR Run Rate",
+          "motion_guardrail": "renewal_base_arr",
+          "data_status": "clean",
+          "label": "Active Asset ARR Detail",
           "secondary": true,
-          "missing_measure": "Existing ARR Run Rate"
+          "missing_measure": ""
         },
         {
           "kpi_id": "indexation_arr_growth",
@@ -914,16 +914,16 @@
       "name": "Existing ARR (Run Rate) Indexed",
       "impact": "HIGH",
       "motion_filter": "renewal",
-      "source_coverage": "missing",
-      "dashboard_status": "surfaced_partial",
+      "source_coverage": "exists",
+      "dashboard_status": "surfaced",
       "pages": [
         "Renewals"
       ],
-      "model_measures": [],
-      "missing_measures": [
+      "model_measures": [
         "Existing ARR Run Rate"
       ],
-      "next_action": "Needs Asset/Subscription base; keep as Renewals caveat until staged."
+      "missing_measures": [],
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
     },
     {
       "kpi_id": "indexation_arr_growth",
@@ -1059,16 +1059,16 @@
       "name": "Business At Risk By Quarter",
       "impact": "HIGH",
       "motion_filter": "renewal",
-      "source_coverage": "partial",
-      "dashboard_status": "surfaced_partial",
+      "source_coverage": "exists",
+      "dashboard_status": "surfaced",
       "pages": [
         "Renewals"
       ],
-      "model_measures": [],
-      "missing_measures": [
+      "model_measures": [
         "Business At Risk ARR"
       ],
-      "next_action": "Keep in page QA; Renewal risk now uses Opportunity risk assessment level."
+      "missing_measures": [],
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
     },
     {
       "kpi_id": "one_off_revenues",

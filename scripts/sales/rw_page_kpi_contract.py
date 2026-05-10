@@ -13,7 +13,13 @@ from dataclasses import dataclass
 from typing import Literal
 
 
-Motion = Literal["land_expand_arr", "renewal_acv", "cross_motion_labeled", "process"]
+Motion = Literal[
+    "land_expand_arr",
+    "renewal_acv",
+    "renewal_base_arr",
+    "cross_motion_labeled",
+    "process",
+]
 VisualRole = Literal[
     "hero KPI",
     "RAG card",
@@ -152,20 +158,30 @@ PAGE_KPI_CONTRACTS: dict[str, PageKPIContract] = {
         primary_kpis=("renewal_retention_rate", "renewals_mom_trend", "lost_arr_quarterly"),
         secondary_diagnostics=("business_at_risk", "existing_arr_run_rate", "indexation_arr_growth"),
         kpi_ids=("renewal_retention_rate", "renewals_mom_trend", "lost_arr_quarterly", "business_at_risk", "existing_arr_run_rate", "indexation_arr_growth"),
-        measures=("Total Open Renewal ACV", "Total Renewal ACV Due", "Renewal Retention Pct (Period)", "Total Renewal ACV Won", "Total Renewal ACV Lost", "Business At Risk ACV"),
+        measures=(
+            "Total Open Renewal ACV",
+            "Total Renewal ACV Due",
+            "Renewal Retention Pct (Period)",
+            "Total Renewal ACV Won",
+            "Total Renewal ACV Lost",
+            "Existing ARR Run Rate",
+            "Existing ARR Expiring In Period",
+            "Business At Risk ARR",
+            "Business At Risk Pct",
+        ),
         motion="renewal_acv",
         placements=(
             p("renewals_mom_trend", "Total Open Renewal ACV", "hero KPI", "renewal_acv", "clean", "Open renewal ACV"),
             p("renewal_retention_rate", "Renewal Retention Pct (Period)", "hero KPI", "renewal_acv", "partial", "Retention"),
             p("renewals_mom_trend", "Total Renewal ACV Won", "hero KPI", "renewal_acv", "clean", "Won renewal ACV"),
             p("lost_arr_quarterly", "Total Renewal ACV Lost", "hero KPI", "renewal_acv", "partial", "Lost renewal ACV"),
-            p("business_at_risk", "Business At Risk ACV", "hero KPI", "renewal_acv", "proxy", "Business at risk proxy", secondary=True, missing_measure="Business At Risk ARR"),
-            p("renewals_mom_trend", "Total Open Renewal ACV", "bridge/waterfall", "renewal_acv", "clean", "Open Renewal ACV by Region"),
-            p("lost_arr_quarterly", "Total Renewal ACV Lost", "detail table", "renewal_acv", "partial", "Renewal Pressure Table"),
-            p("existing_arr_run_rate", "Existing ARR Run Rate", "detail table", "renewal_acv", "missing source data", "Existing ARR Run Rate", secondary=True, missing_measure="Existing ARR Run Rate"),
+            p("existing_arr_run_rate", "Existing ARR Run Rate", "hero KPI", "renewal_base_arr", "clean", "Active ARR base", secondary=True),
+            p("business_at_risk", "Business At Risk ARR", "hero KPI", "renewal_base_arr", "clean", "Business at risk ARR", secondary=True),
+            p("business_at_risk", "Business At Risk ARR", "bridge/waterfall", "renewal_base_arr", "clean", "At-risk active ARR by Region", secondary=True),
+            p("existing_arr_run_rate", "Existing ARR Expiring In Period", "detail table", "renewal_base_arr", "clean", "Active Asset ARR Detail", secondary=True),
             p("indexation_arr_growth", "Indexation ARR Growth", "detail table", "renewal_acv", "missing source data", "Indexation ARR Growth", secondary=True, missing_measure="Indexation ARR Growth"),
         ),
-        caveat="Renewal ACV only. Land and Expand ARR are excluded from this page.",
+        caveat="Renewal opportunity ACV and active-base ARR are separated. Land and Expand new-business ARR are excluded from this page.",
     ),
     "Growth Mix": PageKPIContract(
         page="Growth Mix",

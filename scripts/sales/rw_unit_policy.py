@@ -47,7 +47,11 @@ DEFAULT_MARKDOWN = Path("docs/sales/RW_UNIT_POLICY.md")
 
 def is_currency_measure(name: str) -> bool:
     normalized = name.lower()
-    if any(token in normalized for token in (" pct", " rate", " count", " days", "remaining")):
+    if any(token in normalized for token in (" pct", " count", " days", "remaining")):
+        return False
+    if "win rate" in normalized:
+        return False
+    if " rate" in normalized and "run rate" not in normalized:
         return False
     return any(
         token in normalized

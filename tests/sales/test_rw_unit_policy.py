@@ -12,6 +12,7 @@ from scripts.sales.rw_unit_policy import (
     audit_model_units,
     audit_report_units,
     audit_unit_policy,
+    is_currency_measure,
     strip_report_unit_scaling,
 )
 
@@ -34,6 +35,13 @@ def test_currency_measures_use_one_eur_m_format():
         "Stage Moves ARR 7d",
     ]:
         assert measures[name]["formatString"] == CURRENCY_M_FORMAT
+
+
+def test_arr_run_rate_is_currency_but_win_rate_arr_is_percent():
+    assert is_currency_measure("Existing ARR Run Rate")
+    assert not is_currency_measure("Win Rate ARR")
+    assert not is_currency_measure("Land Win Rate ARR")
+    assert not is_currency_measure("Business At Risk Pct")
 
 
 def test_report_unit_audit_rejects_theme_or_visual_display_unit_scaling():

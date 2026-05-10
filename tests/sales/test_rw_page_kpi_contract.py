@@ -315,7 +315,10 @@ def test_arr_and_renewal_acv_contracts_stay_separate_by_page():
         "Renewal Retention Pct (Period)",
         "Total Renewal ACV Won",
         "Total Renewal ACV Lost",
-        "Business At Risk ACV",
+        "Existing ARR Run Rate",
+        "Existing ARR Expiring In Period",
+        "Business At Risk ARR",
+        "Business At Risk Pct",
     }
     growth_arr_measures = {
         "Open Land ARR",
