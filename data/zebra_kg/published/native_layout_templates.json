@@ -1,0 +1,12 @@
+{
+  "sales-funnel-power-bi-template": {
+    "semantic_model_id": "b384df69-dbfa-48f0-bdb5-727f96c6a4dd",
+    "report_id": "7483393a-17ff-42e8-9e46-97a425cd6b94",
+    "url": "https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/7483393a-17ff-42e8-9e46-97a425cd6b94",
+    "page_count": 6,
+    "visual_count": 104,
+    "static_resource_parts": 13,
+    "translated_custom_visuals": 20,
+    "measure_count": 15
+  }
+}

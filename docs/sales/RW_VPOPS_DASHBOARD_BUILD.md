@@ -898,3 +898,37 @@ Correct command:
 Scale rule: do not add more Zebra templates until this one passes visual review
 in Fabric/Desktop. The learning target is renderer fidelity and reusable bridge
 rules, not bulk count.
+
+
+## Zebra Native Layout Bridge - Sales Funnel — 2026-05-09
+
+Andre correctly flagged that full Zebra custom-visual fidelity can still be
+blocked by SimCorp tenant policy. The SimCorp-safe bridge is therefore
+**native layout**:
+
+- preserve full source PBIX page layout and non-Zebra page furniture
+- translate only Zebra custom visual containers into native Power BI visuals
+- remove `CustomVisuals/*` report definition parts and custom visual packages
+
+Reference doc: `docs/sales/RW_ZEBRA_NATIVE_LAYOUT_SALES_FUNNEL.md`.
+
+Live native-layout report:
+https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/7483393a-17ff-42e8-9e46-97a425cd6b94
+
+Engineering gate:
+
+- Published report: `zbr_native_layout_sales-funnel-power-bi-template`.
+- Published semantic model: `sm_zbr_native_layout_sales-funnel-power-bi-template`.
+- Source/native local gate: 6/6 pages, 104/104 visuals, 20 Zebra custom visuals
+  translated, 0 fallback textboxes, 13 static resources, 0 custom visual
+  leftovers, 0 custom resource parts.
+- Live round-trip verify: 6/6 pages, 104/104 visuals, 13/13 static resources,
+  0 custom resources, 0 custom visual leftovers, semantic model binding present.
+
+Correct command:
+
+```bash
+.venv/bin/python -m scripts.sales.rw_zebra_kg_native_layout_publish \
+  --verify-live \
+  --template sales-funnel-power-bi-template
+```

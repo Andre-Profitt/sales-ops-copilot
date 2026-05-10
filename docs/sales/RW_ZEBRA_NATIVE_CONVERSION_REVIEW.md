@@ -208,3 +208,26 @@ live Fabric round-trip gate:
 
 This is the bridge quality bar. Other templates should only be added one at a
 time after passing the same source, live round-trip, and visual review gates.
+
+## SimCorp-Safe Native Layout Pivot
+
+The custom-visual fidelity artifact can still be blocked by SimCorp policy.
+The conversion bridge that matters for SimCorp is now:
+
+`docs/sales/RW_ZEBRA_NATIVE_LAYOUT_SALES_FUNNEL.md`.
+
+That bridge preserves the full source layout but removes all Zebra custom visual
+packages and translates the 20 Zebra custom visual containers to native Power BI
+visuals. Live Fabric round-trip gate passed:
+
+- 6/6 pages preserved.
+- 104/104 visualContainers preserved.
+- 13/13 static resource parts preserved.
+- 20 custom visuals translated.
+- 0 custom resource parts.
+- 0 custom visual leftovers.
+- Semantic model binding present.
+
+This is the reusable conversion pattern. The fidelity artifact remains useful
+for engineering comparison, but the native-layout artifact is the reviewable
+tenant-safe report.
