@@ -1,6 +1,6 @@
 # RW Cross-Graph Upgrade Target Plan
 
-Generated: `2026-05-10T21:31:44Z`
+Generated: `2026-05-10T21:54:50Z`
 
 This compares three graphs: Zebra template/visual grammar, the live RW Power BI artifact graph, and the RW KPI coverage graph. The target is not more cosmetic styling; it is a better executive operating system with Zebra-grade scenario, variance, and bridge semantics.
 
@@ -11,7 +11,7 @@ This compares three graphs: Zebra template/visual grammar, the live RW Power BI 
 - PBI cleanup counts: `{'info': 0, 'low': 0, 'medium': 5, 'high': 4, 'critical': 0}`
 - Zebra mined visual corpus: `360` visuals
 - RW KPI surface: `25` clean out of `31` KPIs
-- Target plan: `2` P0, `3` P1, `2` P2
+- Target plan: `2` P0, `4` P1, `2` P2
 
 ## Core Graph Signals
 
@@ -113,7 +113,39 @@ This compares three graphs: Zebra template/visual grammar, the live RW Power BI 
 - Renewals has an explicit bridge visual or bridge-equivalent native table.
 - Renewal ACV and active-base ARR labels remain visibly distinct.
 
-### 4. Stage Hygiene / What Changed / Forecast — `movement_date_roles` (P1)
+### 4. Renewals / Product Mix — `product_segment_retention_churn` (P1)
+
+- Owner lane: semantic model + BI surface
+- Zebra pattern: `scenario_variance_columns + ibcs_table_ordering + heatmap matrix`
+- Target state: Build both views: (1) product x segment x region mix heatmaps for current exposure and risk, and (2) installed-base churn/retention by account-product-period: prior active-base ARR, current active-base ARR, retained ARR, churn/downsell, expansion, cross-sell, and product churn.
+
+**Graph evidence**
+- Current semantic model has product grain on `f_asset_line_item`: product family, area, type, account, region, industry, ARR, and asset end date.
+- PBI graph: Renewals already exposes product family in the active-base detail ledger, but not as a product x segment x region heatmap or retention bridge.
+- Salesforce gap probe identified OpportunityLineItem as the likely source for new-business product/revenue-stream mix.
+- Zebra graph: scenario variance columns map naturally to prior active base versus current active base by product.
+
+**Data/model work**
+- Create an effective-dated or snapshot fact for active-base ARR by account-product-period.
+- Use asset start/end dates to reconstruct prior/current base only if historical rows are not overwritten; otherwise persist monthly snapshots.
+- Define segment explicitly: industry, account type, named segment, or another governed account attribute.
+- Stage OpportunityLineItem later for Land + Expand product mix; do not use renewal asset base as new-business product pipeline.
+
+**BI surface work**
+- Product heatmap: Product Family/Product Area x Region with active-base ARR, expiring ARR, at-risk ARR, and risk percentage.
+- Product heatmap: Product Family/Product Area x Segment once segment is governed.
+- Churn view: prior versus current active-base ARR by account-product-period, with retained/churn/downsell/expansion/cross-sell classification.
+- Add account-product churn ledger: prior product ARR, current product ARR, delta, churn classification, renewal date.
+- Keep this as active-base ARR retention, not Renewal ACV and not Land + Expand ARR.
+
+**Acceptance**
+- Product heatmap and churn view both exist; neither is substituted for the other.
+- Gross retention and net retention by account-product are computed from prior/current active-base ARR.
+- Product churn/downsell/expansion/cross-sell classifications are deterministic and tested.
+- All visuals label basis as active-base ARR; Renewal ACV remains separate.
+- Heatmap/matrix output passes visual QA and metric-basis gates.
+
+### 5. Stage Hygiene / What Changed / Forecast — `movement_date_roles` (P1)
 
 - Owner lane: semantic model
 - Zebra pattern: `role_playing_dates`
@@ -137,7 +169,7 @@ This compares three graphs: Zebra template/visual grammar, the live RW Power BI 
 - Semantic-filter audit has zero medium transition-date findings.
 - No page uses a movement-period slicer before the model role exists.
 
-### 5. VP Ops Scorecard — `scorecard_driver_tree` (P1)
+### 6. VP Ops Scorecard — `scorecard_driver_tree` (P1)
 
 - Owner lane: BI surface
 - Zebra pattern: `kpi_tile + variance_table + bridge`
@@ -160,7 +192,7 @@ This compares three graphs: Zebra template/visual grammar, the live RW Power BI 
 - VP Ops Scorecard reaches 100% Zebra-native decision-visual coverage.
 - The page has a visible driver path from headline to detail, not only metric tiles.
 
-### 6. RW KPI Explorer — `explorer_contract_and_slice_dice` (P2)
+### 7. RW KPI Explorer — `explorer_contract_and_slice_dice` (P2)
 
 - Owner lane: governance + BI surface
 - Zebra pattern: `kpi_dictionary + scenario_axis`
@@ -183,7 +215,7 @@ This compares three graphs: Zebra template/visual grammar, the live RW Power BI 
 - Explorer contract exists and is tested.
 - Explorer remains free of `Total Open Pipeline Value` unless explicitly labeled cross-motion.
 
-### 7. Zebra transfer framework — `expand_zebra_exemplar_library` (P2)
+### 8. Zebra transfer framework — `expand_zebra_exemplar_library` (P2)
 
 - Owner lane: transfer engineering
 - Zebra pattern: `multi_template_pattern_mining`
@@ -210,9 +242,10 @@ This compares three graphs: Zebra template/visual grammar, the live RW Power BI 
 1. Close P0 source/model blockers: quota/target, forecast snapshots, Synergy flag.
 2. Add movement date roles so Stage/Forecast movement pages can support period analysis without abusing Close FQ.
 3. Rebuild Forecast and Growth Mix with scenario variance tables and bridge/decomposition visuals.
-4. Upgrade Renewals to an active-base bridge once indexation/uplift fields are staged.
-5. Recompose VP Ops Scorecard as a driver tree after Forecast/Growth Mix have real measures.
-6. Add an explicit explorer contract and mine additional Zebra templates for broader pattern transfer.
+4. Add product x segment x region active-base retention/churn heatmaps from asset snapshots or effective-dated asset rows.
+5. Upgrade Renewals to an active-base bridge once indexation/uplift fields are staged.
+6. Recompose VP Ops Scorecard as a driver tree after Forecast/Growth Mix have real measures.
+7. Add an explicit explorer contract and mine additional Zebra templates for broader pattern transfer.
 
 ## Non-Targets
 

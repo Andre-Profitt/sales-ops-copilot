@@ -85,6 +85,7 @@ def test_cross_graph_plan_prioritizes_forecast_and_growth_blockers():
     assert plan["summary"]["p0_count"] == 2
     assert any(item["signal"] == "bridge_gap" for item in plan["visual_mix_insights"])
     assert any(item["pattern"] == "waterfall_bridge" for item in plan["zebra_schema_signals"])
+    assert "product_segment_retention_churn" in ids
 
 
 def test_cross_graph_plan_markdown_preserves_guardrails():
@@ -98,6 +99,8 @@ def test_cross_graph_plan_markdown_preserves_guardrails():
 
     assert "Forecast — `forecast_scenario_spine`" in markdown
     assert "Growth Mix — `growth_mix_trusted_segmentation`" in markdown
+    assert "Product Mix — `product_segment_retention_churn`" in markdown
+    assert "Product heatmap and churn view both exist" in markdown
     assert "ARR is Land + Expand only" in markdown
     assert "Renewal ACV is Renewal only" in markdown
     assert "Do not count proxy KPIs as finished executive metrics" in markdown

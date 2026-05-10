@@ -278,6 +278,45 @@ def build_upgrade_plan(
         _opportunity(
             rank=4,
             priority="P1",
+            opportunity_id="product_segment_retention_churn",
+            target="Renewals / Product Mix",
+            owner_lane="semantic model + BI surface",
+            graph_evidence=[
+                "Current semantic model has product grain on `f_asset_line_item`: product family, area, type, account, region, industry, ARR, and asset end date.",
+                "PBI graph: Renewals already exposes product family in the active-base detail ledger, but not as a product x segment x region heatmap or retention bridge.",
+                "Salesforce gap probe identified OpportunityLineItem as the likely source for new-business product/revenue-stream mix.",
+                "Zebra graph: scenario variance columns map naturally to prior active base versus current active base by product.",
+            ],
+            zebra_pattern="scenario_variance_columns + ibcs_table_ordering + heatmap matrix",
+            target_state=(
+                "Build both views: (1) product x segment x region mix heatmaps for current exposure and risk, and "
+                "(2) installed-base churn/retention by account-product-period: prior active-base ARR, current "
+                "active-base ARR, retained ARR, churn/downsell, expansion, cross-sell, and product churn."
+            ),
+            data_or_model_work=[
+                "Create an effective-dated or snapshot fact for active-base ARR by account-product-period.",
+                "Use asset start/end dates to reconstruct prior/current base only if historical rows are not overwritten; otherwise persist monthly snapshots.",
+                "Define segment explicitly: industry, account type, named segment, or another governed account attribute.",
+                "Stage OpportunityLineItem later for Land + Expand product mix; do not use renewal asset base as new-business product pipeline.",
+            ],
+            bi_surface_work=[
+                "Product heatmap: Product Family/Product Area x Region with active-base ARR, expiring ARR, at-risk ARR, and risk percentage.",
+                "Product heatmap: Product Family/Product Area x Segment once segment is governed.",
+                "Churn view: prior versus current active-base ARR by account-product-period, with retained/churn/downsell/expansion/cross-sell classification.",
+                "Add account-product churn ledger: prior product ARR, current product ARR, delta, churn classification, renewal date.",
+                "Keep this as active-base ARR retention, not Renewal ACV and not Land + Expand ARR.",
+            ],
+            acceptance=[
+                "Product heatmap and churn view both exist; neither is substituted for the other.",
+                "Gross retention and net retention by account-product are computed from prior/current active-base ARR.",
+                "Product churn/downsell/expansion/cross-sell classifications are deterministic and tested.",
+                "All visuals label basis as active-base ARR; Renewal ACV remains separate.",
+                "Heatmap/matrix output passes visual QA and metric-basis gates.",
+            ],
+        ),
+        _opportunity(
+            rank=5,
+            priority="P1",
             opportunity_id="movement_date_roles",
             target="Stage Hygiene / What Changed / Forecast",
             owner_lane="semantic model",
@@ -305,7 +344,7 @@ def build_upgrade_plan(
             ],
         ),
         _opportunity(
-            rank=5,
+            rank=6,
             priority="P1",
             opportunity_id="scorecard_driver_tree",
             target="VP Ops Scorecard",
@@ -334,7 +373,7 @@ def build_upgrade_plan(
             ],
         ),
         _opportunity(
-            rank=6,
+            rank=7,
             priority="P2",
             opportunity_id="explorer_contract_and_slice_dice",
             target="RW KPI Explorer",
@@ -362,7 +401,7 @@ def build_upgrade_plan(
             ],
         ),
         _opportunity(
-            rank=7,
+            rank=8,
             priority="P2",
             opportunity_id="expand_zebra_exemplar_library",
             target="Zebra transfer framework",
@@ -502,9 +541,10 @@ def render_markdown(plan: dict[str, Any]) -> str:
         "1. Close P0 source/model blockers: quota/target, forecast snapshots, Synergy flag.",
         "2. Add movement date roles so Stage/Forecast movement pages can support period analysis without abusing Close FQ.",
         "3. Rebuild Forecast and Growth Mix with scenario variance tables and bridge/decomposition visuals.",
-        "4. Upgrade Renewals to an active-base bridge once indexation/uplift fields are staged.",
-        "5. Recompose VP Ops Scorecard as a driver tree after Forecast/Growth Mix have real measures.",
-        "6. Add an explicit explorer contract and mine additional Zebra templates for broader pattern transfer.",
+        "4. Add product x segment x region active-base retention/churn heatmaps from asset snapshots or effective-dated asset rows.",
+        "5. Upgrade Renewals to an active-base bridge once indexation/uplift fields are staged.",
+        "6. Recompose VP Ops Scorecard as a driver tree after Forecast/Growth Mix have real measures.",
+        "7. Add an explicit explorer contract and mine additional Zebra templates for broader pattern transfer.",
         "",
         "## Non-Targets",
         "",

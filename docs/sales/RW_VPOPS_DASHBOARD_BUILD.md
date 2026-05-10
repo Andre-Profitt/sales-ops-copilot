@@ -1630,10 +1630,11 @@ Compared the Zebra template/visual grammar graph, the live RW Power BI artifact 
 1. `P0` Forecast scenario spine: quota/target, forecast snapshots, real pipeline coverage and forecast accuracy.
 2. `P0` Growth Mix trusted segmentation: Synergy flag and one-off/non-recurring source.
 3. `P1` Renewals active-base bridge: indexation/uplift and renewal-base bridge.
-4. `P1` movement date roles: stage/forecast transition-date semantics.
-5. `P1` VP Ops Scorecard driver tree: move from scorecard tile surface to driver-path surface.
-6. `P2` RW KPI Explorer contract and safe slice/dice governance.
-7. `P2` expand Zebra exemplar mining beyond the sales-funnel template.
+4. `P1` Product x segment x region mix plus installed-base churn: heatmaps and account-product retention/churn from active-base ARR snapshots/effective-dated assets.
+5. `P1` movement date roles: stage/forecast transition-date semantics.
+6. `P1` VP Ops Scorecard driver tree: move from scorecard tile surface to driver-path surface.
+7. `P2` RW KPI Explorer contract and safe slice/dice governance.
+8. `P2` expand Zebra exemplar mining beyond the sales-funnel template.
 
 **Verification:**
 
