@@ -15,6 +15,7 @@ from scripts.sales.rw_page_kpi_contract import (
     validate_decision_contracts,
 )
 from scripts.sales.rw_filter_bar import FILTER_REFS_BY_PAGE, FORBIDDEN_MOTION_SLICER_REF
+from scripts.sales.rw_metric_basis_audit import audit_metric_basis
 from scripts.sales.rw_semantic_filter_audit import audit_semantic_filter_flow
 
 
@@ -305,6 +306,64 @@ def test_stage_hygiene_stage_and_detail_tables_use_zebra_ibcs_table_grammar():
         "visual_intent": "detail ledger",
     }
     assert detail_objects["zebraGrammar"]["schema"] == "rw-zebra-native-transfer.columnGrammar.v1"
+
+
+def test_product_retention_composes_native_heatmaps_and_ledger():
+    report = compose_report({"sections": []})
+    product_retention = _page(report, "Product Retention")
+    visual_types = [_visual_type(vc) for vc in product_retention["visualContainers"]]
+    encoded = "\n".join(vc["config"] for vc in product_retention["visualContainers"])
+
+    assert set(visual_types) <= {"basicShape", "card", "pivotTable", "tableEx", "textbox", "slicer"}
+    assert visual_types.count("pivotTable") == 2
+    assert visual_types.count("tableEx") == 1
+    assert "f_asset_line_item.product_family" in encoded
+    assert "d_region.region" in encoded
+    assert "f_asset_line_item.industry" in encoded
+    assert "Total Open Pipeline Value" not in encoded
+    assert "Total Open Renewal ACV" not in encoded
+    assert "Open Land ARR" not in encoded
+    assert "Open Expand ARR" not in encoded
+
+
+def test_product_retention_has_consultant_grade_native_visual_qa_and_basis_labels():
+    report = compose_report({"sections": []})
+    product_retention = _page(report, "Product Retention")
+
+    visual_result = audit_report({"sections": [product_retention]})
+    metric_result = audit_metric_basis({"sections": [product_retention]})
+    visual_findings = [
+        f for f in visual_result["findings"] if f["severity"] in {"medium", "high", "critical"}
+    ]
+
+    assert visual_findings == []
+    assert metric_result["summary"]["finding_count"] == 0
+
+
+def test_product_retention_uses_zebra_heatmap_and_detail_table_grammar():
+    report = compose_report({"sections": []})
+    product_retention = _page(report, "Product Retention")
+    matrices = [_single_visual(vc) for vc in product_retention["visualContainers"] if _visual_type(vc) == "pivotTable"]
+    ledger = [
+        _single_visual(vc)
+        for vc in product_retention["visualContainers"]
+        if _visual_type(vc) == "tableEx" and "f_asset_line_item.product_area" in vc["config"]
+    ]
+
+    assert len(matrices) == 2
+    assert len(ledger) == 1
+    for matrix in matrices:
+        objects = matrix.get("objects") or {}
+        assert objects["stylePreset"]["source"] == "zebra-visual-dna"
+        assert objects["zebraGrammar"]["schema"] == "rw-zebra-native-transfer.columnGrammar.v1"
+
+    ledger_objects = ledger[0].get("objects") or {}
+    assert ledger_objects["stylePreset"] == {
+        "source": "zebra-visual-dna",
+        "pattern": "detail-ledger",
+        "visual_intent": "detail ledger",
+    }
+    assert ledger_objects["zebraGrammar"]["schema"] == "rw-zebra-native-transfer.columnGrammar.v1"
 
 
 def test_arr_and_renewal_acv_contracts_stay_separate_by_page():

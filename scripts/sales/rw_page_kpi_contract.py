@@ -183,6 +183,34 @@ PAGE_KPI_CONTRACTS: dict[str, PageKPIContract] = {
         ),
         caveat="Renewal opportunity ACV and active-base ARR are separated. Land and Expand new-business ARR are excluded from this page.",
     ),
+    "Product Retention": PageKPIContract(
+        page="Product Retention",
+        job="Product active-base view: product heatmaps and account-product retention scaffold.",
+        executive_question="Which product, segment, and region combinations carry active-base ARR retention or churn risk?",
+        primary_kpis=("existing_arr_run_rate", "business_at_risk"),
+        secondary_diagnostics=("indexation_arr_growth",),
+        kpi_ids=("existing_arr_run_rate", "business_at_risk", "indexation_arr_growth"),
+        measures=(
+            "Existing ARR Run Rate",
+            "Existing ARR Expiring In Period",
+            "Business At Risk ARR",
+            "Business At Risk Pct",
+            "Active Asset Line Count",
+        ),
+        motion="renewal_base_arr",
+        placements=(
+            p("existing_arr_run_rate", "Existing ARR Run Rate", "hero KPI", "renewal_base_arr", "clean", "Active-base ARR"),
+            p("existing_arr_run_rate", "Existing ARR Expiring In Period", "variance table", "renewal_base_arr", "clean", "Active-base ARR by Product x Region"),
+            p("business_at_risk", "Business At Risk ARR", "hero KPI", "renewal_base_arr", "clean", "At-risk active-base ARR"),
+            p("business_at_risk", "Business At Risk Pct", "variance table", "renewal_base_arr", "clean", "Risk % of active base"),
+            p("existing_arr_run_rate", "Existing ARR Expiring In Period", "detail table", "renewal_base_arr", "clean", "Account-product Retention Ledger", secondary=True),
+            p("indexation_arr_growth", "Indexation ARR Growth", "detail table", "renewal_base_arr", "missing source data", "Indexation ARR Growth", secondary=True, missing_measure="Indexation ARR Growth"),
+        ),
+        caveat=(
+            "Product heatmaps use active-base ARR from asset line items. True churn requires prior/current "
+            "active-base snapshots or effective-dated asset rows. This is not Renewal ACV and not Land + Expand ARR."
+        ),
+    ),
     "Growth Mix": PageKPIContract(
         page="Growth Mix",
         job="Growth mix cockpit: open Land, open Expand, partner contribution, and new-customer signal.",

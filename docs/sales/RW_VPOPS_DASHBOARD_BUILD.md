@@ -1572,6 +1572,51 @@ Andre asked for a direct checklist of RW-expected KPIs versus what the current B
 
 ARR remains Land + Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
 
+## 2026-05-10 — Product Retention tab, active-base heatmaps
+
+Built the first product/churn surface as a native Power BI page: `Product Retention`.
+
+**Shipped:**
+
+- Added `scripts/sales/rw_compose_product_retention.py`.
+- Added `Product Retention` to the all-page composer and KPI contract.
+- Added page slicer policy: Region + End FQ.
+- Added active-base ARR KPI strip:
+  - Active-base ARR
+  - Expiring active-base ARR
+  - At-risk active-base ARR
+  - Risk % of active base
+  - Active asset line count
+- Added two native pivot-table heatmaps:
+  - Product Family x Region
+  - Product Family x Segment Risk
+- Added Account-product Retention Ledger using dense Zebra-native table grammar.
+
+**Scope guardrail:**
+
+- This tab uses `f_asset_line_item` active-base ARR only.
+- It does not use Renewal ACV and does not use Land + Expand ARR.
+- True churn is not faked; it still requires prior/current active-base snapshots or effective-dated asset rows.
+- Growth Mix product revenue by segment/region is intentionally deferred until `OpportunityLineItem` or equivalent product opportunity grain is staged.
+
+**Lab verification:**
+
+- `python3 -m scripts.sales.rw_apply_zebra_lab_proof` regenerated the local lab PBIP.
+- `rw_validate` passed with 9 sections, 149 visualContainers, and all measure refs resolved.
+- Harness audit returned no findings.
+- Visual QA passed with 0 findings.
+- Metric-basis labels passed with 0 findings.
+- Unit policy passed with 0 findings.
+- Semantic filter audit passed with medium=2, high=0, critical=0.
+- KPI checklist now reports 25 / 31 cleanly covered and 29 / 31 usable including partial/proxy.
+
+**Remaining production blockers:**
+
+- Data-surface flow remains `not_exec_complete` because `pipeline_coverage_3x`, `forecast_accuracy`, and `synergy_deals_won` are still high-impact upstream data/model gaps.
+- Enterprise-standard audit remains blocked by those KPI-flow gaps and by the lab-only `Zebra Exceptions` custom visual tab.
+
+No Fabric publish was performed. ARR remains Land + Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
+
 ## 2026-05-10 — Power BI artifact knowledge graph
 
 Built an executable knowledge graph of the current RW Power BI report artifact so the dashboard can be inspected tab-by-tab instead of by screenshots alone.

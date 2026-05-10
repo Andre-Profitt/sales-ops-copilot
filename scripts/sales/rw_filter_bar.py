@@ -14,6 +14,7 @@ FilterSpec = tuple[str, str, str]
 
 REGION_FILTER: FilterSpec = ("d_region", "region", "Region")
 CLOSE_FQ_FILTER: FilterSpec = ("d_calendar", "fiscal_quarter", "Close FQ")
+END_FQ_FILTER: FilterSpec = ("d_calendar", "fiscal_quarter", "End FQ")
 STAGE_FILTER: FilterSpec = ("f_opportunity", "stage_name", "Stage")
 MOTION_FILTER: FilterSpec = ("f_opportunity", "motion_type", "Motion")
 
@@ -28,6 +29,7 @@ PAGE_FILTERS: dict[str, tuple[FilterSpec, ...]] = {
     "Forecast": EXEC_CONTEXT_FILTERS,
     "Stage Hygiene": EXEC_CONTEXT_FILTERS,
     "Renewals": EXEC_CONTEXT_FILTERS,
+    "Product Retention": (REGION_FILTER, END_FQ_FILTER),
     "Growth Mix": EXEC_CONTEXT_FILTERS,
     "RW KPI Explorer": EXEC_CONTEXT_FILTERS + (STAGE_FILTER,),
 }
@@ -59,6 +61,7 @@ FILTER_RATIONALE_BY_PAGE: dict[str, str] = {
     "Forecast": "Region and close-quarter context; motion comparison is handled by the labeled Stage x Motion matrix.",
     "Stage Hygiene": "Region and close-quarter context define the selected opportunity cohort; transition-window measures remain explicit.",
     "Renewals": "Region and close-quarter context only; Renewal ACV measures enforce Renewal motion.",
+    "Product Retention": "Region and asset end-quarter context for active-base ARR; churn snapshots remain explicit when added.",
     "Growth Mix": "Region and close-quarter context only; Land + Expand mix is shown through separate ARR measures.",
     "RW KPI Explorer": "Region, close quarter, and current stage for interactive slicing; motion appears as visual columns, not a page slicer.",
 }

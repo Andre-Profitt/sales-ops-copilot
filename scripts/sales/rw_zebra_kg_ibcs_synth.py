@@ -332,6 +332,28 @@ def zebra_detail_table_objects() -> dict:
     )
 
 
+def zebra_heatmap_matrix_objects(*, pattern: str = "product-retention-heatmap") -> dict:
+    """Matrix/table style for Zebra-inspired heatmap reads.
+
+    Native Power BI matrix JSON cannot fully recreate Zebra's per-cell heatmap
+    grammar from code alone, but this gives the visual the dense IBCS table
+    treatment and stable lineage so Desktop/Fabric formatting passes can target
+    it deterministically.
+    """
+    return _with_zebra_transfer_metadata(
+        build_table_style_objects(
+            header_fill="#EAF0F7",
+            header_text="#1A1D31",
+            row_text="#202124",
+            grid="#D8DEE8",
+            font_size=8,
+        ),
+        pattern=pattern,
+        visual_intent="product x segment heatmap matrix",
+        grammar_schema="rw-zebra-native-transfer.columnGrammar.v1",
+    )
+
+
 def zebra_stage_hygiene_table_objects(*, max_field: str, databar_column: str, accent: str = "#2B5C8A") -> dict:
     """Stage conversion/time-in-stage table style derived from Zebra variance grammar.
 

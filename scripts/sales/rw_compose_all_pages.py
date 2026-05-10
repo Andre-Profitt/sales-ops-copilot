@@ -20,6 +20,7 @@ COMPOSER_MODULES: dict[str, str] = {
     "Forecast": "scripts.sales.rw_compose_forecast",
     "Stage Hygiene": "scripts.sales.rw_compose_stage_hygiene",
     "Renewals": "scripts.sales.rw_compose_renewals",
+    "Product Retention": "scripts.sales.rw_compose_product_retention",
     "Growth Mix": "scripts.sales.rw_compose_growth_mix",
     "RW KPI Explorer": "scripts.sales.rw_compose_kpi_explorer",
 }
