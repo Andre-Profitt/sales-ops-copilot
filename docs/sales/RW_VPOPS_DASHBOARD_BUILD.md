@@ -1670,6 +1670,36 @@ Removed the custom-visual proof tab from the generated local inspection PBIP. Th
 
 The remaining enterprise blocker is now only real source/model readiness: pipeline coverage denominator, forecast accuracy snapshots, Synergy flag, one-off revenue, and transition-date roles. No Fabric publish was performed.
 
+## 2026-05-10 — Shared header and navigation chrome
+
+Started the consultant-grade control/navigation layer pass across all generated tabs.
+
+**Shipped:**
+
+- Added `scripts/sales/rw_page_chrome.py` as the shared page chrome layer.
+- Every generated page now gets the same:
+  - muted top header band
+  - left SimCorp-blue accent rule
+  - `NN / 08` page title treatment
+  - short executive subtitle
+  - consistent tab navigation trail
+  - governed page slicers remain top-right and readable
+- Composer-local top headers are removed by the chrome pass so tabs no longer mix styles.
+- Forecast and What Changed were reflowed so hero/ledger content starts below the shared header band.
+- Added regression coverage that every contracted page has the shared chrome and that non-slicer content cannot overlap the header band.
+
+**Lab verification:**
+
+- `python3 -m scripts.sales.rw_apply_zebra_lab_proof` regenerated the local PBIP.
+- `rw_validate` passed with 8 sections, 180 visualContainers, and all measure refs resolved.
+- Harness audit returned no findings.
+- Visual QA passed with 0 findings.
+- Metric-basis labels passed with 0 findings.
+- Unit policy passed with 0 findings.
+- Semantic filter audit passed with medium=2, high=0, critical=0.
+
+No Fabric publish was performed. This is the first visible pass toward the operating-review flow; the next build should add explicit drill/action paths from Scorecard exceptions into the detail ledgers.
+
 ## 2026-05-10 — Power BI artifact knowledge graph
 
 Built an executable knowledge graph of the current RW Power BI report artifact so the dashboard can be inspected tab-by-tab instead of by screenshots alone.

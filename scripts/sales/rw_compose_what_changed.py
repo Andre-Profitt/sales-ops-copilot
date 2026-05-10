@@ -39,11 +39,11 @@ def _compose(section: dict) -> None:
 
     Layout grid:
         y=12    Exception ledger header
-        y=48    Exception ledger - compact table, no KPI card furniture
-        y=188   Movement ledger header
-        y=218   Movement ledger - compact one-row table of 7d measures
-        y=386   Detail header
-        y=414   Detail table - 1200x280 spanning the page
+        y=92    Exception ledger - compact table, no KPI card furniture
+        y=204   Movement ledger header
+        y=232   Movement ledger - compact one-row table of 7d measures
+        y=376   Detail header
+        y=404   Detail table - 1200x288 spanning the page
         Spec calls for a window slicer at (1000, 20). Field-parameter slicer
         shape not yet captured in _pbir_shapes.py — defer until a textbox
         or field-parameter slicer is browser-authored and captured via
@@ -98,16 +98,16 @@ def _compose(section: dict) -> None:
                 },
             ],
             x=20,
-            y=48,
+            y=92,
             w=1020,
-            h=118,
+            h=96,
             objects=zebra_exception_ledger_objects(),
         )
     )
 
     # ── Phase 2: Movement ledger (compact matrix instead of card wall) ──
     section["visualContainers"].append(
-        build_textbox_visual("7-Day Operating Movement Ledger (counts + ARR Land + Expand)", x=20, y=188, w=1200, h=24, font_size_pt=12, color="#1A1D31")
+        build_textbox_visual("7-Day Operating Movement Ledger (counts + ARR Land + Expand)", x=20, y=204, w=1200, h=24, font_size_pt=12, color="#1A1D31")
     )
     # Spec calls for Stage Moves · Slips · New Opps · Closed. The prior
     # version rendered these as five micro-cards and tripped the visual QA
@@ -150,9 +150,9 @@ def _compose(section: dict) -> None:
                 },
             ],
             x=20,
-            y=218,
+            y=232,
             w=1020,
-            h=150,
+            h=126,
             objects=zebra_compact_movement_ledger_objects(
                 max_field="f_stage_transition.Stage Moves ARR 7d",
                 databar_column="Stage Moves ARR 7d",
@@ -164,7 +164,7 @@ def _compose(section: dict) -> None:
     # ── Phase 3: Detail table ──────────────────────────────────
     section["visualContainers"].append(
         build_textbox_visual(
-            "Top Open ARR (Land + Expand) Movement Queue", x=20, y=386, w=1200, h=24, font_size_pt=12, color="#1A1D31"
+            "Top Open ARR (Land + Expand) Movement Queue", x=20, y=376, w=1200, h=24, font_size_pt=12, color="#1A1D31"
         )
     )
     # Open opps by Open Pipeline ARR. Spec's "Change" + "Risk class"
@@ -203,9 +203,9 @@ def _compose(section: dict) -> None:
                 },
             ],
             x=20,
-            y=414,
+            y=404,
             w=1200,
-            h=280,
+            h=288,
             objects=zebra_detail_table_objects(),
         )
     )

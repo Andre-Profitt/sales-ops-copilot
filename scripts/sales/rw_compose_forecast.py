@@ -93,13 +93,13 @@ def _compose(section: dict) -> None:
 
     Layout grid:
         y=12    Hero header
-        y=42    Hero - 3 cards x 380x96 (Days Remaining, Open, Closed Won)
-        y=154   Stage x motion header
-        y=182   Stage x motion matrix - 1200x210
-        y=408   Forecast discipline header
-        y=436   Forecast discipline - 4 cards x 280x80
-        y=532   Commit-risk header
-        y=560   Commit-risk table - 1200x145
+        y=92    Hero - 3 cards x 380x78 (Days Remaining, Open, Closed Won)
+        y=184   Stage x motion header
+        y=212   Stage x motion matrix - 1200x172
+        y=398   Forecast discipline header
+        y=426   Forecast discipline - 4 cards x 280x72
+        y=512   Commit-risk header
+        y=540   Commit-risk table - 1200x150
     """
     # ── Hero (3 cards) ─────────────────────────────────────────
     section["visualContainers"].append(
@@ -123,12 +123,12 @@ def _compose(section: dict) -> None:
     ]
     for tbl, msr, title, x, display_units in hero:
         section["visualContainers"].append(
-            _kpi_card(tbl, msr, title, x=x, y=42, w=380, h=96, display_units=display_units)
+            _kpi_card(tbl, msr, title, x=x, y=92, w=380, h=78, display_units=display_units)
         )
 
     # ── Stage × motion matrix ──────────────────────────────────
     section["visualContainers"].append(
-        build_textbox_visual("Stage x Motion Open Value (ARR+ACV)", x=20, y=154, w=1200, h=24, font_size_pt=12, color="#1A1D31")
+        build_textbox_visual("Stage x Motion Open Value (ARR+ACV)", x=20, y=184, w=1200, h=24, font_size_pt=12, color="#1A1D31")
     )
     # Rows = stage_name, columns = motion_type, value = Total Open Pipeline Value
     # (which renders ARR for Land + Expand and ACV for Renewal — see measure
@@ -146,9 +146,9 @@ def _compose(section: dict) -> None:
                 }
             ],
             x=20,
-            y=182,
+            y=212,
             w=1200,
-            h=210,
+            h=172,
             objects=zebra_stage_hygiene_table_objects(
                 max_field="f_opportunity.Total Open Pipeline Value",
                 databar_column="f_opportunity.Total Open Pipeline Value",
@@ -159,7 +159,7 @@ def _compose(section: dict) -> None:
 
     # ── Forecast discipline (4 cards) ──────────────────────────
     section["visualContainers"].append(
-        build_textbox_visual("Forecast Discipline", x=20, y=408, w=1200, h=24, font_size_pt=12, color="#1A1D31")
+        build_textbox_visual("Forecast Discipline", x=20, y=398, w=1200, h=24, font_size_pt=12, color="#1A1D31")
     )
     discipline = [
         (
@@ -206,9 +206,9 @@ def _compose(section: dict) -> None:
                 msr,
                 title,
                 x=x,
-                y=436,
+                y=426,
                 w=280,
-                h=80,
+                h=72,
                 tint=tint,
                 accent=accent,
                 value_color=value_color,
@@ -217,7 +217,7 @@ def _compose(section: dict) -> None:
 
     # ── Commit-risk table ──────────────────────────────────────
     section["visualContainers"].append(
-        build_textbox_visual("Late-Stage Commit Risk", x=20, y=532, w=1200, h=24, font_size_pt=12, color="#1A1D31")
+        build_textbox_visual("Late-Stage Commit Risk", x=20, y=512, w=1200, h=24, font_size_pt=12, color="#1A1D31")
     )
     # Top late-stage open deals. Owner column deferred (no d_user join in
     # build_table_visual yet); use account_name instead. "Days late"
@@ -264,9 +264,9 @@ def _compose(section: dict) -> None:
                 },
             ],
             x=20,
-            y=560,
+            y=540,
             w=1200,
-            h=145,
+            h=150,
             objects=zebra_detail_table_objects(),
         )
     )

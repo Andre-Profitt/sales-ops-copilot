@@ -1,6 +1,6 @@
 # RW Power BI Knowledge Graph
 
-Generated: `2026-05-10T22:20:19Z`
+Generated: `2026-05-10T22:25:41Z`
 Source: `path`
 Verdict: `needs_source_or_model_work`
 
@@ -9,13 +9,13 @@ This graph connects the actual Power BI report artifact to the RW KPI contract, 
 ## Executive Read
 
 - Pages: `8`
-- Visuals: `146` (basicShape=30, card=39, clusteredBarChart=3, pivotTable=5, slicer=17, tableEx=14, textbox=38)
+- Visuals: `180` (basicShape=54, card=39, clusteredBarChart=3, pivotTable=5, slicer=17, tableEx=14, textbox=48)
 - Semantic model: `9` tables, `124` measures, `11` relationships
 - Used on BI surface: `53` measures, `19` columns
 - RW KPI contract: `29` KPIs placed from `31` canonical RW KPIs
 - Cleanup findings: `9` (info=0, low=0, medium=5, high=4, critical=0)
-- Graph size: `438` nodes, `1048` edges
-- Machine graph: `output/rw_dashboard_harness/pbi_knowledge_graph/no_lab.pbi_knowledge_graph.json`
+- Graph size: `472` nodes, `1082` edges
+- Machine graph: `output/rw_dashboard_harness/pbi_knowledge_graph/shared_chrome.pbi_knowledge_graph.json`
 
 ## Enterprise Standard Snapshot
 
@@ -37,14 +37,14 @@ This graph connects the actual Power BI report artifact to the RW KPI contract, 
 
 | Tab | Executive question | Visuals | Measures | KPIs | Cleanup |
 | --- | --- | ---: | ---: | ---: | --- |
-| Stage Hygiene | Which stage is slowing or reversing Land + Expand opportunities, and is the Stage 3/4 control point healthy? | 21 | 11 | 5 | clear |
-| Forecast | Can the quarter still land, and is forecast movement disciplined enough to trust? | 15 | 7 | 4 | high=2 |
-| Growth Mix | Is growth coming from the right Land, Expand, partner, source, and new-customer mix? | 19 | 11 | 11 | high=1 |
-| Renewals | How much Renewal ACV is exposed, retained, or lost, and where is the pressure? | 19 | 9 | 6 | clear |
-| What Changed | What materially changed in the last operating window, and which open opportunities need inspection? | 8 | 12 | 4 | clear |
-| VP Ops Scorecard | Where is RW off plan right now, and which lane needs executive action first? | 27 | 15 | 6 | clear |
-| RW KPI Explorer | - | 17 | 17 | 0 | clear |
-| Product Retention | Which product, segment, and region combinations carry active-base ARR retention or churn risk? | 20 | 5 | 3 | clear |
+| Stage Hygiene | Which stage is slowing or reversing Land + Expand opportunities, and is the Stage 3/4 control point healthy? | 25 | 11 | 5 | clear |
+| Forecast | Can the quarter still land, and is forecast movement disciplined enough to trust? | 20 | 7 | 4 | high=2 |
+| Growth Mix | Is growth coming from the right Land, Expand, partner, source, and new-customer mix? | 23 | 11 | 11 | high=1 |
+| Renewals | How much Renewal ACV is exposed, retained, or lost, and where is the pressure? | 23 | 9 | 6 | clear |
+| What Changed | What materially changed in the last operating window, and which open opportunities need inspection? | 13 | 12 | 4 | clear |
+| VP Ops Scorecard | Where is RW off plan right now, and which lane needs executive action first? | 31 | 15 | 6 | clear |
+| RW KPI Explorer | - | 21 | 17 | 0 | clear |
+| Product Retention | Which product, segment, and region combinations carry active-base ARR retention or churn risk? | 24 | 5 | 3 | clear |
 
 ## Per-Tab Graph
 
@@ -52,7 +52,7 @@ This graph connects the actual Power BI report artifact to the RW KPI contract, 
 
 - Question: Which stage is slowing or reversing Land + Expand opportunities, and is the Stage 3/4 control point healthy?
 - Motion basis: `process`
-- Visual mix: `{'basicShape': 4, 'card': 7, 'slicer': 2, 'tableEx': 2, 'textbox': 6}`
+- Visual mix: `{'basicShape': 7, 'card': 7, 'slicer': 2, 'tableEx': 2, 'textbox': 7}`
 - KPIs served: `commercial_approval_to_close_time`, `sales_cycle_length`, `stage3_approvals_compliance`, `stage_conversion`, `time_in_stage`
 - Measures used: `f_opportunity.Avg Sales Cycle Days`, `f_opportunity.Commercial Approval Compliance Pct`, `f_opportunity.Commercial Approval To Close Days`, `f_opportunity.Land Avg Sales Cycle Days`, `f_stage_transition.Avg Days In Prior Stage (LE)`, `f_stage_transition.Avg Days In Stage 4`, `f_stage_transition.Stage 4 Forward Pct`, `f_stage_transition.Stage Backward Pct (LE)`, `f_stage_transition.Stage Forward Pct (LE)`, `f_stage_transition.Stage Moves ARR 7d`, `f_stage_transition.Total Stage Transitions`
 
@@ -72,7 +72,7 @@ This graph connects the actual Power BI report artifact to the RW KPI contract, 
 
 - Question: Can the quarter still land, and is forecast movement disciplined enough to trust?
 - Motion basis: `cross_motion_labeled`
-- Visual mix: `{'card': 7, 'pivotTable': 1, 'slicer': 2, 'tableEx': 1, 'textbox': 4}`
+- Visual mix: `{'basicShape': 3, 'card': 7, 'pivotTable': 1, 'slicer': 2, 'tableEx': 1, 'textbox': 6}`
 - KPIs served: `forecast_accuracy`, `forecast_closed_won`, `pipeline_coverage_3x`, `stage3_acv_value`
 - Measures used: `f_forecast_transition.Avg Days In Forecast Category`, `f_forecast_transition.Forecast Slip Pct`, `f_forecast_transition.Forecast Slips`, `f_forecast_transition.Forecast Upgrades`, `f_opportunity.Days Remaining In FQ`, `f_opportunity.Total Closed Won ARR`, `f_opportunity.Total Open Pipeline Value`
 
@@ -96,7 +96,7 @@ This graph connects the actual Power BI report artifact to the RW KPI contract, 
 
 - Question: Is growth coming from the right Land, Expand, partner, source, and new-customer mix?
 - Motion basis: `land_expand_arr`
-- Visual mix: `{'basicShape': 3, 'card': 5, 'clusteredBarChart': 1, 'slicer': 2, 'tableEx': 2, 'textbox': 6}`
+- Visual mix: `{'basicShape': 6, 'card': 5, 'clusteredBarChart': 1, 'slicer': 2, 'tableEx': 2, 'textbox': 7}`
 - KPIs served: `alf_arr_pipeline`, `closed_won_avg_deal_size`, `closed_won_value_tier`, `cross_sell_to_acquired`, `ilf_arr_pipeline`, `new_customer_reporting`, `opp_source_effectiveness`, `partner_opps_pct`, `ps_arr_attach`, `saas_arr_yoy_growth`, `synergy_deals_won`
 - Measures used: `f_opportunity.Avg Deal Size Won`, `f_opportunity.Closed Won Deals Count`, `f_opportunity.Cross Sell To Acquired ARR`, `f_opportunity.Open Expand ARR`, `f_opportunity.Open Land ARR`, `f_opportunity.PS ARR Attach Pct`, `f_opportunity.Partner ARR`, `f_opportunity.Partner Pct`, `f_opportunity.SaaS YoY Growth Pct`, `f_opportunity.Total Land Won Count`, `f_opportunity.Total Open Pipeline ARR`
 
@@ -119,7 +119,7 @@ This graph connects the actual Power BI report artifact to the RW KPI contract, 
 
 - Question: How much Renewal ACV is exposed, retained, or lost, and where is the pressure?
 - Motion basis: `renewal_acv`
-- Visual mix: `{'basicShape': 3, 'card': 7, 'clusteredBarChart': 1, 'slicer': 2, 'tableEx': 1, 'textbox': 5}`
+- Visual mix: `{'basicShape': 6, 'card': 7, 'clusteredBarChart': 1, 'slicer': 2, 'tableEx': 1, 'textbox': 6}`
 - KPIs served: `business_at_risk`, `existing_arr_run_rate`, `indexation_arr_growth`, `lost_arr_quarterly`, `renewal_retention_rate`, `renewals_mom_trend`
 - Measures used: `f_asset_line_item.Business At Risk ARR`, `f_asset_line_item.Business At Risk Pct`, `f_asset_line_item.Existing ARR Expiring In Period`, `f_asset_line_item.Existing ARR Run Rate`, `f_opportunity.Renewal Retention Pct (Period)`, `f_opportunity.Total Open Renewal ACV`, `f_opportunity.Total Renewal ACV Due`, `f_opportunity.Total Renewal ACV Lost`, `f_opportunity.Total Renewal ACV Won`
 
@@ -139,7 +139,7 @@ This graph connects the actual Power BI report artifact to the RW KPI contract, 
 
 - Question: What materially changed in the last operating window, and which open opportunities need inspection?
 - Motion basis: `land_expand_arr`
-- Visual mix: `{'slicer': 2, 'tableEx': 3, 'textbox': 3}`
+- Visual mix: `{'basicShape': 3, 'slicer': 2, 'tableEx': 3, 'textbox': 5}`
 - KPIs served: `forecast_closed_won`, `new_opps_by_region`, `opp_age`, `stage_conversion`
 - Measures used: `f_opportunity.At Risk Opps ARR`, `f_opportunity.At Risk Opps Count`, `f_opportunity.Closed Lost Count 7d`, `f_opportunity.Closed Won Count 7d`, `f_opportunity.Healthy Moves ARR`, `f_opportunity.Healthy Moves Count`, `f_opportunity.New Opps Count 7d`, `f_opportunity.Total Open Pipeline ARR`, `f_opportunity.Watch Opps ARR`, `f_opportunity.Watch Opps Count`, `f_stage_transition.Stage Moves ARR 7d`, `f_stage_transition.Stage Moves Count 7d`
 
@@ -154,7 +154,7 @@ This graph connects the actual Power BI report artifact to the RW KPI contract, 
 
 - Question: Where is RW off plan right now, and which lane needs executive action first?
 - Motion basis: `cross_motion_labeled`
-- Visual mix: `{'basicShape': 12, 'card': 8, 'clusteredBarChart': 1, 'pivotTable': 1, 'slicer': 2, 'tableEx': 1, 'textbox': 2}`
+- Visual mix: `{'basicShape': 15, 'card': 8, 'clusteredBarChart': 1, 'pivotTable': 1, 'slicer': 2, 'tableEx': 1, 'textbox': 3}`
 - KPIs served: `forecast_closed_won`, `new_opps_by_region`, `opp_win_rate`, `renewal_retention_rate`, `stage_conversion`, `time_in_stage`
 - Measures used: `f_opportunity.At Risk Opps ARR`, `f_opportunity.Closed Won Count 7d`, `f_opportunity.Exception ARR`, `f_opportunity.Exception Opps Count`, `f_opportunity.New Opps Count 7d`, `f_opportunity.Renewal Retention Pct (Period)`, `f_opportunity.Total Closed Won ARR`, `f_opportunity.Total Open Pipeline ARR`, `f_opportunity.Watch Opps ARR`, `f_opportunity.Win Rate ARR`, `f_stage_transition.Avg Days In Prior Stage (LE)`, `f_stage_transition.Backward Moves Count 7d`, `f_stage_transition.Stage Backward Pct (LE)`, `f_stage_transition.Stage Forward Pct (LE)`, `f_stage_transition.Stage Moves ARR 7d`
 
@@ -174,7 +174,7 @@ This graph connects the actual Power BI report artifact to the RW KPI contract, 
 
 - Question: Not contracted.
 - Motion basis: `n/a`
-- Visual mix: `{'basicShape': 4, 'pivotTable': 1, 'slicer': 3, 'tableEx': 3, 'textbox': 6}`
+- Visual mix: `{'basicShape': 7, 'pivotTable': 1, 'slicer': 3, 'tableEx': 3, 'textbox': 7}`
 - KPIs served: -
 - Measures used: `f_opportunity.Avg Deal Size Won`, `f_opportunity.Open Expand ARR`, `f_opportunity.Open Land ARR`, `f_opportunity.Partner ARR`, `f_opportunity.Partner Pct`, `f_opportunity.Renewal Retention Pct (Period)`, `f_opportunity.Total Closed Won ARR`, `f_opportunity.Total Land Won Count`, `f_opportunity.Total Open Pipeline ARR`, `f_opportunity.Total Open Renewal ACV`, `f_opportunity.Total Renewal ACV Lost`, `f_opportunity.Total Renewal ACV Won`, `f_opportunity.Win Rate ARR`, `f_stage_transition.Avg Days In Prior Stage (LE)`, `f_stage_transition.Stage Backward Pct (LE)`, `f_stage_transition.Stage Forward Pct (LE)`
 - Additional measures: `1`
@@ -191,7 +191,7 @@ This graph connects the actual Power BI report artifact to the RW KPI contract, 
 
 - Question: Which product, segment, and region combinations carry active-base ARR retention or churn risk?
 - Motion basis: `renewal_base_arr`
-- Visual mix: `{'basicShape': 4, 'card': 5, 'pivotTable': 2, 'slicer': 2, 'tableEx': 1, 'textbox': 6}`
+- Visual mix: `{'basicShape': 7, 'card': 5, 'pivotTable': 2, 'slicer': 2, 'tableEx': 1, 'textbox': 7}`
 - KPIs served: `business_at_risk`, `existing_arr_run_rate`, `indexation_arr_growth`
 - Measures used: `f_asset_line_item.Active Asset Line Count`, `f_asset_line_item.Business At Risk ARR`, `f_asset_line_item.Business At Risk Pct`, `f_asset_line_item.Existing ARR Expiring In Period`, `f_asset_line_item.Existing ARR Run Rate`
 

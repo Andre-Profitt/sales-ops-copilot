@@ -16,6 +16,7 @@ from scripts.sales.rw_page_kpi_contract import (
 )
 from scripts.sales.rw_filter_bar import FILTER_REFS_BY_PAGE, FORBIDDEN_MOTION_SLICER_REF
 from scripts.sales.rw_metric_basis_audit import audit_metric_basis
+from scripts.sales.rw_page_chrome import NAV_TRAIL, PAGE_ORDER, PAGE_SUBTITLES
 from scripts.sales.rw_semantic_filter_audit import audit_semantic_filter_flow
 
 
@@ -25,6 +26,11 @@ def _single_visual(vc: dict) -> dict:
 
 def _visual_type(vc: dict) -> str:
     return _single_visual(vc)["visualType"]
+
+
+def _textbox_text(vc: dict) -> str:
+    paragraphs = _single_visual(vc).get("objects", {}).get("general", [])[0]["properties"]["paragraphs"]
+    return "".join(run.get("value") or "" for para in paragraphs for run in para.get("textRuns", []))
 
 
 def _page(report: dict, display_name: str) -> dict:
@@ -74,6 +80,59 @@ def test_target_pages_follow_page_specific_slice_controls():
         for slicer in slicer_visuals:
             assert slicer["width"] >= 180, page
             assert slicer["height"] >= 62, page
+
+
+def test_target_pages_have_shared_header_navigation_chrome():
+    report = compose_report({"sections": []})
+
+    for ordinal, page in enumerate(PAGE_ORDER, start=1):
+        section = _page(report, page)
+        top_text = [
+            _textbox_text(vc)
+            for vc in section["visualContainers"]
+            if _visual_type(vc) == "textbox" and vc["y"] <= 82
+        ]
+        top_shapes = [
+            vc
+            for vc in section["visualContainers"]
+            if _visual_type(vc) == "basicShape" and vc["y"] == 0 and vc["height"] == 84
+        ]
+
+        assert any(text.startswith(f"{ordinal:02d} / {len(PAGE_ORDER):02d}") for text in top_text), page
+        assert PAGE_SUBTITLES[page] in top_text, page
+        assert NAV_TRAIL in top_text, page
+        assert len(top_shapes) >= 1, page
+
+
+def test_legacy_top_headers_are_replaced_by_shared_chrome():
+    report = compose_report({"sections": []})
+    forecast_top_text = [
+        _textbox_text(vc)
+        for vc in _page(report, "Forecast")["visualContainers"]
+        if _visual_type(vc) == "textbox" and vc["y"] <= 82
+    ]
+    what_changed_top_text = [
+        _textbox_text(vc)
+        for vc in _page(report, "What Changed")["visualContainers"]
+        if _visual_type(vc) == "textbox" and vc["y"] <= 82
+    ]
+
+    assert "Quarter Outlook" not in forecast_top_text
+    assert "Exception Movement" not in what_changed_top_text
+
+
+def test_page_content_does_not_overlap_shared_header_band():
+    report = compose_report({"sections": []})
+
+    for page in PAGE_ORDER:
+        section = _page(report, page)
+        non_chrome = section["visualContainers"][6:]
+        overlaps = [
+            (_visual_type(vc), vc["x"], vc["y"], vc["width"], vc["height"])
+            for vc in non_chrome
+            if _visual_type(vc) != "slicer" and vc["y"] < 84
+        ]
+        assert overlaps == [], page
 
 
 def test_kpi_explorer_adds_slice_and_dice_views_without_arr_acv_blend():
