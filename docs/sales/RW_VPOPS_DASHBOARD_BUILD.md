@@ -932,3 +932,40 @@ Correct command:
   --verify-live \
   --template sales-funnel-power-bi-template
 ```
+
+
+## Desktop Lab Checkpoint — 2026-05-09
+
+The local Zebra lab PBIP is open in Power BI Desktop under Parallels and is
+connected live to `sm_sales_kpis_rw`.
+
+Lab PBIP:
+
+```text
+C:\Mac\Home\Downloads\rw-pbi-format-lab\rpt_vp_ops_scorecard_zebra_lab_20260509_pbip\rpt_vp_ops_scorecard_zebra_lab.pbip
+```
+
+Evidence:
+
+- Applied the current lab proof with `python3 -m scripts.sales.rw_apply_zebra_lab_proof`.
+- Validated the generated report JSON with
+  `python3 -m scripts.sales.rw_validate --file ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json`.
+- Validation result: 7 sections, 44 total visualContainers, all measure refs
+  resolve against 102 deployed measures.
+- Desktop screenshot:
+  `~/.frontier/artifacts/rw_vpops_lab_open_connected_20260509.png`.
+- The PBIP contains `VP Ops Scorecard` with 7 visualContainers, but Desktop
+  opened on the `Zebra Exceptions` proof page. The next renderer gate is to
+  navigate to `VP Ops Scorecard`, capture that page, and judge whether the
+  7-visual spine is actually consultant-grade.
+
+Power BI Modeling MCP status:
+
+- Windows-side MCP install is good and `tools/list` works.
+- The PBIP uses a live Fabric semantic-model connection, not an imported local
+  Desktop database, so the local Desktop Analysis Services workspace still shows
+  `DbCount=0`.
+- `ConnectFabric` from Codex-through-`prlctl` does not complete because that MCP
+  process runs outside the logged-in Desktop user context. Use a Windows-side
+  interactive MCP client for semantic-model edits, or continue using the
+  repo's Fabric REST validation path for this lab.
