@@ -56,7 +56,16 @@ def test_all_target_pages_compose_against_declared_kpi_contracts():
 
 def test_target_pages_use_only_native_power_bi_visual_types():
     report = compose_report({"sections": []})
-    allowed = {"basicShape", "textbox", "card", "tableEx", "clusteredBarChart", "pivotTable", "slicer"}
+    allowed = {
+        "basicShape",
+        "textbox",
+        "card",
+        "tableEx",
+        "clusteredBarChart",
+        "pivotTable",
+        "slicer",
+        "waterfallChart",
+    }
 
     unexpected: list[tuple[str, str]] = []
     for page in PAGE_KPI_CONTRACTS:
@@ -416,6 +425,8 @@ def test_product_retention_uses_zebra_heatmap_and_detail_table_grammar():
         objects = matrix.get("objects") or {}
         assert objects["stylePreset"]["source"] == "zebra-visual-dna"
         assert objects["zebraGrammar"]["schema"] == "rw-zebra-native-transfer.columnGrammar.v1"
+        assert "dataBars" in objects
+        assert objects["dataBars"]["values"]
 
     ledger_objects = ledger[0].get("objects") or {}
     assert ledger_objects["stylePreset"] == {
@@ -469,6 +480,27 @@ def test_growth_mix_surfaces_one_off_revenue_as_non_recurring_not_arr_or_acv():
     assert "One-off revenue (non-recurring, EUR M)" in encoded
     assert "One-off opp count" in encoded
     assert "Total Open Pipeline Value" not in encoded
+
+
+def test_growth_mix_uses_native_waterfall_bridge_not_basic_bar_only():
+    report = compose_report({"sections": []})
+    growth_mix = _page(report, "Growth Mix")
+    bridges = [
+        _single_visual(vc)
+        for vc in growth_mix["visualContainers"]
+        if _visual_type(vc) == "waterfallChart"
+    ]
+
+    assert len(bridges) == 1
+    bridge = bridges[0]
+    assert bridge["objects"]["stylePreset"] == {
+        "source": "zebra-visual-dna",
+        "pattern": "growth-mix-contribution-bridge",
+        "visual_intent": "Land and Expand ARR contribution bridge",
+    }
+    assert bridge["objects"]["labels"][0]["properties"]["labelDisplayUnits"]["expr"][
+        "Literal"
+    ]["Value"] == "1D"
 
 
 def test_contract_gate_catches_missing_required_primary_kpi():

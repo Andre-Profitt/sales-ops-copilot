@@ -88,7 +88,21 @@ def _compose(section: dict) -> None:
             y=268,
             w=560,
             h=142,
-            objects=zebra_heatmap_matrix_objects(pattern="product-family-region-heatmap"),
+            objects=zebra_heatmap_matrix_objects(
+                pattern="product-family-region-heatmap",
+                databar_specs=(
+                    (
+                        "f_asset_line_item.Existing ARR Run Rate",
+                        "f_asset_line_item.Existing ARR Run Rate",
+                        "#083EA7",
+                    ),
+                    (
+                        "f_asset_line_item.Business At Risk ARR",
+                        "f_asset_line_item.Business At Risk ARR",
+                        "#C33A32",
+                    ),
+                ),
+            ),
         ),
         _panel(660, 224, 596, 210),
         build_textbox_visual(
@@ -111,7 +125,21 @@ def _compose(section: dict) -> None:
             y=268,
             w=560,
             h=142,
-            objects=zebra_heatmap_matrix_objects(pattern="product-family-segment-risk-heatmap"),
+            objects=zebra_heatmap_matrix_objects(
+                pattern="product-family-segment-risk-heatmap",
+                databar_specs=(
+                    (
+                        "f_asset_line_item.Business At Risk Pct",
+                        "f_asset_line_item.Business At Risk Pct",
+                        "#D98A00",
+                    ),
+                    (
+                        "f_asset_line_item.Existing ARR Expiring In Period",
+                        "f_asset_line_item.Existing ARR Expiring In Period",
+                        "#2B5C8A",
+                    ),
+                ),
+            ),
         ),
         _panel(24, 458, 1232, 222),
         build_textbox_visual(

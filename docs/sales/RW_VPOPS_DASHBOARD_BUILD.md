@@ -1572,6 +1572,33 @@ Andre asked for a direct checklist of RW-expected KPIs versus what the current B
 
 ARR remains Land + Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
 
+## 2026-05-10 - Native unit, heatmap, and bridge hardening
+
+Desktop review found three visible executive-quality defects: Growth Mix value labels could render as malformed K/M strings, Product Retention did not read as a true heatmap, and Growth Mix was still using a plain regional bar where a native bridge/decomposition visual is a better Zebra-style fit.
+
+**Shipped:**
+
+- Added explicit native Power BI `None` display-unit metadata (`labelDisplayUnits = 1D`) to generated KPI cards and native charts, while keeping non-none visual/theme K/M/MM/B scaling blocked by the unit-policy gate.
+- Replaced the Growth Mix regional bar with a native `waterfallChart` contribution bridge for `Total Open Pipeline ARR` by region, tagged with Zebra-native transfer metadata.
+- Added data-bar conditional-formatting metadata to both Product Retention matrix heatmaps:
+  - Product Family x Region: existing ARR run-rate and business-at-risk ARR.
+  - Product Family x Segment: business-at-risk percent and expiring active-base ARR.
+- Updated visual QA so native `waterfallChart` is an approved RW visual type.
+- Published the rebuilt report to Fabric:
+  - https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/d7362a11-f3dd-4bd1-a69a-68c941c2598b
+
+**Verification:**
+
+- `python3 -m pytest tests/sales -q` passed: 275 passed, 1 skipped.
+- Local PBIP validation passed: 8 sections, 188 visualContainers, all measure refs resolve.
+- Local and live harness audit returned no findings.
+- Local and live visual QA returned 0 findings at `--fail-on medium`.
+- Local and live unit policy returned 0 findings.
+- Live metric-basis audit returned 0 findings.
+- Zero-value audit returned no medium/high/critical findings.
+
+ARR remains Land + Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
+
 ## 2026-05-10 — One-off revenue data blocker closed
 
 This pass executed the next source-blocker move after the control/navigation and action-flow work: one-off revenue is no longer treated as a source-data gap.  The Salesforce gap probe confirmed populated Opportunity one-off/non-recurring fields, so the ETL, semantic model, Growth Mix page contract, and KPI coverage docs now treat it as a separate non-recurring revenue basis.

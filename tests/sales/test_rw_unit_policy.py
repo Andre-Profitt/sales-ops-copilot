@@ -50,7 +50,7 @@ def test_report_unit_audit_rejects_theme_or_visual_display_unit_scaling():
         "themeCollection": {
             "customTheme": {
                 "visualStyles": {
-                    "card": {"*": {"labels": [{"labelDisplayUnits": 1}]}}
+                    "card": {"*": {"labels": [{"labelDisplayUnits": 1000000}]}}
                 }
             }
         }
@@ -91,6 +91,39 @@ def test_compose_strips_stale_theme_unit_scaling():
             "sections": [],
         }
     )
+
+    assert audit_unit_policy(report=report)["counts"]["high"] == 0
+
+
+def test_report_unit_audit_allows_explicit_no_visual_scaling():
+    report = {
+        "config": json.dumps({"themeCollection": {}}),
+        "sections": [
+            {
+                "visualContainers": [
+                    {
+                        "config": json.dumps(
+                            {
+                                "singleVisual": {
+                                    "objects": {
+                                        "labels": [
+                                            {
+                                                "properties": {
+                                                    "labelDisplayUnits": {
+                                                        "expr": {"Literal": {"Value": "1D"}}
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        )
+                    }
+                ]
+            }
+        ],
+    }
 
     assert audit_unit_policy(report=report)["counts"]["high"] == 0
 

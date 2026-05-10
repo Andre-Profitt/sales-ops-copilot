@@ -1,6 +1,6 @@
 # RW Cross-Graph Upgrade Target Plan
 
-Generated: `2026-05-10T22:47:10Z`
+Generated: `2026-05-10T23:20:27Z`
 
 This compares three graphs: Zebra template/visual grammar, the live RW Power BI artifact graph, and the RW KPI coverage graph. The target is not more cosmetic styling; it is a better executive operating system with Zebra-grade scenario, variance, and bridge semantics.
 

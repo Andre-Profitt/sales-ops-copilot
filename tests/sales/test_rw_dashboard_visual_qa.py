@@ -8,6 +8,7 @@ from scripts.sales._pbir_helpers import (
     build_shape_visual,
     build_table_visual,
     build_textbox_visual,
+    build_waterfall_chart_visual,
 )
 from scripts.sales.rw_dashboard_visual_qa import audit_report, render_markdown, write_outputs
 
@@ -207,3 +208,28 @@ def test_visual_qa_writes_json_and_markdown(tmp_path: Path):
     assert "# RW Dashboard Visual QA" in markdown
     assert "plain_table" in markdown or "unstyled_table" in markdown
     assert render_markdown(result).startswith("# RW Dashboard Visual QA")
+
+
+def test_visual_qa_allows_native_waterfall_bridge():
+    report = _report(
+        "Growth Mix",
+        [
+            build_textbox_visual("Growth Mix", x=24, y=12, w=400, h=28, font_size_pt=18),
+            build_waterfall_chart_visual(
+                category_table="d_region",
+                category_column="region",
+                category_title="Region",
+                measure_table="f_opportunity",
+                measure_name="Total Open Pipeline ARR",
+                measure_title="Open ARR (Land + Expand)",
+                x=24,
+                y=60,
+                w=540,
+                h=320,
+            ),
+        ],
+    )
+
+    result = audit_report(report)
+
+    assert "unknown_visual_type" not in _codes(result["findings"])

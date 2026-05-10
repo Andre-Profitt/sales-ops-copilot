@@ -25,6 +25,17 @@ def _solid_color(color: str) -> dict:
     return {"solid": {"color": _literal(color)}}
 
 
+def _display_units_none() -> dict:
+    """Power BI display-unit value for None.
+
+    The semantic model already carries `EUR M` formats. Leaving visuals on Auto
+    lets Power BI append K/M on top of model formats, which is how labels drift
+    into unreadable strings such as `00KM`. A value of 1 means no visual-level
+    scaling, matching renderer-authored report.json examples.
+    """
+    return {"expr": {"Literal": {"Value": "1D"}}}
+
+
 def _column_expr(alias: str, field: str) -> dict:
     return {
         "Column": {
@@ -737,6 +748,7 @@ def build_clustered_bar_chart_visual(
                     {
                         "properties": {
                             "labelColor": _solid_color("#666666"),
+                            "labelDisplayUnits": _display_units_none(),
                             "fontSize": _literal(9),
                             "showAxisTitle": _literal(False),
                         }
@@ -746,6 +758,7 @@ def build_clustered_bar_chart_visual(
                     {
                         "properties": {
                             "show": _literal(True),
+                            "labelDisplayUnits": _display_units_none(),
                             "color": _solid_color("#252423"),
                             "fontSize": _literal(9),
                         }
@@ -789,6 +802,79 @@ def build_clustered_bar_chart_visual(
         "y": y,
         "z": 800,
     }
+
+
+def build_waterfall_chart_visual(
+    *,
+    category_table: str,
+    category_column: str,
+    category_title: str,
+    measure_table: str,
+    measure_name: str,
+    measure_title: str,
+    x: float,
+    y: float,
+    w: float = 520,
+    h: float = 260,
+    fill: str = "#083EA7",
+) -> dict:
+    """Construct a native waterfallChart for contribution/decomposition reads."""
+    vc = build_table_visual(
+        name="waterfall_bridge",
+        columns=[
+            {
+                "table": category_table,
+                "field": category_column,
+                "kind": "column",
+                "title": category_title,
+            },
+            {"table": measure_table, "field": measure_name, "kind": "measure", "title": measure_title},
+        ],
+        x=x,
+        y=y,
+        w=w,
+        h=h,
+    )
+    cfg = json.loads(vc["config"])
+    sv = cfg["singleVisual"]
+    values = sv.get("projections", {}).get("Values", [])
+    sv["visualType"] = "waterfallChart"
+    sv["projections"] = {"Category": values[:1], "Y": values[1:]}
+    sv["objects"] = {
+        "legend": [{"properties": {"show": _literal(False)}}],
+        "categoryAxis": [
+            {
+                "properties": {
+                    "labelColor": _solid_color("#252423"),
+                    "fontSize": _literal(9),
+                    "showAxisTitle": _literal(False),
+                }
+            }
+        ],
+        "valueAxis": [
+            {
+                "properties": {
+                    "labelColor": _solid_color("#666666"),
+                    "labelDisplayUnits": _display_units_none(),
+                    "fontSize": _literal(9),
+                    "showAxisTitle": _literal(False),
+                }
+            }
+        ],
+        "labels": [
+            {
+                "properties": {
+                    "show": _literal(True),
+                    "labelDisplayUnits": _display_units_none(),
+                    "color": _solid_color("#252423"),
+                    "fontSize": _literal(9),
+                }
+            }
+        ],
+        "dataPoint": [{"properties": {"fill": _solid_color(fill)}}],
+    }
+    vc["config"] = json.dumps(cfg)
+    return vc
 
 
 def build_textbox_visual(
@@ -1158,6 +1244,7 @@ def build_rag_card_objects(
     category_label_color = accent if label_color in neutral_label_colors else label_color
     label_props = {
         "color": _solid_color(value_color),
+        "labelDisplayUnits": _display_units_none(),
         "fontSize": _literal(str(value_font_size)),
         "fontFamily": _literal("Segoe UI Semibold"),
     }

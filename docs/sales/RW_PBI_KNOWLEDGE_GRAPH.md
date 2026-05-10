@@ -1,6 +1,6 @@
 # RW Power BI Knowledge Graph
 
-Generated: `2026-05-10T22:46:47Z`
+Generated: `2026-05-10T23:20:22Z`
 Source: `composed`
 Verdict: `needs_source_or_model_work`
 
@@ -9,7 +9,7 @@ This graph connects the actual Power BI report artifact to the RW KPI contract, 
 ## Executive Read
 
 - Pages: `8`
-- Visuals: `188` (basicShape=54, card=39, clusteredBarChart=3, pivotTable=5, slicer=17, tableEx=14, textbox=56)
+- Visuals: `188` (basicShape=54, card=39, clusteredBarChart=2, pivotTable=5, slicer=17, tableEx=14, textbox=56, waterfallChart=1)
 - Semantic model: `9` tables, `127` measures, `11` relationships
 - Used on BI surface: `55` measures, `19` columns
 - RW KPI contract: `30` KPIs placed from `31` canonical RW KPIs
@@ -171,7 +171,7 @@ This graph connects the actual Power BI report artifact to the RW KPI contract, 
 
 - Question: Is growth coming from the right Land, Expand, partner, source, and new-customer mix?
 - Motion basis: `land_expand_arr`
-- Visual mix: `{'basicShape': 6, 'card': 5, 'clusteredBarChart': 1, 'slicer': 2, 'tableEx': 2, 'textbox': 8}`
+- Visual mix: `{'basicShape': 6, 'card': 5, 'slicer': 2, 'tableEx': 2, 'textbox': 8, 'waterfallChart': 1}`
 - KPIs served: `alf_arr_pipeline`, `closed_won_avg_deal_size`, `closed_won_value_tier`, `cross_sell_to_acquired`, `ilf_arr_pipeline`, `new_customer_reporting`, `one_off_revenues`, `opp_source_effectiveness`, `partner_opps_pct`, `ps_arr_attach`, `saas_arr_yoy_growth`, `synergy_deals_won`
 - Measures used: `f_opportunity.Avg Deal Size Won`, `f_opportunity.Closed Won Deals Count`, `f_opportunity.Cross Sell To Acquired ARR`, `f_opportunity.One Off Revenues`, `f_opportunity.One-Off Revenue Opp Count`, `f_opportunity.Open Expand ARR`, `f_opportunity.Open Land ARR`, `f_opportunity.PS ARR Attach Pct`, `f_opportunity.Partner ARR`, `f_opportunity.Partner Pct`, `f_opportunity.SaaS YoY Growth Pct`, `f_opportunity.Total Land Won Count`, `f_opportunity.Total Open Pipeline ARR`
 
@@ -182,7 +182,7 @@ This graph connects the actual Power BI report artifact to the RW KPI contract, 
 | Avg won ARR (Land + Expand) | `card` | `M:f_opportunity.Avg Deal Size Won` |
 | Partner ARR (Land + Expand) | `card` | `M:f_opportunity.Partner ARR` |
 | Partner % ARR share | `card` | `M:f_opportunity.Partner Pct` |
-| Region | Open ARR (Land + Expand) | `clusteredBarChart` | `C:d_region.region`, `M:f_opportunity.Total Open Pipeline ARR` |
+| Region | Open ARR (Land + Expand) | `waterfallChart` | `C:d_region.region`, `M:f_opportunity.Total Open Pipeline ARR` |
 | Region | Open Land ARR | Open Expand ARR | Open ARR (Land + Expand) | Avg won ARR (Land + Expand) | Partner ARR (Land + Expand) | Partner % ARR | Land won count | `tableEx` | `C:d_region.region`, `M:f_opportunity.Open Land ARR`, `M:f_opportunity.Open Expand ARR`, `M:f_opportunity.Total Open Pipeline ARR`, `M:f_opportunity.Avg Deal Size Won`, `M:f_opportunity.Partner ARR`, `M:f_opportunity.Partner Pct`, `M:f_opportunity.Total Land Won Count` |
 | Won tier | Won deal count | Axioma ARR (Land + Expand) | One-off revenue (non-recurring, EUR M) | One-off opp count | SaaS ARR YoY % | PS attach % (ACV/ARR) | `tableEx` | `C:f_opportunity.won_value_tier`, `M:f_opportunity.Closed Won Deals Count`, `M:f_opportunity.Cross Sell To Acquired ARR`, `M:f_opportunity.One Off Revenues`, `M:f_opportunity.One-Off Revenue Opp Count`, `M:f_opportunity.SaaS YoY Growth Pct`, `M:f_opportunity.PS ARR Attach Pct` |
 

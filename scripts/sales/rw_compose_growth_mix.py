@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from scripts.sales._pbir_helpers import (
     build_card_visual_with_objects,
-    build_clustered_bar_chart_visual,
     build_shape_visual,
     build_table_visual,
     build_textbox_visual,
+    build_waterfall_chart_visual,
 )
 from scripts.sales.rw_add_visual import REPORT_ID, WORKSPACE_ID, _token, get_current_report_json, push_report
 from scripts.sales.rw_page_kpi_contract import contract_for
@@ -62,11 +62,11 @@ def _card(
     )
 
 
-def _zebra_chart(visual: dict) -> dict:
+def _zebra_bridge(visual: dict) -> dict:
     return tag_visual_with_zebra_transfer_metadata(
         visual,
-        pattern="growth-mix-region-chart",
-        visual_intent="Land and Expand ARR by region",
+        pattern="growth-mix-contribution-bridge",
+        visual_intent="Land and Expand ARR contribution bridge",
     )
 
 
@@ -83,8 +83,8 @@ def _compose(section: dict) -> None:
         _card("Partner ARR", "Partner ARR (Land + Expand)", x=760, tint="#FFF8E6", accent="#D98A00"),
         _card("Partner Pct", "Partner % ARR share", x=1000, tint="#FFF8E6", accent="#D98A00"),
         _panel(24, 224, 588, 456),
-        build_textbox_visual("Open Land + Expand ARR by Region", x=40, y=236, w=420, h=24, font_size_pt=11, color="#1A1D31"),
-        _zebra_chart(build_clustered_bar_chart_visual(
+        build_textbox_visual("Open Land + Expand ARR Contribution Bridge", x=40, y=236, w=500, h=24, font_size_pt=11, color="#1A1D31"),
+        _zebra_bridge(build_waterfall_chart_visual(
             category_table="d_region",
             category_column="region",
             category_title="Region",

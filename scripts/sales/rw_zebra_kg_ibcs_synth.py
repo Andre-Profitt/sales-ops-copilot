@@ -332,7 +332,11 @@ def zebra_detail_table_objects() -> dict:
     )
 
 
-def zebra_heatmap_matrix_objects(*, pattern: str = "product-retention-heatmap") -> dict:
+def zebra_heatmap_matrix_objects(
+    *,
+    pattern: str = "product-retention-heatmap",
+    databar_specs: tuple[tuple[str, str, str], ...] = (),
+) -> dict:
     """Matrix/table style for Zebra-inspired heatmap reads.
 
     Native Power BI matrix JSON cannot fully recreate Zebra's per-cell heatmap
@@ -340,7 +344,7 @@ def zebra_heatmap_matrix_objects(*, pattern: str = "product-retention-heatmap") 
     treatment and stable lineage so Desktop/Fabric formatting passes can target
     it deterministically.
     """
-    return _with_zebra_transfer_metadata(
+    objects = _with_zebra_transfer_metadata(
         build_table_style_objects(
             header_fill="#EAF0F7",
             header_text="#1A1D31",
@@ -352,6 +356,17 @@ def zebra_heatmap_matrix_objects(*, pattern: str = "product-retention-heatmap") 
         visual_intent="product x segment heatmap matrix",
         grammar_schema="rw-zebra-native-transfer.columnGrammar.v1",
     )
+    if databar_specs:
+        objects["dataBars"] = {
+            "values": [
+                bar
+                for column_name, max_field, positive_color in databar_specs
+                for bar in build_databar_cf_objects(column_name, max_field, positive_color)[
+                    "values"
+                ]
+            ]
+        }
+    return objects
 
 
 def zebra_stage_hygiene_table_objects(*, max_field: str, databar_column: str, accent: str = "#2B5C8A") -> dict:

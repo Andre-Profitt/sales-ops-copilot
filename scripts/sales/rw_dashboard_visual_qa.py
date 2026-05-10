@@ -45,7 +45,7 @@ CARD_TYPES = {"card"}
 TABLE_TYPES = {"tableEx", "pivotTable"}
 TEXT_TYPES = {"textbox"}
 ZEBRA_TYPES = {"ZebraBITables98F88148E5424E949E69864664EE1860"}
-NATIVE_VISUAL_TYPES = CARD_TYPES | TABLE_TYPES | TEXT_TYPES | {"basicShape", "clusteredBarChart", "slicer"}
+NATIVE_VISUAL_TYPES = CARD_TYPES | TABLE_TYPES | TEXT_TYPES | {"basicShape", "clusteredBarChart", "slicer", "waterfallChart"}
 ACCENT_COLORS = {"#2B5C8A", "#3B8A3E", "#C33A32", "#D98A00", "#083EA7", "#CC3333", "#DD8800", "#339933"}
 RENEWAL_BASE_ARR_MEASURES = {
     "Existing ARR Run Rate",

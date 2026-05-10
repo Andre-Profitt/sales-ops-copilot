@@ -14,6 +14,7 @@ from scripts.sales._pbir_helpers import (
     build_table_style_objects,
     build_table_visual,
     build_textbox_visual,
+    build_waterfall_chart_visual,
     build_zebra_bi_table_visual,
     ensure_pages,
     remove_page,
@@ -70,7 +71,9 @@ def test_build_rag_card_objects_has_status_treatment():
         "Literal"
     ]["Value"] == "'#cc3333'"
     assert objects["labels"][0]["properties"]["fontSize"]["expr"]["Literal"]["Value"] == "'28'"
-    assert "labelDisplayUnits" not in objects["labels"][0]["properties"]
+    assert objects["labels"][0]["properties"]["labelDisplayUnits"]["expr"]["Literal"][
+        "Value"
+    ] == "1D"
 
 
 def test_build_rag_card_visual_attaches_rag_objects():
@@ -200,7 +203,35 @@ def test_build_clustered_bar_chart_visual_has_category_and_measure():
                 },
             }
         ]
-    assert "labelDisplayUnits" not in sv["objects"]["labels"][0]["properties"]
+    assert sv["objects"]["labels"][0]["properties"]["labelDisplayUnits"]["expr"]["Literal"][
+        "Value"
+    ] == "1D"
+
+
+def test_build_waterfall_chart_visual_uses_native_bridge_and_no_auto_units():
+    vc = build_waterfall_chart_visual(
+        category_table="d_region",
+        category_column="region",
+        category_title="Region",
+        measure_table="f_opportunity",
+        measure_name="Total Open Pipeline ARR",
+        measure_title="Open ARR (Land + Expand)",
+        x=20,
+        y=44,
+        w=500,
+        h=240,
+    )
+
+    sv = json.loads(vc["config"])["singleVisual"]
+
+    assert sv["visualType"] == "waterfallChart"
+    assert set(sv["projections"]) == {"Category", "Y"}
+    assert sv["objects"]["labels"][0]["properties"]["labelDisplayUnits"]["expr"]["Literal"][
+        "Value"
+    ] == "1D"
+    assert sv["objects"]["valueAxis"][0]["properties"]["labelDisplayUnits"]["expr"]["Literal"][
+        "Value"
+    ] == "1D"
 
 
 def test_build_zebra_bi_table_visual_has_categories_values_and_no_license():

@@ -2,7 +2,9 @@
 
 Currency values in the RW dashboard are reported in org reporting currency,
 EUR, and shown in millions. Visuals must not apply their own display-unit
-scaling on top of semantic-model formats.
+scaling on top of semantic-model formats. Explicit visual-level "None" display
+units are allowed because they stop Power BI from re-scaling semantic EUR M
+values into K/MM/BMM variants.
 """
 
 from __future__ import annotations
@@ -22,10 +24,12 @@ CURRENCY_M_FORMAT = 'EUR #,0,,.0"M";(EUR #,0,,.0"M");"-"'
 COUNT_FORMATS = {"#,0", "0"}
 PERCENT_FORMATS = {"0.0%"}
 DURATION_FORMATS = {"0", "0.0"}
-FORBIDDEN_VISUAL_UNIT_KEYS = {
+VISUAL_DISPLAY_UNIT_KEYS = {
     "labelDisplayUnits",
     "displayUnits",
     "DisplayUnits",
+}
+FORBIDDEN_VISUAL_UNIT_KEYS = {
     "labelPrecision",
 }
 FORBIDDEN_FORMAT_TOKENS = ("$#", "$", "BMM", "MM", "KM")
@@ -138,11 +142,31 @@ def _walk(obj: Any, path: str = "$"):
             yield from _walk(value, f"{path}[{idx}]")
 
 
+def _display_unit_literal(value: Any) -> str:
+    if not isinstance(value, dict):
+        return str(value)
+    literal = value.get("expr", {}).get("Literal", {}).get("Value")
+    return "" if literal is None else str(literal)
+
+
+def _is_none_display_unit(value: Any) -> bool:
+    literal = _display_unit_literal(value).strip().strip("'").lower()
+    if literal in {"none", "1", "1d", "1l", "1.0", "1.0d"}:
+        return True
+    try:
+        return float(literal.removesuffix("d").removesuffix("l")) == 1.0
+    except ValueError:
+        return False
+
+
 def _strip_keys(obj: Any, forbidden: set[str]) -> int:
     removed = 0
     if isinstance(obj, dict):
         for key in list(obj):
-            if key in forbidden:
+            if key in VISUAL_DISPLAY_UNIT_KEYS and not _is_none_display_unit(obj[key]):
+                obj.pop(key, None)
+                removed += 1
+            elif key in forbidden:
                 obj.pop(key, None)
                 removed += 1
             else:
@@ -228,7 +252,9 @@ def audit_report_units(report: dict) -> list[dict[str, Any]]:
         report_config = {}
     findings.extend(_audit_visible_unit_text(report_config, scope="Report theme"))
     for path, key, _value in _walk(report_config):
-        if key in FORBIDDEN_VISUAL_UNIT_KEYS:
+        if key in VISUAL_DISPLAY_UNIT_KEYS and _is_none_display_unit(_value):
+            continue
+        if key in VISUAL_DISPLAY_UNIT_KEYS or key in FORBIDDEN_VISUAL_UNIT_KEYS:
             findings.append(
                 _finding(
                     finding_id="theme_visual_unit_scaling",
@@ -249,7 +275,9 @@ def audit_report_units(report: dict) -> list[dict[str, Any]]:
                 _audit_visible_unit_text(cfg, scope=f"{page}/{visual_name or 'visual'}")
             )
             for path, key, _value in _walk(cfg):
-                if key in FORBIDDEN_VISUAL_UNIT_KEYS:
+                if key in VISUAL_DISPLAY_UNIT_KEYS and _is_none_display_unit(_value):
+                    continue
+                if key in VISUAL_DISPLAY_UNIT_KEYS or key in FORBIDDEN_VISUAL_UNIT_KEYS:
                     findings.append(
                         _finding(
                             finding_id="visual_unit_scaling",
@@ -273,7 +301,7 @@ def audit_unit_policy(report: dict | None = None, model_bim: dict | None = None)
         "unit_policy": {
             "currency_unit": CURRENCY_UNIT_LABEL,
             "currency_format": CURRENCY_M_FORMAT,
-            "visual_display_units": "forbidden",
+            "visual_display_units": "non_none_scaling_forbidden_explicit_none_allowed",
         },
         "counts": counts,
         "findings": findings,
@@ -288,7 +316,7 @@ def write_markdown(result: dict[str, Any], path: Path) -> None:
         "",
         f"- Currency unit: `{policy['currency_unit']}`",
         f"- Semantic format: `{policy['currency_format']}`",
-        "- Visual/theme display-unit scaling: forbidden",
+        "- Visual/theme display-unit scaling: forbidden except explicit `None` display units",
         "- Count format: `#,0`",
         "- Percent format: `0.0%`",
         "- Day/duration format: `0.0` where decimal precision is useful, otherwise `0`.",
