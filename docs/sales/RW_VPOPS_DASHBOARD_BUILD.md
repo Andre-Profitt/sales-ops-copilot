@@ -1700,6 +1700,32 @@ Started the consultant-grade control/navigation layer pass across all generated 
 
 No Fabric publish was performed. This is the first visible pass toward the operating-review flow; the next build should add explicit drill/action paths from Scorecard exceptions into the detail ledgers.
 
+## 2026-05-10 — First action-flow cue layer
+
+Added a lightweight operating-review cue to the shared chrome so the dashboard no longer reads as isolated tabs only.
+
+**Shipped:**
+
+- Every generated tab now shows a visible `Action:` cue beside the page title.
+- Scorecard routes exceptions to `What Changed`.
+- What Changed routes movement queues to `Forecast` / `Stage Hygiene`.
+- Forecast routes commit risk to owner/account detail.
+- Renewals routes active-base risk to `Product Retention`.
+- Product Retention routes product risk to the account-product ledger.
+- Growth Mix routes mix gaps to Explorer.
+- Added regression coverage so the action cue is present on every contracted page.
+
+**Lab verification:**
+
+- `python3 -m scripts.sales.rw_apply_zebra_lab_proof` regenerated the local PBIP.
+- `rw_validate` passed with 8 sections, 188 visualContainers, and all measure refs resolved.
+- Visual QA passed with 0 findings.
+- Metric-basis labels passed with 0 findings.
+- Unit policy passed with 0 findings.
+- Semantic filter audit passed with medium=2, high=0, critical=0.
+
+No Fabric publish was performed. This is not full Power BI drillthrough yet; it is the first governed action-flow layer. The next deeper slice is to add explicit detail/drill targets and, where Power BI JSON shape is proven, page-navigation buttons.
+
 ## 2026-05-10 — Power BI artifact knowledge graph
 
 Built an executable knowledge graph of the current RW Power BI report artifact so the dashboard can be inspected tab-by-tab instead of by screenshots alone.

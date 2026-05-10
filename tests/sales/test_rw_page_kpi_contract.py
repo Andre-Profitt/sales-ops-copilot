@@ -16,7 +16,7 @@ from scripts.sales.rw_page_kpi_contract import (
 )
 from scripts.sales.rw_filter_bar import FILTER_REFS_BY_PAGE, FORBIDDEN_MOTION_SLICER_REF
 from scripts.sales.rw_metric_basis_audit import audit_metric_basis
-from scripts.sales.rw_page_chrome import NAV_TRAIL, PAGE_ORDER, PAGE_SUBTITLES
+from scripts.sales.rw_page_chrome import ACTION_TRAILS, CHROME_VISUAL_COUNT, NAV_TRAIL, PAGE_ORDER, PAGE_SUBTITLES
 from scripts.sales.rw_semantic_filter_audit import audit_semantic_filter_flow
 
 
@@ -100,6 +100,7 @@ def test_target_pages_have_shared_header_navigation_chrome():
 
         assert any(text.startswith(f"{ordinal:02d} / {len(PAGE_ORDER):02d}") for text in top_text), page
         assert PAGE_SUBTITLES[page] in top_text, page
+        assert ACTION_TRAILS[page] in top_text, page
         assert NAV_TRAIL in top_text, page
         assert len(top_shapes) >= 1, page
 
@@ -126,7 +127,7 @@ def test_page_content_does_not_overlap_shared_header_band():
 
     for page in PAGE_ORDER:
         section = _page(report, page)
-        non_chrome = section["visualContainers"][6:]
+        non_chrome = section["visualContainers"][CHROME_VISUAL_COUNT:]
         overlaps = [
             (_visual_type(vc), vc["x"], vc["y"], vc["width"], vc["height"])
             for vc in non_chrome
