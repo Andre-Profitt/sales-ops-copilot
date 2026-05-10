@@ -1088,3 +1088,73 @@ Result: `no findings`.
 The code-level visual debt gate is now clean. The next gate is Desktop
 screenshot review for spacing, clipping, and whether the native Zebra-pattern
 pages actually read at consulting grade.
+
+
+## Last-Four Tab Enterprise Polish v2 - Open Pipeline Fix (2026-05-10)
+
+Andre flagged two material issues after Desktop review: `Renewals` and
+`Growth Mix` were visually better but showing zero/weak values, and the last
+four tabs still read too generic.
+
+**Root cause:**
+
+- `Renewals` was leading with closed-won Renewal ACV. Current-year data has
+  meaningful open Renewal ACV, so a closed-won-first page can read as zero in
+  the wrong filter context.
+- `Growth Mix` was leading with closed-won Land/Expand ARR. Current-year growth
+  review is more useful as open Land/Expand pipeline.
+- `Partner ARR` used exact `lead_source = "Partner"`, but the live data includes
+  partner-like values such as `Limited Partner`; exact matching undercounted.
+
+**Live data check from OneLake `f_opportunity`:**
+
+- 2026 open Renewal ACV: approximately `151.6M`.
+- 2026 open Land ARR: approximately `175.2M`.
+- 2026 open Expand ARR: approximately `141.0M`.
+- Partner-like open L+E ARR exists under lead-source strings containing
+  `partner`.
+
+**Semantic model changes deployed to `sm_sales_kpis_rw`:**
+
+- Added `Total Open Renewal ACV`.
+- Added `Total Renewal ACV Due`.
+- Added `Open Land ARR`.
+- Added `Open Expand ARR`.
+- Updated `Partner ARR` to use
+  `CONTAINSSTRING(LOWER(f_opportunity[lead_source]), "partner")` while keeping
+  the Land+Expand ARR and open-pipeline filters.
+
+The model now has 106 deployed measures. Fabric updateDefinition LRO succeeded
+for semantic model `3c58b5dd-b321-4aaa-a5cd-fb73e474edbb`; refresh was
+enqueued.
+
+**Page changes:**
+
+- `Renewals` now leads with open renewal exposure:
+  `Total Open Renewal ACV`, retention, won ACV, lost ACV.
+- `Renewals` regional chart now uses `Total Open Renewal ACV`, not closed-won
+  ACV.
+- `Growth Mix` now leads with `Open Land ARR`, `Open Expand ARR`, partner ARR,
+  and partner percentage.
+- `Growth Mix` regional chart now uses `Total Open Pipeline ARR`.
+- Forecast, What Changed, and Stage Hygiene labels were tightened to more
+  executive/operating language and away from generic generated-section wording.
+
+**Verification:**
+
+- `python3 -m scripts.sales.rw_apply_zebra_lab_proof` regenerated the Desktop
+  lab PBIP report JSON.
+- `python3 -m scripts.sales.rw_validate --file ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json`
+  succeeded: 7 sections, 105 visualContainers, all refs resolve against 106
+  deployed measures.
+- `python3 -m scripts.sales.rw_dashboard_harness audit --source path --path ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json --label rw_last4_enterprise_polish_v2`
+  returned `no findings`.
+- Contract validation returned zero errors.
+- `.venv/bin/pytest tests/sales -q` succeeded: 170 passed, 1 skipped.
+
+**Promotion status:**
+
+The semantic model is live with the new measures. The report layout changes are
+currently applied to the local Desktop lab PBIP; promote to the live RW report
+with `python3 -m scripts.sales.rw_compose_all_pages` after Desktop visual
+review.

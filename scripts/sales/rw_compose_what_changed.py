@@ -58,7 +58,7 @@ def _compose(section: dict) -> None:
     """
     # ── Phase 1: Risk band ──────────────────────────────────────
     section["visualContainers"].append(
-        build_textbox_visual("RISK BAND - only what needs attention", x=20, y=12, w=1200, h=24)
+        build_textbox_visual("Exception Movement", x=20, y=12, w=1200, h=24)
     )
     # Hero cards. ARR shown via a separate small card under each count
     # — a single card hosts one Measure per the current builder.
@@ -114,7 +114,7 @@ def _compose(section: dict) -> None:
 
     # ── Phase 2: Change buckets (3 of 4 spec'd; Slips deferred) ──
     section["visualContainers"].append(
-        build_textbox_visual("CHANGE BUCKETS - comprehensive", x=20, y=198, w=1200, h=24)
+        build_textbox_visual("7-Day Operating Movement", x=20, y=198, w=1200, h=24)
     )
     # Spec calls for Stage Moves · Slips · New Opps · Closed.
     # Slips defers until f_ofh_close_date ETL ships
@@ -210,7 +210,7 @@ def _compose(section: dict) -> None:
     # ── Phase 3: Detail table ──────────────────────────────────
     section["visualContainers"].append(
         build_textbox_visual(
-            "DETAIL - top open opportunities by ARR impact", x=20, y=386, w=1200, h=24
+            "Top Open ARR Movement Queue", x=20, y=386, w=1200, h=24
         )
     )
     # Open opps by Open Pipeline ARR. Spec's "Change" + "Risk class"

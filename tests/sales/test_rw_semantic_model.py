@@ -28,3 +28,31 @@ def test_arr_exception_measures_are_explicitly_land_expand_filtered():
         "[At Risk Opps Count] + [Watch Opps Count]"
     )
     assert measures["Exception ARR"]["expression"] == "[At Risk Opps ARR] + [Watch Opps ARR]"
+
+
+def test_open_renewal_and_growth_measures_do_not_depend_on_closed_won_only():
+    measures = _measure_map()
+
+    assert measures["Total Open Renewal ACV"]["expression"] == (
+        'CALCULATE ( SUM ( f_opportunity[acv_org_ccy] ), '
+        'f_opportunity[is_closed] = FALSE(), f_opportunity[motion_type] = "Renewal" )'
+    )
+    assert measures["Total Renewal ACV Due"]["expression"] == (
+        'CALCULATE ( SUM ( f_opportunity[acv_org_ccy] ), '
+        'f_opportunity[motion_type] = "Renewal" )'
+    )
+    assert measures["Open Land ARR"]["expression"] == (
+        'CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), '
+        'f_opportunity[is_closed] = FALSE(), f_opportunity[motion_type] = "Land" )'
+    )
+    assert measures["Open Expand ARR"]["expression"] == (
+        'CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), '
+        'f_opportunity[is_closed] = FALSE(), f_opportunity[motion_type] = "Expand" )'
+    )
+
+
+def test_partner_arr_matches_partner_substrings_not_exact_only():
+    expression = _measure_map()["Partner ARR"]["expression"]
+
+    assert 'CONTAINSSTRING ( LOWER ( f_opportunity[lead_source] ), "partner" )' in expression
+    assert 'f_opportunity[lead_source] = "Partner"' not in expression

@@ -96,7 +96,7 @@ def _compose(section: dict) -> None:
     """
     # ── Hero (3 cards) ─────────────────────────────────────────
     section["visualContainers"].append(
-        build_textbox_visual("HERO - quarter answer", x=20, y=12, w=1200, h=24)
+        build_textbox_visual("Quarter Outlook", x=20, y=12, w=1200, h=24)
     )
     # Spec calls for Quota attainment + Pipeline coverage 3x +
     # Days remaining. Quota dependency unmet — substitute with
@@ -119,7 +119,7 @@ def _compose(section: dict) -> None:
 
     # ── Stage × motion matrix ──────────────────────────────────
     section["visualContainers"].append(
-        build_textbox_visual("STAGE X MOTION - open value matrix", x=20, y=154, w=1200, h=24)
+        build_textbox_visual("Stage x Motion Open Value", x=20, y=154, w=1200, h=24)
     )
     # Rows = stage_name, columns = motion_type, value = Total Open Pipeline Value
     # (which renders ARR for Land/Expand and ACV for Renewal — see measure
@@ -152,7 +152,7 @@ def _compose(section: dict) -> None:
 
     # ── Forecast discipline (4 cards) ──────────────────────────
     section["visualContainers"].append(
-        build_textbox_visual("FORECAST DISCIPLINE - movement quality", x=20, y=408, w=1200, h=24)
+        build_textbox_visual("Forecast Discipline", x=20, y=408, w=1200, h=24)
     )
     discipline = [
         (
@@ -210,7 +210,7 @@ def _compose(section: dict) -> None:
 
     # ── Commit-risk table ──────────────────────────────────────
     section["visualContainers"].append(
-        build_textbox_visual("COMMIT RISK - late-stage open deals", x=20, y=532, w=1200, h=24)
+        build_textbox_visual("Late-Stage Commit Risk", x=20, y=532, w=1200, h=24)
     )
     # Top late-stage open deals. Owner column deferred (no d_user join in
     # build_table_visual yet); use account_name instead. "Days late"

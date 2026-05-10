@@ -115,11 +115,11 @@ PAGE_KPI_CONTRACTS: dict[str, PageKPIContract] = {
             "Avg Days In Stage 4",
         ),
         motion="process",
-        caveat="Commercial Approval compliance awaits the explicit gate measure.",
+        caveat="Stage 3 and Stage 4 are the control points for approval friction and late-funnel slippage.",
     ),
     "Renewals": PageKPIContract(
         page="Renewals",
-        job="Renewal ACV health: retention, won/lost renewal ACV, YoY direction.",
+        job="Renewal ACV cockpit: open exposure, retained ACV, lost ACV, and regional pressure.",
         kpi_ids=(
             "renewal_retention_rate",
             "renewals_mom_trend",
@@ -127,18 +127,18 @@ PAGE_KPI_CONTRACTS: dict[str, PageKPIContract] = {
             "indexation_arr_growth",
         ),
         measures=(
+            "Total Open Renewal ACV",
+            "Total Renewal ACV Due",
             "Renewal Retention Pct (Period)",
             "Total Renewal ACV Won",
             "Total Renewal ACV Lost",
-            "Renewal ACV YoY Pct",
-            "Renewal ACV YTD YoY Pct",
         ),
         motion="renewal_acv",
-        caveat="Existing ARR run-rate and indexation require Phase 3 subscription/asset data.",
+        caveat="Renewal ACV only. Land and Expand ARR are excluded from this page.",
     ),
     "Growth Mix": PageKPIContract(
         page="Growth Mix",
-        job="Strategic growth composition: Land, Expand, partner/source contribution, new customers.",
+        job="Growth mix cockpit: open Land, open Expand, partner contribution, and new-customer signal.",
         kpi_ids=(
             "ilf_arr_pipeline",
             "alf_arr_pipeline",
@@ -148,16 +148,15 @@ PAGE_KPI_CONTRACTS: dict[str, PageKPIContract] = {
             "synergy_deals_won",
         ),
         measures=(
-            "Land Closed Won ARR",
-            "Expand Closed Won ARR",
+            "Open Land ARR",
+            "Open Expand ARR",
             "Partner ARR",
             "Partner Pct",
-            "Source ARR Won",
-            "Source Win Rate",
+            "Total Open Pipeline ARR",
             "Total Land Won Count",
         ),
         motion="land_expand_arr",
-        caveat="Synergy/Axioma/product mix need Phase 3 fields; current page surfaces available proxies.",
+        caveat="Land and Expand ARR only. Renewal ACV is excluded from this page.",
     ),
 }
 

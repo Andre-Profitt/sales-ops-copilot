@@ -34,7 +34,7 @@ def _compose(section: dict) -> None:
     section["filters"] = "[]"
     section["visualContainers"] = [
         build_textbox_visual(PAGE, x=24, y=12, w=420, h=28, font_size_pt=18, color="#1A1D31"),
-        build_textbox_visual(contract.job, x=24, y=42, w=980, h=22, font_size_pt=9, color="#5C6670", bold=False),
+        build_textbox_visual("Conversion, backward movement, and time-in-stage bottlenecks.", x=24, y=42, w=980, h=22, font_size_pt=9, color="#5C6670", bold=False),
         _panel(24, 84, 1232, 116),
         build_rag_card_visual("f_stage_transition", "Stage Forward Pct (LE)", "Forward rate", x=40, y=104, w=280, h=76, tint="#EEF9EE", accent="#3B8A3E", value_color="#1F6F3B", display_units=None),
         build_rag_card_visual("f_stage_transition", "Stage Backward Pct (LE)", "Backward rate", x=340, y=104, w=280, h=76, tint="#FFEEEE", accent="#C33A32", value_color="#B3261E", display_units=None),
@@ -58,12 +58,12 @@ def _compose(section: dict) -> None:
             objects=build_matrix_style_objects(font_size=8),
         ),
         _panel(804, 224, 452, 214),
-        build_textbox_visual("Commercial Approval Gate Watch", x=820, y=236, w=360, h=24, font_size_pt=11, color="#1A1D31"),
+        build_textbox_visual("Stage 3 Gate Pressure", x=820, y=236, w=360, h=24, font_size_pt=11, color="#1A1D31"),
         build_rag_card_visual("f_stage_transition", "Stage 3 Forward Pct", "Stage 3 forward", x=820, y=274, w=200, h=72, tint="#FFF8E6", accent="#D98A00", value_color="#1A1D31", display_units=None),
         build_rag_card_visual("f_stage_transition", "Avg Days In Stage 3", "Stage 3 avg days", x=1036, y=274, w=200, h=72, tint="#FFF8E6", accent="#D98A00", value_color="#1A1D31", display_units=None),
         build_textbox_visual(contract.caveat, x=820, y=362, w=410, h=46, font_size_pt=8, color="#5C6670", bold=False),
         _panel(804, 466, 452, 214),
-        build_textbox_visual("Bottleneck Detail", x=820, y=478, w=360, h=24, font_size_pt=11, color="#1A1D31"),
+        build_textbox_visual("Stage 4 Bottleneck Detail", x=820, y=478, w=360, h=24, font_size_pt=11, color="#1A1D31"),
         build_table_visual(
             name="stage_hygiene_detail",
             columns=[

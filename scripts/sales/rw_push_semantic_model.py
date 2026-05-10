@@ -268,8 +268,9 @@ def build_model_bim() -> dict:
         # Partner mix
         {
             "name": "Partner ARR",
-            "expression": 'CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), f_opportunity[is_closed] = FALSE(), f_opportunity[lead_source] = "Partner", f_opportunity[motion_type] IN { "Land", "Expand" } )',
+            "expression": 'CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), f_opportunity[is_closed] = FALSE(), CONTAINSSTRING ( LOWER ( f_opportunity[lead_source] ), "partner" ), f_opportunity[motion_type] IN { "Land", "Expand" } )',
             "formatString": '$#,0,,.0"M"',
+            "description": "RW KPI: partner_opps_pct numerator. Open L+E ARR where lead source contains partner.",
         },
         {
             "name": "Partner Pct",
@@ -278,6 +279,18 @@ def build_model_bim() -> dict:
             "description": "RW KPI: partner_opps_pct. Target 20% of pipeline.",
         },
         # Renewals (ACV, never blend with ARR)
+        {
+            "name": "Total Open Renewal ACV",
+            "expression": 'CALCULATE ( SUM ( f_opportunity[acv_org_ccy] ), f_opportunity[is_closed] = FALSE(), f_opportunity[motion_type] = "Renewal" )',
+            "formatString": '$#,0,,.0"M"',
+            "description": "Open renewal pipeline ACV. Renewal-only; never blended with ARR.",
+        },
+        {
+            "name": "Total Renewal ACV Due",
+            "expression": 'CALCULATE ( SUM ( f_opportunity[acv_org_ccy] ), f_opportunity[motion_type] = "Renewal" )',
+            "formatString": '$#,0,,.0"M"',
+            "description": "All renewal ACV in current filter context: open + won + lost. Renewal-only denominator candidate.",
+        },
         {
             "name": "Total Renewal ACV Won",
             "expression": 'CALCULATE ( SUM ( f_opportunity[acv_org_ccy] ), f_opportunity[is_won] = TRUE(), f_opportunity[motion_type] = "Renewal" )',
@@ -410,6 +423,12 @@ def build_model_bim() -> dict:
         #   RENEWAL → ACV field (already separated above)
         # The blended L+E measures stay; these are additional drill-downs.
         {
+            "name": "Open Land ARR",
+            "expression": 'CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), f_opportunity[is_closed] = FALSE(), f_opportunity[motion_type] = "Land" )',
+            "formatString": '$#,0,,.0"M"',
+            "description": "Open Land ARR. New-business pipeline; excludes Expand and Renewal.",
+        },
+        {
             "name": "Land Closed Won ARR",
             "expression": 'CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), f_opportunity[is_won] = TRUE(), f_opportunity[motion_type] = "Land" )',
             "formatString": '$#,0,,.0"M"',
@@ -426,6 +445,12 @@ def build_model_bim() -> dict:
             "expression": 'CALCULATE ( AVERAGEX ( f_opportunity, DATEDIFF ( f_opportunity[created_date], f_opportunity[close_date], DAY ) ), f_opportunity[is_won] = TRUE(), f_opportunity[motion_type] = "Land" )',
             "formatString": "0",
             "description": "Land cycle length. RW target <90d most likely refers to this (Land deals).",
+        },
+        {
+            "name": "Open Expand ARR",
+            "expression": 'CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), f_opportunity[is_closed] = FALSE(), f_opportunity[motion_type] = "Expand" )',
+            "formatString": '$#,0,,.0"M"',
+            "description": "Open Expand ARR. Existing-customer growth pipeline; excludes Land and Renewal.",
         },
         {
             "name": "Expand Closed Won ARR",

@@ -71,19 +71,18 @@ def test_total_open_pipeline_value_is_the_only_cross_motion_measure():
 
 def test_arr_and_renewal_acv_contracts_stay_separate_by_page():
     renewal_measures = {
+        "Total Open Renewal ACV",
+        "Total Renewal ACV Due",
         "Renewal Retention Pct (Period)",
         "Total Renewal ACV Won",
         "Total Renewal ACV Lost",
-        "Renewal ACV YoY Pct",
-        "Renewal ACV YTD YoY Pct",
     }
     growth_arr_measures = {
-        "Land Closed Won ARR",
-        "Expand Closed Won ARR",
+        "Open Land ARR",
+        "Open Expand ARR",
         "Partner ARR",
         "Partner Pct",
-        "Source ARR Won",
-        "Source Win Rate",
+        "Total Open Pipeline ARR",
         "Total Land Won Count",
     }
 
