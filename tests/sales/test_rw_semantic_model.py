@@ -11,6 +11,11 @@ def _measure_map() -> dict[str, dict]:
     }
 
 
+def _table_map() -> dict[str, dict]:
+    model = build_model_bim()["model"]
+    return {table["name"]: table for table in model["tables"]}
+
+
 def test_arr_exception_measures_are_explicitly_land_expand_filtered():
     measures = _measure_map()
     land_expand = 'f_opportunity[motion_type] IN { "Land", "Expand" }'
@@ -82,3 +87,29 @@ def test_currency_measure_formats_are_locked_to_eur_m():
         "Stage Moves ARR 7d",
     ]:
         assert measures[name]["formatString"] == CURRENCY_M_FORMAT
+
+
+def test_stage_order_semantics_are_in_model():
+    tables = _table_map()
+    opp_cols = {column["name"]: column for column in tables["f_opportunity"]["columns"]}
+    transition_cols = {
+        column["name"]: column for column in tables["f_stage_transition"]["columns"]
+    }
+    stage_cols = {column["name"]: column for column in tables["d_stage"]["columns"]}
+    relationships = {
+        rel["name"]: rel for rel in build_model_bim()["model"]["relationships"]
+    }
+
+    assert opp_cols["stage_name"]["sortByColumn"] == "stage_order"
+    assert "stage_order" in opp_cols
+    assert transition_cols["from_stage_name"]["sortByColumn"] == "from_stage_order"
+    assert transition_cols["to_stage_name"]["sortByColumn"] == "to_stage_order"
+    assert stage_cols["stage_name"]["sortByColumn"] == "stage_order"
+    assert relationships["rel_opp_stage"] == {
+        "name": "rel_opp_stage",
+        "fromTable": "f_opportunity",
+        "fromColumn": "stage_order",
+        "toTable": "d_stage",
+        "toColumn": "stage_order",
+        "crossFilteringBehavior": "oneDirection",
+    }

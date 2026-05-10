@@ -20,7 +20,6 @@ The report is now guarded against the major executive-flow failure: page-level M
 
 | Severity | Area | Finding | Impact | Next action |
 | --- | --- | --- | --- | --- |
-| `medium` | stage order | f_stage_transition has numeric stage fields, but f_opportunity currently exposes stage_name without a semantic d_stage dimension. | Opportunity-stage visuals can only use label sorting until the model grows a canonical stage order that places 1-6, Opt-out, Won in the business sequence. | Add d_stage and join opportunity/stage-transition facts through canonical stage keys. |
 | `medium` | date roles | f_stage_transition.transition_at has no direct calendar role. | A close-quarter slicer selects the opportunity cohort, not the exact transition period. That is acceptable when labeled Close FQ, but not good enough for a future transition-period executive toggle. | Add role-specific transition-date semantics before introducing Stage Move FQ or Forecast Move FQ slicers. |
 | `medium` | date roles | f_forecast_transition.transition_at has no direct calendar role. | A close-quarter slicer selects the opportunity cohort, not the exact transition period. That is acceptable when labeled Close FQ, but not good enough for a future transition-period executive toggle. | Add role-specific transition-date semantics before introducing Stage Move FQ or Forecast Move FQ slicers. |
 
@@ -52,6 +51,7 @@ These checks are informed by the Zebra schema corpus, not just local RW preferen
 | `rel_opp_account` | `f_opportunity.account_id` | `d_account.account_id` | `oneDirection` | `True` |
 | `rel_opp_user` | `f_opportunity.owner_id` | `d_user.user_id` | `oneDirection` | `True` |
 | `rel_opp_region` | `f_opportunity.region` | `d_region.region` | `oneDirection` | `True` |
+| `rel_opp_stage` | `f_opportunity.stage_order` | `d_stage.stage_order` | `oneDirection` | `True` |
 | `rel_opp_close_date` | `f_opportunity.close_date` | `d_calendar.date` | `oneDirection` | `True` |
 | `rel_opp_created_date` | `f_opportunity.created_date` | `d_calendar.date` | `oneDirection` | `False` |
 | `rel_asset_account` | `f_asset_line_item.account_id` | `d_account.account_id` | `oneDirection` | `True` |
@@ -62,8 +62,8 @@ These checks are informed by the Zebra schema corpus, not just local RW preferen
 
 ## Stage Model
 
-- Has `d_stage`: `False`
-- `f_opportunity` stage columns: `stage_name`
-- `f_stage_transition` stage columns: `days_in_prior_stage`, `from_stage_name`, `from_stage_num`, `from_stage_raw`, `to_stage_name`, `to_stage_num`, `to_stage_raw`
+- Has `d_stage`: `True`
+- `f_opportunity` stage columns: `stage_name`, `stage_order`
+- `f_stage_transition` stage columns: `days_in_prior_stage`, `from_stage_name`, `from_stage_num`, `from_stage_order`, `from_stage_raw`, `to_stage_name`, `to_stage_num`, `to_stage_order`, `to_stage_raw`
 
-The next semantic-model upgrade is a canonical `d_stage` table plus explicit transition-date roles. Until then, the report should keep Close FQ labeling and avoid transition-period slicers.
+Canonical `d_stage` and stage sort keys are present. Opportunity-stage and transition-stage visuals should sort by business order rather than labels.

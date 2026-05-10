@@ -190,13 +190,13 @@ def test_build_clustered_bar_chart_visual_has_category_and_measure():
         {
             "Direction": 1,
             "Expression": {
-                "Column": {
-                    "Expression": {"SourceRef": {"Source": "c"}},
-                    "Property": "stage_name",
-                }
-            },
-        }
-    ]
+                    "Column": {
+                        "Expression": {"SourceRef": {"Source": "c"}},
+                        "Property": "stage_order",
+                    }
+                },
+            }
+        ]
     assert "labelDisplayUnits" not in sv["objects"]["labels"][0]["properties"]
 
 
@@ -327,14 +327,14 @@ def test_stage_tables_sort_by_numeric_stage_column_when_available():
             "Expression": {
                 "Column": {
                     "Expression": {"SourceRef": {"Source": "a"}},
-                    "Property": "from_stage_num",
+                    "Property": "from_stage_order",
                 }
             },
         }
     ]
 
 
-def test_stage_matrices_sort_by_stage_label_until_stage_sort_key_deploys():
+def test_stage_matrices_sort_by_opportunity_stage_order_key():
     vc = build_matrix_visual(
         rows=[{"table": "f_opportunity", "field": "stage_name", "title": "Stage"}],
         columns=[],
@@ -352,7 +352,7 @@ def test_stage_matrices_sort_by_stage_label_until_stage_sort_key_deploys():
             "Expression": {
                 "Column": {
                     "Expression": {"SourceRef": {"Source": "a"}},
-                    "Property": "stage_name",
+                    "Property": "stage_order",
                 }
             },
         }

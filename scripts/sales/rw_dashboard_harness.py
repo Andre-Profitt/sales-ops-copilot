@@ -16,6 +16,7 @@ Usage:
     python3 -m scripts.sales.rw_dashboard_harness audit --source desktop
     python3 -m scripts.sales.rw_dashboard_harness visual-qa --source path --path <report.json>
     python3 -m scripts.sales.rw_dashboard_harness unit-policy --source path --path <report.json>
+    python3 -m scripts.sales.rw_dashboard_harness zero-values
     python3 -m scripts.sales.rw_dashboard_harness metric-basis --source path --path <report.json>
     python3 -m scripts.sales.rw_dashboard_harness semantic-filter --source path --path <report.json>
     python3 -m scripts.sales.rw_dashboard_harness data-surface-flow --source path --path <report.json>
@@ -499,6 +500,42 @@ def cmd_unit_policy(args: argparse.Namespace) -> None:
         raise SystemExit(1)
 
 
+def cmd_zero_values(args: argparse.Namespace) -> None:
+    from scripts.sales.rw_zero_value_audit import (
+        DEFAULT_MARKDOWN,
+        SEVERITY_RANK,
+        audit_opportunity_zero_values,
+        load_opportunity_from_lakehouse,
+        write_markdown,
+    )
+
+    import pandas as pd
+
+    opportunity = (
+        pd.read_csv(args.csv.expanduser()) if args.csv else load_opportunity_from_lakehouse()
+    )
+    result = audit_opportunity_zero_values(opportunity)
+    label = slug(args.label or f"lakehouse_{timestamp()}")
+    json_path = args.out_dir / "zero_values" / f"{label}.zero_values.json"
+    markdown_path = args.markdown or DEFAULT_MARKDOWN
+    write_json(json_path, result)
+    write_markdown(result, markdown_path)
+    counts = result["summary"]["severity_counts"]
+    print(f"zero values json: {json_path}")
+    print(f"zero values markdown: {markdown_path}")
+    print(
+        f"findings={result['summary']['finding_count']} "
+        + " ".join(f"{severity}={counts[severity]}" for severity in SEVERITY_RANK)
+    )
+    threshold = SEVERITY_RANK[args.fail_on]
+    blocking = [
+        finding
+        for finding in result["findings"]
+        if SEVERITY_RANK[finding["severity"]] >= threshold
+    ]
+    raise SystemExit(1 if blocking else 0)
+
+
 def cmd_metric_basis(args: argparse.Namespace) -> None:
     from scripts.sales.rw_metric_basis_audit import (
         DEFAULT_MARKDOWN,
@@ -686,6 +723,21 @@ def build_parser() -> argparse.ArgumentParser:
     p_unit_policy.add_argument("--markdown", type=Path, help="Markdown report path")
     p_unit_policy.add_argument("--fail-on-high", action="store_true")
     p_unit_policy.set_defaults(func=cmd_unit_policy)
+
+    p_zero_values = sub.add_parser(
+        "zero-values", help="Run Renewal ACV and Growth Mix source zero-value gate"
+    )
+    p_zero_values.add_argument("--csv", type=Path, help="Optional f_opportunity CSV")
+    p_zero_values.add_argument("--out-dir", type=Path, default=DEFAULT_OUT_DIR)
+    p_zero_values.add_argument("--label", help="Output label")
+    p_zero_values.add_argument("--markdown", type=Path, help="Markdown report path")
+    p_zero_values.add_argument(
+        "--fail-on",
+        choices=("info", "low", "medium", "high", "critical"),
+        default="critical",
+        help="Exit non-zero when a source zero finding at this severity or higher is present.",
+    )
+    p_zero_values.set_defaults(func=cmd_zero_values)
 
     p_metric_basis = sub.add_parser("metric-basis", help="Run visible metric-basis label gate")
     add_source_args(p_metric_basis)

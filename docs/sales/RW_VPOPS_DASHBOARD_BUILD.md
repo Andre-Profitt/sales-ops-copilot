@@ -1572,6 +1572,52 @@ Andre asked for a direct checklist of RW-expected KPIs versus what the current B
 
 ARR remains Land + Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
 
+## 2026-05-10 — Stage order, unit, and zero-value hardening
+
+Andre flagged three executive-trust issues: mixed units, non-business stage ordering, and suspect zeros on Renewals/Growth Mix.  This pass made those checks executable and pushed the stage-order fix into OneLake, the semantic model, and the live report.
+
+**Shipped:**
+
+- Added canonical stage-order mapping in `scripts/sales/rw_stage_order.py`: stages sort as `1-6`, `0 - Opt-out`, `7 - Won`, then `Unknown`.
+- Re-staged OneLake:
+  - `f_opportunity.stage_order`
+  - `d_stage` with 9 governed rows
+  - `f_stage_transition.from_stage_order`
+  - `f_stage_transition.to_stage_order`
+- Updated the semantic model so `stage_name`, `from_stage_name`, and `to_stage_name` carry sort-by columns.
+- Updated native visual builders so opportunity-stage and transition-stage visuals emit sort expressions against the stage-order keys.
+- Added `scripts/sales/rw_zero_value_audit.py` plus `rw_dashboard_harness zero-values`.
+- Regenerated live report and local Zebra lab PBIP.
+
+**Source zero-value audit result:**
+
+- Audited 10 Renewal/Growth Mix source metrics from the Lakehouse `f_opportunity` table.
+- Findings: 0.
+- This means Renewal ACV and Growth Mix source values are present and non-zero; if a Desktop view shows zeros, the issue is visual/filter/rendering, not a missing source field for these audited measures.
+
+**Live verification:**
+
+- `rw_validate --live`: passed with 7 sections, 126 visuals, all measure refs resolved.
+- Live unit policy: 0 findings.
+- Live zero-value audit: 0 findings.
+- Live metric-basis audit: 0 findings.
+- Live visual QA: 0 findings.
+- Live semantic-filter audit: medium=2, high=0, critical=0.  The remaining medium findings are transition-date roles only; canonical stage order is now closed.
+- Live report JSON token check:
+  - `stage_order`: present
+  - `from_stage_order`: present
+  - `labelDisplayUnits`: 0
+  - `displayUnits`: 0
+  - `0.00mm`: 0
+  - `L+E`: 0
+
+**Remaining data-engineering blockers:**
+
+- Add transition-date roles for stage/forecast movement-period slicing.
+- Add quota denominator for true pipeline coverage.
+- Add ForecastingItem/snapshot history for real forecast accuracy.
+- Add trusted Synergy and one-off revenue sources.
+
 ## 2026-05-10 — Metric basis labels locked across the BI surface
 
 Andre asked whether the dashboard bases were right: weighted versus unweighted, ARR versus ACV, and unified labels across charts.  The issue was not the DAX definitions alone; several visible labels were still too generic for an executive reader (`Win rate`, `Retention`, `Open Value`, `Partner %`, `Won`, `Risk ARR`).

@@ -36,11 +36,11 @@ def test_enterprise_standard_reports_zebra_native_page_coverage():
     assert rows["RW KPI Explorer"]["zebra_native_coverage"] >= 0.9
 
 
-def test_enterprise_standard_backlog_starts_with_data_engineering_spine():
+def test_enterprise_standard_backlog_starts_with_transition_date_roles():
     result = audit_enterprise_standard(report=compose_report({"sections": []}))
     backlog = result["upgrade_backlog"]
 
-    assert backlog[0]["lane"] == "semantic spine"
-    assert "d_stage" in backlog[0]["work"]
+    assert backlog[0]["lane"] == "movement dates"
+    assert "transition" in backlog[0]["work"]
     assert any(item["lane"] == "forecast data" for item in backlog)
     assert not any(item["lane"].startswith("page:") for item in backlog)

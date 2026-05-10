@@ -8,7 +8,7 @@ This is the governing standard for getting the RW Power BI dashboard to Zebra-na
 
 - Visual QA counts: `{'info': 0, 'low': 0, 'medium': 0, 'high': 0, 'critical': 0}`
 - Unit policy counts: `{'info': 0, 'low': 0, 'medium': 0, 'high': 0, 'critical': 0}`
-- Semantic/filter counts: `{'info': 0, 'low': 0, 'medium': 3, 'high': 0, 'critical': 0}`
+- Semantic/filter counts: `{'info': 0, 'low': 0, 'medium': 2, 'high': 0, 'critical': 0}`
 - Data-surface verdict: `not_exec_complete`
 - KPI rollup: `25` clean, `4` partial/proxy, `1` model gaps, `1` source gaps out of `31` RW KPIs.
 - Zebra schema benchmark: `20` templates, `133` relationships, `130` single-direction relationships.
@@ -27,7 +27,7 @@ This is the governing standard for getting the RW Power BI dashboard to Zebra-na
 
 | Severity | Lane | Page | Finding | Next action |
 | --- | --- | --- | --- | --- |
-| `medium` | semantic/filter architecture | - | Semantic/filter flow is guarded but still has model debt. | Add d_stage and explicit transition-date roles. |
+| `medium` | semantic/filter architecture | - | Semantic/filter flow is guarded but still has model debt. | Add explicit stage/forecast transition-date roles. |
 | `high` | data-to-surface flow | - | Data-surface verdict is not_exec_complete; 3 high-impact KPI flows are incomplete. | Close or explicitly descope the high-impact KPI flow blockers before production deployment. |
 
 ## Zebra-Native Page Coverage
@@ -46,14 +46,13 @@ This is the governing standard for getting the RW Power BI dashboard to Zebra-na
 
 | # | Lane | Work | Why |
 | ---: | --- | --- | --- |
-| 1 | semantic spine | Add canonical d_stage plus stage sort/key relationships. | Stage visuals need business-order semantics and reusable stage governance. |
-| 2 | movement dates | Add stage-transition and forecast-transition date roles. | Close FQ is cohort context; movement-period slicing needs separate transition dates. |
-| 3 | source data | Stage quota, forecast snapshots, renewal base/indexation, Synergy, and one-off revenue sources. | The remaining high-impact RW KPIs are data/model blockers, not layout blockers. |
-| 4 | target/plan data | Stage quota/target denominator for Pipeline Coverage Ratio. | Open pipeline numerator is surfaced, but 3x coverage cannot be executive-grade without quota. |
-| 5 | forecast data | Stage ForecastingItem/snapshot history for true forecast accuracy. | Current Forecast page uses slip/upgrade proxies, not accuracy versus submitted forecast. |
-| 6 | renewal base data | Stage Asset/Subscription base, existing ARR run-rate, indexation/uplift fields, and active-base risk. | Renewal page now shows open ACV risk, but not full active-base renewal economics or retained base quality. |
-| 7 | growth segmentation | Stage a trusted Synergy flag and one-off/non-recurring revenue source. | Axioma, SaaS, and PS attach are now modeled; Synergy and one-off revenue remain the Growth Mix gaps. |
-| 8 | BI surface | Add controlled drill paths from Scorecard -> exception ledger -> owner/account/opportunity detail. | The pages answer executive questions, but the action flow is not yet as strong as a boardroom operating review. |
+| 1 | movement dates | Add stage-transition and forecast-transition date roles. | Close FQ is cohort context; movement-period slicing needs separate transition dates. |
+| 2 | source data | Stage quota, forecast snapshots, renewal base/indexation, Synergy, and one-off revenue sources. | The remaining high-impact RW KPIs are data/model blockers, not layout blockers. |
+| 3 | target/plan data | Stage quota/target denominator for Pipeline Coverage Ratio. | Open pipeline numerator is surfaced, but 3x coverage cannot be executive-grade without quota. |
+| 4 | forecast data | Stage ForecastingItem/snapshot history for true forecast accuracy. | Current Forecast page uses slip/upgrade proxies, not accuracy versus submitted forecast. |
+| 5 | renewal base data | Stage Asset/Subscription base, existing ARR run-rate, indexation/uplift fields, and active-base risk. | Renewal page now shows open ACV risk, but not full active-base renewal economics or retained base quality. |
+| 6 | growth segmentation | Stage a trusted Synergy flag and one-off/non-recurring revenue source. | Axioma, SaaS, and PS attach are now modeled; Synergy and one-off revenue remain the Growth Mix gaps. |
+| 7 | BI surface | Add controlled drill paths from Scorecard -> exception ledger -> owner/account/opportunity detail. | The pages answer executive questions, but the action flow is not yet as strong as a boardroom operating review. |
 
 ## Publish Rule
 

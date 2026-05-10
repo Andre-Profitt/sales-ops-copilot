@@ -46,17 +46,17 @@ def _measure_expr(alias: str, measure: str) -> dict:
 def _stage_order_expr(aliases: dict[str, str], table: str, field: str) -> dict | None:
     """Return the safest available stage-order expression for a visual.
 
-    Stage transition facts already carry numeric stage columns, so sort their
-    display labels by those fields. Opportunity stage labels are sorted by the
-    label itself until the f_opportunity model grows a deployed stage sort key.
+    Stage labels must follow the SimCorp handbook order: 1-6, Opt-out, Won.
+    The semantic model carries explicit sort keys for opportunity and transition
+    stage fields so visuals never fall back to alphabetical or raw numeric sort.
     """
     alias = aliases[table]
     if table == "f_stage_transition" and field == "from_stage_name":
-        return _column_expr(alias, "from_stage_num")
+        return _column_expr(alias, "from_stage_order")
     if table == "f_stage_transition" and field == "to_stage_name":
-        return _column_expr(alias, "to_stage_num")
-    if field == "stage_name":
-        return _column_expr(alias, field)
+        return _column_expr(alias, "to_stage_order")
+    if table == "f_opportunity" and field == "stage_name":
+        return _column_expr(alias, "stage_order")
     return None
 
 

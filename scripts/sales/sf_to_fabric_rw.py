@@ -39,6 +39,8 @@ import pandas as pd
 from azure.identity import AzureCliCredential
 from deltalake import write_deltalake
 
+from scripts.sales.rw_stage_order import stage_dimension_rows, stage_order_for_label
+
 WORKSPACE_ID = "b66233d5-9d4a-44ba-89a8-b70206d98ae7"
 LAKEHOUSE_NAME = "lkh_sales_kpis_rw"
 SF_ORG = "apro@simcorp.com"
@@ -309,6 +311,8 @@ def transform(stage: pathlib.Path) -> dict[str, pd.DataFrame]:
         return "1M+"
 
     f_opp["won_value_tier"] = f_opp["arr_org_ccy"].apply(_value_tier)
+    f_opp["stage_order"] = f_opp["stage_name"].apply(stage_order_for_label).astype("int64")
+    d_stage = pd.DataFrame(stage_dimension_rows())
 
     # Date dim spanning data window
     min_d = min(
@@ -345,6 +349,7 @@ def transform(stage: pathlib.Path) -> dict[str, pd.DataFrame]:
         "d_account": d_acc,
         "d_user": d_usr,
         "d_region": d_region,
+        "d_stage": d_stage,
         "d_calendar": d_calendar,
     }
 

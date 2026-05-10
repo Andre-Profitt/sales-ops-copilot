@@ -17,7 +17,6 @@ Usage:
 from __future__ import annotations
 
 import pathlib
-import re
 import subprocess
 import sys
 import tempfile
@@ -26,6 +25,8 @@ import duckdb
 import pandas as pd
 from azure.identity import AzureCliCredential
 from deltalake import write_deltalake
+
+from scripts.sales.rw_stage_order import parse_stage_label, stage_order_for_label
 
 WORKSPACE_ID = "b66233d5-9d4a-44ba-89a8-b70206d98ae7"
 LAKEHOUSE_ID = "50f1721e-6b2e-44db-a1a7-7b8209c7a77b"  # lkh_sales_kpis_rw
@@ -55,17 +56,11 @@ def _run_soql(query: str, target_csv: pathlib.Path) -> int:
     return max(0, sum(1 for _ in proc.stdout.splitlines()) - 1)
 
 
-_STAGE_RE = re.compile(r"^\s*(\d+)\s*[-–—]\s*(.+?)\s*$")
-
-
 def _parse_stage(s: str | None) -> tuple[int | None, str | None]:
     """Parse '5 - Preferred' → (5, 'Preferred'). Returns (None, raw) if pattern doesn't match."""
     if s is None or pd.isna(s):
         return (None, None)
-    m = _STAGE_RE.match(str(s))
-    if not m:
-        return (None, str(s).strip())
-    return (int(m.group(1)), m.group(2))
+    return parse_stage_label(s)
 
 
 def transform(stage: pathlib.Path) -> pd.DataFrame:
@@ -97,6 +92,8 @@ def transform(stage: pathlib.Path) -> pd.DataFrame:
     df["from_stage_name"] = [p[1] for p in parsed_from]
     df["to_stage_num"] = [p[0] for p in parsed_to]
     df["to_stage_name"] = [p[1] for p in parsed_to]
+    df["from_stage_order"] = df["from_stage_raw"].apply(stage_order_for_label).astype("int64")
+    df["to_stage_order"] = df["to_stage_raw"].apply(stage_order_for_label).astype("int64")
 
     # Direction: forward if to>from, backward if to<from, lateral otherwise (e.g. closing)
     def _direction(row):
@@ -121,6 +118,7 @@ def write_to_onelake(df: pd.DataFrame) -> None:
         f"{ONELAKE_BASE}/f_stage_transition",
         df,
         mode="overwrite",
+        schema_mode="overwrite",
         storage_options=storage_options,
     )
     print(f"  f_stage_transition: {len(df):,} rows -> {ONELAKE_BASE}/f_stage_transition")

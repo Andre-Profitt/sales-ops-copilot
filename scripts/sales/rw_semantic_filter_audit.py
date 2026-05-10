@@ -373,19 +373,32 @@ def write_markdown(result: dict, path: Path) -> None:
             f"| `{rel['name']}` | `{rel['from']}` | `{rel['to']}` | `{rel['crossFilteringBehavior']}` | `{rel['isActive']}` |"
         )
 
+    stage_model = result["model_summary"]["stage_model"]
+    if stage_model["has_d_stage"]:
+        stage_note = (
+            "Canonical `d_stage` and stage sort keys are present. Opportunity-stage and "
+            "transition-stage visuals should sort by business order rather than labels."
+        )
+    else:
+        stage_note = (
+            "The next semantic-model upgrade is a canonical `d_stage` table plus explicit "
+            "transition-date roles. Until then, the report should keep Close FQ labeling "
+            "and avoid transition-period slicers."
+        )
+
     lines += [
         "",
         "## Stage Model",
         "",
-        f"- Has `d_stage`: `{result['model_summary']['stage_model']['has_d_stage']}`",
+        f"- Has `d_stage`: `{stage_model['has_d_stage']}`",
         "- `f_opportunity` stage columns: "
-        + ", ".join(f"`{c}`" for c in result["model_summary"]["stage_model"]["f_opportunity_stage_columns"]),
+        + ", ".join(f"`{c}`" for c in stage_model["f_opportunity_stage_columns"]),
         "- `f_stage_transition` stage columns: "
         + ", ".join(
-            f"`{c}`" for c in result["model_summary"]["stage_model"]["f_stage_transition_stage_columns"]
+            f"`{c}`" for c in stage_model["f_stage_transition_stage_columns"]
         ),
         "",
-        "The next semantic-model upgrade is a canonical `d_stage` table plus explicit transition-date roles. Until then, the report should keep Close FQ labeling and avoid transition-period slicers.",
+        stage_note,
     ]
     path.write_text("\n".join(lines) + "\n")
 

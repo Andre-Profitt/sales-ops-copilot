@@ -95,8 +95,7 @@ def test_semantic_filter_audit_blocks_motion_slicer_policy_regression():
 
     assert result["counts"]["critical"] == 0
     assert result["counts"]["high"] == 0
-    assert {finding["id"] for finding in result["findings"]} >= {
-        "stage_dimension",
+    assert {finding["id"] for finding in result["findings"]} == {
         "transition_date_role:f_stage_transition",
         "transition_date_role:f_forecast_transition",
     }

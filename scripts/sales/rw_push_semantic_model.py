@@ -69,6 +69,7 @@ def build_model_bim() -> dict:
         *,
         key: bool = False,
         fmt: str | None = None,
+        sort_by: str | None = None,
     ) -> dict:
         c: dict = {
             "name": name,
@@ -80,6 +81,8 @@ def build_model_bim() -> dict:
             c["isKey"] = True
         if fmt:
             c["formatString"] = fmt
+        if sort_by:
+            c["sortByColumn"] = sort_by
         return c
 
     def dl_partition(table_name: str) -> dict:
@@ -1027,7 +1030,8 @@ def build_model_bim() -> dict:
                         col("opp_name", "string"),
                         col("account_id", "string"),
                         col("owner_id", "string"),
-                        col("stage_name", "string"),
+                        col("stage_name", "string", sort_by="stage_order"),
+                        col("stage_order", "int64"),
                         col("motion_type", "string"),
                         col("record_type", "string"),
                         col("primary_quote_type", "string"),
@@ -1097,6 +1101,16 @@ def build_model_bim() -> dict:
                     "partitions": [dl_partition("d_region")],
                 },
                 {
+                    "name": "d_stage",
+                    "columns": [
+                        col("stage_order", "int64", key=True),
+                        col("stage_name", "string", sort_by="stage_order"),
+                        col("stage_short_name", "string", sort_by="stage_order"),
+                        col("is_terminal", "boolean"),
+                    ],
+                    "partitions": [dl_partition("d_stage")],
+                },
+                {
                     "name": "d_calendar",
                     "columns": [
                         col("date", "dateTime", key=True, fmt="yyyy-mm-dd"),
@@ -1121,9 +1135,11 @@ def build_model_bim() -> dict:
                         col("prior_transition_at", "dateTime"),
                         col("days_in_prior_stage", "double"),
                         col("from_stage_num", "int64"),
-                        col("from_stage_name", "string"),
+                        col("from_stage_name", "string", sort_by="from_stage_order"),
+                        col("from_stage_order", "int64"),
                         col("to_stage_num", "int64"),
-                        col("to_stage_name", "string"),
+                        col("to_stage_name", "string", sort_by="to_stage_order"),
+                        col("to_stage_order", "int64"),
                         col("direction", "string"),
                     ],
                     "partitions": [dl_partition("f_stage_transition")],
@@ -1197,6 +1213,14 @@ def build_model_bim() -> dict:
                     "fromColumn": "region",
                     "toTable": "d_region",
                     "toColumn": "region",
+                    "crossFilteringBehavior": "oneDirection",
+                },
+                {
+                    "name": "rel_opp_stage",
+                    "fromTable": "f_opportunity",
+                    "fromColumn": "stage_order",
+                    "toTable": "d_stage",
+                    "toColumn": "stage_order",
                     "crossFilteringBehavior": "oneDirection",
                 },
                 {

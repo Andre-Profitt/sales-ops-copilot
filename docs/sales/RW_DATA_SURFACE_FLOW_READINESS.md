@@ -11,7 +11,7 @@ No, the dashboard is not fully done yet. It is guarded and inspectable, but the 
 - Surfaced partial/proxy KPIs: `4`.
 - Model/measure gaps: `1`.
 - Source-data gaps: `1`.
-- Semantic model: `8` tables, `124` measures, `10` relationships.
+- Semantic model: `9` tables, `124` measures, `11` relationships.
 - Page contract: `6` executive pages covering `29` KPI IDs.
 - Unit policy: `EUR M`; visual display-unit scaling is forbidden.
 - Guardrails: ARR/Renewal ACV separation, page-specific slicer policy, unit policy, visual QA, semantic-filter audit, Zebra visual/schema benchmarks.
@@ -21,7 +21,6 @@ No, the dashboard is not fully done yet. It is guarded and inspectable, but the 
 | Lane | Need | Why |
 | --- | --- | --- |
 | unit policy | Keep every monetary visual on EUR M; forbid visual/theme display-unit scaling. | Mixed K/M/MM/BMM labels make executive reads look ungoverned and can double-scale values. |
-| semantic model | Add canonical d_stage and stage keys/order. | Stage visuals need business-order semantics, not label sorting. |
 | semantic model | Add transition-date roles for stage and forecast movements. | Close FQ is a cohort selector; it is not the same as movement-period filtering. |
 | target/plan data | Stage quota/target denominator for Pipeline Coverage Ratio. | Open pipeline numerator is surfaced, but 3x coverage cannot be executive-grade without quota. |
 | forecast data | Stage ForecastingItem/snapshot history for true forecast accuracy. | Current Forecast page uses slip/upgrade proxies, not accuracy versus submitted forecast. |
@@ -48,7 +47,7 @@ No, the dashboard is not fully done yet. It is guarded and inspectable, but the 
 
 1. No critical/high semantic-filter findings.
 2. No high-impact RW KPI remains proxy-only unless explicitly descoped in the exec narrative.
-3. `d_stage` and transition-date semantics exist before adding richer stage/forecast period flows.
+3. Transition-date semantics exist before adding richer stage/forecast period flows.
 4. Forecast, renewal-base, Synergy, and one-off revenue gaps are either staged or clearly excluded from the dashboard scope.
 5. Unit audit has zero high/critical findings; every monetary measure reads in one unit.
 6. The BI surface supports an action flow from headline exception to account/opportunity detail without ARR/ACV blending.

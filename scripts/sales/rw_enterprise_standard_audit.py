@@ -242,13 +242,18 @@ def _gate_findings(
             )
         )
     elif s_counts["medium"]:
+        medium_ids = {finding["id"] for finding in semantic_filter["findings"] if finding["severity"] == "medium"}
+        if medium_ids and all(finding_id.startswith("transition_date_role") for finding_id in medium_ids):
+            semantic_next_action = "Add explicit stage/forecast transition-date roles."
+        else:
+            semantic_next_action = "Close the remaining semantic-model debt."
         findings.append(
             _finding(
                 finding_id="semantic_model_debt",
                 severity="medium",
                 lane="semantic/filter architecture",
                 message="Semantic/filter flow is guarded but still has model debt.",
-                next_action="Add d_stage and explicit transition-date roles.",
+                next_action=semantic_next_action,
                 evidence=s_counts,
             )
         )
@@ -278,18 +283,12 @@ def _upgrade_backlog(data_surface: dict[str, Any], zebra_rows: list[dict[str, An
     backlog = [
         {
             "sequence": "1",
-            "lane": "semantic spine",
-            "work": "Add canonical d_stage plus stage sort/key relationships.",
-            "why": "Stage visuals need business-order semantics and reusable stage governance.",
-        },
-        {
-            "sequence": "2",
             "lane": "movement dates",
             "work": "Add stage-transition and forecast-transition date roles.",
             "why": "Close FQ is cohort context; movement-period slicing needs separate transition dates.",
         },
         {
-            "sequence": "3",
+            "sequence": "2",
             "lane": "source data",
             "work": "Stage quota, forecast snapshots, renewal base/indexation, Synergy, and one-off revenue sources.",
             "why": "The remaining high-impact RW KPIs are data/model blockers, not layout blockers.",

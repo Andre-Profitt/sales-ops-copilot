@@ -181,11 +181,6 @@ def necessary_to_finish() -> list[dict[str, str]]:
         },
         {
             "lane": "semantic model",
-            "need": "Add canonical d_stage and stage keys/order.",
-            "why": "Stage visuals need business-order semantics, not label sorting.",
-        },
-        {
-            "lane": "semantic model",
             "need": "Add transition-date roles for stage and forecast movements.",
             "why": "Close FQ is a cohort selector; it is not the same as movement-period filtering.",
         },
@@ -289,7 +284,7 @@ def write_markdown(result: dict[str, Any], path: Path) -> None:
         "",
         "1. No critical/high semantic-filter findings.",
         "2. No high-impact RW KPI remains proxy-only unless explicitly descoped in the exec narrative.",
-        "3. `d_stage` and transition-date semantics exist before adding richer stage/forecast period flows.",
+        "3. Transition-date semantics exist before adding richer stage/forecast period flows.",
         "4. Forecast, renewal-base, Synergy, and one-off revenue gaps are either staged or clearly excluded from the dashboard scope.",
         "5. Unit audit has zero high/critical findings; every monetary measure reads in one unit.",
         "6. The BI surface supports an action flow from headline exception to account/opportunity detail without ARR/ACV blending.",
