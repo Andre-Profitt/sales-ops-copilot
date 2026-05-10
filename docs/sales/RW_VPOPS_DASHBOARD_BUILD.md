@@ -1404,6 +1404,35 @@ Desktop review found two renderer-level issues: stage visuals were not consisten
 
 No Fabric publish was performed.  ARR remains Land+Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
 
+## 2026-05-10 — Zebra schema architecture benchmark
+
+Follow-up review used Zebra's extracted semantic schemas, not just the visual DNA layer, to inform RW model/filter quality.  The goal was to make the architecture critique evidence-backed: how do polished Zebra templates actually structure dimensions, date roles, scenarios, KPI metadata, and relationships?
+
+**Shipped:**
+
+- Added `scripts/sales/rw_zebra_schema_architecture.py` to mine all `data/zebra_kg/schemas/<slug>/model.json` files.
+- Added `docs/sales/RW_ZEBRA_SCHEMA_ARCHITECTURE_REVIEW.md`.
+- Embedded the Zebra schema benchmark inside `docs/sales/RW_SEMANTIC_FILTER_ARCHITECTURE.md` and the `rw_semantic_filter_audit` JSON payload.
+- Added regression tests in `tests/sales/test_rw_zebra_schema_architecture.py`.
+
+**Zebra evidence now informing RW:**
+
+- 130 / 133 Zebra relationships are single-direction, supporting the RW decision to avoid bidirectional filter hacks.
+- 12 / 20 Zebra schemas carry scenario/version as data columns, while only 1 uses a scenario dimension, supporting Motion as a visual axis/measure family rather than a universal page slicer.
+- 13 / 20 schemas include KPI metadata tables, supporting the executable RW KPI/page contract and a possible future `d_kpi`.
+- Role-playing/inactive date patterns exist in the corpus, supporting explicit transition-date roles before adding stage-move or forecast-move period slicers.
+- Sales Funnel uses `Data[Scenario]`, `Data[KPI_ID]`, `KPIs`, and `Products[Ranking]`; the RW lift is semantic discipline, not a literal model clone.
+
+**Verification:**
+
+- `python3 -m ruff check scripts/sales/rw_zebra_schema_architecture.py tests/sales/test_rw_zebra_schema_architecture.py scripts/sales/rw_semantic_filter_audit.py` passed.
+- `python3 -m pytest tests/sales/test_rw_zebra_schema_architecture.py tests/sales/test_rw_page_kpi_contract.py -q` passed: 26 passed.
+- `python3 -m scripts.sales.rw_zebra_schema_architecture --json output/rw_dashboard_harness/zebra_schema_architecture.json` regenerated the review doc.
+- `python3 -m scripts.sales.rw_semantic_filter_audit --fail-on high` passed with medium=3, high=0, critical=0.
+- `python3 -m pytest tests/sales -q` passed: 225 passed, 1 skipped.
+
+No Fabric publish was performed.  This tightens the architecture standard used by the RW dashboard harness.
+
 ## 2026-05-10 — RW KPI Explorer and slice/dice controls
 
 Desktop review found the native report was still too static: the KPI pages had the right broad measures, but not enough visible slice/dice controls or exploratory KPI views.

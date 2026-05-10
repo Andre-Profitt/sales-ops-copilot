@@ -18,6 +18,7 @@ from scripts.sales.rw_filter_bar import (
 )
 from scripts.sales.rw_page_kpi_contract import PAGE_KPI_CONTRACTS
 from scripts.sales.rw_push_semantic_model import build_model_bim
+from scripts.sales.rw_zebra_schema_architecture import build_zebra_schema_benchmark
 
 Severity = Literal["info", "low", "medium", "high", "critical"]
 
@@ -274,6 +275,7 @@ def audit_semantic_filter_flow(report: dict | None = None, model_bim: dict | Non
     report = report or compose_report({"sections": []})
     model_bim = model_bim or build_model_bim()
     model = model_bim["model"]
+    zebra_benchmark = build_zebra_schema_benchmark()
 
     page_findings, page_policy = _audit_page_filters(report)
     model_findings, model_summary = _audit_model(model)
@@ -291,6 +293,11 @@ def audit_semantic_filter_flow(report: dict | None = None, model_bim: dict | Non
         "findings": findings,
         "page_filter_policy": page_policy,
         "model_summary": model_summary,
+        "zebra_schema_benchmark": {
+            "schema": zebra_benchmark["schema"],
+            "summary": zebra_benchmark["summary"],
+            "guidance": zebra_benchmark["guidance"],
+        },
         "filter_titles": FILTER_TITLES_BY_REF,
     }
 
@@ -330,6 +337,29 @@ def write_markdown(result: dict, path: Path) -> None:
         lines.append(
             f"| `{finding['severity']}` | {finding['area']} | {page}{finding['message']} | {finding['impact']} | {finding['next_action']} |"
         )
+
+    zebra = result["zebra_schema_benchmark"]
+    summary = zebra["summary"]
+    lines += [
+        "",
+        "## Zebra Schema Benchmark",
+        "",
+        "These checks are informed by the Zebra schema corpus, not just local RW preference.",
+        "",
+        f"- Templates mined: `{summary['template_count']}`",
+        f"- Relationships mined: `{summary['total_relationships']}`",
+        f"- Single-direction relationships: `{summary['single_direction_relationships']}`",
+        f"- Bidirectional relationships: `{summary['bidirectional_relationships']}`",
+        f"- Inactive relationships: `{summary['inactive_relationships']}`",
+        f"- Templates with role-playing dimensions: `{summary['templates_with_role_playing_dims']}`",
+        f"- Templates with ordered dimensions: `{summary['templates_with_ordered_dimensions']}`",
+        f"- Templates with scenario columns: `{summary['templates_with_scenario_columns']}`",
+        "",
+        "| Zebra pattern | Evidence | RW application |",
+        "| --- | --- | --- |",
+    ]
+    for item in zebra["guidance"]:
+        lines.append(f"| `{item['pattern']}` | {item['evidence']} | {item['rw_application']} |")
 
     lines += [
         "",

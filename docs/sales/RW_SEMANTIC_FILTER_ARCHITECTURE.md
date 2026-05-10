@@ -24,6 +24,27 @@ The report is now guarded against the major executive-flow failure: page-level M
 | `medium` | date roles | f_stage_transition.transition_at has no direct calendar role. | A close-quarter slicer selects the opportunity cohort, not the exact transition period. That is acceptable when labeled Close FQ, but not good enough for a future transition-period executive toggle. | Add role-specific transition-date semantics before introducing Stage Move FQ or Forecast Move FQ slicers. |
 | `medium` | date roles | f_forecast_transition.transition_at has no direct calendar role. | A close-quarter slicer selects the opportunity cohort, not the exact transition period. That is acceptable when labeled Close FQ, but not good enough for a future transition-period executive toggle. | Add role-specific transition-date semantics before introducing Stage Move FQ or Forecast Move FQ slicers. |
 
+## Zebra Schema Benchmark
+
+These checks are informed by the Zebra schema corpus, not just local RW preference.
+
+- Templates mined: `20`
+- Relationships mined: `133`
+- Single-direction relationships: `130`
+- Bidirectional relationships: `3`
+- Inactive relationships: `7`
+- Templates with role-playing dimensions: `2`
+- Templates with ordered dimensions: `2`
+- Templates with scenario columns: `12`
+
+| Zebra pattern | Evidence | RW application |
+| --- | --- | --- |
+| `single_direction_star` | 130/133 relationships use single-direction filtering. | Keep RW relationships conservative and do not introduce bidirectional filters to make slicers feel easier. |
+| `role_playing_dates` | 2/20 schemas use role-playing dimensions and 7 inactive relationships exist in the corpus. | Add explicit transition-date roles before exposing Stage Move FQ or Forecast Move FQ slicers. |
+| `ordered_dimensions` | 2/20 schemas carry sort/order/rank columns on dimensions. | Promote stage order into a canonical d_stage dimension instead of relying on label sorting. |
+| `scenario_as_axis` | 12/20 schemas carry scenario/version as data columns, while only 1 use scenario dimensions. | Treat Motion as a labeled analytic axis or explicit measure family, not a universal page slicer. |
+| `kpi_dictionary` | 13/20 schemas include KPI/table metadata; sales-funnel uses KPI_ID with an inactive KPI relationship. | Keep RW KPI/page contracts executable and consider a future d_kpi metadata table for governed explorer behavior. |
+
 ## Relationship Flow
 
 | Relationship | From | To | Behavior | Active |
