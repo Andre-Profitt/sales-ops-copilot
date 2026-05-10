@@ -1642,6 +1642,34 @@ The generated executive slicers were technically present but too compressed for 
 
 No Fabric publish was performed.
 
+## 2026-05-10 — Removed lab-only Zebra Exceptions page
+
+Removed the custom-visual proof tab from the generated local inspection PBIP. The old `Zebra Exceptions` page was useful for initial Zebra BI validation, but it polluted the current artifact with a custom visual that SimCorp Desktop/Fabric governance can block.
+
+**Shipped:**
+
+- `scripts/sales/rw_apply_zebra_lab_proof.py` now regenerates the native RW inspection PBIP instead of adding Zebra proof pages.
+- Existing old lab artifacts are scrubbed on each run:
+  - `Zebra Exceptions` page
+  - Zebra custom visual containers
+  - Zebra custom visual `resourcePackages`
+  - copied `CustomVisuals/*` package directories
+- Added regression coverage proving the command does not require the source Zebra PBIX and leaves the report native-only.
+
+**Lab verification:**
+
+- `python3 -m scripts.sales.rw_apply_zebra_lab_proof` regenerated the local PBIP.
+- Local artifact now has 8 sections, 146 visualContainers, `resourcePackages=[]`, no `CustomVisuals` directory, and no Zebra custom visual type references.
+- `rw_validate` passed with all measure refs resolved.
+- Harness audit returned no findings.
+- Visual QA passed with 0 findings.
+- Metric-basis labels passed with 0 findings.
+- Unit policy passed with 0 findings.
+- Semantic filter audit passed with medium=2, high=0, critical=0.
+- PBI knowledge graph no longer has the `Zebra Exceptions` uncontracted-tab/custom-visual findings.
+
+The remaining enterprise blocker is now only real source/model readiness: pipeline coverage denominator, forecast accuracy snapshots, Synergy flag, one-off revenue, and transition-date roles. No Fabric publish was performed.
+
 ## 2026-05-10 — Power BI artifact knowledge graph
 
 Built an executable knowledge graph of the current RW Power BI report artifact so the dashboard can be inspected tab-by-tab instead of by screenshots alone.

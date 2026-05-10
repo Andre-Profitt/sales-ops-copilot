@@ -1,6 +1,6 @@
 # RW Power BI Knowledge Graph
 
-Generated: `2026-05-10T22:05:57Z`
+Generated: `2026-05-10T22:20:19Z`
 Source: `path`
 Verdict: `needs_source_or_model_work`
 
@@ -8,14 +8,14 @@ This graph connects the actual Power BI report artifact to the RW KPI contract, 
 
 ## Executive Read
 
-- Pages: `9`
-- Visuals: `149` (ZebraBITables98F88148E5424E949E69864664EE1860=1, basicShape=30, card=39, clusteredBarChart=3, pivotTable=5, slicer=17, tableEx=14, textbox=40)
+- Pages: `8`
+- Visuals: `146` (basicShape=30, card=39, clusteredBarChart=3, pivotTable=5, slicer=17, tableEx=14, textbox=38)
 - Semantic model: `9` tables, `124` measures, `11` relationships
 - Used on BI surface: `53` measures, `19` columns
 - RW KPI contract: `29` KPIs placed from `31` canonical RW KPIs
-- Cleanup findings: `11` (info=0, low=0, medium=6, high=5, critical=0)
-- Graph size: `444` nodes, `1059` edges
-- Machine graph: `output/rw_dashboard_harness/pbi_knowledge_graph/product_retention.pbi_knowledge_graph.json`
+- Cleanup findings: `9` (info=0, low=0, medium=5, high=4, critical=0)
+- Graph size: `438` nodes, `1048` edges
+- Machine graph: `output/rw_dashboard_harness/pbi_knowledge_graph/no_lab.pbi_knowledge_graph.json`
 
 ## Enterprise Standard Snapshot
 
@@ -37,7 +37,6 @@ This graph connects the actual Power BI report artifact to the RW KPI contract, 
 
 | Tab | Executive question | Visuals | Measures | KPIs | Cleanup |
 | --- | --- | ---: | ---: | ---: | --- |
-| Zebra Exceptions | - | 3 | 4 | 0 | medium=1, high=1 |
 | Stage Hygiene | Which stage is slowing or reversing Land + Expand opportunities, and is the Stage 3/4 control point healthy? | 21 | 11 | 5 | clear |
 | Forecast | Can the quarter still land, and is forecast movement disciplined enough to trust? | 15 | 7 | 4 | high=2 |
 | Growth Mix | Is growth coming from the right Land, Expand, partner, source, and new-customer mix? | 19 | 11 | 11 | high=1 |
@@ -48,23 +47,6 @@ This graph connects the actual Power BI report artifact to the RW KPI contract, 
 | Product Retention | Which product, segment, and region combinations carry active-base ARR retention or churn risk? | 20 | 5 | 3 | clear |
 
 ## Per-Tab Graph
-
-### Zebra Exceptions
-
-- Question: Not contracted.
-- Motion basis: `n/a`
-- Visual mix: `{'ZebraBITables98F88148E5424E949E69864664EE1860': 1, 'textbox': 2}`
-- KPIs served: -
-- Measures used: `f_opportunity.At Risk Opps ARR`, `f_opportunity.Exception ARR`, `f_opportunity.Exception Opps Count`, `f_opportunity.Watch Opps ARR`
-
-| Visual | Type | Fields |
-| --- | --- | --- |
-| Region | Exception ARR (Land + Expand) | Exception opp count | At-risk ARR (Land + Expand) | Watch ARR (Land + Expand) | `ZebraBITables98F88148E5424E949E69864664EE1860` | `C:d_region.region`, `M:f_opportunity.Exception ARR`, `M:f_opportunity.Exception Opps Count`, `M:f_opportunity.At Risk Opps ARR`, `M:f_opportunity.Watch Opps ARR` |
-
-| Severity | Source | Finding | Next action |
-| --- | --- | --- | --- |
-| `medium` | `pbi_graph` | Zebra Exceptions is present in the report but not in the RW KPI page contract. | Either add an explicit page contract or remove/keep it as a non-production lab tab. |
-| `high` | `pbi_graph` | Zebra Exceptions contains a Zebra custom visual (ZebraBITables98F88148E5424E949E69864664EE1860). | Convert this proof visual to native tableEx/IBCS grammar or remove the lab tab before production inspection. |
 
 ### Stage Hygiene
 
