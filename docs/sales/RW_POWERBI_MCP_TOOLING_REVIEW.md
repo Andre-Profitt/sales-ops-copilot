@@ -26,6 +26,28 @@ Local environment:
 - Power BI Desktop is installed in the Parallels VM:
   `C:\Program Files\Microsoft Power BI Desktop\bin\PBIDesktop.exe`.
 
+Desktop MCP in Parallels:
+
+- Installed a user-local Windows ARM64 Node.js toolchain at
+  `C:\Users\test\tools\node-v22.16.0-win-arm64`.
+- With that folder prepended to `PATH`, the Windows-side command
+  `npx -y @microsoft/powerbi-modeling-mcp@latest --help` works.
+- The Windows-side MCP server starts as
+  `@microsoft/powerbi-modeling-mcp-win32-arm64` version `0.5.0-beta.6`.
+- A real stdio MCP probe succeeded:
+  `initialize` returned server `powerbi-modeling-mcp` version `0.5.0.0`, and
+  `tools/list` returned 21 tools including `connection_operations`,
+  `database_operations`, `model_operations`, `measure_operations`, and
+  `dax_query_operations`.
+- `connection_operations.ListLocalInstances` found one live Power BI Desktop
+  Analysis Services instance:
+  `data source=localhost:59613;Application Name=MCP-PBIModeling`.
+- The active Desktop workspace for port `59613` currently has no loaded database
+  (`DbCount=0`), so `connection_operations.Connect` returns
+  `No databases found on the server`. This is a Desktop state issue, not an MCP
+  package/install issue: open a loaded `.pbix` model or a PBIP semantic model,
+  then rerun `ListLocalInstances` and `Connect`.
+
 Tenant/API probe:
 
 - Remote Power BI MCP endpoint:
