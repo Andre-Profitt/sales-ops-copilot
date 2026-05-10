@@ -19,6 +19,7 @@ Usage:
     python3 -m scripts.sales.rw_dashboard_harness semantic-filter --source path --path <report.json>
     python3 -m scripts.sales.rw_dashboard_harness data-surface-flow --source path --path <report.json>
     python3 -m scripts.sales.rw_dashboard_harness enterprise-standard --source path --path <report.json>
+    python3 -m scripts.sales.rw_dashboard_harness kpi-checklist
     python3 -m scripts.sales.rw_dashboard_harness diff --before <snapshot.json> --after-desktop
     python3 -m scripts.sales.rw_dashboard_harness extract --source desktop --page "What Changed" --name e337
 """
@@ -552,6 +553,23 @@ def cmd_enterprise_standard(args: argparse.Namespace) -> None:
     raise SystemExit(1 if blocking else 0)
 
 
+def cmd_kpi_checklist(args: argparse.Namespace) -> None:
+    from scripts.sales.rw_kpi_coverage_checklist import DEFAULT_MARKDOWN, write_outputs
+
+    label = slug(args.label or "rw_kpi_coverage")
+    markdown_path = args.markdown or DEFAULT_MARKDOWN
+    json_path = args.out_dir / "kpi_coverage" / f"{label}.kpi_coverage.json"
+    markdown_path, json_path, result = write_outputs(markdown_path, json_path)
+    summary = result["summary"]
+    print(f"kpi coverage json: {json_path}")
+    print(f"kpi coverage markdown: {markdown_path}")
+    print(
+        f"covered={summary['covered']}/{summary['total_kpis']} "
+        f"usable_including_proxy={summary['usable_on_bi_including_proxy']}/{summary['total_kpis']} "
+        f"model_gaps={summary['model_measure_gap']} source_gaps={summary['source_data_gap']}"
+    )
+
+
 def cmd_diff(args: argparse.Namespace) -> None:
     before = load_report_from_path(args.before)
     after = load_report_from_path(resolve_after_path(args))
@@ -679,6 +697,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="Exit non-zero when an enterprise-standard finding at this severity or higher is present.",
     )
     p_enterprise.set_defaults(func=cmd_enterprise_standard)
+
+    p_kpi_checklist = sub.add_parser(
+        "kpi-checklist", help="Write RW KPI expected-vs-BI coverage checklist"
+    )
+    p_kpi_checklist.add_argument("--out-dir", type=Path, default=DEFAULT_OUT_DIR)
+    p_kpi_checklist.add_argument("--label", help="Output label")
+    p_kpi_checklist.add_argument("--markdown", type=Path, help="Markdown report path")
+    p_kpi_checklist.set_defaults(func=cmd_kpi_checklist)
 
     p_diff = sub.add_parser("diff", help="Diff two report.json files")
     p_diff.add_argument("--before", type=Path, required=True)

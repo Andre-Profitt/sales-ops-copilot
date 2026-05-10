@@ -1541,6 +1541,37 @@ Reviewing the schema-to-surface flow showed a separate executive-quality problem
 
 No Fabric publish was performed.  ARR remains Land+Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
 
+## 2026-05-10 — RW KPI coverage checklist
+
+Andre asked for a direct checklist of RW-expected KPIs versus what the current BI surface actually covers.  Added `scripts/sales/rw_kpi_coverage_checklist.py` and the harness command `rw_dashboard_harness kpi-checklist` so the checklist is generated from the same source of truth as the KPI graph, page contract, and semantic-model measure inventory.
+
+**Current coverage answer:**
+
+- RW expected KPIs: 31
+- Cleanly covered on BI: 17 / 31
+- Usable on BI including partial/proxy coverage: 23 / 31
+- Not dependable yet: 8 / 31
+- Model/measure gaps: 3
+- Source-data gaps: 5
+
+**Generated artifacts:**
+
+- `docs/sales/RW_KPI_COVERAGE_CHECKLIST.md`
+- `output/rw_dashboard_harness/kpi_coverage/rw_kpi_coverage.kpi_coverage.json`
+
+**Remaining high-impact gap queue:**
+
+- `pipeline_coverage_3x`: quota denominator / true coverage ratio.
+- `commercial_approval_to_close_time`: Commercial Approval date/ETL.
+- `forecast_accuracy`: real ForecastingItem or forecast snapshot accuracy.
+- `existing_arr_run_rate`: Asset/Subscription base.
+- `cross_sell_to_acquired`: Axioma/acquired-account flag.
+- `synergy_deals_won`: synergy flag; current Growth Mix view is proxy only.
+- `business_at_risk`: account/subscription health flag.
+- `saas_arr_yoy_growth`: SaaS deployment/product flag.
+
+ARR remains Land+Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
+
 ## 2026-05-10 — Zebra schema architecture benchmark
 
 Follow-up review used Zebra's extracted semantic schemas, not just the visual DNA layer, to inform RW model/filter quality.  The goal was to make the architecture critique evidence-backed: how do polished Zebra templates actually structure dimensions, date roles, scenarios, KPI metadata, and relationships?
