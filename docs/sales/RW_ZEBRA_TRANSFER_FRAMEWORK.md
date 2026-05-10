@@ -67,8 +67,8 @@ Current exemplar gate writes separate QA artifacts under `output/rw_zebra_transf
   "source_pages": 6,
   "rebuilt_pages": 6,
   "source_visuals": 104,
-  "rebuilt_visuals": 107,
-  "visual_count_delta": 3,
+  "rebuilt_visuals": 101,
+  "visual_count_delta": -3,
   "custom_visual_leftovers": 0,
   "custom_resource_packages": 0,
   "fallback_textboxes": 0,
@@ -81,7 +81,7 @@ Current exemplar gate writes separate QA artifacts under `output/rw_zebra_transf
 }
 ```
 
-The rebuilt visual count can exceed source count because Zebra Cards expand into native composites.
+The rebuilt visual count can differ from source count because Zebra Cards can expand into native composites while visual-local furniture and blank template containers are normalized away instead of being re-emitted as generic fallback textboxes.
 
 ## Transfer rules encoded
 
