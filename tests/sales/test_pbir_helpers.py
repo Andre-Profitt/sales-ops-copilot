@@ -10,6 +10,7 @@ from scripts.sales._pbir_helpers import (
     build_rag_card_objects,
     build_rag_card_visual,
     build_shape_visual,
+    build_slicer_visual,
     build_table_style_objects,
     build_table_visual,
     build_textbox_visual,
@@ -120,6 +121,24 @@ def test_ensure_pages_idempotent(empty_report):
     for n, _ in targets:
         assert n in names
     assert len(names) == len(set(names))
+
+
+def test_build_slicer_visual_has_compact_native_chrome():
+    vc = build_slicer_visual(
+        table="d_region",
+        column="region",
+        title="Region",
+        x=790,
+        y=10,
+        w=142,
+        h=48,
+    )
+
+    sv = json.loads(vc["config"])["singleVisual"]
+    assert sv["visualType"] == "slicer"
+    assert sv["projections"]["Values"][0]["queryRef"] == "d_region.region"
+    assert {"general", "header", "items"} <= set(sv["objects"])
+    assert {"title", "visualHeader", "border", "background"} <= set(sv["vcObjects"])
 
 
 def test_build_matrix_visual_axes():

@@ -141,6 +141,8 @@ def build_slicer_visual(
     y: float,
     w: float = 240,
     h: float = 90,
+    *,
+    font_size: int = 8,
 ) -> dict:
     """Construct a slicer visualContainer for a column on a dim table."""
     visual_name = uuid.uuid4().hex[:20]
@@ -183,6 +185,46 @@ def build_slicer_visual(
                     {
                         "properties": {
                             "orientation": {"expr": {"Literal": {"Value": "1D"}}},
+                        }
+                    }
+                ],
+                "header": [
+                    {
+                        "properties": {
+                            "textSize": _literal(font_size),
+                            "fontColor": _solid_color("#1A1D31"),
+                            "background": _solid_color("#FFFFFF"),
+                        }
+                    }
+                ],
+                "items": [
+                    {
+                        "properties": {
+                            "textSize": _literal(font_size),
+                            "fontColor": _solid_color("#202124"),
+                            "background": _solid_color("#FFFFFF"),
+                        }
+                    }
+                ],
+            },
+            "vcObjects": {
+                "title": [{"properties": {"show": _literal(False)}}],
+                "visualHeader": [{"properties": {"show": _literal(False)}}],
+                "border": [
+                    {
+                        "properties": {
+                            "show": _literal(True),
+                            "color": _solid_color("#D8DEE8"),
+                            "radius": _literal(2),
+                        }
+                    }
+                ],
+                "background": [
+                    {
+                        "properties": {
+                            "show": _literal(True),
+                            "color": _solid_color("#FFFFFF"),
+                            "transparency": _literal(0.0),
                         }
                     }
                 ],

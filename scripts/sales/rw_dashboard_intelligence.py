@@ -263,6 +263,17 @@ def to_markdown(rows: tuple[KPIIntelligenceRow, ...]) -> str:
         "Source-data upgrades; these need ETL/source-field work before a real dashboard visual can be trusted:",
     ]
     _append_queue(lines, source_upgrades)
+    lines += [
+        "",
+        "## Slice/Dice Explorer",
+        "",
+        "The generated report also includes a native `RW KPI Explorer` page for interactive analysis outside the executive narrative tabs.",
+        "",
+        "- Common slicers on every RW page: Region, Fiscal quarter, Motion.",
+        "- Explorer-only slicer: Stage.",
+        "- Explorer views: Land + Expand ARR mix, Renewal ACV exposure, Stage conversion diagnostics, Growth mix and new-customer signal.",
+        "- ARR and Renewal ACV remain separate in the explorer; it does not use `Total Open Pipeline Value`.",
+    ]
     _append_page_target_map(lines)
     lines += [
         "",

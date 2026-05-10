@@ -47,7 +47,7 @@ def test_all_target_pages_compose_against_declared_kpi_contracts():
 
 def test_target_pages_use_only_native_power_bi_visual_types():
     report = compose_report({"sections": []})
-    allowed = {"basicShape", "textbox", "card", "tableEx", "clusteredBarChart", "pivotTable"}
+    allowed = {"basicShape", "textbox", "card", "tableEx", "clusteredBarChart", "pivotTable", "slicer"}
 
     unexpected: list[tuple[str, str]] = []
     for page in PAGE_KPI_CONTRACTS:
@@ -57,6 +57,38 @@ def test_target_pages_use_only_native_power_bi_visual_types():
                 unexpected.append((page, visual_type))
 
     assert unexpected == []
+
+
+def test_target_pages_have_common_slice_controls():
+    report = compose_report({"sections": []})
+
+    for page in PAGE_KPI_CONTRACTS:
+        slicers = [
+            _single_visual(vc)
+            for vc in _page(report, page)["visualContainers"]
+            if _visual_type(vc) == "slicer"
+        ]
+        refs = {slicer["projections"]["Values"][0]["queryRef"] for slicer in slicers}
+        assert refs >= {
+            "d_region.region",
+            "d_calendar.fiscal_quarter",
+            "f_opportunity.motion_type",
+        }, page
+
+
+def test_kpi_explorer_adds_slice_and_dice_views_without_arr_acv_blend():
+    report = compose_report({"sections": []})
+    explorer = _page(report, "RW KPI Explorer")
+    encoded = "\n".join(vc["config"] for vc in explorer["visualContainers"])
+
+    assert sum(1 for vc in explorer["visualContainers"] if _visual_type(vc) == "slicer") == 4
+    assert "d_region.region" in encoded
+    assert "d_calendar.fiscal_quarter" in encoded
+    assert "f_opportunity.motion_type" in encoded
+    assert "f_opportunity.stage_name" in encoded
+    assert "Total Open Pipeline ARR" in encoded
+    assert "Total Open Renewal ACV" in encoded
+    assert "Total Open Pipeline Value" not in encoded
 
 
 def test_target_pages_have_no_plain_card_or_plain_table_visual_debt():
@@ -105,7 +137,7 @@ def test_what_changed_uses_native_visual_types_only():
     what_changed = _page(report, "What Changed")
     visual_types = {_visual_type(vc) for vc in what_changed["visualContainers"]}
 
-    assert visual_types <= {"basicShape", "card", "tableEx", "textbox"}
+    assert visual_types <= {"basicShape", "card", "tableEx", "textbox", "slicer"}
     assert not any(kind.startswith("ZebraBI") for kind in visual_types)
 
 
@@ -201,7 +233,7 @@ def test_stage_hygiene_uses_native_visual_types_only():
     stage_hygiene = _page(report, "Stage Hygiene")
     visual_types = {_visual_type(vc) for vc in stage_hygiene["visualContainers"]}
 
-    assert visual_types <= {"basicShape", "card", "tableEx", "textbox"}
+    assert visual_types <= {"basicShape", "card", "tableEx", "textbox", "slicer"}
     assert not any(kind.startswith("ZebraBI") for kind in visual_types)
 
 

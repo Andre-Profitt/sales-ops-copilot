@@ -102,20 +102,20 @@
         {
           "kpi_id": "opp_age",
           "measure": "At Risk Opps ARR",
-          "visual_role": "RAG card",
+          "visual_role": "exception ledger",
           "motion_guardrail": "land_expand_arr",
           "data_status": "clean",
-          "label": "At Risk - ARR",
+          "label": "At Risk ARR",
           "secondary": false,
           "missing_measure": ""
         },
         {
           "kpi_id": "opp_age",
           "measure": "Watch Opps ARR",
-          "visual_role": "RAG card",
+          "visual_role": "exception ledger",
           "motion_guardrail": "land_expand_arr",
           "data_status": "clean",
-          "label": "Watch - ARR",
+          "label": "Watch ARR",
           "secondary": false,
           "missing_measure": ""
         },

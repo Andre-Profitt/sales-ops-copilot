@@ -1403,3 +1403,32 @@ Desktop review found two renderer-level issues: stage visuals were not consisten
 - `scripts/sales/rw_open_pbi_lab_in_parallels.sh --reset-cache` opened `rpt_vp_ops_scorecard_zebra_lab` in the active Windows user session.
 
 No Fabric publish was performed.  ARR remains Land+Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
+
+## 2026-05-10 — RW KPI Explorer and slice/dice controls
+
+Desktop review found the native report was still too static: the KPI pages had the right broad measures, but not enough visible slice/dice controls or exploratory KPI views.
+
+**Shipped:**
+
+- Added a compact shared slicer bar to every generated RW KPI page:
+  - Region
+  - Fiscal quarter
+  - Motion
+- Added a dedicated `RW KPI Explorer` page with four native, styled slice/dice blocks:
+  - Land + Expand ARR mix by Region x Motion
+  - Renewal ACV exposure by Region
+  - Stage conversion diagnostics by sales stage
+  - Growth mix and new-customer signal by Region
+- Added an Explorer-only Stage slicer.
+- Kept the explorer from using `Total Open Pipeline Value`; ARR and Renewal ACV stay in separate native views.
+- Added regression tests that every contract page has the common slicers and that the explorer exposes the expected slice/dice dimensions without cross-motion blending.
+
+**Lab verification:**
+
+- `python3 -m scripts.sales.rw_apply_zebra_lab_proof` regenerated the local lab PBIP.
+- `python3 -m scripts.sales.rw_validate --file ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json` passed with 8 sections, 131 visualContainers, and all measure refs resolved.
+- `python3 -m scripts.sales.rw_dashboard_harness audit --source path --path ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json --label rw_kpi_explorer_slicers` returned no findings.
+- `python3 -m scripts.sales.rw_dashboard_harness visual-qa --source path --path ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json --label rw_kpi_explorer_slicers --fail-on medium --markdown docs/sales/RW_DASHBOARD_VISUAL_QA.md` returned 0 findings.
+- `python3 -m pytest tests/sales -q` passed: 221 passed, 1 skipped.
+
+No Fabric publish was performed.  This is still a local Desktop lab upgrade until reviewed in Parallels.

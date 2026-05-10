@@ -9,16 +9,18 @@ from __future__ import annotations
 from collections.abc import Callable
 from importlib import import_module
 
+from scripts.sales.rw_filter_bar import append_filter_bar
 from scripts.sales.rw_page_kpi_contract import validate_contract_pages
 
 
 COMPOSER_MODULES: dict[str, str] = {
+    "VP Ops Scorecard": "scripts.sales.rw_compose_scorecard_home",
     "What Changed": "scripts.sales.rw_compose_what_changed",
     "Forecast": "scripts.sales.rw_compose_forecast",
     "Stage Hygiene": "scripts.sales.rw_compose_stage_hygiene",
     "Renewals": "scripts.sales.rw_compose_renewals",
     "Growth Mix": "scripts.sales.rw_compose_growth_mix",
-    "VP Ops Scorecard": "scripts.sales.rw_compose_scorecard_home",
+    "RW KPI Explorer": "scripts.sales.rw_compose_kpi_explorer",
 }
 
 
@@ -53,6 +55,7 @@ def compose_report(rj: dict) -> dict:
         section["height"] = 720.0
         section["width"] = 1280.0
         _load_composer(module_name)(section)
+        append_filter_bar(section, explorer=page == "RW KPI Explorer")
     for ordinal, section in enumerate(rj.get("sections", [])):
         section["ordinal"] = ordinal
     return rj

@@ -38,6 +38,15 @@ Source-data upgrades; these need ETL/source-field work before a real dashboard v
 - `one_off_revenues`: Needs one-off/PS product fields; likely Product/Pricing future page.
 - `ps_arr_attach`: Needs PS/license product split; likely Product/Pricing future page.
 
+## Slice/Dice Explorer
+
+The generated report also includes a native `RW KPI Explorer` page for interactive analysis outside the executive narrative tabs.
+
+- Common slicers on every RW page: Region, Fiscal quarter, Motion.
+- Explorer-only slicer: Stage.
+- Explorer views: Land + Expand ARR mix, Renewal ACV exposure, Stage conversion diagnostics, Growth mix and new-customer signal.
+- ARR and Renewal ACV remain separate in the explorer; it does not use `Total Open Pipeline Value`.
+
 ## Page Decision Target Map
 
 The page contract is executable via `scripts/sales/rw_page_kpi_contract.py`; tests fail if a required KPI loses its page, visual role, motion guardrail, or proxy/gap label.
@@ -69,8 +78,8 @@ The page contract is executable via `scripts/sales/rw_page_kpi_contract.py`; tes
 
 | KPI | Measure | Role | Motion | Data status | Label |
 | --- | --- | --- | --- | --- | --- |
-| `opp_age` | `At Risk Opps ARR` | RAG card | `land_expand_arr` | clean | At Risk - ARR |
-| `opp_age` | `Watch Opps ARR` | RAG card | `land_expand_arr` | clean | Watch - ARR |
+| `opp_age` | `At Risk Opps ARR` | exception ledger | `land_expand_arr` | clean | At Risk ARR |
+| `opp_age` | `Watch Opps ARR` | exception ledger | `land_expand_arr` | clean | Watch ARR |
 | `stage_conversion` | `Stage Moves ARR 7d` | movement ledger | `land_expand_arr` | clean | Stage move ARR |
 | `new_opps_by_region` | `New Opps Count 7d` | movement ledger | `land_expand_arr` | clean | New opps |
 | `forecast_closed_won` | `Closed Won Count 7d` | movement ledger | `land_expand_arr` | clean | Won |
