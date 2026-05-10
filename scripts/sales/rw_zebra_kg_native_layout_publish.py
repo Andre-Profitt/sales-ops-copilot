@@ -25,7 +25,6 @@ from typing import Any
 
 from scripts.sales.rw_zebra_kg_fidelity_publish import (
     DEFAULT_SOURCE_DIR,
-    LiveVerifyResult,
     get_item_definition,
 )
 from scripts.sales.rw_zebra_kg_publish_all_templates import (
@@ -90,7 +89,11 @@ class NativeLayoutGate:
     def publishable(self) -> bool:
         return (
             self.source_pages == self.native_pages
-            and self.source_visuals == self.native_visuals
+            # Native Zebra Cards can intentionally expand one source custom visual
+            # into a textbox + value card + variance card composite. Treat equal
+            # or greater native visual count as structurally safe; lost visuals
+            # are still blocked.
+            and self.native_visuals >= self.source_visuals
             and self.custom_visual_leftovers == 0
             and self.custom_resource_parts == 0
             and not self.unresolved_measure_refs
@@ -129,7 +132,7 @@ class NativeLayoutVerifyResult:
     def passed(self) -> bool:
         return (
             self.source_pages == self.live_pages
-            and self.source_visuals == self.live_visuals
+            and self.live_visuals >= self.source_visuals
             and self.source_static_resource_parts == self.live_static_resource_parts
             and self.live_custom_resource_parts == 0
             and self.live_custom_visual_leftovers == 0

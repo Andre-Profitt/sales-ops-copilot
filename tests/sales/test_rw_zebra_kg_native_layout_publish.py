@@ -5,6 +5,8 @@ import json
 import zipfile
 
 from scripts.sales.rw_zebra_kg_native_layout_publish import (
+    NativeLayoutGate,
+    NativeLayoutVerifyResult,
     load_native_layout_source,
     native_layout_gate,
     report_definition_parts,
@@ -83,6 +85,43 @@ def test_native_layout_preserves_layout_but_removes_custom_visuals_and_resources
     assert gate.custom_visual_leftovers == 0
     assert gate.custom_resource_parts == 0
     assert gate.publishable
+
+
+def test_native_layout_gate_allows_composite_card_expansion():
+    gate = NativeLayoutGate(
+        source_pages=6,
+        native_pages=6,
+        source_visuals=104,
+        native_visuals=122,
+        translated_custom_visuals=38,
+        native_fallback_textboxes=0,
+        static_resource_parts=13,
+        custom_visual_leftovers=0,
+        custom_resource_parts=0,
+        extra_columns=1,
+        unresolved_measure_refs=[],
+    )
+
+    assert gate.publishable
+
+
+def test_live_verify_allows_composite_card_expansion():
+    result = NativeLayoutVerifyResult(
+        slug="sales-funnel-power-bi-template",
+        report_id="report-id",
+        format="PBIR-Legacy",
+        source_pages=6,
+        live_pages=6,
+        source_visuals=104,
+        live_visuals=122,
+        source_static_resource_parts=13,
+        live_static_resource_parts=13,
+        live_custom_resource_parts=0,
+        live_custom_visual_leftovers=0,
+        semantic_model_id_present=True,
+    )
+
+    assert result.passed
 
 
 def test_native_layout_report_definition_has_no_custom_visual_resource_parts(tmp_path):
