@@ -1,172 +1,190 @@
 """RW Power BI page-to-KPI targeting contract.
 
 This keeps the report from drifting into attractive-but-generic dashboard pages.
-Every production tab must declare the RW KPI IDs it serves and the deployed
-measures it uses. ARR and Renewal ACV remain separated at the measure layer.
+Every production tab must declare the executive question it answers, the RW KPI
+IDs it serves, the visual role each required KPI needs, and the motion/data
+status guardrails. ARR and Renewal ACV remain separated at the measure layer.
 """
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from typing import Literal
 
 
 Motion = Literal["land_expand_arr", "renewal_acv", "cross_motion_labeled", "process"]
+VisualRole = Literal[
+    "hero KPI",
+    "RAG card",
+    "movement ledger",
+    "variance table",
+    "bridge/waterfall",
+    "detail table",
+    "slicer",
+]
+DataStatus = Literal["clean", "proxy", "partial", "missing model measure", "missing source data"]
+
+
+@dataclass(frozen=True)
+class KPIPlacement:
+    kpi_id: str
+    measure: str
+    visual_role: VisualRole
+    motion_guardrail: Motion
+    data_status: DataStatus
+    label: str
+    secondary: bool = False
+    missing_measure: str = ""
 
 
 @dataclass(frozen=True)
 class PageKPIContract:
     page: str
     job: str
+    executive_question: str
+    primary_kpis: tuple[str, ...]
+    secondary_diagnostics: tuple[str, ...]
     kpi_ids: tuple[str, ...]
     measures: tuple[str, ...]
     motion: Motion
+    placements: tuple[KPIPlacement, ...]
     caveat: str = ""
+
+
+def p(
+    kpi_id: str,
+    measure: str,
+    role: VisualRole,
+    motion: Motion,
+    status: DataStatus,
+    label: str,
+    *,
+    secondary: bool = False,
+    missing_measure: str = "",
+) -> KPIPlacement:
+    return KPIPlacement(kpi_id, measure, role, motion, status, label, secondary, missing_measure)
 
 
 PAGE_KPI_CONTRACTS: dict[str, PageKPIContract] = {
     "VP Ops Scorecard": PageKPIContract(
         page="VP Ops Scorecard",
         job="Executive control room: outcome, conversion, exceptions, stage health, 7-day movement.",
-        kpi_ids=(
-            "forecast_closed_won",
-            "opp_win_rate",
-            "renewal_retention_rate",
-            "stage_conversion",
-            "time_in_stage",
-            "new_opps_by_region",
-        ),
-        measures=(
-            "Total Closed Won ARR",
-            "Win Rate ARR",
-            "Exception ARR",
-            "Renewal Retention Pct (Period)",
-            "Total Open Pipeline ARR",
-            "Stage Forward Pct (LE)",
-            "Stage Backward Pct (LE)",
-            "Avg Days In Prior Stage (LE)",
-            "Stage Moves ARR 7d",
-            "New Opps Count 7d",
-            "Closed Won Count 7d",
-            "Backward Moves Count 7d",
-        ),
+        executive_question="Where is RW off plan right now, and which lane needs executive action first?",
+        primary_kpis=("forecast_closed_won", "opp_win_rate", "stage_conversion", "renewal_retention_rate"),
+        secondary_diagnostics=("time_in_stage", "new_opps_by_region"),
+        kpi_ids=("forecast_closed_won", "opp_win_rate", "renewal_retention_rate", "stage_conversion", "time_in_stage", "new_opps_by_region"),
+        measures=("Total Closed Won ARR", "Win Rate ARR", "Exception ARR", "Renewal Retention Pct (Period)", "Total Open Pipeline ARR", "Stage Forward Pct (LE)", "Stage Backward Pct (LE)", "Avg Days In Prior Stage (LE)", "Stage Moves ARR 7d", "New Opps Count 7d", "Closed Won Count 7d", "Backward Moves Count 7d"),
         motion="cross_motion_labeled",
+        placements=(
+            p("forecast_closed_won", "Total Closed Won ARR", "hero KPI", "land_expand_arr", "clean", "Closed won ARR"),
+            p("opp_win_rate", "Win Rate ARR", "hero KPI", "land_expand_arr", "clean", "Win rate"),
+            p("stage_conversion", "Stage Forward Pct (LE)", "variance table", "land_expand_arr", "partial", "Stage hygiene"),
+            p("renewal_retention_rate", "Renewal Retention Pct (Period)", "hero KPI", "renewal_acv", "partial", "Renewal retention"),
+            p("time_in_stage", "Avg Days In Prior Stage (LE)", "variance table", "land_expand_arr", "partial", "Stage hygiene", secondary=True),
+            p("new_opps_by_region", "New Opps Count 7d", "RAG card", "land_expand_arr", "clean", "New opps 7d", secondary=True),
+        ),
         caveat="Renewal retention is displayed beside ARR KPIs but not blended into ARR.",
     ),
     "What Changed": PageKPIContract(
         page="What Changed",
         job="Daily/weekly movement review: new, won/lost, stage moves, and exception deltas.",
-        kpi_ids=(
-            "new_opps_by_region",
-            "stage_conversion",
-            "opp_age",
-            "forecast_closed_won",
-        ),
-        measures=(
-            "At Risk Opps Count",
-            "At Risk Opps ARR",
-            "Watch Opps Count",
-            "Watch Opps ARR",
-            "Healthy Moves Count",
-            "Healthy Moves ARR",
-            "Stage Moves Count 7d",
-            "Stage Moves ARR 7d",
-            "New Opps Count 7d",
-            "Closed Won Count 7d",
-            "Closed Lost Count 7d",
-            "Total Open Pipeline ARR",
-        ),
+        executive_question="What materially changed in the last operating window, and which open opportunities need inspection?",
+        primary_kpis=("new_opps_by_region", "stage_conversion", "opp_age", "forecast_closed_won"),
+        secondary_diagnostics=(),
+        kpi_ids=("new_opps_by_region", "stage_conversion", "opp_age", "forecast_closed_won"),
+        measures=("At Risk Opps Count", "At Risk Opps ARR", "Watch Opps Count", "Watch Opps ARR", "Healthy Moves Count", "Healthy Moves ARR", "Stage Moves Count 7d", "Stage Moves ARR 7d", "New Opps Count 7d", "Closed Won Count 7d", "Closed Lost Count 7d", "Total Open Pipeline ARR"),
         motion="land_expand_arr",
+        placements=(
+            p("opp_age", "At Risk Opps ARR", "RAG card", "land_expand_arr", "clean", "At Risk - ARR"),
+            p("opp_age", "Watch Opps ARR", "RAG card", "land_expand_arr", "clean", "Watch - ARR"),
+            p("stage_conversion", "Stage Moves ARR 7d", "movement ledger", "land_expand_arr", "clean", "Stage move ARR"),
+            p("new_opps_by_region", "New Opps Count 7d", "movement ledger", "land_expand_arr", "clean", "New opps"),
+            p("forecast_closed_won", "Closed Won Count 7d", "movement ledger", "land_expand_arr", "clean", "Won"),
+            p("opp_age", "Total Open Pipeline ARR", "detail table", "land_expand_arr", "clean", "Top Open ARR Movement Queue"),
+        ),
     ),
     "Forecast": PageKPIContract(
         page="Forecast",
         job="Quarter answer: remaining days, open value, won ARR, forecast movement discipline.",
-        kpi_ids=(
-            "forecast_closed_won",
-            "pipeline_coverage_3x",
-            "forecast_accuracy",
-            "stage3_acv_value",
-        ),
-        measures=(
-            "Days Remaining In FQ",
-            "Total Open Pipeline Value",
-            "Total Closed Won ARR",
-            "Forecast Slip Pct",
-            "Forecast Slips",
-            "Forecast Upgrades",
-            "Avg Days In Forecast Category",
-        ),
+        executive_question="Can the quarter still land, and is forecast movement disciplined enough to trust?",
+        primary_kpis=("forecast_closed_won", "pipeline_coverage_3x", "forecast_accuracy"),
+        secondary_diagnostics=("stage3_acv_value",),
+        kpi_ids=("forecast_closed_won", "pipeline_coverage_3x", "forecast_accuracy", "stage3_acv_value"),
+        measures=("Days Remaining In FQ", "Total Open Pipeline Value", "Total Closed Won ARR", "Forecast Slip Pct", "Forecast Slips", "Forecast Upgrades", "Avg Days In Forecast Category"),
         motion="cross_motion_labeled",
+        placements=(
+            p("pipeline_coverage_3x", "Total Open Pipeline Value", "hero KPI", "cross_motion_labeled", "partial", "Open Pipeline (cross-motion)", missing_measure="Pipeline Coverage Ratio"),
+            p("forecast_closed_won", "Total Closed Won ARR", "hero KPI", "land_expand_arr", "clean", "Closed Won ARR (FY26)"),
+            p("pipeline_coverage_3x", "Total Open Pipeline Value", "variance table", "cross_motion_labeled", "partial", "Stage x Motion Open Value", secondary=True, missing_measure="Pipeline Coverage Ratio"),
+            p("forecast_accuracy", "Forecast Slip Pct", "RAG card", "land_expand_arr", "proxy", "Slip Rate proxy", missing_measure="Forecast Accuracy"),
+            p("forecast_accuracy", "Forecast Slips", "RAG card", "land_expand_arr", "proxy", "Total Slips proxy", secondary=True, missing_measure="Forecast Accuracy"),
+            p("stage3_acv_value", "Total Open Pipeline Value", "detail table", "cross_motion_labeled", "partial", "Late-Stage Commit Risk", secondary=True),
+        ),
         caveat="Total Open Pipeline Value is the only explicit cross-motion value measure.",
     ),
     "Stage Hygiene": PageKPIContract(
         page="Stage Hygiene",
         job="Funnel diagnosis: stage conversion, backward movement, and time-in-stage bottlenecks.",
-        kpi_ids=(
-            "stage_conversion",
-            "time_in_stage",
-            "sales_cycle_length",
-            "stage3_approvals_compliance",
-        ),
-        measures=(
-            "Stage Forward Pct (LE)",
-            "Stage Backward Pct (LE)",
-            "Avg Days In Prior Stage (LE)",
-            "Avg Sales Cycle Days",
-            "Land Avg Sales Cycle Days",
-            "Total Stage Transitions",
-            "Stage Moves ARR 7d",
-            "Stage 3 Forward Pct",
-            "Avg Days In Stage 3",
-            "Stage 4 Forward Pct",
-            "Avg Days In Stage 4",
-        ),
+        executive_question="Which stage is slowing or reversing Land+Expand opportunities, and is the Stage 3/4 control point healthy?",
+        primary_kpis=("stage_conversion", "time_in_stage", "sales_cycle_length"),
+        secondary_diagnostics=("stage3_approvals_compliance",),
+        kpi_ids=("stage_conversion", "time_in_stage", "sales_cycle_length", "stage3_approvals_compliance"),
+        measures=("Stage Forward Pct (LE)", "Stage Backward Pct (LE)", "Avg Days In Prior Stage (LE)", "Avg Sales Cycle Days", "Land Avg Sales Cycle Days", "Total Stage Transitions", "Stage Moves ARR 7d", "Stage 3 Forward Pct", "Avg Days In Stage 3", "Stage 4 Forward Pct", "Avg Days In Stage 4"),
         motion="process",
+        placements=(
+            p("stage_conversion", "Stage Forward Pct (LE)", "hero KPI", "land_expand_arr", "partial", "Forward rate"),
+            p("stage_conversion", "Stage Backward Pct (LE)", "hero KPI", "land_expand_arr", "partial", "Backward rate"),
+            p("time_in_stage", "Avg Days In Prior Stage (LE)", "hero KPI", "land_expand_arr", "partial", "Stage aging"),
+            p("sales_cycle_length", "Land Avg Sales Cycle Days", "hero KPI", "land_expand_arr", "clean", "Land cycle"),
+            p("sales_cycle_length", "Avg Sales Cycle Days", "hero KPI", "land_expand_arr", "clean", "L+E cycle"),
+            p("stage_conversion", "Stage Forward Pct (LE)", "variance table", "land_expand_arr", "partial", "Stage Conversion Matrix"),
+            p("stage3_approvals_compliance", "Stage 3 Forward Pct", "RAG card", "land_expand_arr", "proxy", "Stage 3 forward proxy", secondary=True, missing_measure="Commercial Approval Compliance Pct"),
+        ),
         caveat="Stage 3 and Stage 4 are the control points for approval friction and late-funnel slippage.",
     ),
     "Renewals": PageKPIContract(
         page="Renewals",
         job="Renewal ACV cockpit: open exposure, retained ACV, lost ACV, and regional pressure.",
-        kpi_ids=(
-            "renewal_retention_rate",
-            "renewals_mom_trend",
-            "lost_arr_quarterly",
-            "existing_arr_run_rate",
-            "indexation_arr_growth",
-        ),
-        measures=(
-            "Total Open Renewal ACV",
-            "Total Renewal ACV Due",
-            "Renewal Retention Pct (Period)",
-            "Total Renewal ACV Won",
-            "Total Renewal ACV Lost",
-        ),
+        executive_question="How much Renewal ACV is exposed, retained, or lost, and where is the pressure?",
+        primary_kpis=("renewal_retention_rate", "renewals_mom_trend", "lost_arr_quarterly"),
+        secondary_diagnostics=("existing_arr_run_rate", "indexation_arr_growth"),
+        kpi_ids=("renewal_retention_rate", "renewals_mom_trend", "lost_arr_quarterly", "existing_arr_run_rate", "indexation_arr_growth"),
+        measures=("Total Open Renewal ACV", "Total Renewal ACV Due", "Renewal Retention Pct (Period)", "Total Renewal ACV Won", "Total Renewal ACV Lost"),
         motion="renewal_acv",
+        placements=(
+            p("renewals_mom_trend", "Total Open Renewal ACV", "hero KPI", "renewal_acv", "clean", "Open renewal ACV"),
+            p("renewal_retention_rate", "Renewal Retention Pct (Period)", "hero KPI", "renewal_acv", "partial", "Retention"),
+            p("renewals_mom_trend", "Total Renewal ACV Won", "hero KPI", "renewal_acv", "clean", "Won renewal ACV"),
+            p("lost_arr_quarterly", "Total Renewal ACV Lost", "hero KPI", "renewal_acv", "partial", "Lost renewal ACV"),
+            p("renewals_mom_trend", "Total Open Renewal ACV", "bridge/waterfall", "renewal_acv", "clean", "Open Renewal ACV by Region"),
+            p("lost_arr_quarterly", "Total Renewal ACV Lost", "detail table", "renewal_acv", "partial", "Renewal Pressure Table"),
+            p("existing_arr_run_rate", "Existing ARR Run Rate", "detail table", "renewal_acv", "missing source data", "Existing ARR Run Rate", secondary=True, missing_measure="Existing ARR Run Rate"),
+            p("indexation_arr_growth", "Indexation ARR Growth", "detail table", "renewal_acv", "missing source data", "Indexation ARR Growth", secondary=True, missing_measure="Indexation ARR Growth"),
+        ),
         caveat="Renewal ACV only. Land and Expand ARR are excluded from this page.",
     ),
     "Growth Mix": PageKPIContract(
         page="Growth Mix",
         job="Growth mix cockpit: open Land, open Expand, partner contribution, and new-customer signal.",
-        kpi_ids=(
-            "ilf_arr_pipeline",
-            "alf_arr_pipeline",
-            "new_customer_reporting",
-            "closed_won_avg_deal_size",
-            "partner_opps_pct",
-            "opp_source_effectiveness",
-            "synergy_deals_won",
-        ),
-        measures=(
-            "Open Land ARR",
-            "Open Expand ARR",
-            "Partner ARR",
-            "Partner Pct",
-            "Total Open Pipeline ARR",
-            "Total Land Won Count",
-            "Avg Deal Size Won",
-        ),
+        executive_question="Is growth coming from the right Land, Expand, partner, source, and new-customer mix?",
+        primary_kpis=("ilf_arr_pipeline", "alf_arr_pipeline", "new_customer_reporting", "closed_won_avg_deal_size", "partner_opps_pct"),
+        secondary_diagnostics=("opp_source_effectiveness", "synergy_deals_won"),
+        kpi_ids=("ilf_arr_pipeline", "alf_arr_pipeline", "new_customer_reporting", "closed_won_avg_deal_size", "partner_opps_pct", "opp_source_effectiveness", "synergy_deals_won"),
+        measures=("Open Land ARR", "Open Expand ARR", "Partner ARR", "Partner Pct", "Total Open Pipeline ARR", "Total Land Won Count", "Avg Deal Size Won"),
         motion="land_expand_arr",
-        caveat="Land and Expand ARR only. Renewal ACV is excluded from this page.",
+        placements=(
+            p("alf_arr_pipeline", "Open Land ARR", "hero KPI", "land_expand_arr", "partial", "Open Land"),
+            p("ilf_arr_pipeline", "Open Expand ARR", "hero KPI", "land_expand_arr", "partial", "Open Expand"),
+            p("closed_won_avg_deal_size", "Avg Deal Size Won", "hero KPI", "land_expand_arr", "partial", "Avg won deal"),
+            p("partner_opps_pct", "Partner ARR", "hero KPI", "land_expand_arr", "clean", "Partner ARR"),
+            p("partner_opps_pct", "Partner Pct", "hero KPI", "land_expand_arr", "clean", "Partner %"),
+            p("alf_arr_pipeline", "Total Open Pipeline ARR", "bridge/waterfall", "land_expand_arr", "partial", "Open Land + Expand ARR by Region"),
+            p("new_customer_reporting", "Total Land Won Count", "detail table", "land_expand_arr", "clean", "Land count"),
+            p("opp_source_effectiveness", "Partner ARR", "detail table", "land_expand_arr", "clean", "Strategic Mix Detail", secondary=True),
+            p("synergy_deals_won", "Total Land Won Count", "detail table", "land_expand_arr", "proxy", "Land count proxy", secondary=True, missing_measure="Synergy Deals Won"),
+        ),
+        caveat="Land and Expand ARR only. Renewal ACV is excluded from this page. Synergy is labeled as a proxy until the source flag exists.",
     ),
 }
 
@@ -180,3 +198,127 @@ def required_measures() -> set[str]:
     for contract in PAGE_KPI_CONTRACTS.values():
         out.update(contract.measures)
     return out
+
+
+def target_map_as_dict() -> dict[str, dict]:
+    """Serializable page-by-page KPI decision target map for docs/artifacts."""
+    return {
+        page: {
+            "executive_question": contract.executive_question,
+            "job": contract.job,
+            "primary_kpis": list(contract.primary_kpis),
+            "secondary_diagnostics": list(contract.secondary_diagnostics),
+            "required_motion_guardrail": contract.motion,
+            "caveat": contract.caveat,
+            "placements": [
+                {
+                    "kpi_id": placement.kpi_id,
+                    "measure": placement.measure,
+                    "visual_role": placement.visual_role,
+                    "motion_guardrail": placement.motion_guardrail,
+                    "data_status": placement.data_status,
+                    "label": placement.label,
+                    "secondary": placement.secondary,
+                    "missing_measure": placement.missing_measure,
+                }
+                for placement in contract.placements
+            ],
+        }
+        for page, contract in PAGE_KPI_CONTRACTS.items()
+    }
+
+
+def _visual_type(vc: dict) -> str:
+    try:
+        return json.loads(vc.get("config", "{}"))["singleVisual"].get("visualType", "")
+    except (json.JSONDecodeError, KeyError, TypeError):
+        return ""
+
+
+def _page_text(section: dict) -> str:
+    return "\n".join(v.get("config", "") for v in section.get("visualContainers", []))
+
+
+def _measure_visual_types(section: dict, measure: str) -> set[str]:
+    return {
+        _visual_type(vc)
+        for vc in section.get("visualContainers", [])
+        if measure and measure in vc.get("config", "")
+    }
+
+
+ROLE_VISUAL_TYPES: dict[VisualRole, set[str]] = {
+    "hero KPI": {"card"},
+    "RAG card": {"card"},
+    "movement ledger": {"tableEx", "pivotTable"},
+    "variance table": {"tableEx", "pivotTable"},
+    "bridge/waterfall": {"waterfallChart", "clusteredBarChart", "pivotTable"},
+    "detail table": {"tableEx", "pivotTable"},
+    "slicer": {"slicer"},
+}
+
+
+def validate_decision_contracts(contracts: dict[str, PageKPIContract] | None = None) -> list[str]:
+    contracts = contracts or PAGE_KPI_CONTRACTS
+    errors: list[str] = []
+    for page, contract in contracts.items():
+        if not contract.executive_question.strip().endswith("?"):
+            errors.append(f"{page}: executive question must be explicit and end with '?'")
+        placement_ids = {placement.kpi_id for placement in contract.placements}
+        for kpi_id in contract.primary_kpis:
+            if kpi_id not in contract.kpi_ids:
+                errors.append(f"{page}: primary KPI {kpi_id!r} is not in kpi_ids")
+            if kpi_id not in placement_ids:
+                errors.append(f"{page}: primary KPI {kpi_id!r} has no required visual placement")
+        for placement in contract.placements:
+            if placement.kpi_id not in contract.kpi_ids:
+                errors.append(f"{page}: placement references undeclared KPI {placement.kpi_id!r}")
+            if placement.data_status == "clean" and placement.missing_measure:
+                errors.append(f"{page}: proxy/gap KPI {placement.kpi_id!r} cannot be counted clean")
+            if placement.data_status == "proxy" and "proxy" not in placement.label.lower() and "proxy" not in contract.caveat.lower():
+                errors.append(f"{page}: proxy KPI {placement.kpi_id!r} must be labeled as proxy/partial")
+            if placement.motion_guardrail == "cross_motion_labeled":
+                label_text = f"{placement.label} {contract.caveat}".lower()
+                if "cross-motion" not in label_text and "cross motion" not in label_text:
+                    errors.append(f"{page}: cross-motion measure {placement.measure!r} is not explicitly labeled")
+            if placement.motion_guardrail == "land_expand_arr" and "Renewal ACV" in placement.measure:
+                errors.append(f"{page}: Land+Expand ARR placement uses Renewal ACV measure {placement.measure!r}")
+            if placement.motion_guardrail == "renewal_acv" and placement.measure.endswith(" ARR"):
+                errors.append(f"{page}: Renewal ACV placement uses ARR measure {placement.measure!r}")
+    return errors
+
+
+def validate_contract_pages(rj: dict, contracts: dict[str, PageKPIContract] | None = None) -> list[str]:
+    contracts = contracts or PAGE_KPI_CONTRACTS
+    errors = validate_decision_contracts(contracts)
+    pages = {s.get("displayName"): s for s in rj.get("sections", [])}
+    for page, contract in contracts.items():
+        section = pages.get(page)
+        if section is None:
+            errors.append(f"missing target page {page!r}")
+            continue
+        if not section.get("visualContainers"):
+            errors.append(f"target page {page!r} has no visuals")
+            continue
+        encoded = _page_text(section)
+        for measure in contract.measures:
+            if measure not in encoded:
+                errors.append(f"{page}: contract measure {measure!r} not present in page JSON")
+        if "Total Open Pipeline Value" in encoded and contract.motion != "cross_motion_labeled":
+            errors.append(f"{page}: unlabeled cross-motion Total Open Pipeline Value is not allowed")
+        for placement in contract.placements:
+            if placement.data_status in {"missing model measure", "missing source data"}:
+                if placement.measure in encoded:
+                    errors.append(f"{page}: gap KPI {placement.kpi_id!r} appears as solved measure {placement.measure!r}")
+                continue
+            if placement.measure not in encoded:
+                errors.append(f"{page}: required KPI {placement.kpi_id!r} measure {placement.measure!r} missing")
+                continue
+            actual_types = _measure_visual_types(section, placement.measure)
+            allowed_types = ROLE_VISUAL_TYPES[placement.visual_role]
+            if not actual_types & allowed_types:
+                errors.append(
+                    f"{page}: KPI {placement.kpi_id!r} requires role {placement.visual_role!r} "
+                    f"via {sorted(allowed_types)}, found {sorted(actual_types)}"
+                )
+    return errors

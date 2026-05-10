@@ -160,7 +160,7 @@ def _compose(section: dict) -> None:
         (
             "f_forecast_transition",
             "Forecast Slip Pct",
-            "Slip Rate",
+            "Slip Rate (proxy)",
             20,
             "#FFEEEE",
             "#C33A32",
@@ -169,7 +169,7 @@ def _compose(section: dict) -> None:
         (
             "f_forecast_transition",
             "Forecast Slips",
-            "Total Slips (qtr)",
+            "Total Slips (proxy)",
             320,
             "#FFF8E6",
             "#D98A00",

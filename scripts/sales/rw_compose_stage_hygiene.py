@@ -61,7 +61,7 @@ def _compose(section: dict) -> None:
         ),
         _panel(804, 224, 452, 214),
         build_textbox_visual("Stage 3 Gate Pressure", x=820, y=236, w=360, h=24, font_size_pt=11, color="#1A1D31"),
-        build_rag_card_visual("f_stage_transition", "Stage 3 Forward Pct", "Stage 3 forward", x=820, y=274, w=200, h=72, tint="#FFF8E6", accent="#D98A00", value_color="#1A1D31", display_units=None, value_font_size=24),
+        build_rag_card_visual("f_stage_transition", "Stage 3 Forward Pct", "Stage 3 forward (proxy)", x=820, y=274, w=200, h=72, tint="#FFF8E6", accent="#D98A00", value_color="#1A1D31", display_units=None, value_font_size=24),
         build_rag_card_visual("f_stage_transition", "Avg Days In Stage 3", "Stage 3 avg days", x=1036, y=274, w=200, h=72, tint="#FFF8E6", accent="#D98A00", value_color="#1A1D31", display_units=None, value_font_size=24),
         build_textbox_visual(contract.caveat, x=820, y=362, w=410, h=46, font_size_pt=8, color="#5C6670", bold=False),
         _panel(804, 466, 452, 214),

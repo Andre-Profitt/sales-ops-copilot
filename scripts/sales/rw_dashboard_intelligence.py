@@ -16,7 +16,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from scripts.sales.rw_kpi_graph import GRAPH, SalesKPI
-from scripts.sales.rw_page_kpi_contract import PAGE_KPI_CONTRACTS
+from scripts.sales.rw_page_kpi_contract import PAGE_KPI_CONTRACTS, target_map_as_dict
 from scripts.sales.rw_push_semantic_model import build_model_bim
 
 
@@ -189,6 +189,34 @@ def _append_queue(lines: list[str], rows: list[KPIIntelligenceRow]) -> None:
         lines.append(f"- `{row.kpi_id}`: {row.next_action}")
 
 
+def _append_page_target_map(lines: list[str]) -> None:
+    lines += [
+        "",
+        "## Page Decision Target Map",
+        "",
+        "The page contract is executable via `scripts/sales/rw_page_kpi_contract.py`; tests fail if a required KPI loses its page, visual role, motion guardrail, or proxy/gap label.",
+    ]
+    for page, contract in PAGE_KPI_CONTRACTS.items():
+        lines += [
+            "",
+            f"### {page}",
+            "",
+            f"- Executive question: {contract.executive_question}",
+            f"- Primary KPIs: {', '.join(f'`{kpi}`' for kpi in contract.primary_kpis)}",
+            f"- Secondary diagnostics: {', '.join(f'`{kpi}`' for kpi in contract.secondary_diagnostics) if contract.secondary_diagnostics else 'None'}",
+            f"- Required motion guardrail: `{contract.motion}`",
+            f"- Caveat: {contract.caveat or 'None'}",
+            "",
+            "| KPI | Measure | Role | Motion | Data status | Label |",
+            "| --- | --- | --- | --- | --- | --- |",
+        ]
+        for placement in contract.placements:
+            lines.append(
+                f"| `{placement.kpi_id}` | `{placement.measure}` | {placement.visual_role} | "
+                f"`{placement.motion_guardrail}` | {placement.data_status} | {placement.label} |"
+            )
+
+
 def to_markdown(rows: tuple[KPIIntelligenceRow, ...]) -> str:
     counts = rollup(rows)
     fast_page_upgrades = [
@@ -235,6 +263,7 @@ def to_markdown(rows: tuple[KPIIntelligenceRow, ...]) -> str:
         "Source-data upgrades; these need ETL/source-field work before a real dashboard visual can be trusted:",
     ]
     _append_queue(lines, source_upgrades)
+    _append_page_target_map(lines)
     lines += [
         "",
         "## KPI Matrix",
@@ -288,6 +317,7 @@ def write_outputs(out_path: Path) -> None:
         json.dumps(
             {
                 "rollup": rollup(rows),
+                "page_target_map": target_map_as_dict(),
                 "rows": [asdict(row) for row in rows],
             },
             indent=2,

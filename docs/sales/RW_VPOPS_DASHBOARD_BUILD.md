@@ -1295,3 +1295,40 @@ Follow-up to the visual QA wall-of-cards finding on `What Changed`.
   refs.
 - `python3 -m pytest tests/sales -q` succeeded: 198 passed, 1 skipped,
   2 warnings.
+## 2026-05-10 — RW KPI decision-coverage hardening
+
+This pass tightened the native RW dashboard around Richard Wyeth's actual VP Ops KPI set rather than broad visual styling. No Fabric publish was performed.
+
+**Decision contract shipped:**
+
+- `scripts/sales/rw_page_kpi_contract.py` now defines an executable page-by-page target map for the six RW pages:
+  - VP Ops Scorecard
+  - What Changed
+  - Forecast
+  - Stage Hygiene
+  - Renewals
+  - Growth Mix
+- Each page declares:
+  - executive question
+  - primary KPIs
+  - secondary diagnostics
+  - required visual role per KPI
+  - motion guardrail (`land_expand_arr`, `renewal_acv`, `cross_motion_labeled`, or `process`)
+  - data status (`clean`, `proxy`, `partial`, `missing model measure`, `missing source data`)
+- `rw_compose_all_pages.py` now composes the full six-page local report shape and runs the decision contract before push-capable code paths.
+
+**Regression gates added:**
+
+- Missing required primary KPI fails.
+- Wrong ARR/Renewal ACV motion fails.
+- Cross-motion measures fail unless explicitly labeled.
+- Proxy/gap KPIs fail if counted as clean.
+- Required KPI visual role fails if the composed page places the measure on the wrong native visual type.
+
+**Small page-copy improvements:**
+
+- Forecast proxy cards are labeled as proxy until a true Forecast Accuracy / snapshot measure exists.
+- Stage Hygiene Stage 3 compliance card is labeled as proxy until Commercial Approval compliance is modeled.
+
+**Business rule preserved:** ARR remains Land + Expand only; Renewal ACV remains Renewal-only. `Total Open Pipeline Value` is the only explicitly labeled cross-motion value measure.
+

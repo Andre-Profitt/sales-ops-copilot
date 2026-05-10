@@ -3,11 +3,17 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 
 from scripts.sales.rw_compose_all_pages import compose_report, validate_contract_pages
 from scripts.sales.rw_dashboard_harness import audit
 from scripts.sales.rw_dashboard_visual_qa import audit_report
-from scripts.sales.rw_page_kpi_contract import PAGE_KPI_CONTRACTS, required_measures
+from scripts.sales.rw_page_kpi_contract import (
+    PAGE_KPI_CONTRACTS,
+    KPIPlacement,
+    required_measures,
+    validate_decision_contracts,
+)
 
 
 def _visual_type(vc: dict) -> str:
@@ -16,6 +22,14 @@ def _visual_type(vc: dict) -> str:
 
 def _page(report: dict, display_name: str) -> dict:
     return next(s for s in report["sections"] if s["displayName"] == display_name)
+
+
+def _single_contract(page: str, **overrides):
+    return {page: replace(PAGE_KPI_CONTRACTS[page], **overrides)}
+
+
+def test_decision_contracts_are_self_consistent():
+    assert validate_decision_contracts() == []
 
 
 def test_all_target_pages_compose_against_declared_kpi_contracts():
@@ -104,3 +118,76 @@ def test_arr_and_renewal_acv_contracts_stay_separate_by_page():
     assert set(PAGE_KPI_CONTRACTS["Growth Mix"].measures) == growth_arr_measures
     assert PAGE_KPI_CONTRACTS["Renewals"].motion == "renewal_acv"
     assert PAGE_KPI_CONTRACTS["Growth Mix"].motion == "land_expand_arr"
+
+
+def test_contract_gate_catches_missing_required_primary_kpi():
+    broken = _single_contract("Forecast", primary_kpis=("forecast_closed_won", "made_up_kpi"))
+
+    errors = validate_decision_contracts(broken)
+
+    assert any("made_up_kpi" in error and "not in kpi_ids" in error for error in errors)
+    assert any("made_up_kpi" in error and "no required visual placement" in error for error in errors)
+
+
+def test_contract_gate_catches_wrong_arr_acv_motion():
+    bad_placement = KPIPlacement(
+        kpi_id="renewal_retention_rate",
+        measure="Total Renewal ACV Won",
+        visual_role="hero KPI",
+        motion_guardrail="land_expand_arr",
+        data_status="clean",
+        label="Bad blended renewal card",
+    )
+    broken = _single_contract("Renewals", placements=(bad_placement,))
+
+    errors = validate_decision_contracts(broken)
+
+    assert any("Land+Expand ARR placement uses Renewal ACV" in error for error in errors)
+
+
+def test_contract_gate_catches_unlabeled_cross_motion_measure():
+    bad_placement = KPIPlacement(
+        kpi_id="pipeline_coverage_3x",
+        measure="Total Open Pipeline Value",
+        visual_role="hero KPI",
+        motion_guardrail="cross_motion_labeled",
+        data_status="partial",
+        label="Open pipeline",
+    )
+    broken = _single_contract("Forecast", placements=(bad_placement,), caveat="")
+
+    errors = validate_decision_contracts(broken)
+
+    assert any("cross-motion measure" in error and "not explicitly labeled" in error for error in errors)
+
+
+def test_contract_gate_catches_proxy_counted_as_clean():
+    bad_placement = KPIPlacement(
+        kpi_id="forecast_accuracy",
+        measure="Forecast Slip Pct",
+        visual_role="RAG card",
+        motion_guardrail="land_expand_arr",
+        data_status="clean",
+        label="Slip Rate",
+        missing_measure="Forecast Accuracy",
+    )
+    broken = _single_contract("Forecast", placements=(bad_placement,))
+
+    errors = validate_decision_contracts(broken)
+
+    assert any("cannot be counted clean" in error for error in errors)
+
+
+def test_contract_gate_catches_missing_visual_role_for_required_kpi():
+    report = compose_report({"sections": []})
+    forecast = _page(report, "Forecast")
+    for vc in forecast["visualContainers"]:
+        if "Forecast Slip Pct" in vc["config"]:
+            config = json.loads(vc["config"])
+            config["singleVisual"]["visualType"] = "tableEx"
+            vc["config"] = json.dumps(config)
+            break
+
+    errors = validate_contract_pages(report)
+
+    assert any("forecast_accuracy" in error and "requires role 'RAG card'" in error for error in errors)

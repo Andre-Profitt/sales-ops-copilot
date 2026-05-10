@@ -38,6 +38,118 @@ Source-data upgrades; these need ETL/source-field work before a real dashboard v
 - `one_off_revenues`: Needs one-off/PS product fields; likely Product/Pricing future page.
 - `ps_arr_attach`: Needs PS/license product split; likely Product/Pricing future page.
 
+## Page Decision Target Map
+
+The page contract is executable via `scripts/sales/rw_page_kpi_contract.py`; tests fail if a required KPI loses its page, visual role, motion guardrail, or proxy/gap label.
+
+### VP Ops Scorecard
+
+- Executive question: Where is RW off plan right now, and which lane needs executive action first?
+- Primary KPIs: `forecast_closed_won`, `opp_win_rate`, `stage_conversion`, `renewal_retention_rate`
+- Secondary diagnostics: `time_in_stage`, `new_opps_by_region`
+- Required motion guardrail: `cross_motion_labeled`
+- Caveat: Renewal retention is displayed beside ARR KPIs but not blended into ARR.
+
+| KPI | Measure | Role | Motion | Data status | Label |
+| --- | --- | --- | --- | --- | --- |
+| `forecast_closed_won` | `Total Closed Won ARR` | hero KPI | `land_expand_arr` | clean | Closed won ARR |
+| `opp_win_rate` | `Win Rate ARR` | hero KPI | `land_expand_arr` | clean | Win rate |
+| `stage_conversion` | `Stage Forward Pct (LE)` | variance table | `land_expand_arr` | partial | Stage hygiene |
+| `renewal_retention_rate` | `Renewal Retention Pct (Period)` | hero KPI | `renewal_acv` | partial | Renewal retention |
+| `time_in_stage` | `Avg Days In Prior Stage (LE)` | variance table | `land_expand_arr` | partial | Stage hygiene |
+| `new_opps_by_region` | `New Opps Count 7d` | RAG card | `land_expand_arr` | clean | New opps 7d |
+
+### What Changed
+
+- Executive question: What materially changed in the last operating window, and which open opportunities need inspection?
+- Primary KPIs: `new_opps_by_region`, `stage_conversion`, `opp_age`, `forecast_closed_won`
+- Secondary diagnostics: None
+- Required motion guardrail: `land_expand_arr`
+- Caveat: None
+
+| KPI | Measure | Role | Motion | Data status | Label |
+| --- | --- | --- | --- | --- | --- |
+| `opp_age` | `At Risk Opps ARR` | RAG card | `land_expand_arr` | clean | At Risk - ARR |
+| `opp_age` | `Watch Opps ARR` | RAG card | `land_expand_arr` | clean | Watch - ARR |
+| `stage_conversion` | `Stage Moves ARR 7d` | movement ledger | `land_expand_arr` | clean | Stage move ARR |
+| `new_opps_by_region` | `New Opps Count 7d` | movement ledger | `land_expand_arr` | clean | New opps |
+| `forecast_closed_won` | `Closed Won Count 7d` | movement ledger | `land_expand_arr` | clean | Won |
+| `opp_age` | `Total Open Pipeline ARR` | detail table | `land_expand_arr` | clean | Top Open ARR Movement Queue |
+
+### Forecast
+
+- Executive question: Can the quarter still land, and is forecast movement disciplined enough to trust?
+- Primary KPIs: `forecast_closed_won`, `pipeline_coverage_3x`, `forecast_accuracy`
+- Secondary diagnostics: `stage3_acv_value`
+- Required motion guardrail: `cross_motion_labeled`
+- Caveat: Total Open Pipeline Value is the only explicit cross-motion value measure.
+
+| KPI | Measure | Role | Motion | Data status | Label |
+| --- | --- | --- | --- | --- | --- |
+| `pipeline_coverage_3x` | `Total Open Pipeline Value` | hero KPI | `cross_motion_labeled` | partial | Open Pipeline (cross-motion) |
+| `forecast_closed_won` | `Total Closed Won ARR` | hero KPI | `land_expand_arr` | clean | Closed Won ARR (FY26) |
+| `pipeline_coverage_3x` | `Total Open Pipeline Value` | variance table | `cross_motion_labeled` | partial | Stage x Motion Open Value |
+| `forecast_accuracy` | `Forecast Slip Pct` | RAG card | `land_expand_arr` | proxy | Slip Rate proxy |
+| `forecast_accuracy` | `Forecast Slips` | RAG card | `land_expand_arr` | proxy | Total Slips proxy |
+| `stage3_acv_value` | `Total Open Pipeline Value` | detail table | `cross_motion_labeled` | partial | Late-Stage Commit Risk |
+
+### Stage Hygiene
+
+- Executive question: Which stage is slowing or reversing Land+Expand opportunities, and is the Stage 3/4 control point healthy?
+- Primary KPIs: `stage_conversion`, `time_in_stage`, `sales_cycle_length`
+- Secondary diagnostics: `stage3_approvals_compliance`
+- Required motion guardrail: `process`
+- Caveat: Stage 3 and Stage 4 are the control points for approval friction and late-funnel slippage.
+
+| KPI | Measure | Role | Motion | Data status | Label |
+| --- | --- | --- | --- | --- | --- |
+| `stage_conversion` | `Stage Forward Pct (LE)` | hero KPI | `land_expand_arr` | partial | Forward rate |
+| `stage_conversion` | `Stage Backward Pct (LE)` | hero KPI | `land_expand_arr` | partial | Backward rate |
+| `time_in_stage` | `Avg Days In Prior Stage (LE)` | hero KPI | `land_expand_arr` | partial | Stage aging |
+| `sales_cycle_length` | `Land Avg Sales Cycle Days` | hero KPI | `land_expand_arr` | clean | Land cycle |
+| `sales_cycle_length` | `Avg Sales Cycle Days` | hero KPI | `land_expand_arr` | clean | L+E cycle |
+| `stage_conversion` | `Stage Forward Pct (LE)` | variance table | `land_expand_arr` | partial | Stage Conversion Matrix |
+| `stage3_approvals_compliance` | `Stage 3 Forward Pct` | RAG card | `land_expand_arr` | proxy | Stage 3 forward proxy |
+
+### Renewals
+
+- Executive question: How much Renewal ACV is exposed, retained, or lost, and where is the pressure?
+- Primary KPIs: `renewal_retention_rate`, `renewals_mom_trend`, `lost_arr_quarterly`
+- Secondary diagnostics: `existing_arr_run_rate`, `indexation_arr_growth`
+- Required motion guardrail: `renewal_acv`
+- Caveat: Renewal ACV only. Land and Expand ARR are excluded from this page.
+
+| KPI | Measure | Role | Motion | Data status | Label |
+| --- | --- | --- | --- | --- | --- |
+| `renewals_mom_trend` | `Total Open Renewal ACV` | hero KPI | `renewal_acv` | clean | Open renewal ACV |
+| `renewal_retention_rate` | `Renewal Retention Pct (Period)` | hero KPI | `renewal_acv` | partial | Retention |
+| `renewals_mom_trend` | `Total Renewal ACV Won` | hero KPI | `renewal_acv` | clean | Won renewal ACV |
+| `lost_arr_quarterly` | `Total Renewal ACV Lost` | hero KPI | `renewal_acv` | partial | Lost renewal ACV |
+| `renewals_mom_trend` | `Total Open Renewal ACV` | bridge/waterfall | `renewal_acv` | clean | Open Renewal ACV by Region |
+| `lost_arr_quarterly` | `Total Renewal ACV Lost` | detail table | `renewal_acv` | partial | Renewal Pressure Table |
+| `existing_arr_run_rate` | `Existing ARR Run Rate` | detail table | `renewal_acv` | missing source data | Existing ARR Run Rate |
+| `indexation_arr_growth` | `Indexation ARR Growth` | detail table | `renewal_acv` | missing source data | Indexation ARR Growth |
+
+### Growth Mix
+
+- Executive question: Is growth coming from the right Land, Expand, partner, source, and new-customer mix?
+- Primary KPIs: `ilf_arr_pipeline`, `alf_arr_pipeline`, `new_customer_reporting`, `closed_won_avg_deal_size`, `partner_opps_pct`
+- Secondary diagnostics: `opp_source_effectiveness`, `synergy_deals_won`
+- Required motion guardrail: `land_expand_arr`
+- Caveat: Land and Expand ARR only. Renewal ACV is excluded from this page. Synergy is labeled as a proxy until the source flag exists.
+
+| KPI | Measure | Role | Motion | Data status | Label |
+| --- | --- | --- | --- | --- | --- |
+| `alf_arr_pipeline` | `Open Land ARR` | hero KPI | `land_expand_arr` | partial | Open Land |
+| `ilf_arr_pipeline` | `Open Expand ARR` | hero KPI | `land_expand_arr` | partial | Open Expand |
+| `closed_won_avg_deal_size` | `Avg Deal Size Won` | hero KPI | `land_expand_arr` | partial | Avg won deal |
+| `partner_opps_pct` | `Partner ARR` | hero KPI | `land_expand_arr` | clean | Partner ARR |
+| `partner_opps_pct` | `Partner Pct` | hero KPI | `land_expand_arr` | clean | Partner % |
+| `alf_arr_pipeline` | `Total Open Pipeline ARR` | bridge/waterfall | `land_expand_arr` | partial | Open Land + Expand ARR by Region |
+| `new_customer_reporting` | `Total Land Won Count` | detail table | `land_expand_arr` | clean | Land count |
+| `opp_source_effectiveness` | `Partner ARR` | detail table | `land_expand_arr` | clean | Strategic Mix Detail |
+| `synergy_deals_won` | `Total Land Won Count` | detail table | `land_expand_arr` | proxy | Land count proxy |
+
 ## KPI Matrix
 
 | KPI | Impact | Motion | KG Source Status | Dashboard Status | Pages | Measures | Next Action |
