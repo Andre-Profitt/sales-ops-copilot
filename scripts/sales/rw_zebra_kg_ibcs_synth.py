@@ -222,19 +222,28 @@ def zebra_native_card_objects(
     visual_intent: str = "KPI strip",
     tint: str,
     accent: str,
+    surface: str = "#FFFFFF",
+    border: str = "#D8DEE8",
     value_color: str = "#222222",
-    label_color: str = "#666666",
+    label_color: str | None = None,
     value_font_size: int = 28,
     label_font_size: int = 10,
-    display_units: int | None = 1,
+    display_units: int | None = None,
 ) -> dict:
-    """Zebra-card-inspired native card object grammar for RW pages."""
+    """Zebra-card-inspired native card object grammar for RW pages.
+
+    Zebra/IBCS transfers should read like finance-operating dashboards:
+    neutral card surfaces, quiet borders, and semantic color only as an accent.
+    The source tint argument remains for API compatibility with older composers,
+    but the native card background deliberately stays neutral to avoid pastel
+    RAG tiles.
+    """
     return _with_zebra_transfer_metadata(
         build_rag_card_objects(
-            tint=tint,
-            accent=accent,
+            tint=surface,
+            accent=border,
             value_color=value_color,
-            label_color=label_color,
+            label_color=label_color or accent,
             value_font_size=value_font_size,
             label_font_size=label_font_size,
             display_units=display_units,
@@ -262,6 +271,27 @@ def zebra_compact_movement_ledger_objects(*, max_field: str, databar_column: str
     )
     objects["dataBars"] = build_databar_cf_objects(databar_column, max_field, accent)
     return objects
+
+
+def zebra_exception_ledger_objects() -> dict:
+    """Compact IBCS-style exception ledger for What Changed.
+
+    This deliberately replaces KPI-card furniture with a single scan table:
+    the business read is exception magnitude by status, not three decorative
+    scorecards.
+    """
+    return _with_zebra_transfer_metadata(
+        build_table_style_objects(
+            header_fill="#F3F6FA",
+            header_text="#1A1D31",
+            row_text="#202124",
+            grid="#D8DEE8",
+            font_size=9,
+        ),
+        pattern="exception-band-ledger",
+        visual_intent="exception movement ledger",
+        grammar_schema="rw-zebra-native-transfer.columnGrammar.v1",
+    )
 
 
 def zebra_detail_table_objects() -> dict:

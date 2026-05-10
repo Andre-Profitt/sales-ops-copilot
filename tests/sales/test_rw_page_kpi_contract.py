@@ -138,30 +138,50 @@ def test_what_changed_applies_zebra_native_table_grammar_to_movement_ledger():
     assert "dataBars" in objects
 
 
-def test_what_changed_top_risk_cards_use_zebra_object_bearing_card_grammar():
+def test_what_changed_exception_band_uses_zebra_ledger_not_scorecards():
     report = compose_report({"sections": []})
     what_changed = _page(report, "What Changed")
-    risk_cards = [
+    exception_ledgers = [
+        _single_visual(vc)
+        for vc in what_changed["visualContainers"]
+        if _visual_type(vc) == "tableEx" and "At Risk Opps ARR" in vc["config"]
+    ]
+
+    assert len(exception_ledgers) == 1
+    ledger = exception_ledgers[0]
+    assert list(ledger["columnProperties"]) == [
+        "f_opportunity.At Risk Opps Count",
+        "f_opportunity.At Risk Opps ARR",
+        "f_opportunity.Watch Opps Count",
+        "f_opportunity.Watch Opps ARR",
+        "f_opportunity.Healthy Moves Count",
+        "f_opportunity.Healthy Moves ARR",
+    ]
+    objects = ledger.get("objects") or {}
+    assert objects["stylePreset"] == {
+        "source": "zebra-visual-dna",
+        "pattern": "exception-band-ledger",
+        "visual_intent": "exception movement ledger",
+    }
+    assert objects["zebraGrammar"]["schema"] == "rw-zebra-native-transfer.columnGrammar.v1"
+    assert {"columnHeaders", "values", "grid"} <= set(objects)
+    assert not [
         _single_visual(vc)
         for vc in what_changed["visualContainers"]
         if _visual_type(vc) == "card" and any(token in vc["config"] for token in ("At Risk", "Watch", "Healthy"))
     ]
 
-    assert len(risk_cards) == 6
-    for card in risk_cards:
-        objects = card.get("objects") or {}
-        assert objects["stylePreset"] == {
-            "source": "zebra-visual-dna",
-            "pattern": "composite-risk-kpi-card",
-            "visual_intent": "KPI strip",
-        }
-        assert objects["zebraGrammar"]["safe_groups"] == [
-            "chartSettings",
-            "coreSettings",
-            "dataLabelSettings",
-            "titleSettings",
-        ]
-        assert {"background", "border", "labels", "categoryLabels"} <= set(objects)
+
+def test_rw_zebra_native_cards_avoid_pastel_rag_tile_surfaces():
+    report = compose_report({"sections": []})
+    encoded = "\n".join(
+        vc["config"]
+        for page in ("What Changed", "Stage Hygiene")
+        for vc in _page(report, page)["visualContainers"]
+    )
+
+    for pastel in ("#ffeeee", "#fff8e6", "#eef9ee", "#FFEEEE", "#FFF8E6", "#EEF9EE"):
+        assert pastel not in encoded
 
 
 def test_stage_hygiene_visual_qa_has_no_medium_plus_findings():

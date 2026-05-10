@@ -211,7 +211,7 @@ def _build_kpi_strip() -> list[dict]:
     out: list[dict] = []
     for i, (table, measure, title, tint, accent, value_color, display_units) in enumerate(cards):
         x = MARGIN + i * (card_w + GAP)
-        out.append(build_shape_visual(x=x, y=88, w=card_w, h=116, fill=tint, line=accent, z=30, radius=2))
+        out.append(build_shape_visual(x=x, y=88, w=card_w, h=116, fill="#FFFFFF", line="#D8DEE8", z=30, radius=2))
         out.append(
             build_rag_card_visual(
                 measure_table=table,
@@ -353,7 +353,7 @@ def _build_movement_pulse() -> list[dict]:
         row = i // 2
         x = 820 + col * (tile_w + 12)
         y = 540 + row * (tile_h + 10)
-        out.append(build_shape_visual(x=x, y=y, w=tile_w, h=tile_h, fill=tint, line=accent, z=30, radius=2))
+        out.append(build_shape_visual(x=x, y=y, w=tile_w, h=tile_h, fill="#FFFFFF", line="#D8DEE8", z=30, radius=2))
         out.append(
             build_rag_card_visual(
                 measure_table=table,

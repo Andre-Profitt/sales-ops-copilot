@@ -48,8 +48,10 @@ ZEBRA_TYPES = {"ZebraBITables98F88148E5424E949E69864664EE1860"}
 NATIVE_VISUAL_TYPES = CARD_TYPES | TABLE_TYPES | TEXT_TYPES | {"basicShape", "clusteredBarChart"}
 ACCENT_COLORS = {"#2B5C8A", "#3B8A3E", "#C33A32", "#D98A00", "#083EA7", "#CC3333", "#DD8800", "#339933"}
 NEUTRAL_COLORS = {"#D8DEE8", "#E3E7EE", "#EEF2F6", "#FFFFFF", "#F4F7FB"}
+PASTEL_STATUS_FILLS = {"#FFEEEE", "#FFF8E6", "#EEF9EE"}
 ACCENT_COLORS = {color.upper() for color in ACCENT_COLORS}
 NEUTRAL_COLORS = {color.upper() for color in NEUTRAL_COLORS}
+PASTEL_STATUS_FILLS = {color.upper() for color in PASTEL_STATUS_FILLS}
 
 
 def timestamp() -> str:
@@ -334,6 +336,19 @@ def audit_styling(page: str, vc: dict) -> list[dict]:
                     recommendation="Apply blue/green/amber/red accent and matching tint by KPI polarity.",
                 )
             )
+        pastel_backgrounds = _find_colors(objects.get("background", [])).intersection(PASTEL_STATUS_FILLS)
+        if pastel_backgrounds:
+            issues.append(
+                finding(
+                    code="pastel_status_card_surface",
+                    severity="medium",
+                    page=page,
+                    visual=vc,
+                    message="KPI card uses a pastel RAG tile background instead of a Zebra-style neutral surface.",
+                    evidence={"background_colors": sorted(pastel_backgrounds)},
+                    recommendation="Use white/near-white card surfaces with status color limited to a narrow accent or label.",
+                )
+            )
     elif vt in TABLE_TYPES:
         if not objects:
             issues.append(
@@ -357,6 +372,21 @@ def audit_styling(page: str, vc: dict) -> list[dict]:
                     message="Table has objects but does not expose expected header/value styling keys.",
                     evidence={"object_keys": sorted(objects)},
                     recommendation="Use the shared RW table style object builder.",
+                )
+            )
+    elif vt == "basicShape":
+        fill_colors = _find_colors(objects.get("fill", [])).intersection(PASTEL_STATUS_FILLS)
+        area = float(vc.get("width") or 0) * float(vc.get("height") or 0)
+        if fill_colors and area >= 2000:
+            issues.append(
+                finding(
+                    code="pastel_status_panel_surface",
+                    severity="medium",
+                    page=page,
+                    visual=vc,
+                    message="Large panel uses a pastel RAG fill that reads as template/AI-generated.",
+                    evidence={"fill_colors": sorted(fill_colors), "area": round(area, 1)},
+                    recommendation="Use a neutral panel fill and reserve status color for a thin accent strip.",
                 )
             )
     elif vt and vt not in NATIVE_VISUAL_TYPES and vt not in ZEBRA_TYPES:

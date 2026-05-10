@@ -1358,3 +1358,48 @@ Applied the proven Zebra-native grammar pattern to exactly one additional RW pag
 
 No Fabric publish was performed.  ARR remains Land+Expand only, Renewal ACV remains Renewal only, and no custom visuals were introduced to the native Stage Hygiene page.
 
+## 2026-05-10 — Neutral Zebra/IBCS card surface hardening
+
+Desktop review flagged the colored KPI scorecards as too AI/template-like and not faithful enough to Zebra/IBCS operating-report style.  The shared native card helper now keeps KPI card surfaces white with a quiet neutral border; red/amber/green/blue status is limited to accent typography or narrow accent furniture, not full pastel tile fills.
+
+**Shipped:**
+
+- Updated `build_rag_card_objects()` so all native RW KPI cards use neutral card backgrounds and neutral borders by default.
+- Updated `zebra_native_card_objects()` to preserve Zebra-derived lineage metadata while inheriting the neutral card surface rule.
+- Removed the remaining front-page pastel shape panels behind KPI cards.
+- Added visual QA findings for pastel status card surfaces and large pastel status panels so this style regression fails at `--fail-on medium`.
+- Regenerated the local Desktop lab PBIP.
+
+**Lab verification:**
+
+- `python3 -m scripts.sales.rw_apply_zebra_lab_proof` regenerated the local lab PBIP.
+- `python3 -m scripts.sales.rw_validate --file ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json` passed with 7 sections, 106 visualContainers, and all measure refs resolved.
+- `python3 -m scripts.sales.rw_dashboard_harness audit --source path --path ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json --label rw_neutral_zebra_cards` returned no findings.
+- `python3 -m scripts.sales.rw_dashboard_harness visual-qa --source path --path ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json --label rw_neutral_zebra_cards --fail-on medium --markdown docs/sales/RW_DASHBOARD_VISUAL_QA.md` returned 0 findings.
+- `python3 -m pytest tests/sales -q` passed: 216 passed, 1 skipped.
+
+No Fabric publish was performed.  This is ready for Power BI Desktop inspection before production deployment.
+
+## 2026-05-10 — Stage order and display-unit hardening
+
+Desktop review found two renderer-level issues: stage visuals were not consistently ordered by the sales process, and some values were showing as `0.00MM` because native visuals were applying display-unit scaling on top of model-level million-format strings.
+
+**Shipped:**
+
+- Added shared PBIR query helpers for native column/measure expressions and deterministic stage ordering.
+- Stage-bearing native tables, matrices, and bar charts now emit explicit ascending `OrderBy` metadata.
+- `f_stage_transition[from_stage_name]` sorts by deployed `from_stage_num`; `f_stage_transition[to_stage_name]` sorts by `to_stage_num`; `f_opportunity[stage_name]` sorts by the stage label until the opportunity fact grows a deployed stage sort key.
+- Removed all generated visual-level `labelDisplayUnits` settings from native RW card/chart helpers so Power BI relies on semantic-model formats instead of double-scaling values into `MM`.
+- Converted the What Changed exception band from colored scorecards into one compact Zebra/IBCS-style exception ledger table, leaving that page with zero card visuals.
+- Added `scripts/sales/rw_open_pbi_lab_in_parallels.sh` for repeatable fresh Desktop inspection in the visible Parallels user session, including optional current-user cache/recovery reset.
+
+**Lab verification:**
+
+- `python3 -m scripts.sales.rw_apply_zebra_lab_proof` regenerated the local lab PBIP.
+- `python3 -m scripts.sales.rw_validate --file ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json` passed with 7 sections, 95 visualContainers, and all measure refs resolved.
+- `python3 -m scripts.sales.rw_dashboard_harness audit --source path --path ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json --label rw_stage_sort_units` returned no findings.
+- `python3 -m scripts.sales.rw_dashboard_harness visual-qa --source path --path ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json --label rw_stage_sort_units --fail-on medium --markdown docs/sales/RW_DASHBOARD_VISUAL_QA.md` returned 0 findings.
+- `python3 -m pytest tests/sales -q` passed: 218 passed, 1 skipped.
+- `scripts/sales/rw_open_pbi_lab_in_parallels.sh --reset-cache` opened `rpt_vp_ops_scorecard_zebra_lab` in the active Windows user session.
+
+No Fabric publish was performed.  ARR remains Land+Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.

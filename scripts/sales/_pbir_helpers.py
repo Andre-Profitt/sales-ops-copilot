@@ -25,6 +25,51 @@ def _solid_color(color: str) -> dict:
     return {"solid": {"color": _literal(color)}}
 
 
+def _column_expr(alias: str, field: str) -> dict:
+    return {
+        "Column": {
+            "Expression": {"SourceRef": {"Source": alias}},
+            "Property": field,
+        }
+    }
+
+
+def _measure_expr(alias: str, measure: str) -> dict:
+    return {
+        "Measure": {
+            "Expression": {"SourceRef": {"Source": alias}},
+            "Property": measure,
+        }
+    }
+
+
+def _stage_order_expr(aliases: dict[str, str], table: str, field: str) -> dict | None:
+    """Return the safest available stage-order expression for a visual.
+
+    Stage transition facts already carry numeric stage columns, so sort their
+    display labels by those fields. Opportunity stage labels are sorted by the
+    label itself until the f_opportunity model grows a deployed stage sort key.
+    """
+    alias = aliases[table]
+    if table == "f_stage_transition" and field == "from_stage_name":
+        return _column_expr(alias, "from_stage_num")
+    if table == "f_stage_transition" and field == "to_stage_name":
+        return _column_expr(alias, "to_stage_num")
+    if field == "stage_name":
+        return _column_expr(alias, field)
+    return None
+
+
+def _first_stage_order_by(columns: list[dict], aliases: dict[str, str]) -> list[dict]:
+    for c in columns:
+        if c["kind"] != "column":
+            continue
+        expr = _stage_order_expr(aliases, c["table"], c["field"])
+        if expr is not None:
+            return [{"Direction": 1, "Expression": expr}]
+    return []
+
+
 def build_card_visual(
     measure_table: str,
     measure_name: str,
@@ -182,17 +227,19 @@ def build_table_visual(
         alias = aliases[c["table"]]
         query_ref = f"{c['table']}.{c['field']}"
         node_key = "Measure" if c["kind"] == "measure" else "Column"
-        select.append(
-            {
-                node_key: {
-                    "Expression": {"SourceRef": {"Source": alias}},
-                    "Property": c["field"],
-                },
-                "Name": query_ref,
-            }
-        )
+        expr = _measure_expr(alias, c["field"]) if node_key == "Measure" else _column_expr(alias, c["field"])
+        select.append({**expr, "Name": query_ref})
         projections.append({"queryRef": query_ref})
         column_props[query_ref] = {"displayName": c["title"]}
+
+    prototype_query = {
+        "Version": 2,
+        "From": [{"Name": alias, "Entity": tbl, "Type": 0} for tbl, alias in aliases.items()],
+        "Select": select,
+    }
+    order_by = _first_stage_order_by(columns, aliases)
+    if order_by:
+        prototype_query["OrderBy"] = order_by
 
     config = {
         "name": visual_name,
@@ -212,13 +259,7 @@ def build_table_visual(
         "singleVisual": {
             "visualType": "tableEx",
             "projections": {"Values": projections},
-            "prototypeQuery": {
-                "Version": 2,
-                "From": [
-                    {"Name": alias, "Entity": tbl, "Type": 0} for tbl, alias in aliases.items()
-                ],
-                "Select": select,
-            },
+            "prototypeQuery": prototype_query,
             "columnProperties": column_props,
             "drillFilterOtherVisuals": True,
         },
@@ -261,23 +302,11 @@ def build_matrix_visual(
 
     def _col_node(c: dict) -> dict:
         alias = aliases[c["table"]]
-        return {
-            "Column": {
-                "Expression": {"SourceRef": {"Source": alias}},
-                "Property": c["field"],
-            },
-            "Name": f"{c['table']}.{c['field']}",
-        }
+        return {**_column_expr(alias, c["field"]), "Name": f"{c['table']}.{c['field']}"}
 
     def _measure_node(c: dict) -> dict:
         alias = aliases[c["table"]]
-        return {
-            "Measure": {
-                "Expression": {"SourceRef": {"Source": alias}},
-                "Property": c["field"],
-            },
-            "Name": f"{c['table']}.{c['field']}",
-        }
+        return {**_measure_expr(alias, c["field"]), "Name": f"{c['table']}.{c['field']}"}
 
     select = (
         [_col_node(c) for c in rows]
@@ -292,6 +321,18 @@ def build_matrix_visual(
     column_props: dict[str, dict] = {}
     for c in rows + columns + values:
         column_props[f"{c['table']}.{c['field']}"] = {"displayName": c["title"]}
+
+    prototype_query = {
+        "Version": 2,
+        "From": [{"Name": alias, "Entity": tbl, "Type": 0} for tbl, alias in aliases.items()],
+        "Select": select,
+    }
+    order_by = _first_stage_order_by(
+        [{**c, "kind": "column"} for c in rows + columns],
+        aliases,
+    )
+    if order_by:
+        prototype_query["OrderBy"] = order_by
 
     config = {
         "name": visual_name,
@@ -311,13 +352,7 @@ def build_matrix_visual(
         "singleVisual": {
             "visualType": "pivotTable",
             "projections": projections,
-            "prototypeQuery": {
-                "Version": 2,
-                "From": [
-                    {"Name": alias, "Entity": tbl, "Type": 0} for tbl, alias in aliases.items()
-                ],
-                "Select": select,
-            },
+            "prototypeQuery": prototype_query,
             "columnProperties": column_props,
             "drillFilterOtherVisuals": True,
         },
@@ -594,12 +629,10 @@ def build_clustered_bar_chart_visual(
     category_ref = f"{category_table}.{category_column}"
     measure_ref = f"{measure_table}.{measure_name}"
 
-    measure_expr = {
-        "Measure": {
-            "Expression": {"SourceRef": {"Source": measure_alias}},
-            "Property": measure_name,
-        }
-    }
+    measure_expr = _measure_expr(measure_alias, measure_name)
+    category_expr = _column_expr(category_alias, category_column)
+    order_expr = _stage_order_expr(aliases, category_table, category_column)
+    order_by = [{"Direction": 1, "Expression": order_expr}] if order_expr else [{"Direction": 2, "Expression": measure_expr}]
     config = {
         "name": visual_name,
         "layouts": [
@@ -627,16 +660,10 @@ def build_clustered_bar_chart_visual(
                     {"Name": alias, "Entity": tbl, "Type": 0} for tbl, alias in aliases.items()
                 ],
                 "Select": [
-                    {
-                        "Column": {
-                            "Expression": {"SourceRef": {"Source": category_alias}},
-                            "Property": category_column,
-                        },
-                        "Name": category_ref,
-                    },
+                    {**category_expr, "Name": category_ref},
                     {**measure_expr, "Name": measure_ref},
                 ],
-                "OrderBy": [{"Direction": 2, "Expression": measure_expr}],
+                "OrderBy": order_by,
             },
             "columnProperties": {
                 category_ref: {"displayName": category_title},
@@ -669,8 +696,6 @@ def build_clustered_bar_chart_visual(
                             "show": _literal(True),
                             "color": _solid_color("#252423"),
                             "fontSize": _literal(9),
-                            "labelDisplayUnits": _literal(1000000.0),
-                            "labelPrecision": _literal(1),
                         }
                     }
                 ],
@@ -1064,33 +1089,32 @@ def build_rag_card_objects(
     tint: str,
     accent: str,
     value_color: str = "#222222",
-    label_color: str = "#666666",
+    label_color: str | None = None,
     value_font_size: int = 28,
     label_font_size: int = 10,
-    display_units: int | None = 1,
+    display_units: int | None = None,
     show_category_label: bool = True,
 ) -> dict:
-    """Return a conservative legacy-card objects block for RAG KPI cards.
+    """Return a conservative legacy-card objects block for KPI cards.
 
     The labels/categoryLabels shape is based on the verified SalesManager card
-    fixture. The background/border objects use standard Power BI container
-    object names and are intentionally small so Desktop/Fabric can drop unknown
-    subproperties without breaking the visual.
+    fixture. RAG status is intentionally expressed through accent typography
+    instead of pastel tile fills, which reads closer to Zebra/IBCS executive
+    reporting and avoids the AI-template look of red/amber/green card surfaces.
     """
+    neutral_label_colors = {None, "#666666", "#5C6670"}
+    category_label_color = accent if label_color in neutral_label_colors else label_color
     label_props = {
         "color": _solid_color(value_color),
         "fontSize": _literal(str(value_font_size)),
         "fontFamily": _literal("Segoe UI Semibold"),
     }
-    if display_units is not None:
-        label_props["labelDisplayUnits"] = _literal(float(display_units))
-
     return {
         "background": [
             {
                 "properties": {
                     "show": _literal(True),
-                    "color": _solid_color(tint),
+                    "color": _solid_color("#FFFFFF"),
                     "transparency": _literal(0.0),
                 }
             }
@@ -1099,7 +1123,7 @@ def build_rag_card_objects(
             {
                 "properties": {
                     "show": _literal(True),
-                    "color": _solid_color(accent),
+                    "color": _solid_color("#D8DEE8"),
                     "radius": _literal(2),
                 }
             }
@@ -1109,7 +1133,7 @@ def build_rag_card_objects(
             {
                 "properties": {
                     "show": _literal(show_category_label),
-                    "color": _solid_color(label_color),
+                    "color": _solid_color(category_label_color),
                     "fontSize": _literal(str(label_font_size)),
                     "fontFamily": _literal("Segoe UI"),
                 }
@@ -1130,10 +1154,10 @@ def build_rag_card_visual(
     tint: str,
     accent: str,
     value_color: str = "#222222",
-    label_color: str = "#666666",
+    label_color: str | None = None,
     value_font_size: int = 28,
     label_font_size: int = 10,
-    display_units: int | None = 1,
+    display_units: int | None = None,
     show_category_label: bool = True,
 ) -> dict:
     """Construct a card with the RW RAG visual treatment attached."""

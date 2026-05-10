@@ -12,15 +12,13 @@ Run:
 from __future__ import annotations
 
 from scripts.sales._pbir_helpers import (
-    build_card_visual_with_objects,
-    build_shape_visual,
     build_table_visual,
     build_textbox_visual,
 )
 from scripts.sales.rw_zebra_kg_ibcs_synth import (
     zebra_compact_movement_ledger_objects,
     zebra_detail_table_objects,
-    zebra_native_card_objects,
+    zebra_exception_ledger_objects,
 )
 
 PAGE = "What Changed"
@@ -40,10 +38,10 @@ def _compose(section: dict) -> None:
     """Append all visuals for the What Changed tab to section['visualContainers'].
 
     Layout grid:
-        y=12    Risk band header
-        y=42    Risk band hero - 3 columns x (count card 320x78 + ARR card 320x56)
-        y=198   Movement ledger header
-        y=228   Movement ledger - compact one-row table of 7d measures
+        y=12    Exception ledger header
+        y=48    Exception ledger - compact table, no KPI card furniture
+        y=188   Movement ledger header
+        y=218   Movement ledger - compact one-row table of 7d measures
         y=386   Detail header
         y=414   Detail table - 1200x280 spanning the page
         Spec calls for a window slicer at (1000, 20). Field-parameter slicer
@@ -58,68 +56,58 @@ def _compose(section: dict) -> None:
             "Exception Movement", x=20, y=12, w=1200, h=28, font_size_pt=18, color="#1A1D31"
         )
     )
-    # Hero cards. ARR shown via a separate small card under each count
-    # — a single card hosts one Measure per the current builder.
-    # Combine into one card via objects block in a follow-up after we
-    # capture the right shape via rw_capture_visual.
-    risk_band = [
-        ("At Risk Opps Count", "At Risk Opps ARR", "At Risk", 20, "#ffeeee", "#cc3333"),
-        ("Watch Opps Count", "Watch Opps ARR", "Watch", 360, "#fff8e6", "#dd8800"),
-        ("Healthy Moves Count", "Healthy Moves ARR", "Healthy", 700, "#eef9ee", "#339933"),
-    ]
-    for count_msr, arr_msr, title, x, tint, accent in risk_band:
-        section["visualContainers"].append(
-            build_shape_visual(
-                x=x - 4,
-                y=38,
-                w=328,
-                h=146,
-                fill=tint,
-                line=accent,
-                z=100,
-                radius=4,
-            )
+    section["visualContainers"].append(
+        build_table_visual(
+            name="what_changed_exception_ledger",
+            columns=[
+                {
+                    "table": "f_opportunity",
+                    "field": "At Risk Opps Count",
+                    "kind": "measure",
+                    "title": "At risk opps",
+                },
+                {
+                    "table": "f_opportunity",
+                    "field": "At Risk Opps ARR",
+                    "kind": "measure",
+                    "title": "At risk ARR",
+                },
+                {
+                    "table": "f_opportunity",
+                    "field": "Watch Opps Count",
+                    "kind": "measure",
+                    "title": "Watch opps",
+                },
+                {
+                    "table": "f_opportunity",
+                    "field": "Watch Opps ARR",
+                    "kind": "measure",
+                    "title": "Watch ARR",
+                },
+                {
+                    "table": "f_opportunity",
+                    "field": "Healthy Moves Count",
+                    "kind": "measure",
+                    "title": "Healthy moves",
+                },
+                {
+                    "table": "f_opportunity",
+                    "field": "Healthy Moves ARR",
+                    "kind": "measure",
+                    "title": "Healthy ARR",
+                },
+            ],
+            x=20,
+            y=48,
+            w=1020,
+            h=118,
+            objects=zebra_exception_ledger_objects(),
         )
-        section["visualContainers"].append(
-            build_card_visual_with_objects(
-                "f_opportunity",
-                count_msr,
-                f"{title} - count",
-                x=x,
-                y=42,
-                w=320,
-                h=78,
-                objects=zebra_native_card_objects(
-                    tint=tint,
-                    accent=accent,
-                    value_font_size=28,
-                    label_font_size=9,
-                    display_units=1,
-                ),
-            )
-        )
-        section["visualContainers"].append(
-            build_card_visual_with_objects(
-                "f_opportunity",
-                arr_msr,
-                f"{title} - ARR",
-                x=x,
-                y=124,
-                w=320,
-                h=56,
-                objects=zebra_native_card_objects(
-                    tint=tint,
-                    accent=accent,
-                    value_font_size=18,
-                    label_font_size=8,
-                    display_units=1,
-                ),
-            )
-        )
+    )
 
     # ── Phase 2: Movement ledger (compact matrix instead of card wall) ──
     section["visualContainers"].append(
-        build_textbox_visual("7-Day Operating Movement Ledger", x=20, y=198, w=1200, h=24, font_size_pt=12, color="#1A1D31")
+        build_textbox_visual("7-Day Operating Movement Ledger", x=20, y=188, w=1200, h=24, font_size_pt=12, color="#1A1D31")
     )
     # Spec calls for Stage Moves · Slips · New Opps · Closed. The prior
     # version rendered these as five micro-cards and tripped the visual QA
@@ -162,7 +150,7 @@ def _compose(section: dict) -> None:
                 },
             ],
             x=20,
-            y=228,
+            y=218,
             w=1020,
             h=150,
             objects=zebra_compact_movement_ledger_objects(

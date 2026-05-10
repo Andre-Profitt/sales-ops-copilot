@@ -57,15 +57,19 @@ def test_build_card_visual_with_objects_no_block_falls_through():
 
 
 def test_build_rag_card_objects_has_status_treatment():
-    objects = build_rag_card_objects(tint="#ffeeee", accent="#cc3333")
+    objects = build_rag_card_objects(tint="#ffeeee", accent="#cc3333", display_units=1000000)
 
     assert objects["background"][0]["properties"]["color"]["solid"]["color"]["expr"][
         "Literal"
-    ]["Value"] == "'#ffeeee'"
+    ]["Value"] == "'#FFFFFF'"
     assert objects["border"][0]["properties"]["color"]["solid"]["color"]["expr"][
+        "Literal"
+    ]["Value"] == "'#D8DEE8'"
+    assert objects["categoryLabels"][0]["properties"]["color"]["solid"]["color"]["expr"][
         "Literal"
     ]["Value"] == "'#cc3333'"
     assert objects["labels"][0]["properties"]["fontSize"]["expr"]["Literal"]["Value"] == "'28'"
+    assert "labelDisplayUnits" not in objects["labels"][0]["properties"]
 
 
 def test_build_rag_card_visual_attaches_rag_objects():
@@ -163,6 +167,18 @@ def test_build_clustered_bar_chart_visual_has_category_and_measure():
         "Total Open Pipeline Value"
     )
     assert "objects" in sv
+    assert sv["prototypeQuery"]["OrderBy"] == [
+        {
+            "Direction": 1,
+            "Expression": {
+                "Column": {
+                    "Expression": {"SourceRef": {"Source": "c"}},
+                    "Property": "stage_name",
+                }
+            },
+        }
+    ]
+    assert "labelDisplayUnits" not in sv["objects"]["labels"][0]["properties"]
 
 
 def test_build_zebra_bi_table_visual_has_categories_values_and_no_license():
@@ -262,6 +278,66 @@ def test_build_table_visual_columns():
     sel = config["singleVisual"]["prototypeQuery"]["Select"]
     assert "Column" in sel[0] and sel[0]["Column"]["Property"] == "opp_name"
     assert "Measure" in sel[2] and sel[2]["Measure"]["Property"] == "Total Open Pipeline ARR"
+
+
+def test_stage_tables_sort_by_numeric_stage_column_when_available():
+    vc = build_table_visual(
+        name="stage_table",
+        columns=[
+            {
+                "table": "f_stage_transition",
+                "field": "from_stage_name",
+                "kind": "column",
+                "title": "Stage",
+            },
+            {
+                "table": "f_stage_transition",
+                "field": "Stage Forward Pct (LE)",
+                "kind": "measure",
+                "title": "Forward %",
+            },
+        ],
+        x=20,
+        y=120,
+    )
+
+    sv = json.loads(vc["config"])["singleVisual"]
+    assert sv["prototypeQuery"]["OrderBy"] == [
+        {
+            "Direction": 1,
+            "Expression": {
+                "Column": {
+                    "Expression": {"SourceRef": {"Source": "a"}},
+                    "Property": "from_stage_num",
+                }
+            },
+        }
+    ]
+
+
+def test_stage_matrices_sort_by_stage_label_until_stage_sort_key_deploys():
+    vc = build_matrix_visual(
+        rows=[{"table": "f_opportunity", "field": "stage_name", "title": "Stage"}],
+        columns=[],
+        values=[
+            {"table": "f_opportunity", "field": "Total Open Pipeline ARR", "title": "Open ARR"},
+        ],
+        x=20,
+        y=120,
+    )
+
+    sv = json.loads(vc["config"])["singleVisual"]
+    assert sv["prototypeQuery"]["OrderBy"] == [
+        {
+            "Direction": 1,
+            "Expression": {
+                "Column": {
+                    "Expression": {"SourceRef": {"Source": "a"}},
+                    "Property": "stage_name",
+                }
+            },
+        }
+    ]
 
 
 def test_build_textbox_visual_static_label():

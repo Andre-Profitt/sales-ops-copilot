@@ -168,6 +168,7 @@ The sales-funnel exemplar patterns are applied to these RW dashboard pages via `
 The RW page mapping uses the learned native equivalents:
 
 - KPI strips use composite Zebra-card-style patterns instead of flat unstyled generic cards.
+- KPI card surfaces stay neutral.  RAG/status color is restricted to accent typography or narrow accent furniture; full pastel red/amber/green KPI tiles are blocked by visual QA because they do not match the Zebra/IBCS executive-report idiom.
 - Movement/variance sections use tableEx/pivotTable with IBCS ordering and variance/data-bar style objects.
 - Charts retain semantic role and spacing rather than being used as decorative approximations.
 - Static section furniture remains a first-class transfer artifact.
@@ -195,6 +196,7 @@ The second RW-native application is also deliberately one page: `Stage Hygiene`.
 Reusable helpers live in `scripts/sales/rw_zebra_kg_ibcs_synth.py`:
 
 - `zebra_native_card_objects()`
+- `zebra_exception_ledger_objects()`
 - `zebra_compact_movement_ledger_objects()`
 - `zebra_stage_hygiene_table_objects()`
 - `zebra_detail_table_objects()`

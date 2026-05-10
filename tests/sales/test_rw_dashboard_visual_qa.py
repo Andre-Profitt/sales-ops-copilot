@@ -1,7 +1,14 @@
 import json
 from pathlib import Path
 
-from scripts.sales._pbir_helpers import build_card_visual, build_rag_card_visual, build_table_visual, build_textbox_visual
+from scripts.sales._pbir_helpers import (
+    build_card_visual,
+    build_card_visual_with_objects,
+    build_rag_card_visual,
+    build_shape_visual,
+    build_table_visual,
+    build_textbox_visual,
+)
 from scripts.sales.rw_dashboard_visual_qa import audit_report, render_markdown, write_outputs
 
 
@@ -60,6 +67,64 @@ def test_visual_qa_flags_card_strip_dimension_drift_and_wall_of_cards():
     codes = _codes(result["findings"])
     assert "card_strip_dimension_drift" in codes
     assert "wall_of_cards" in codes
+
+
+def test_visual_qa_flags_pastel_rag_card_and_panel_surfaces():
+    visuals = [
+        build_textbox_visual("What Changed", x=20, y=12, w=400, h=28, font_size_pt=18),
+        build_shape_visual(x=20, y=60, w=320, h=120, fill="#ffeeee", line="#cc3333"),
+        build_card_visual_with_objects(
+            "f_opportunity",
+            "At Risk Opps Count",
+            "At Risk",
+            x=360,
+            y=60,
+            w=260,
+            h=90,
+            objects={
+                "background": [
+                    {
+                        "properties": {
+                            "color": {
+                                "solid": {
+                                    "color": {"expr": {"Literal": {"Value": "'#ffeeee'"}}}
+                                }
+                            }
+                        }
+                    }
+                ],
+                "border": [
+                    {
+                        "properties": {
+                            "color": {
+                                "solid": {
+                                    "color": {"expr": {"Literal": {"Value": "'#cc3333'"}}}
+                                }
+                            }
+                        }
+                    }
+                ],
+                "labels": [{"properties": {"fontSize": {"expr": {"Literal": {"Value": "'28'"}}}}}],
+                "categoryLabels": [
+                    {
+                        "properties": {
+                            "color": {
+                                "solid": {
+                                    "color": {"expr": {"Literal": {"Value": "'#cc3333'"}}}
+                                }
+                            }
+                        }
+                    }
+                ],
+            },
+        ),
+    ]
+
+    result = audit_report(_report("What Changed", visuals))
+
+    codes = _codes(result["findings"])
+    assert "pastel_status_panel_surface" in codes
+    assert "pastel_status_card_surface" in codes
 
 
 def test_visual_qa_enforces_arr_acv_guardrails():

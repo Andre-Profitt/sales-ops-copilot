@@ -17,6 +17,7 @@ Motion = Literal["land_expand_arr", "renewal_acv", "cross_motion_labeled", "proc
 VisualRole = Literal[
     "hero KPI",
     "RAG card",
+    "exception ledger",
     "movement ledger",
     "variance table",
     "bridge/waterfall",
@@ -96,8 +97,8 @@ PAGE_KPI_CONTRACTS: dict[str, PageKPIContract] = {
         measures=("At Risk Opps Count", "At Risk Opps ARR", "Watch Opps Count", "Watch Opps ARR", "Healthy Moves Count", "Healthy Moves ARR", "Stage Moves Count 7d", "Stage Moves ARR 7d", "New Opps Count 7d", "Closed Won Count 7d", "Closed Lost Count 7d", "Total Open Pipeline ARR"),
         motion="land_expand_arr",
         placements=(
-            p("opp_age", "At Risk Opps ARR", "RAG card", "land_expand_arr", "clean", "At Risk - ARR"),
-            p("opp_age", "Watch Opps ARR", "RAG card", "land_expand_arr", "clean", "Watch - ARR"),
+            p("opp_age", "At Risk Opps ARR", "exception ledger", "land_expand_arr", "clean", "At Risk ARR"),
+            p("opp_age", "Watch Opps ARR", "exception ledger", "land_expand_arr", "clean", "Watch ARR"),
             p("stage_conversion", "Stage Moves ARR 7d", "movement ledger", "land_expand_arr", "clean", "Stage move ARR"),
             p("new_opps_by_region", "New Opps Count 7d", "movement ledger", "land_expand_arr", "clean", "New opps"),
             p("forecast_closed_won", "Closed Won Count 7d", "movement ledger", "land_expand_arr", "clean", "Won"),
@@ -250,6 +251,7 @@ def _measure_visual_types(section: dict, measure: str) -> set[str]:
 ROLE_VISUAL_TYPES: dict[VisualRole, set[str]] = {
     "hero KPI": {"card"},
     "RAG card": {"card"},
+    "exception ledger": {"tableEx", "pivotTable"},
     "movement ledger": {"tableEx", "pivotTable"},
     "variance table": {"tableEx", "pivotTable"},
     "bridge/waterfall": {"waterfallChart", "clusteredBarChart", "pivotTable"},
