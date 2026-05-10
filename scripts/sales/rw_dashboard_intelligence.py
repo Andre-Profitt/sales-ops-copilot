@@ -78,7 +78,7 @@ NEXT_SURFACE: dict[str, str] = {
     "synergy_deals_won": "Needs synergy flag; current Growth Mix page uses Land won count as a proxy.",
     "lost_arr_quarterly": "Add to Renewals as loss waterfall / reason table.",
     "business_at_risk": "Keep in page QA; active-base ARR risk now comes from Apttus Asset Line Item joined to Account termination risk.",
-    "one_off_revenues": "Needs one-off/PS product fields; likely Product/Pricing future page.",
+    "one_off_revenues": "Keep in Growth Mix QA; Opportunity one-off/non-recurring fields are now staged separately from ARR and Renewal ACV.",
     "ps_arr_attach": "Keep in page QA; PS recurring ACV is now modeled from Opportunity.",
     "saas_arr_yoy_growth": "Keep in page QA; SaaS ACV/ARR field is now modeled from Opportunity.",
     "existing_arr_run_rate": "Keep in page QA; active installed ARR run-rate now comes from Apttus Asset Line Item.",

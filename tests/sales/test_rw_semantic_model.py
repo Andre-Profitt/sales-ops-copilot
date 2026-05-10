@@ -85,6 +85,7 @@ def test_currency_measure_formats_are_locked_to_eur_m():
         "Total Open Renewal ACV",
         "Total Renewal ACV Won",
         "Stage Moves ARR 7d",
+        "One Off Revenues",
     ]:
         assert measures[name]["formatString"] == CURRENCY_M_FORMAT
 
@@ -113,3 +114,23 @@ def test_stage_order_semantics_are_in_model():
         "toColumn": "stage_order",
         "crossFilteringBehavior": "oneDirection",
     }
+
+
+def test_one_off_revenue_is_staged_as_non_recurring_not_arr_or_acv():
+    measures = _measure_map()
+    opp_cols = {column["name"] for column in _table_map()["f_opportunity"]["columns"]}
+
+    assert {
+        "ps_one_off_org_ccy",
+        "ps_non_recurring_org_ccy",
+        "third_party_one_off_org_ccy",
+        "cdd_one_off_tcv_org_ccy",
+        "pso_one_off_tcv_org_ccy",
+        "psi_psa_one_off_org_ccy",
+        "one_off_revenue_org_ccy",
+    } <= opp_cols
+    assert measures["One Off Revenues"]["expression"] == (
+        "SUM ( f_opportunity[one_off_revenue_org_ccy] )"
+    )
+    assert "arr_org_ccy" not in measures["One Off Revenues"]["expression"]
+    assert "acv_org_ccy" not in measures["One Off Revenues"]["expression"]

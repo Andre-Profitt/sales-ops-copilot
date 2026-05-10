@@ -196,13 +196,13 @@ def necessary_to_finish() -> list[dict[str, str]]:
         },
         {
             "lane": "renewal base data",
-            "need": "Stage Asset/Subscription base, existing ARR run-rate, indexation/uplift fields, and active-base risk.",
-            "why": "Renewal page now shows open ACV risk, but not full active-base renewal economics or retained base quality.",
+            "need": "Find and stage a populated indexation/uplift source.",
+            "why": "Active-base ARR and active-base risk are now modeled from asset line items; indexation/uplift remains unpopulated.",
         },
         {
             "lane": "growth segmentation",
-            "need": "Stage a trusted Synergy flag and one-off/non-recurring revenue source.",
-            "why": "Axioma, SaaS, and PS attach are now modeled; Synergy and one-off revenue remain the Growth Mix gaps.",
+            "need": "Stage a trusted Synergy flag.",
+            "why": "Axioma, SaaS, PS attach, and one-off/non-recurring revenue are now modeled; Synergy remains report/name-filter only.",
         },
         {
             "lane": "BI surface",
@@ -285,7 +285,7 @@ def write_markdown(result: dict[str, Any], path: Path) -> None:
         "1. No critical/high semantic-filter findings.",
         "2. No high-impact RW KPI remains proxy-only unless explicitly descoped in the exec narrative.",
         "3. Transition-date semantics exist before adding richer stage/forecast period flows.",
-        "4. Forecast, renewal-base, Synergy, and one-off revenue gaps are either staged or clearly excluded from the dashboard scope.",
+        "4. Forecast, indexation/uplift, and Synergy gaps are either staged or clearly excluded from the dashboard scope.",
         "5. Unit audit has zero high/critical findings; every monetary measure reads in one unit.",
         "6. The BI surface supports an action flow from headline exception to account/opportunity detail without ARR/ACV blending.",
     ]

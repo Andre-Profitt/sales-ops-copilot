@@ -69,6 +69,14 @@ EXACT_RULES: dict[str, BasisRule] = {
     "Open Land ARR": BasisRule("land_arr", (_tokens("arr",), _tokens("land",))),
     "Open Expand ARR": BasisRule("expand_arr", (_tokens("arr",), _tokens("expand",))),
     "Total Land Won Count": BasisRule("count", (_tokens("count", "deals"), _tokens("land",))),
+    "One Off Revenues": BasisRule(
+        "non_recurring_revenue",
+        (_tokens("one-off", "one off", "non-recurring", "non recurring"), _tokens("revenue",)),
+    ),
+    "One-Off Revenue Opp Count": BasisRule(
+        "count",
+        (_tokens("one-off", "one off", "non-recurring", "non recurring"), _tokens("count", "opp", "opps", "deal", "deals")),
+    ),
 }
 
 RENEWAL_ACV_RE = re.compile(r"Renewal\s+ACV", re.IGNORECASE)

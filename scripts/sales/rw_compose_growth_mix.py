@@ -124,16 +124,18 @@ def _compose(section: dict) -> None:
                 {"table": "f_opportunity", "field": "won_value_tier", "kind": "column", "title": "Won tier"},
                 {"table": "f_opportunity", "field": "Closed Won Deals Count", "kind": "measure", "title": "Won deal count"},
                 {"table": "f_opportunity", "field": "Cross Sell To Acquired ARR", "kind": "measure", "title": "Axioma ARR (Land + Expand)"},
+                {"table": "f_opportunity", "field": "One Off Revenues", "kind": "measure", "title": "One-off revenue (non-recurring, EUR M)"},
+                {"table": "f_opportunity", "field": "One-Off Revenue Opp Count", "kind": "measure", "title": "One-off opp count"},
                 {"table": "f_opportunity", "field": "SaaS YoY Growth Pct", "kind": "measure", "title": "SaaS ARR YoY %"},
                 {"table": "f_opportunity", "field": "PS ARR Attach Pct", "kind": "measure", "title": "PS attach % (ACV/ARR)"},
             ],
             x=652,
             y=500,
             w=580,
-            h=98,
+            h=130,
             objects=zebra_detail_table_objects(),
         ),
-        build_textbox_visual(contract.caveat, x=652, y=612, w=560, h=44, font_size_pt=8, color="#5C6670", bold=False),
+        build_textbox_visual(contract.caveat, x=652, y=642, w=560, h=34, font_size_pt=8, color="#5C6670", bold=False),
     ]
 
 

@@ -32,6 +32,7 @@ def test_metric_basis_rules_classify_load_bearing_measure_families():
     assert rule_for_measure("Existing ARR Run Rate").basis == "active_base_arr"
     assert rule_for_measure("Total Open Pipeline Value").basis == "cross_motion_arr_acv"
     assert rule_for_measure("Renewal Retention Pct (Period)").basis == "acv_weighted_rate"
+    assert rule_for_measure("One Off Revenues").basis == "non_recurring_revenue"
 
 
 def test_composed_rw_report_has_no_metric_basis_label_findings():

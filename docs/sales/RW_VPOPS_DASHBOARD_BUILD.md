@@ -1572,6 +1572,47 @@ Andre asked for a direct checklist of RW-expected KPIs versus what the current B
 
 ARR remains Land + Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
 
+## 2026-05-10 — One-off revenue data blocker closed
+
+This pass executed the next source-blocker move after the control/navigation and action-flow work: one-off revenue is no longer treated as a source-data gap.  The Salesforce gap probe confirmed populated Opportunity one-off/non-recurring fields, so the ETL, semantic model, Growth Mix page contract, and KPI coverage docs now treat it as a separate non-recurring revenue basis.
+
+**Shipped:**
+
+- Added six Opportunity one-off/non-recurring source fields to `scripts/sales/sf_to_fabric_rw.py`.
+- Added `one_off_revenue_org_ccy` as the source-derived total in `f_opportunity`.
+- Added semantic columns plus deployed measures:
+  - `One Off Revenues`
+  - `PS Non-Recurring Revenue`
+  - `One-Off Revenue Opp Count`
+- Surfaced `One Off Revenues` on `Growth Mix` as `One-off revenue (non-recurring, EUR M)`.
+- Updated KPI contracts/intelligence/checklist so `one_off_revenues` is covered instead of source-blocked.
+- Kept the basis explicit: one-off revenue is not ARR, not Renewal ACV, and not part of `Total Open Pipeline Value`.
+
+**Coverage impact:**
+
+- Cleanly covered on BI: 25 -> 26 / 31.
+- Usable on BI including proxy coverage: 29 -> 30 / 31.
+- Source-data gaps: 1 -> 0.
+- Remaining non-dependable KPI: `synergy_deals_pipe`; the high-impact blockers remain `pipeline_coverage_3x`, `forecast_accuracy`, and `synergy_deals_won`.
+
+**Live data/model update:**
+
+- Re-ran `python3 -m scripts.sales.sf_to_fabric_rw`; `f_opportunity` now has 10,237 rows x 41 columns.
+- Re-pushed `sm_sales_kpis_rw`; deployed semantic model now exposes 127 measures and resolves `One Off Revenues` / `One-Off Revenue Opp Count`.
+- No Fabric report publish was performed; the local PBIP lab report was regenerated.
+
+**Verification:**
+
+- `python3 -m scripts.sales.rw_salesforce_gap_source_probe` passed and regenerated the source-probe docs.
+- `python3 -m scripts.sales.rw_apply_zebra_lab_proof` regenerated the local lab PBIP.
+- `python3 -m scripts.sales.rw_validate --file ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json` passed with 8 sections, 188 visualContainers, and all measure refs resolved.
+- Dashboard harness audit returned no findings.
+- Visual QA passed with 0 findings at `--fail-on medium`.
+- Unit policy passed with 0 findings.
+- Metric-basis audit passed with 0 findings.
+- Semantic-filter audit passed with medium=2, high=0, critical=0.
+- `python3 -m pytest tests/sales -q` passed: 271 passed, 1 skipped, 2 warnings.
+
 ## 2026-05-10 — Product Retention tab, active-base heatmaps
 
 Built the first product/churn surface as a native Power BI page: `Product Retention`.
@@ -2080,7 +2121,7 @@ The coverage checklist showed that several gaps were not truly missing data; the
 - `forecast_accuracy`: ForecastingItem exists, but true accuracy needs a forecast snapshot/backtest grain; current page remains slip/upgrade proxy.
 - `existing_arr_run_rate` and `indexation_arr_growth`: still need Asset/Subscription base and uplift/indexation fields.
 - `synergy_deals_won` / `synergy_deals_pipe`: still need a trusted Synergy flag.
-- `one_off_revenues`: still needs product/finance source for non-recurring revenue.
+- `one_off_revenues`: superseded later on 2026-05-10; Opportunity one-off/non-recurring fields were found, staged, modeled, and surfaced.
 
 **Deployed/verified:**
 

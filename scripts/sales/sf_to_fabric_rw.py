@@ -65,6 +65,12 @@ SELECT
     convertCurrency(APTS_RH_ASP_Annual__c),
     convertCurrency(APTS_RUS_Axioma_Order_Inflow__c),
     convertCurrency(APTS_PS_Recurring_ACV_Display__c),
+    convertCurrency(APTS_RH_PS_One_Off__c),
+    convertCurrency(APTS_PS_Non_Recurring_NPP_Display__c),
+    convertCurrency(APTS_RH_3rd_Party_One_Off__c),
+    convertCurrency(APTS_CDD_One_Off_TCV_Display__c),
+    convertCurrency(APTS_PSO_One_Off_TCV_Display__c),
+    convertCurrency(APTS_RUS_PSI_PSA_One_Off__c),
     convertCurrency(Quota_Amount__c),
     convertCurrency(Amount),
     LeadSource,
@@ -210,6 +216,20 @@ def transform(stage: pathlib.Path) -> dict[str, pd.DataFrame]:
             CAST("APTS_RH_ASP_Annual__c" AS DOUBLE) as saas_acv_org_ccy,
             CAST("APTS_RUS_Axioma_Order_Inflow__c" AS DOUBLE) as axioma_order_inflow_org_ccy,
             CAST("APTS_PS_Recurring_ACV_Display__c" AS DOUBLE) as ps_recurring_acv_org_ccy,
+            CAST("APTS_RH_PS_One_Off__c" AS DOUBLE) as ps_one_off_org_ccy,
+            CAST("APTS_PS_Non_Recurring_NPP_Display__c" AS DOUBLE) as ps_non_recurring_org_ccy,
+            CAST("APTS_RH_3rd_Party_One_Off__c" AS DOUBLE) as third_party_one_off_org_ccy,
+            CAST("APTS_CDD_One_Off_TCV_Display__c" AS DOUBLE) as cdd_one_off_tcv_org_ccy,
+            CAST("APTS_PSO_One_Off_TCV_Display__c" AS DOUBLE) as pso_one_off_tcv_org_ccy,
+            CAST("APTS_RUS_PSI_PSA_One_Off__c" AS DOUBLE) as psi_psa_one_off_org_ccy,
+            (
+                COALESCE(CAST("APTS_RH_PS_One_Off__c" AS DOUBLE), 0)
+                + COALESCE(CAST("APTS_PS_Non_Recurring_NPP_Display__c" AS DOUBLE), 0)
+                + COALESCE(CAST("APTS_RH_3rd_Party_One_Off__c" AS DOUBLE), 0)
+                + COALESCE(CAST("APTS_CDD_One_Off_TCV_Display__c" AS DOUBLE), 0)
+                + COALESCE(CAST("APTS_PSO_One_Off_TCV_Display__c" AS DOUBLE), 0)
+                + COALESCE(CAST("APTS_RUS_PSI_PSA_One_Off__c" AS DOUBLE), 0)
+            ) as one_off_revenue_org_ccy,
             CAST("Quota_Amount__c" AS DOUBLE) as quota_org_ccy,
             CAST("Amount" AS DOUBLE) as amount_org_ccy,
             "LeadSource" as lead_source,

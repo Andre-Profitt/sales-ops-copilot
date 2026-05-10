@@ -5,11 +5,11 @@ Generated from `scripts/sales/rw_kpi_graph.py`, `rw_page_kpi_contract.py`, and t
 ## Rollup
 
 - Total RW KPIs: 31
-- Surfaced cleanly on dashboard pages: 25
+- Surfaced cleanly on dashboard pages: 26
 - Surfaced but still partial: 4
 - Model-available but not clearly surfaced: 0
 - Partial data or measure gap: 1
-- Source-data gap: 1
+- Source-data gap: 0
 
 Cardinal rule: ARR is Land + Expand only; Renewal ACV is Renewal only. The only cross-motion value measure remains `Total Open Pipeline Value`.
 
@@ -28,7 +28,7 @@ Semantic/model upgrades; a page exists or the KPI is close, but the current visu
 - `synergy_deals_pipe`: Needs synergy flag; then add open/won synergy strip to Growth Mix.
 
 Source-data upgrades; these need ETL/source-field work before a real dashboard visual can be trusted:
-- `one_off_revenues`: Needs one-off/PS product fields; likely Product/Pricing future page.
+- None.
 
 ## Slice/Dice Explorer
 
@@ -133,13 +133,30 @@ The page contract is executable via `scripts/sales/rw_page_kpi_contract.py`; tes
 | `existing_arr_run_rate` | `Existing ARR Expiring In Period` | detail table | `renewal_base_arr` | clean | Active-base ARR Detail |
 | `indexation_arr_growth` | `Indexation ARR Growth` | detail table | `renewal_acv` | missing source data | Indexation ARR Growth |
 
+### Product Retention
+
+- Executive question: Which product, segment, and region combinations carry active-base ARR retention or churn risk?
+- Primary KPIs: `existing_arr_run_rate`, `business_at_risk`
+- Secondary diagnostics: `indexation_arr_growth`
+- Required motion guardrail: `renewal_base_arr`
+- Caveat: Product heatmaps use active-base ARR from asset line items. True churn requires prior/current active-base snapshots or effective-dated asset rows. This is not Renewal ACV and not Land + Expand ARR.
+
+| KPI | Measure | Role | Motion | Data status | Label |
+| --- | --- | --- | --- | --- | --- |
+| `existing_arr_run_rate` | `Existing ARR Run Rate` | hero KPI | `renewal_base_arr` | clean | Active-base ARR |
+| `existing_arr_run_rate` | `Existing ARR Expiring In Period` | variance table | `renewal_base_arr` | clean | Active-base ARR by Product x Region |
+| `business_at_risk` | `Business At Risk ARR` | hero KPI | `renewal_base_arr` | clean | At-risk active-base ARR |
+| `business_at_risk` | `Business At Risk Pct` | variance table | `renewal_base_arr` | clean | Risk % of active base |
+| `existing_arr_run_rate` | `Existing ARR Expiring In Period` | detail table | `renewal_base_arr` | clean | Account-product Retention Ledger |
+| `indexation_arr_growth` | `Indexation ARR Growth` | detail table | `renewal_base_arr` | missing source data | Indexation ARR Growth |
+
 ### Growth Mix
 
 - Executive question: Is growth coming from the right Land, Expand, partner, source, and new-customer mix?
 - Primary KPIs: `ilf_arr_pipeline`, `alf_arr_pipeline`, `new_customer_reporting`, `closed_won_avg_deal_size`, `partner_opps_pct`
-- Secondary diagnostics: `opp_source_effectiveness`, `closed_won_value_tier`, `cross_sell_to_acquired`, `ps_arr_attach`, `saas_arr_yoy_growth`, `synergy_deals_won`
+- Secondary diagnostics: `opp_source_effectiveness`, `closed_won_value_tier`, `cross_sell_to_acquired`, `one_off_revenues`, `ps_arr_attach`, `saas_arr_yoy_growth`, `synergy_deals_won`
 - Required motion guardrail: `land_expand_arr`
-- Caveat: Land and Expand ARR stay separate from Renewal ACV. SaaS and PS use their own source fields; Synergy remains proxy-only until the source flag exists.
+- Caveat: Land and Expand ARR stay separate from Renewal ACV. One-off revenue is non-recurring and is not blended into ARR or ACV. Synergy remains proxy-only until the source flag exists.
 
 | KPI | Measure | Role | Motion | Data status | Label |
 | --- | --- | --- | --- | --- | --- |
@@ -153,6 +170,7 @@ The page contract is executable via `scripts/sales/rw_page_kpi_contract.py`; tes
 | `opp_source_effectiveness` | `Partner ARR` | detail table | `land_expand_arr` | clean | Strategic Mix Detail |
 | `closed_won_value_tier` | `Closed Won Deals Count` | detail table | `land_expand_arr` | clean | Won value tier |
 | `cross_sell_to_acquired` | `Cross Sell To Acquired ARR` | detail table | `land_expand_arr` | clean | Axioma ARR (Land + Expand) |
+| `one_off_revenues` | `One Off Revenues` | detail table | `process` | clean | One-off revenue (non-recurring, EUR M) |
 | `ps_arr_attach` | `PS ARR Attach Pct` | detail table | `land_expand_arr` | clean | PS attach % (ACV/ARR) |
 | `saas_arr_yoy_growth` | `SaaS YoY Growth Pct` | detail table | `process` | clean | SaaS ARR YoY % |
 | `synergy_deals_won` | `Total Land Won Count` | detail table | `land_expand_arr` | proxy | Land count proxy |
@@ -179,8 +197,8 @@ The page contract is executable via `scripts/sales/rw_page_kpi_contract.py`; tes
 | `partner_opps_pct` | MEDIUM | land_expand | exists | surfaced | Growth Mix | Partner ARR, Partner Pct | Keep in page QA; tighten visual treatment if Desktop review flags it. |
 | `renewal_retention_rate` | HIGH | renewal | partial | surfaced | VP Ops Scorecard, Renewals | Renewal Retention Pct (Period) | Keep in page QA; tighten visual treatment if Desktop review flags it. |
 | `renewals_mom_trend` | HIGH | renewal | exists | surfaced | Renewals | Total Open Renewal ACV, Total Renewal ACV Won | Keep in page QA; tighten visual treatment if Desktop review flags it. |
-| `existing_arr_run_rate` | HIGH | renewal | exists | surfaced | Renewals | Existing ARR Run Rate | Keep in page QA; tighten visual treatment if Desktop review flags it. |
-| `indexation_arr_growth` | MEDIUM | renewal | missing | surfaced_partial | Renewals | - (missing: Indexation ARR Growth) | Needs indexation/contract uplift field; keep as Renewals caveat until staged. |
+| `existing_arr_run_rate` | HIGH | renewal | exists | surfaced | Renewals, Product Retention | Existing ARR Run Rate | Keep in page QA; tighten visual treatment if Desktop review flags it. |
+| `indexation_arr_growth` | MEDIUM | renewal | missing | surfaced_partial | Renewals, Product Retention | - (missing: Indexation ARR Growth) | Needs indexation/contract uplift field; keep as Renewals caveat until staged. |
 | `ilf_arr_pipeline` | HIGH | land_expand | partial | surfaced | Growth Mix | Open Expand ARR | Keep in page QA; tighten visual treatment if Desktop review flags it. |
 | `alf_arr_pipeline` | HIGH | land_expand | partial | surfaced | Growth Mix | Open Land ARR | Keep in page QA; tighten visual treatment if Desktop review flags it. |
 | `new_customer_reporting` | HIGH | land_expand | exists | surfaced | Growth Mix | Total Land Won Count, Total Land Won ARR | Keep in page QA; tighten visual treatment if Desktop review flags it. |
@@ -188,8 +206,8 @@ The page contract is executable via `scripts/sales/rw_page_kpi_contract.py`; tes
 | `synergy_deals_won` | HIGH | land_expand | partial | surfaced_partial | Growth Mix | Total Land Won Count (missing: Synergy Deals Won) | Needs synergy flag; current Growth Mix page uses Land won count as a proxy. |
 | `synergy_deals_pipe` | MEDIUM | land_expand | partial | partial_data_or_measure_gap | - | - (missing: Synergy Deals Pipeline) | Needs synergy flag; then add open/won synergy strip to Growth Mix. |
 | `lost_arr_quarterly` | HIGH | renewal | exists | surfaced | Renewals | Total Renewal ACV Lost | Keep in page QA; tighten visual treatment if Desktop review flags it. |
-| `business_at_risk` | HIGH | renewal | exists | surfaced | Renewals | Business At Risk ARR | Keep in page QA; tighten visual treatment if Desktop review flags it. |
-| `one_off_revenues` | MEDIUM | all | missing | source_data_gap | - | - (missing: One Off Revenues) | Needs one-off/PS product fields; likely Product/Pricing future page. |
+| `business_at_risk` | HIGH | renewal | exists | surfaced | Renewals, Product Retention | Business At Risk ARR | Keep in page QA; tighten visual treatment if Desktop review flags it. |
+| `one_off_revenues` | MEDIUM | all | exists | surfaced | Growth Mix | One Off Revenues | Keep in page QA; tighten visual treatment if Desktop review flags it. |
 | `ps_arr_attach` | MEDIUM | land_expand | exists | surfaced | Growth Mix | PS ARR Attach Pct | Keep in page QA; tighten visual treatment if Desktop review flags it. |
 | `saas_arr_yoy_growth` | HIGH | all | exists | surfaced | Growth Mix | SaaS YoY Growth Pct | Keep in page QA; tighten visual treatment if Desktop review flags it. |
 

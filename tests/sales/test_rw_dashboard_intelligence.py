@@ -34,11 +34,11 @@ def test_rollup_keeps_proxy_kpis_out_of_cleanly_surfaced_count():
 
     assert counts == {
         "total_kpis": 31,
-        "surfaced": 25,
+        "surfaced": 26,
         "surfaced_partial": 4,
         "model_available_not_surfaced": 0,
         "partial_data_or_measure_gap": 1,
-        "source_data_gap": 1,
+        "source_data_gap": 0,
     }
 
 
@@ -54,6 +54,8 @@ def test_partial_statuses_call_out_the_actual_missing_measure():
     assert rows["existing_arr_run_rate"].dashboard_status == "surfaced"
     assert rows["indexation_arr_growth"].dashboard_status == "surfaced_partial"
     assert rows["synergy_deals_won"].dashboard_status == "surfaced_partial"
+    assert rows["one_off_revenues"].dashboard_status == "surfaced"
+    assert rows["one_off_revenues"].source_coverage == "exists"
     assert rows["business_at_risk"].dashboard_status == "surfaced"
 
 

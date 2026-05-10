@@ -229,7 +229,7 @@ def build_upgrade_plan(
             ),
             data_or_model_work=[
                 "Stage a trusted Synergy flag for won and open pipeline.",
-                "Identify and stage one-off/non-recurring revenue source fields.",
+                "Keep one-off/non-recurring revenue as a separate governed basis; it is now staged and surfaced.",
                 "Keep Land and Expand written out and separate from Renewal ACV.",
             ],
             bi_surface_work=[

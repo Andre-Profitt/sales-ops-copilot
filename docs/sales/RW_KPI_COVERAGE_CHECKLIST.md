@@ -5,11 +5,11 @@ Generated from `scripts/sales/rw_kpi_graph.py`, `rw_dashboard_intelligence.py`, 
 ## Coverage Answer
 
 - RW expected KPIs: 31
-- Cleanly covered on BI: 25 / 31
-- Usable on BI including partial/proxy coverage: 29 / 31
-- Not dependable yet: 2 / 31
+- Cleanly covered on BI: 26 / 31
+- Usable on BI including partial/proxy coverage: 30 / 31
+- Not dependable yet: 1 / 31
 - Model/measure gaps: 1
-- Source-data gaps: 1
+- Source-data gaps: 0
 
 Cardinal guardrail: ARR is Land + Expand only; Renewal ACV is Renewal only. Total Open Pipeline Value is the only explicitly labeled cross-motion value.
 
@@ -47,7 +47,7 @@ Checklist legend: `[x]` covered, `[~]` partial/proxy on BI, `[ ]` not dependable
 | [ ] | `synergy_deals_pipe` | Synergy deals in pipe; target 30 deals/quarter | MEDIUM | land_expand | Model/measure gap | - | missing: Synergy Deals Pipeline | Needs synergy flag; then add open/won synergy strip to Growth Mix. |
 | [x] | `lost_arr_quarterly` | Lost ARR By Quarter (with reason); target <5% annually | HIGH | renewal | Covered | Renewals | Total Renewal ACV Lost | Keep in page QA; tighten visual treatment if Desktop review flags it. |
 | [x] | `business_at_risk` | Business At Risk By Quarter; target <10% of ARR | HIGH | renewal | Covered | Renewals, Product Retention | Business At Risk ARR | Keep in page QA; tighten visual treatment if Desktop review flags it. |
-| [ ] | `one_off_revenues` | One Off Revenues by Quarter; target Track & Monitor | MEDIUM | all | Source-data gap | - | missing: One Off Revenues | Needs one-off/PS product fields; likely Product/Pricing future page. |
+| [x] | `one_off_revenues` | One Off Revenues by Quarter; target Track & Monitor | MEDIUM | all | Covered | Growth Mix | One Off Revenues | Keep in page QA; tighten visual treatment if Desktop review flags it. |
 | [x] | `ps_arr_attach` | PS ARR by Quarter; target 15% attach rate | MEDIUM | land_expand | Covered | Growth Mix | PS ARR Attach Pct | Keep in page QA; tighten visual treatment if Desktop review flags it. |
 | [x] | `saas_arr_yoy_growth` | SaaS ARR by Quarter; target Growth >20% YoY | HIGH | all | Covered | Growth Mix | SaaS YoY Growth Pct | Keep in page QA; tighten visual treatment if Desktop review flags it. |
 
@@ -70,4 +70,4 @@ Checklist legend: `[x]` covered, `[~]` partial/proxy on BI, `[ ]` not dependable
 
 ## Source-Data Gaps
 
-- `one_off_revenues` (MEDIUM, all): Needs one-off/PS product fields; likely Product/Pricing future page.
+- None.

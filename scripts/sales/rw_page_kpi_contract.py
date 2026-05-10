@@ -216,9 +216,9 @@ PAGE_KPI_CONTRACTS: dict[str, PageKPIContract] = {
         job="Growth mix cockpit: open Land, open Expand, partner contribution, and new-customer signal.",
         executive_question="Is growth coming from the right Land, Expand, partner, source, and new-customer mix?",
         primary_kpis=("ilf_arr_pipeline", "alf_arr_pipeline", "new_customer_reporting", "closed_won_avg_deal_size", "partner_opps_pct"),
-        secondary_diagnostics=("opp_source_effectiveness", "closed_won_value_tier", "cross_sell_to_acquired", "ps_arr_attach", "saas_arr_yoy_growth", "synergy_deals_won"),
-        kpi_ids=("ilf_arr_pipeline", "alf_arr_pipeline", "new_customer_reporting", "closed_won_avg_deal_size", "partner_opps_pct", "opp_source_effectiveness", "closed_won_value_tier", "cross_sell_to_acquired", "ps_arr_attach", "saas_arr_yoy_growth", "synergy_deals_won"),
-        measures=("Open Land ARR", "Open Expand ARR", "Partner ARR", "Partner Pct", "Total Open Pipeline ARR", "Total Land Won Count", "Avg Deal Size Won", "Closed Won Deals Count", "Cross Sell To Acquired ARR", "PS ARR Attach Pct", "SaaS YoY Growth Pct"),
+        secondary_diagnostics=("opp_source_effectiveness", "closed_won_value_tier", "cross_sell_to_acquired", "one_off_revenues", "ps_arr_attach", "saas_arr_yoy_growth", "synergy_deals_won"),
+        kpi_ids=("ilf_arr_pipeline", "alf_arr_pipeline", "new_customer_reporting", "closed_won_avg_deal_size", "partner_opps_pct", "opp_source_effectiveness", "closed_won_value_tier", "cross_sell_to_acquired", "one_off_revenues", "ps_arr_attach", "saas_arr_yoy_growth", "synergy_deals_won"),
+        measures=("Open Land ARR", "Open Expand ARR", "Partner ARR", "Partner Pct", "Total Open Pipeline ARR", "Total Land Won Count", "Avg Deal Size Won", "Closed Won Deals Count", "Cross Sell To Acquired ARR", "One Off Revenues", "One-Off Revenue Opp Count", "PS ARR Attach Pct", "SaaS YoY Growth Pct"),
         motion="land_expand_arr",
         placements=(
             p("alf_arr_pipeline", "Open Land ARR", "hero KPI", "land_expand_arr", "partial", "Open Land ARR"),
@@ -231,11 +231,12 @@ PAGE_KPI_CONTRACTS: dict[str, PageKPIContract] = {
             p("opp_source_effectiveness", "Partner ARR", "detail table", "land_expand_arr", "clean", "Strategic Mix Detail", secondary=True),
             p("closed_won_value_tier", "Closed Won Deals Count", "detail table", "land_expand_arr", "clean", "Won value tier", secondary=True),
             p("cross_sell_to_acquired", "Cross Sell To Acquired ARR", "detail table", "land_expand_arr", "clean", "Axioma ARR (Land + Expand)", secondary=True),
+            p("one_off_revenues", "One Off Revenues", "detail table", "process", "clean", "One-off revenue (non-recurring, EUR M)", secondary=True),
             p("ps_arr_attach", "PS ARR Attach Pct", "detail table", "land_expand_arr", "clean", "PS attach % (ACV/ARR)", secondary=True),
             p("saas_arr_yoy_growth", "SaaS YoY Growth Pct", "detail table", "process", "clean", "SaaS ARR YoY %", secondary=True),
             p("synergy_deals_won", "Total Land Won Count", "detail table", "land_expand_arr", "proxy", "Land count proxy", secondary=True, missing_measure="Synergy Deals Won"),
         ),
-        caveat="Land and Expand ARR stay separate from Renewal ACV. SaaS and PS use their own source fields; Synergy remains proxy-only until the source flag exists.",
+        caveat="Land and Expand ARR stay separate from Renewal ACV. One-off revenue is non-recurring and is not blended into ARR or ACV. Synergy remains proxy-only until the source flag exists.",
     ),
 }
 

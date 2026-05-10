@@ -20,12 +20,12 @@ def test_checklist_rollup_matches_current_bi_coverage_contract():
     summary = build_checklist()["summary"]
 
     assert summary["total_kpis"] == 31
-    assert summary["covered"] == 25
+    assert summary["covered"] == 26
     assert summary["partial_proxy"] == 4
     assert summary["model_measure_gap"] == 1
-    assert summary["source_data_gap"] == 1
-    assert summary["usable_on_bi_including_proxy"] == 29
-    assert summary["not_dependable_yet"] == 2
+    assert summary["source_data_gap"] == 0
+    assert summary["usable_on_bi_including_proxy"] == 30
+    assert summary["not_dependable_yet"] == 1
 
 
 def test_checklist_keeps_arr_acv_guardrail_and_clear_status_labels():
@@ -66,3 +66,9 @@ def test_coverage_rows_retain_page_and_measure_evidence():
     assert pipeline["bi_coverage"] == "Partial/proxy on BI"
     assert "Forecast" in pipeline["pages"]
     assert "Pipeline Coverage Ratio" in pipeline["missing_measures"]
+
+    one_off = rows["one_off_revenues"]
+    assert one_off["check"] == "[x]"
+    assert one_off["bi_coverage"] == "Covered"
+    assert "Growth Mix" in one_off["pages"]
+    assert one_off["present_measures"] == ("One Off Revenues",)

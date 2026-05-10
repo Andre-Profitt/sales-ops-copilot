@@ -1,11 +1,11 @@
 {
   "rollup": {
     "total_kpis": 31,
-    "surfaced": 25,
+    "surfaced": 26,
     "surfaced_partial": 4,
     "model_available_not_surfaced": 0,
     "partial_data_or_measure_gap": 1,
-    "source_data_gap": 1
+    "source_data_gap": 0
   },
   "page_target_map": {
     "VP Ops Scorecard": {
@@ -442,6 +442,81 @@
         }
       ]
     },
+    "Product Retention": {
+      "executive_question": "Which product, segment, and region combinations carry active-base ARR retention or churn risk?",
+      "job": "Product active-base view: product heatmaps and account-product retention scaffold.",
+      "primary_kpis": [
+        "existing_arr_run_rate",
+        "business_at_risk"
+      ],
+      "secondary_diagnostics": [
+        "indexation_arr_growth"
+      ],
+      "required_motion_guardrail": "renewal_base_arr",
+      "caveat": "Product heatmaps use active-base ARR from asset line items. True churn requires prior/current active-base snapshots or effective-dated asset rows. This is not Renewal ACV and not Land + Expand ARR.",
+      "placements": [
+        {
+          "kpi_id": "existing_arr_run_rate",
+          "measure": "Existing ARR Run Rate",
+          "visual_role": "hero KPI",
+          "motion_guardrail": "renewal_base_arr",
+          "data_status": "clean",
+          "label": "Active-base ARR",
+          "secondary": false,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "existing_arr_run_rate",
+          "measure": "Existing ARR Expiring In Period",
+          "visual_role": "variance table",
+          "motion_guardrail": "renewal_base_arr",
+          "data_status": "clean",
+          "label": "Active-base ARR by Product x Region",
+          "secondary": false,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "business_at_risk",
+          "measure": "Business At Risk ARR",
+          "visual_role": "hero KPI",
+          "motion_guardrail": "renewal_base_arr",
+          "data_status": "clean",
+          "label": "At-risk active-base ARR",
+          "secondary": false,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "business_at_risk",
+          "measure": "Business At Risk Pct",
+          "visual_role": "variance table",
+          "motion_guardrail": "renewal_base_arr",
+          "data_status": "clean",
+          "label": "Risk % of active base",
+          "secondary": false,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "existing_arr_run_rate",
+          "measure": "Existing ARR Expiring In Period",
+          "visual_role": "detail table",
+          "motion_guardrail": "renewal_base_arr",
+          "data_status": "clean",
+          "label": "Account-product Retention Ledger",
+          "secondary": true,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "indexation_arr_growth",
+          "measure": "Indexation ARR Growth",
+          "visual_role": "detail table",
+          "motion_guardrail": "renewal_base_arr",
+          "data_status": "missing source data",
+          "label": "Indexation ARR Growth",
+          "secondary": true,
+          "missing_measure": "Indexation ARR Growth"
+        }
+      ]
+    },
     "Growth Mix": {
       "executive_question": "Is growth coming from the right Land, Expand, partner, source, and new-customer mix?",
       "job": "Growth mix cockpit: open Land, open Expand, partner contribution, and new-customer signal.",
@@ -456,12 +531,13 @@
         "opp_source_effectiveness",
         "closed_won_value_tier",
         "cross_sell_to_acquired",
+        "one_off_revenues",
         "ps_arr_attach",
         "saas_arr_yoy_growth",
         "synergy_deals_won"
       ],
       "required_motion_guardrail": "land_expand_arr",
-      "caveat": "Land and Expand ARR stay separate from Renewal ACV. SaaS and PS use their own source fields; Synergy remains proxy-only until the source flag exists.",
+      "caveat": "Land and Expand ARR stay separate from Renewal ACV. One-off revenue is non-recurring and is not blended into ARR or ACV. Synergy remains proxy-only until the source flag exists.",
       "placements": [
         {
           "kpi_id": "alf_arr_pipeline",
@@ -560,6 +636,16 @@
           "motion_guardrail": "land_expand_arr",
           "data_status": "clean",
           "label": "Axioma ARR (Land + Expand)",
+          "secondary": true,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "one_off_revenues",
+          "measure": "One Off Revenues",
+          "visual_role": "detail table",
+          "motion_guardrail": "process",
+          "data_status": "clean",
+          "label": "One-off revenue (non-recurring, EUR M)",
           "secondary": true,
           "missing_measure": ""
         },
@@ -917,7 +1003,8 @@
       "source_coverage": "exists",
       "dashboard_status": "surfaced",
       "pages": [
-        "Renewals"
+        "Renewals",
+        "Product Retention"
       ],
       "model_measures": [
         "Existing ARR Run Rate"
@@ -933,7 +1020,8 @@
       "source_coverage": "missing",
       "dashboard_status": "surfaced_partial",
       "pages": [
-        "Renewals"
+        "Renewals",
+        "Product Retention"
       ],
       "model_measures": [],
       "missing_measures": [
@@ -1062,7 +1150,8 @@
       "source_coverage": "exists",
       "dashboard_status": "surfaced",
       "pages": [
-        "Renewals"
+        "Renewals",
+        "Product Retention"
       ],
       "model_measures": [
         "Business At Risk ARR"
@@ -1075,14 +1164,16 @@
       "name": "One Off Revenues by Quarter",
       "impact": "MEDIUM",
       "motion_filter": "all",
-      "source_coverage": "missing",
-      "dashboard_status": "source_data_gap",
-      "pages": [],
-      "model_measures": [],
-      "missing_measures": [
+      "source_coverage": "exists",
+      "dashboard_status": "surfaced",
+      "pages": [
+        "Growth Mix"
+      ],
+      "model_measures": [
         "One Off Revenues"
       ],
-      "next_action": "Needs one-off/PS product fields; likely Product/Pricing future page."
+      "missing_measures": [],
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
     },
     {
       "kpi_id": "ps_arr_attach",

@@ -448,6 +448,8 @@ def test_arr_and_renewal_acv_contracts_stay_separate_by_page():
         "Avg Deal Size Won",
         "Closed Won Deals Count",
         "Cross Sell To Acquired ARR",
+        "One Off Revenues",
+        "One-Off Revenue Opp Count",
         "PS ARR Attach Pct",
         "SaaS YoY Growth Pct",
     }
@@ -456,6 +458,17 @@ def test_arr_and_renewal_acv_contracts_stay_separate_by_page():
     assert set(PAGE_KPI_CONTRACTS["Growth Mix"].measures) == growth_arr_measures
     assert PAGE_KPI_CONTRACTS["Renewals"].motion == "renewal_acv"
     assert PAGE_KPI_CONTRACTS["Growth Mix"].motion == "land_expand_arr"
+
+
+def test_growth_mix_surfaces_one_off_revenue_as_non_recurring_not_arr_or_acv():
+    report = compose_report({"sections": []})
+    growth_mix = _page(report, "Growth Mix")
+    encoded = "\n".join(vc["config"] for vc in growth_mix["visualContainers"])
+
+    assert "One Off Revenues" in encoded
+    assert "One-off revenue (non-recurring, EUR M)" in encoded
+    assert "One-off opp count" in encoded
+    assert "Total Open Pipeline Value" not in encoded
 
 
 def test_contract_gate_catches_missing_required_primary_kpi():

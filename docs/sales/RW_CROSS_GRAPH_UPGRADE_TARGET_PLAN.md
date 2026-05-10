@@ -1,6 +1,6 @@
 # RW Cross-Graph Upgrade Target Plan
 
-Generated: `2026-05-10T21:54:50Z`
+Generated: `2026-05-10T22:47:10Z`
 
 This compares three graphs: Zebra template/visual grammar, the live RW Power BI artifact graph, and the RW KPI coverage graph. The target is not more cosmetic styling; it is a better executive operating system with Zebra-grade scenario, variance, and bridge semantics.
 
@@ -10,7 +10,7 @@ This compares three graphs: Zebra template/visual grammar, the live RW Power BI 
 - Live PBI footprint: `7` pages, `126` visuals
 - PBI cleanup counts: `{'info': 0, 'low': 0, 'medium': 5, 'high': 4, 'critical': 0}`
 - Zebra mined visual corpus: `360` visuals
-- RW KPI surface: `25` clean out of `31` KPIs
+- RW KPI surface: `26` clean out of `31` KPIs
 - Target plan: `2` P0, `4` P1, `2` P2
 
 ## Core Graph Signals
@@ -74,7 +74,7 @@ This compares three graphs: Zebra template/visual grammar, the live RW Power BI 
 
 **Data/model work**
 - Stage a trusted Synergy flag for won and open pipeline.
-- Identify and stage one-off/non-recurring revenue source fields.
+- Keep one-off/non-recurring revenue as a separate governed basis; it is now staged and surfaced.
 - Keep Land and Expand written out and separate from Renewal ACV.
 
 **BI surface work**

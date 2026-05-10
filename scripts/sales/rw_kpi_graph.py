@@ -680,13 +680,17 @@ _KPIS = (
         primary_bucket="Metrics",
         direction="track",
         motion_filter="all",
-        sf_source_id=None,
-        sf_source_name=None,
-        coverage_status="missing",
-        definition="Non-ARR revenue (one-off services, training, custom dev) booked in the quarter.",
+        sf_source_id="Opportunity one-off revenue fields",
+        sf_source_name="APTS Opportunity one-off/non-recurring fields",
+        coverage_status="exists",
+        definition="Non-ARR, non-Renewal-ACV revenue from Opportunity one-off/non-recurring amount fields booked in the quarter.",
         why_it_matters="Revenue mix discipline; one-offs don't compound but they fund delivery margin.",
-        soql_hint="SUM(One_Off_Amount__c) or sum of OpportunityLineItem where ProductFamily='Services'",
-        caveats=("Real gap — 0 SF reports match. May live in Finance system, not SF.",),
+        soql_hint=(
+            "SUM(APTS_RH_PS_One_Off__c + APTS_PS_Non_Recurring_NPP_Display__c + "
+            "APTS_RH_3rd_Party_One_Off__c + APTS_CDD_One_Off_TCV_Display__c + "
+            "APTS_PSO_One_Off_TCV_Display__c + APTS_RUS_PSI_PSA_One_Off__c)"
+        ),
+        caveats=("Distinct non-recurring revenue basis; do not blend into ARR or Renewal ACV.",),
     ),
     SalesKPI(
         kpi_id="ps_arr_attach",

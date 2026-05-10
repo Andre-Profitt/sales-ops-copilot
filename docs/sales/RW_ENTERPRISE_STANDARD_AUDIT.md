@@ -10,7 +10,7 @@ This is the governing standard for getting the RW Power BI dashboard to Zebra-na
 - Unit policy counts: `{'info': 0, 'low': 0, 'medium': 0, 'high': 0, 'critical': 0}`
 - Semantic/filter counts: `{'info': 0, 'low': 0, 'medium': 2, 'high': 0, 'critical': 0}`
 - Data-surface verdict: `not_exec_complete`
-- KPI rollup: `25` clean, `4` partial/proxy, `1` model gaps, `1` source gaps out of `31` RW KPIs.
+- KPI rollup: `26` clean, `4` partial/proxy, `1` model gaps, `0` source gaps out of `31` RW KPIs.
 - Zebra schema benchmark: `20` templates, `133` relationships, `130` single-direction relationships.
 
 ## Standard
@@ -51,8 +51,8 @@ This is the governing standard for getting the RW Power BI dashboard to Zebra-na
 | 2 | source data | Stage quota, forecast snapshots, renewal base/indexation, Synergy, and one-off revenue sources. | The remaining high-impact RW KPIs are data/model blockers, not layout blockers. |
 | 3 | target/plan data | Stage quota/target denominator for Pipeline Coverage Ratio. | Open pipeline numerator is surfaced, but 3x coverage cannot be executive-grade without quota. |
 | 4 | forecast data | Stage ForecastingItem/snapshot history for true forecast accuracy. | Current Forecast page uses slip/upgrade proxies, not accuracy versus submitted forecast. |
-| 5 | renewal base data | Stage Asset/Subscription base, existing ARR run-rate, indexation/uplift fields, and active-base risk. | Renewal page now shows open ACV risk, but not full active-base renewal economics or retained base quality. |
-| 6 | growth segmentation | Stage a trusted Synergy flag and one-off/non-recurring revenue source. | Axioma, SaaS, and PS attach are now modeled; Synergy and one-off revenue remain the Growth Mix gaps. |
+| 5 | renewal base data | Find and stage a populated indexation/uplift source. | Active-base ARR and active-base risk are now modeled from asset line items; indexation/uplift remains unpopulated. |
+| 6 | growth segmentation | Stage a trusted Synergy flag. | Axioma, SaaS, PS attach, and one-off/non-recurring revenue are now modeled; Synergy remains report/name-filter only. |
 | 7 | BI surface | Add controlled drill paths from Scorecard -> exception ledger -> owner/account/opportunity detail. | The pages answer executive questions, but the action flow is not yet as strong as a boardroom operating review. |
 
 ## Publish Rule
