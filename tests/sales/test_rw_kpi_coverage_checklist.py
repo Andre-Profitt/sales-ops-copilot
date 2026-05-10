@@ -20,12 +20,12 @@ def test_checklist_rollup_matches_current_bi_coverage_contract():
     summary = build_checklist()["summary"]
 
     assert summary["total_kpis"] == 31
-    assert summary["covered"] == 17
+    assert summary["covered"] == 23
     assert summary["partial_proxy"] == 6
-    assert summary["model_measure_gap"] == 3
-    assert summary["source_data_gap"] == 5
-    assert summary["usable_on_bi_including_proxy"] == 23
-    assert summary["not_dependable_yet"] == 8
+    assert summary["model_measure_gap"] == 1
+    assert summary["source_data_gap"] == 1
+    assert summary["usable_on_bi_including_proxy"] == 29
+    assert summary["not_dependable_yet"] == 2
 
 
 def test_checklist_keeps_arr_acv_guardrail_and_clear_status_labels():
@@ -47,13 +47,10 @@ def test_high_impact_gap_queue_calls_out_expected_blockers():
 
     assert {
         "pipeline_coverage_3x",
-        "commercial_approval_to_close_time",
         "forecast_accuracy",
         "existing_arr_run_rate",
-        "cross_sell_to_acquired",
         "business_at_risk",
         "synergy_deals_won",
-        "saas_arr_yoy_growth",
     } <= high_gap_ids
 
 

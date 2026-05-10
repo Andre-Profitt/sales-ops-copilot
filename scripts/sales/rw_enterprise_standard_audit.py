@@ -291,7 +291,7 @@ def _upgrade_backlog(data_surface: dict[str, Any], zebra_rows: list[dict[str, An
         {
             "sequence": "3",
             "lane": "source data",
-            "work": "Stage quota, forecast snapshots, Commercial Approval, renewal base, and segmentation flags.",
+            "work": "Stage quota, forecast snapshots, renewal base/indexation, Synergy, and one-off revenue sources.",
             "why": "The remaining high-impact RW KPIs are data/model blockers, not layout blockers.",
         },
     ]

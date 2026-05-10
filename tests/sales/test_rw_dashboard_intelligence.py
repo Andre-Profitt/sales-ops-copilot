@@ -34,11 +34,11 @@ def test_rollup_keeps_proxy_kpis_out_of_cleanly_surfaced_count():
 
     assert counts == {
         "total_kpis": 31,
-        "surfaced": 17,
+        "surfaced": 23,
         "surfaced_partial": 6,
         "model_available_not_surfaced": 0,
-        "partial_data_or_measure_gap": 3,
-        "source_data_gap": 5,
+        "partial_data_or_measure_gap": 1,
+        "source_data_gap": 1,
     }
 
 
@@ -49,13 +49,12 @@ def test_partial_statuses_call_out_the_actual_missing_measure():
     assert "Pipeline Coverage Ratio" in rows["pipeline_coverage_3x"].missing_measures
     assert rows["forecast_accuracy"].dashboard_status == "surfaced_partial"
     assert "Forecast Accuracy" in rows["forecast_accuracy"].missing_measures
-    assert rows["stage3_approvals_compliance"].dashboard_status == "surfaced_partial"
-    assert "Commercial Approval Compliance Pct" in (
-        rows["stage3_approvals_compliance"].missing_measures
-    )
+    assert rows["stage3_approvals_compliance"].dashboard_status == "surfaced"
+    assert rows["commercial_approval_to_close_time"].dashboard_status == "surfaced"
     assert rows["existing_arr_run_rate"].dashboard_status == "surfaced_partial"
     assert rows["indexation_arr_growth"].dashboard_status == "surfaced_partial"
     assert rows["synergy_deals_won"].dashboard_status == "surfaced_partial"
+    assert rows["business_at_risk"].dashboard_status == "surfaced_partial"
 
 
 def test_model_available_queue_is_empty_after_fast_page_upgrades():

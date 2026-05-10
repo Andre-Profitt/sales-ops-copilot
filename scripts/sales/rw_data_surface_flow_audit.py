@@ -200,19 +200,14 @@ def necessary_to_finish() -> list[dict[str, str]]:
             "why": "Current Forecast page uses slip/upgrade proxies, not accuracy versus submitted forecast.",
         },
         {
-            "lane": "approval/process data",
-            "need": "Stage Commercial Approval status/date from Apttus or the approved SimCorp source.",
-            "why": "Stage 3/approval KPIs are proxy-only without the actual approval event.",
-        },
-        {
             "lane": "renewal base data",
-            "need": "Stage Asset/Subscription base, existing ARR run-rate, and indexation/uplift fields.",
-            "why": "Renewal page can show ACV exposure, but not full renewal economics or retained base quality.",
+            "need": "Stage Asset/Subscription base, existing ARR run-rate, indexation/uplift fields, and active-base risk.",
+            "why": "Renewal page now shows open ACV risk, but not full active-base renewal economics or retained base quality.",
         },
         {
             "lane": "growth segmentation",
-            "need": "Stage Axioma/acquired, synergy, SaaS, product/PS, and one-off revenue flags.",
-            "why": "Growth Mix is credible for Land/Expand/partner today, but not yet the full RW segmentation agenda.",
+            "need": "Stage a trusted Synergy flag and one-off/non-recurring revenue source.",
+            "why": "Axioma, SaaS, and PS attach are now modeled; Synergy and one-off revenue remain the Growth Mix gaps.",
         },
         {
             "lane": "BI surface",
@@ -295,7 +290,7 @@ def write_markdown(result: dict[str, Any], path: Path) -> None:
         "1. No critical/high semantic-filter findings.",
         "2. No high-impact RW KPI remains proxy-only unless explicitly descoped in the exec narrative.",
         "3. `d_stage` and transition-date semantics exist before adding richer stage/forecast period flows.",
-        "4. Forecast, approval, renewal-base, and growth-segmentation source gaps are either staged or clearly excluded from the dashboard scope.",
+        "4. Forecast, renewal-base, Synergy, and one-off revenue gaps are either staged or clearly excluded from the dashboard scope.",
         "5. Unit audit has zero high/critical findings; every monetary measure reads in one unit.",
         "6. The BI surface supports an action flow from headline exception to account/opportunity detail without ARR/ACV blending.",
     ]

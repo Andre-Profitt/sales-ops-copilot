@@ -59,8 +59,16 @@ SELECT
     CurrencyIsoCode,
     convertCurrency(APTS_Opportunity_ARR__c),
     convertCurrency(APTS_Renewal_ACV__c),
+    convertCurrency(APTS_RH_ASP_Annual__c),
+    convertCurrency(APTS_RUS_Axioma_Order_Inflow__c),
+    convertCurrency(APTS_PS_Recurring_ACV_Display__c),
+    convertCurrency(Quota_Amount__c),
     convertCurrency(Amount),
     LeadSource,
+    Stage_20_Approval__c,
+    Stage_20_Approval_Date__c,
+    Submit_for_Stage_20_Review_Date__c,
+    Risk_Assessment_Level__c,
     IsWon, IsClosed,
     CloseDate, CreatedDate,
     LastStageChangeDate,
@@ -71,7 +79,8 @@ WHERE (CloseDate = LAST_N_FISCAL_YEARS:3 OR CloseDate = THIS_FISCAL_YEAR)
 """
 
 SOQL_ACCOUNT = """
-SELECT Id, Name, Region__c, BillingCountry, Industry, OwnerId, Type
+SELECT Id, Name, Region__c, BillingCountry, Industry, OwnerId, Type,
+       Axioma_Client__c, Risk_of_Potential_Termination__c
 FROM Account
 WHERE Id IN (SELECT AccountId FROM Opportunity WHERE (CloseDate = LAST_N_FISCAL_YEARS:3 OR CloseDate = THIS_FISCAL_YEAR))
 """
@@ -142,8 +151,16 @@ def transform(stage: pathlib.Path) -> dict[str, pd.DataFrame]:
             "CurrencyIsoCode" as native_currency,
             CAST("APTS_Opportunity_ARR__c" AS DOUBLE) as arr_org_ccy,
             CAST("APTS_Renewal_ACV__c" AS DOUBLE) as acv_org_ccy,
+            CAST("APTS_RH_ASP_Annual__c" AS DOUBLE) as saas_acv_org_ccy,
+            CAST("APTS_RUS_Axioma_Order_Inflow__c" AS DOUBLE) as axioma_order_inflow_org_ccy,
+            CAST("APTS_PS_Recurring_ACV_Display__c" AS DOUBLE) as ps_recurring_acv_org_ccy,
+            CAST("Quota_Amount__c" AS DOUBLE) as quota_org_ccy,
             CAST("Amount" AS DOUBLE) as amount_org_ccy,
             "LeadSource" as lead_source,
+            CAST("Stage_20_Approval__c" AS BOOLEAN) as commercial_approval,
+            CAST("Stage_20_Approval_Date__c" AS DATE) as commercial_approval_date,
+            CAST("Submit_for_Stage_20_Review_Date__c" AS DATE) as commercial_approval_submit_date,
+            "Risk_Assessment_Level__c" as risk_assessment_level,
             CAST("IsWon" AS BOOLEAN) as is_won,
             CAST("IsClosed" AS BOOLEAN) as is_closed,
             CAST("CloseDate" AS DATE) as close_date,
@@ -164,7 +181,9 @@ def transform(stage: pathlib.Path) -> dict[str, pd.DataFrame]:
             "BillingCountry" as billing_country,
             "Industry" as industry,
             "OwnerId" as owner_id,
-            "Type" as account_type
+            "Type" as account_type,
+            CAST("Axioma_Client__c" AS BOOLEAN) as axioma_client,
+            "Risk_of_Potential_Termination__c" as termination_risk
         FROM raw_acc
     """).fetch_df()
 
@@ -195,6 +214,19 @@ def transform(stage: pathlib.Path) -> dict[str, pd.DataFrame]:
         r for r in regions_in_data if r not in region_order
     ]
     d_region = pd.DataFrame({"region": ordered, "sort_order": range(1, len(ordered) + 1)})
+
+    def _value_tier(value: float | None) -> str:
+        if pd.isna(value) or value is None or value <= 0:
+            return "No ARR"
+        if value < 250_000:
+            return "<250k"
+        if value < 500_000:
+            return "250k-500k"
+        if value < 1_000_000:
+            return "500k-1M"
+        return "1M+"
+
+    f_opp["won_value_tier"] = f_opp["arr_org_ccy"].apply(_value_tier)
 
     # Date dim spanning data window
     min_d = pd.to_datetime(f_opp["close_date"]).min()
@@ -266,7 +298,13 @@ def write_to_onelake(lakehouse_id: str, frames: dict[str, pd.DataFrame]) -> None
     storage_options = {"bearer_token": token, "use_fabric_endpoint": "true"}
     base = ONELAKE_BASE_FMT.format(ws=WORKSPACE_ID, lh=lakehouse_id)
     for name, df in frames.items():
-        write_deltalake(f"{base}/{name}", df, mode="overwrite", storage_options=storage_options)
+        write_deltalake(
+            f"{base}/{name}",
+            df,
+            mode="overwrite",
+            schema_mode="overwrite",
+            storage_options=storage_options,
+        )
         print(f"  {name}: {len(df):,} rows -> {base}/{name}")
 
 

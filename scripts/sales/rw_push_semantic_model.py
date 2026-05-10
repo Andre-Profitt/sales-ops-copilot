@@ -278,6 +278,101 @@ def build_model_bim() -> dict:
             "formatString": "0.0%",
             "description": "RW KPI: partner_opps_pct. Target 20% of pipeline.",
         },
+        {
+            "name": "Total Land Expand ARR",
+            "expression": 'CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), f_opportunity[motion_type] IN { "Land", "Expand" } )',
+            "formatString": 'EUR #,0,,.0"M";(EUR #,0,,.0"M");"-"',
+            "description": "All Land+Expand ARR in the current filter context. Denominator for mix/attach diagnostics; excludes Renewal ACV.",
+        },
+        {
+            "name": "Closed Won Deals Count",
+            "expression": 'CALCULATE ( COUNTROWS ( f_opportunity ), f_opportunity[is_won] = TRUE(), f_opportunity[motion_type] IN { "Land", "Expand" } )',
+            "formatString": "#,0",
+            "description": "RW KPI: closed_won_value_tier. Slice by f_opportunity[won_value_tier].",
+        },
+        {
+            "name": "Commercial Approval Eligible Opps",
+            "expression": (
+                "COUNTROWS ( "
+                "FILTER ( f_opportunity, "
+                'f_opportunity[motion_type] IN { "Land", "Expand" } && '
+                "NOT ( f_opportunity[stage_name] IN { \"1 - Prospecting\", \"2 - Discovery\" } ) "
+                ") )"
+            ),
+            "formatString": "#,0",
+            "description": "Stage 3+ Land+Expand opps eligible for Commercial Approval monitoring.",
+        },
+        {
+            "name": "Commercial Approved Opps",
+            "expression": (
+                "COUNTROWS ( "
+                "FILTER ( f_opportunity, "
+                'f_opportunity[motion_type] IN { "Land", "Expand" } && '
+                "f_opportunity[commercial_approval] = TRUE() && "
+                "NOT ( f_opportunity[stage_name] IN { \"1 - Prospecting\", \"2 - Discovery\" } ) "
+                ") )"
+            ),
+            "formatString": "#,0",
+            "description": "Stage 3+ Land+Expand opps with Commercial Approval checked.",
+        },
+        {
+            "name": "Commercial Approval Compliance Pct",
+            "expression": "DIVIDE ( [Commercial Approved Opps], [Commercial Approval Eligible Opps] )",
+            "formatString": "0.0%",
+            "description": "RW KPI: stage3_approvals_compliance. Stage 3+ Land+Expand approval compliance.",
+        },
+        {
+            "name": "Commercial Approval To Close Days",
+            "expression": (
+                "CALCULATE ( "
+                "AVERAGEX ( "
+                "FILTER ( f_opportunity, "
+                "f_opportunity[is_won] = TRUE() && "
+                'f_opportunity[motion_type] IN { "Land", "Expand" } && '
+                "NOT ( ISBLANK ( f_opportunity[commercial_approval_date] ) ) "
+                "), "
+                "DATEDIFF ( f_opportunity[commercial_approval_date], f_opportunity[close_date], DAY ) "
+                ") )"
+            ),
+            "formatString": "0.0",
+            "description": "RW KPI: commercial_approval_to_close_time. Days from Commercial Approval date to won close.",
+        },
+        {
+            "name": "Cross Sell To Acquired ARR",
+            "expression": 'CALCULATE ( SUM ( f_opportunity[axioma_order_inflow_org_ccy] ), f_opportunity[motion_type] IN { "Land", "Expand" } )',
+            "formatString": 'EUR #,0,,.0"M";(EUR #,0,,.0"M");"-"',
+            "description": "RW KPI: cross_sell_to_acquired. Uses Axioma Order Inflow on Land+Expand opps.",
+        },
+        {
+            "name": "PS Recurring ACV",
+            "expression": 'CALCULATE ( SUM ( f_opportunity[ps_recurring_acv_org_ccy] ), f_opportunity[motion_type] IN { "Land", "Expand" } )',
+            "formatString": 'EUR #,0,,.0"M";(EUR #,0,,.0"M");"-"',
+            "description": "Recurring PS ACV on Land+Expand opps.",
+        },
+        {
+            "name": "PS ARR Attach Pct",
+            "expression": "DIVIDE ( [PS Recurring ACV], [Total Land Expand ARR] )",
+            "formatString": "0.0%",
+            "description": "RW KPI: ps_arr_attach. PS recurring ACV divided by Land+Expand ARR.",
+        },
+        {
+            "name": "SaaS ARR",
+            "expression": "SUM ( f_opportunity[saas_acv_org_ccy] )",
+            "formatString": 'EUR #,0,,.0"M";(EUR #,0,,.0"M");"-"',
+            "description": "SimCorp SaaS ACV/ARR signal from APTS_RH_ASP_Annual__c.",
+        },
+        {
+            "name": "SaaS ARR LY YTD",
+            "expression": "CALCULATE ( [SaaS ARR], REMOVEFILTERS ( d_calendar ), DATESBETWEEN ( d_calendar[date], DATE ( YEAR ( TODAY () ) - 1, 1, 1 ), DATE ( YEAR ( TODAY () ) - 1, MONTH ( TODAY () ), DAY ( TODAY () ) ) ) )",
+            "formatString": 'EUR #,0,,.0"M";(EUR #,0,,.0"M");"-"',
+            "description": "SaaS ARR for Jan 1 -> same-day prior year.",
+        },
+        {
+            "name": "SaaS YoY Growth Pct",
+            "expression": "DIVIDE ( [SaaS ARR] - [SaaS ARR LY YTD], [SaaS ARR LY YTD] )",
+            "formatString": "0.0%",
+            "description": "RW KPI: saas_arr_yoy_growth. SaaS ARR growth rate; target growth >20% YoY.",
+        },
         # Renewals (ACV, never blend with ARR)
         {
             "name": "Total Open Renewal ACV",
@@ -308,6 +403,19 @@ def build_model_bim() -> dict:
             "expression": "DIVIDE ( [Total Renewal ACV Won], [Total Renewal ACV Won] + [Total Renewal ACV Lost] )",
             "formatString": "0.0%",
             "description": "RW KPI: renewal_retention_rate (partial — uses closed-period basis, not term-due basis). Target 95%.",
+        },
+        {
+            "name": "Business At Risk ACV",
+            "expression": (
+                "CALCULATE ( "
+                "SUM ( f_opportunity[acv_org_ccy] ), "
+                'f_opportunity[motion_type] = "Renewal", '
+                "f_opportunity[is_closed] = FALSE(), "
+                'f_opportunity[risk_assessment_level] IN { "High", "Medium - High" } '
+                ")"
+            ),
+            "formatString": 'EUR #,0,,.0"M";(EUR #,0,,.0"M");"-"',
+            "description": "RW KPI proxy: business_at_risk. Open Renewal ACV with High or Medium-High opportunity risk; active ARR base still requires subscription data.",
         },
         # New business pacing
         {
@@ -874,8 +982,16 @@ def build_model_bim() -> dict:
                         col("native_currency", "string"),
                         col("arr_org_ccy", "double"),
                         col("acv_org_ccy", "double"),
+                        col("saas_acv_org_ccy", "double"),
+                        col("axioma_order_inflow_org_ccy", "double"),
+                        col("ps_recurring_acv_org_ccy", "double"),
+                        col("quota_org_ccy", "double"),
                         col("amount_org_ccy", "double"),
                         col("lead_source", "string"),
+                        col("commercial_approval", "boolean"),
+                        col("commercial_approval_date", "dateTime", fmt="yyyy-mm-dd"),
+                        col("commercial_approval_submit_date", "dateTime", fmt="yyyy-mm-dd"),
+                        col("risk_assessment_level", "string"),
                         col("is_won", "boolean"),
                         col("is_closed", "boolean"),
                         col("close_date", "dateTime", fmt="yyyy-mm-dd"),
@@ -885,6 +1001,7 @@ def build_model_bim() -> dict:
                         col("billing_country", "string"),
                         col("industry", "string"),
                         col("account_name", "string"),
+                        col("won_value_tier", "string"),
                     ],
                     "partitions": [dl_partition("f_opportunity")],
                     "measures": measures,
@@ -899,6 +1016,8 @@ def build_model_bim() -> dict:
                         col("industry", "string"),
                         col("owner_id", "string"),
                         col("account_type", "string"),
+                        col("axioma_client", "boolean"),
+                        col("termination_risk", "string"),
                     ],
                     "partitions": [dl_partition("d_account")],
                 },

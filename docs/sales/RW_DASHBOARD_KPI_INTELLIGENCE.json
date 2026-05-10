@@ -1,11 +1,11 @@
 {
   "rollup": {
     "total_kpis": 31,
-    "surfaced": 17,
+    "surfaced": 23,
     "surfaced_partial": 6,
     "model_available_not_surfaced": 0,
-    "partial_data_or_measure_gap": 3,
-    "source_data_gap": 5
+    "partial_data_or_measure_gap": 1,
+    "source_data_gap": 1
   },
   "page_target_map": {
     "VP Ops Scorecard": {
@@ -246,7 +246,8 @@
         "sales_cycle_length"
       ],
       "secondary_diagnostics": [
-        "stage3_approvals_compliance"
+        "stage3_approvals_compliance",
+        "commercial_approval_to_close_time"
       ],
       "required_motion_guardrail": "process",
       "caveat": "Stage 3 and Stage 4 are the control points for approval friction and late-funnel slippage.",
@@ -313,13 +314,23 @@
         },
         {
           "kpi_id": "stage3_approvals_compliance",
-          "measure": "Stage 3 Forward Pct",
+          "measure": "Commercial Approval Compliance Pct",
           "visual_role": "RAG card",
           "motion_guardrail": "land_expand_arr",
-          "data_status": "proxy",
-          "label": "Stage 3 forward proxy",
+          "data_status": "clean",
+          "label": "Commercial Approval compliance",
           "secondary": true,
-          "missing_measure": "Commercial Approval Compliance Pct"
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "commercial_approval_to_close_time",
+          "measure": "Commercial Approval To Close Days",
+          "visual_role": "RAG card",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "clean",
+          "label": "Approval-to-close days",
+          "secondary": true,
+          "missing_measure": ""
         }
       ]
     },
@@ -332,6 +343,7 @@
         "lost_arr_quarterly"
       ],
       "secondary_diagnostics": [
+        "business_at_risk",
         "existing_arr_run_rate",
         "indexation_arr_growth"
       ],
@@ -377,6 +389,16 @@
           "label": "Lost renewal ACV",
           "secondary": false,
           "missing_measure": ""
+        },
+        {
+          "kpi_id": "business_at_risk",
+          "measure": "Business At Risk ACV",
+          "visual_role": "hero KPI",
+          "motion_guardrail": "renewal_acv",
+          "data_status": "proxy",
+          "label": "Business at risk proxy",
+          "secondary": true,
+          "missing_measure": "Business At Risk ARR"
         },
         {
           "kpi_id": "renewals_mom_trend",
@@ -432,10 +454,14 @@
       ],
       "secondary_diagnostics": [
         "opp_source_effectiveness",
+        "closed_won_value_tier",
+        "cross_sell_to_acquired",
+        "ps_arr_attach",
+        "saas_arr_yoy_growth",
         "synergy_deals_won"
       ],
       "required_motion_guardrail": "land_expand_arr",
-      "caveat": "Land and Expand ARR only. Renewal ACV is excluded from this page. Synergy is labeled as a proxy until the source flag exists.",
+      "caveat": "Land and Expand ARR stay separate from Renewal ACV. SaaS and PS use their own source fields; Synergy remains proxy-only until the source flag exists.",
       "placements": [
         {
           "kpi_id": "alf_arr_pipeline",
@@ -514,6 +540,46 @@
           "motion_guardrail": "land_expand_arr",
           "data_status": "clean",
           "label": "Strategic Mix Detail",
+          "secondary": true,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "closed_won_value_tier",
+          "measure": "Closed Won Deals Count",
+          "visual_role": "detail table",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "clean",
+          "label": "Won value tier",
+          "secondary": true,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "cross_sell_to_acquired",
+          "measure": "Cross Sell To Acquired ARR",
+          "visual_role": "detail table",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "clean",
+          "label": "Axioma order inflow",
+          "secondary": true,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "ps_arr_attach",
+          "measure": "PS ARR Attach Pct",
+          "visual_role": "detail table",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "clean",
+          "label": "PS attach",
+          "secondary": true,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "saas_arr_yoy_growth",
+          "measure": "SaaS YoY Growth Pct",
+          "visual_role": "detail table",
+          "motion_guardrail": "process",
+          "data_status": "clean",
+          "label": "SaaS YoY",
           "secondary": true,
           "missing_measure": ""
         },
@@ -609,7 +675,7 @@
       "name": "Opportunity Age / Stale Opportunities",
       "impact": "MEDIUM",
       "motion_filter": "land_expand",
-      "source_coverage": "missing",
+      "source_coverage": "exists",
       "dashboard_status": "surfaced",
       "pages": [
         "What Changed"
@@ -625,7 +691,7 @@
       "name": "Opportunity Source Effectiveness",
       "impact": "MEDIUM",
       "motion_filter": "land_expand",
-      "source_coverage": "missing",
+      "source_coverage": "exists",
       "dashboard_status": "surfaced",
       "pages": [
         "Growth Mix"
@@ -676,7 +742,7 @@
       "name": "Closed Won Average Deal Size by month",
       "impact": "HIGH",
       "motion_filter": "land_expand",
-      "source_coverage": "partial",
+      "source_coverage": "exists",
       "dashboard_status": "surfaced",
       "pages": [
         "Growth Mix"
@@ -692,12 +758,16 @@
       "name": "Number of close won deals by value tier",
       "impact": "MEDIUM",
       "motion_filter": "land_expand",
-      "source_coverage": "missing",
-      "dashboard_status": "source_data_gap",
-      "pages": [],
-      "model_measures": [],
+      "source_coverage": "exists",
+      "dashboard_status": "surfaced",
+      "pages": [
+        "Growth Mix"
+      ],
+      "model_measures": [
+        "Closed Won Deals Count"
+      ],
       "missing_measures": [],
-      "next_action": "Add DAX value-tier measures or a calculated tier column, then surface on Growth Mix."
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
     },
     {
       "kpi_id": "new_opps_by_region",
@@ -722,26 +792,25 @@
       "name": "Stage 3 approvals by month",
       "impact": "MEDIUM",
       "motion_filter": "land_expand",
-      "source_coverage": "partial",
-      "dashboard_status": "surfaced_partial",
+      "source_coverage": "exists",
+      "dashboard_status": "surfaced",
       "pages": [
         "Stage Hygiene"
       ],
       "model_measures": [
+        "Commercial Approval Compliance Pct",
         "Stage 3 Forward Pct",
         "Avg Days In Stage 3"
       ],
-      "missing_measures": [
-        "Commercial Approval Compliance Pct"
-      ],
-      "next_action": "Add Commercial Approval compliance measure; current Stage Hygiene page only shows Stage 3 flow proxies."
+      "missing_measures": [],
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
     },
     {
       "kpi_id": "stage3_acv_value",
       "name": "ACV of Stage 3 approvals",
       "impact": "MEDIUM",
       "motion_filter": "land_expand",
-      "source_coverage": "missing",
+      "source_coverage": "exists",
       "dashboard_status": "surfaced",
       "pages": [
         "Forecast"
@@ -758,14 +827,16 @@
       "name": "Commercial approval to close time",
       "impact": "HIGH",
       "motion_filter": "land_expand",
-      "source_coverage": "missing",
-      "dashboard_status": "source_data_gap",
-      "pages": [],
-      "model_measures": [],
-      "missing_measures": [
+      "source_coverage": "exists",
+      "dashboard_status": "surfaced",
+      "pages": [
+        "Stage Hygiene"
+      ],
+      "model_measures": [
         "Commercial Approval To Close Days"
       ],
-      "next_action": "Needs Commercial Approval date in ETL; then add to Stage Hygiene."
+      "missing_measures": [],
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
     },
     {
       "kpi_id": "forecast_accuracy",
@@ -792,7 +863,7 @@
       "name": "Partner Opportunities",
       "impact": "MEDIUM",
       "motion_filter": "land_expand",
-      "source_coverage": "missing",
+      "source_coverage": "exists",
       "dashboard_status": "surfaced",
       "pages": [
         "Growth Mix"
@@ -907,7 +978,7 @@
       "name": "New Customer reporting amount by month and value and region",
       "impact": "HIGH",
       "motion_filter": "land_expand",
-      "source_coverage": "missing",
+      "source_coverage": "exists",
       "dashboard_status": "surfaced",
       "pages": [
         "Growth Mix"
@@ -924,14 +995,16 @@
       "name": "ARR from Cross Selling to Acquired Business",
       "impact": "HIGH",
       "motion_filter": "land_expand",
-      "source_coverage": "missing",
-      "dashboard_status": "source_data_gap",
-      "pages": [],
-      "model_measures": [],
-      "missing_measures": [
+      "source_coverage": "exists",
+      "dashboard_status": "surfaced",
+      "pages": [
+        "Growth Mix"
+      ],
+      "model_measures": [
         "Cross Sell To Acquired ARR"
       ],
-      "next_action": "Needs Axioma/acquired-account flag; then add to Growth Mix."
+      "missing_measures": [],
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
     },
     {
       "kpi_id": "synergy_deals_won",
@@ -970,7 +1043,7 @@
       "name": "Lost ARR By Quarter (with reason)",
       "impact": "HIGH",
       "motion_filter": "renewal",
-      "source_coverage": "partial",
+      "source_coverage": "exists",
       "dashboard_status": "surfaced",
       "pages": [
         "Renewals"
@@ -987,13 +1060,15 @@
       "impact": "HIGH",
       "motion_filter": "renewal",
       "source_coverage": "partial",
-      "dashboard_status": "partial_data_or_measure_gap",
-      "pages": [],
+      "dashboard_status": "surfaced_partial",
+      "pages": [
+        "Renewals"
+      ],
       "model_measures": [],
       "missing_measures": [
         "Business At Risk ARR"
       ],
-      "next_action": "Needs account/subscription health flag; then add to Renewals."
+      "next_action": "Keep in page QA; Renewal risk now uses Opportunity risk assessment level."
     },
     {
       "kpi_id": "one_off_revenues",
@@ -1014,28 +1089,32 @@
       "name": "PS ARR by Quarter",
       "impact": "MEDIUM",
       "motion_filter": "land_expand",
-      "source_coverage": "missing",
-      "dashboard_status": "source_data_gap",
-      "pages": [],
-      "model_measures": [],
-      "missing_measures": [
+      "source_coverage": "exists",
+      "dashboard_status": "surfaced",
+      "pages": [
+        "Growth Mix"
+      ],
+      "model_measures": [
         "PS ARR Attach Pct"
       ],
-      "next_action": "Needs PS/license product split; likely Product/Pricing future page."
+      "missing_measures": [],
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
     },
     {
       "kpi_id": "saas_arr_yoy_growth",
       "name": "SaaS ARR by Quarter",
       "impact": "HIGH",
       "motion_filter": "all",
-      "source_coverage": "partial",
-      "dashboard_status": "partial_data_or_measure_gap",
-      "pages": [],
-      "model_measures": [],
-      "missing_measures": [
-        "SaaS ARR YoY Growth"
+      "source_coverage": "exists",
+      "dashboard_status": "surfaced",
+      "pages": [
+        "Growth Mix"
       ],
-      "next_action": "Needs SaaS deployment field; likely Product/Pricing future page."
+      "model_measures": [
+        "SaaS YoY Growth Pct"
+      ],
+      "missing_measures": [],
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
     }
   ]
 }

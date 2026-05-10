@@ -1663,3 +1663,54 @@ Reviewing the data schema and page filter behavior showed the visual layer was a
 - `python3 -m pytest tests/sales -q` passed: 222 passed, 1 skipped.
 
 No Fabric publish was performed.  ARR remains Land+Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
+
+## 2026-05-10 — RW KPI coverage lift, Phase 4 source fields
+
+The coverage checklist showed that several gaps were not truly missing data; they were fields already present in Salesforce but not staged into the Lakehouse/model.  This pass pulled the confirmed fields into the RW staging/model and surfaced the newly trustworthy measures on the appropriate BI pages.
+
+**Staged source fields:**
+
+- Commercial Approval: `Stage_20_Approval__c`, `Stage_20_Approval_Date__c`, `Submit_for_Stage_20_Review_Date__c`
+- SaaS: `APTS_RH_ASP_Annual__c`
+- Axioma/acquired-business inflow: `APTS_RUS_Axioma_Order_Inflow__c`
+- PS attach: `APTS_PS_Recurring_ACV_Display__c`
+- Opportunity risk: `Risk_Assessment_Level__c`
+- Account context: `Axioma_Client__c`, `Risk_of_Potential_Termination__c`
+
+**New semantic measures deployed to `sm_sales_kpis_rw`:**
+
+- `Commercial Approval Compliance Pct`
+- `Commercial Approval To Close Days`
+- `Closed Won Deals Count`
+- `Cross Sell To Acquired ARR`
+- `PS ARR Attach Pct`
+- `SaaS YoY Growth Pct`
+- `Business At Risk ACV` as an explicit Renewal ACV proxy; the true active-base ARR metric still needs subscription data.
+
+**Coverage impact:**
+
+- Cleanly covered on BI: 17 / 31 -> 23 / 31
+- Usable on BI including partial/proxy: 23 / 31 -> 29 / 31
+- Model/measure gaps: 3 -> 1
+- Source-data gaps: 5 -> 1
+
+**Remaining blockers:**
+
+- `pipeline_coverage_3x`: `Quota_Amount__c` exists but is zero-populated in the 10,237-row extraction; needs quota/target source.
+- `forecast_accuracy`: ForecastingItem exists, but true accuracy needs a forecast snapshot/backtest grain; current page remains slip/upgrade proxy.
+- `existing_arr_run_rate` and `indexation_arr_growth`: still need Asset/Subscription base and uplift/indexation fields.
+- `synergy_deals_won` / `synergy_deals_pipe`: still need a trusted Synergy flag.
+- `one_off_revenues`: still needs product/finance source for non-recurring revenue.
+
+**Deployed/verified:**
+
+- Re-ran `sf_to_fabric_rw.py`; `f_opportunity` now has 10,237 rows x 33 columns.
+- Re-pushed `sm_sales_kpis_rw`; deployed measure inventory is now 119 measures.
+- Regenerated the local Zebra lab PBIP.
+- `rw_validate` passed against the deployed model: 8 sections, 127 visuals, all measure refs resolve.
+- Visual QA passed with 0 findings.
+- Unit policy passed with 0 findings.
+- Semantic filter audit passed with medium=3, high=0, critical=0.
+- Data-surface flow remains `not_exec_complete` because the remaining gaps are real data/model blockers, not visual issues.
+
+ARR remains Land+Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.

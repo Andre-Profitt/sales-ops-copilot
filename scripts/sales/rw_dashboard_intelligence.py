@@ -33,6 +33,7 @@ KPI_MEASURE_HINTS: dict[str, tuple[str, ...]] = {
     "sales_cycle_length": ("Avg Sales Cycle Days", "Land Avg Sales Cycle Days"),
     "time_in_stage": ("Avg Days In Prior Stage (LE)",),
     "closed_won_avg_deal_size": ("Avg Deal Size Won",),
+    "closed_won_value_tier": ("Closed Won Deals Count",),
     "new_opps_by_region": ("New Opps Created", "New Opps Count 7d"),
     "stage3_approvals_compliance": (
         "Commercial Approval Compliance Pct",
@@ -62,26 +63,24 @@ KPI_MEASURE_HINTS: dict[str, tuple[str, ...]] = {
     "synergy_deals_pipe": ("Synergy Deals Pipeline",),
     "one_off_revenues": ("One Off Revenues",),
     "ps_arr_attach": ("PS ARR Attach Pct",),
-    "saas_arr_yoy_growth": ("SaaS ARR YoY Growth",),
+    "saas_arr_yoy_growth": ("SaaS YoY Growth Pct",),
 }
 
 
 NEXT_SURFACE: dict[str, str] = {
     "pipeline_coverage_3x": "Add quota denominator and true 3x coverage ratio; current Forecast page shows the open-pipeline numerator.",
-    "closed_won_avg_deal_size": "Add to Growth Mix as value-tier / deal-size strip.",
-    "closed_won_value_tier": "Add DAX value-tier measures or a calculated tier column, then surface on Growth Mix.",
     "sales_cycle_length": "Add to Stage Hygiene as cycle-time companion to time-in-stage.",
-    "stage3_approvals_compliance": "Add Commercial Approval compliance measure; current Stage Hygiene page only shows Stage 3 flow proxies.",
-    "commercial_approval_to_close_time": "Needs Commercial Approval date in ETL; then add to Stage Hygiene.",
+    "stage3_approvals_compliance": "Keep in page QA; Commercial Approval fields are now modeled from Opportunity.",
+    "commercial_approval_to_close_time": "Keep in page QA; Commercial Approval date is now modeled from Opportunity.",
     "forecast_accuracy": "Add real ForecastingItem/snapshot accuracy; current Forecast page only shows slips/upgrades movement proxies.",
     "synergy_deals_pipe": "Needs synergy flag; then add open/won synergy strip to Growth Mix.",
-    "cross_sell_to_acquired": "Needs Axioma/acquired-account flag; then add to Growth Mix.",
+    "cross_sell_to_acquired": "Keep in page QA; Axioma Order Inflow is now modeled from Opportunity.",
     "synergy_deals_won": "Needs synergy flag; current Growth Mix page uses Land won count as a proxy.",
     "lost_arr_quarterly": "Add to Renewals as loss waterfall / reason table.",
-    "business_at_risk": "Needs account/subscription health flag; then add to Renewals.",
+    "business_at_risk": "Keep in page QA; Renewal risk now uses Opportunity risk assessment level.",
     "one_off_revenues": "Needs one-off/PS product fields; likely Product/Pricing future page.",
-    "ps_arr_attach": "Needs PS/license product split; likely Product/Pricing future page.",
-    "saas_arr_yoy_growth": "Needs SaaS deployment field; likely Product/Pricing future page.",
+    "ps_arr_attach": "Keep in page QA; PS recurring ACV is now modeled from Opportunity.",
+    "saas_arr_yoy_growth": "Keep in page QA; SaaS ACV/ARR field is now modeled from Opportunity.",
     "existing_arr_run_rate": "Needs Asset/Subscription base; keep as Renewals caveat until staged.",
     "indexation_arr_growth": "Needs indexation/contract uplift field; keep as Renewals caveat until staged.",
 }

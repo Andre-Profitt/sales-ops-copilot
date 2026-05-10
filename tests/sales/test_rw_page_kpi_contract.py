@@ -315,6 +315,7 @@ def test_arr_and_renewal_acv_contracts_stay_separate_by_page():
         "Renewal Retention Pct (Period)",
         "Total Renewal ACV Won",
         "Total Renewal ACV Lost",
+        "Business At Risk ACV",
     }
     growth_arr_measures = {
         "Open Land ARR",
@@ -324,6 +325,10 @@ def test_arr_and_renewal_acv_contracts_stay_separate_by_page():
         "Total Open Pipeline ARR",
         "Total Land Won Count",
         "Avg Deal Size Won",
+        "Closed Won Deals Count",
+        "Cross Sell To Acquired ARR",
+        "PS ARR Attach Pct",
+        "SaaS YoY Growth Pct",
     }
 
     assert set(PAGE_KPI_CONTRACTS["Renewals"].measures) == renewal_measures
