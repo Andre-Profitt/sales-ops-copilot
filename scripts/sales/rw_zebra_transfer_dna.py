@@ -178,12 +178,165 @@ def _style(objects: dict) -> dict:
     }
 
 
+def _sensitive_key(key: str) -> bool:
+    key_l = str(key).lower()
+    return "license" in key_l or "activation" in key_l or ("key" in key_l and "legend" not in key_l)
+
+
+def _sanitize_value(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {k: _sanitize_value(v) for k, v in value.items() if not _sensitive_key(str(k))}
+    if isinstance(value, list):
+        return [_sanitize_value(item) for item in value]
+    return value
+
+
 def _sanitized_objects(objects: dict) -> dict:
     """Preserve visual grammar without persisting Zebra license/activation blobs."""
     return {
-        group: entries
+        group: _sanitize_value(entries)
         for group, entries in (objects or {}).items()
-        if "license" not in group.lower() and "activation" not in group.lower()
+        if not _sensitive_key(group)
+    }
+
+
+SAFE_OBJECT_GROUPS = {
+    "chartSettings",
+    "designSettings",
+    "dataLabelSettings",
+    "titleSettings",
+    "grid",
+    "multipleLayout",
+    "coreSettings",
+}
+
+
+def _safe_property_subset(properties: dict) -> dict:
+    allowed_fragments = (
+        "alignment",
+        "background",
+        "border",
+        "color",
+        "columnsettings",
+        "font",
+        "format",
+        "grid",
+        "hidden",
+        "label",
+        "layout",
+        "marker",
+        "text",
+        "padding",
+        "scale",
+        "show",
+        "spacing",
+        "table",
+        "title",
+        "transparency",
+        "width",
+    )
+    safe = {}
+    for key, value in (properties or {}).items():
+        key_l = str(key).lower()
+        if "license" in key_l or "activation" in key_l or "key" in key_l and "legend" not in key_l:
+            continue
+        if any(fragment in key_l for fragment in allowed_fragments):
+            safe[key] = value
+    return safe
+
+
+def _visual_object_grammar(objects: dict) -> dict:
+    groups = {}
+    for group in SAFE_OBJECT_GROUPS:
+        entries = objects.get(group) or []
+        normalized_entries = []
+        for idx, entry in enumerate(entries):
+            if not isinstance(entry, dict):
+                continue
+            props = entry.get("properties") if isinstance(entry.get("properties"), dict) else {}
+            safe_props = _safe_property_subset(props)
+            if safe_props:
+                normalized_entries.append(
+                    {
+                        "selector": entry.get("selector") or entry.get("objectName") or "general",
+                        "index": idx,
+                        "properties": safe_props,
+                    }
+                )
+        if normalized_entries:
+            groups[group] = normalized_entries
+    return {
+        "schema": "rw-zebra-native-transfer.visualObjectGrammar.v1",
+        "safe_groups": sorted(groups),
+        "groups": groups,
+    }
+
+
+def _column_intent(marker_style, show_as_table, fmt) -> str:
+    if marker_style in {5, "5", "bar", "dataBar"}:
+        return "data_bar"
+    if marker_style in {2, 3, "2", "3", "bullet", "variance"}:
+        return "bullet_or_variance_marker"
+    if show_as_table in {0, "0", False}:
+        return "chart_value"
+    if fmt in {1, "1"}:
+        return "variance_delta"
+    if fmt in {2, "2"}:
+        return "variance_percent"
+    return "table_value"
+
+
+def _column_grammar(column_settings: dict, derived_columns: list[dict]) -> dict:
+    columns = []
+    for order, (key, cfg) in enumerate((column_settings or {}).items()):
+        if not isinstance(cfg, dict):
+            continue
+        table_view = cfg.get("tableView") or {}
+        chart_view = cfg.get("chartView") or {}
+        marker = table_view.get("markerStyle", chart_view.get("markerStyle"))
+        show_as_table = table_view.get("showAsTable", chart_view.get("showAsTable"))
+        fmt = cfg.get("format")
+        hidden = bool(table_view.get("hidden", chart_view.get("hidden", False)))
+        columns.append(
+            {
+                "key": key,
+                "order": order,
+                "markerStyle": marker,
+                "showAsTable": show_as_table,
+                "scaleGroup": cfg.get("scaleGroup"),
+                "format": fmt,
+                "hidden": hidden,
+                "intent": _column_intent(marker, show_as_table, fmt),
+                "support_column": hidden or str(key).startswith("_") or "support" in str(key).lower(),
+            }
+        )
+    existing = {c["key"] for c in columns}
+    for variance in derived_columns or []:
+        key = variance.get("key")
+        if not key or key in existing:
+            continue
+        fmt = variance.get("format")
+        columns.append(
+            {
+                "key": key,
+                "order": len(columns),
+                "markerStyle": 5 if variance.get("role") == "delta" else None,
+                "showAsTable": True,
+                "scaleGroup": None,
+                "format": fmt,
+                "hidden": False,
+                "intent": "variance_percent" if variance.get("role") == "relative" else "variance_delta",
+                "scenario_pair": variance.get("scenario_pair"),
+                "support_column": False,
+                "synthesized_by_zebra": True,
+            }
+        )
+    return {
+        "schema": "rw-zebra-native-transfer.columnGrammar.v1",
+        "columns": columns,
+        "hidden_support_columns": [c["key"] for c in columns if c.get("support_column")],
+        "ordered_keys": [c["key"] for c in columns],
+        "intents": sorted({c["intent"] for c in columns}),
     }
 
 
@@ -253,7 +406,55 @@ def load_report_from_pbix(path: Path) -> dict:
     raise FileNotFoundError(f"No report layout member found in {path}")
 
 
-def _static_furniture(section: dict, page_width: float, page_height: float) -> list[dict]:
+def _distance_band(a: dict, b: dict) -> tuple[str, float]:
+    ax1, ay1 = float(a.get("x", 0)), float(a.get("y", 0))
+    ax2, ay2 = ax1 + float(a.get("w", 0)), ay1 + float(a.get("h", 0))
+    bx1, by1 = float(b.get("x", 0)), float(b.get("y", 0))
+    bx2, by2 = bx1 + float(b.get("w", 0)), by1 + float(b.get("h", 0))
+    overlap_w = max(0.0, min(ax2, bx2) - max(ax1, bx1))
+    overlap_h = max(0.0, min(ay2, by2) - max(ay1, by1))
+    min_area = max(1.0, min((ax2 - ax1) * (ay2 - ay1), (bx2 - bx1) * (by2 - by1)))
+    if (overlap_w * overlap_h) / min_area >= 0.1:
+        return "overlap", 0.0
+    dx = max(bx1 - ax2, ax1 - bx2, 0.0)
+    dy = max(by1 - ay2, ay1 - by2, 0.0)
+    distance = (dx**2 + dy**2) ** 0.5
+    if distance <= 24:
+        return "adjacent", distance
+    if distance <= 96:
+        return "nearby", distance
+    return "distant", distance
+
+
+def _furniture_intent(text: str, box: dict, page_width: float, page_height: float) -> str:
+    text_l = text.lower()
+    if box.get("y", 0) < page_height * 0.14:
+        if any(token in text_l for token in ("back", "home", "menu", "filter", "reset")):
+            return "nav_button"
+        return "page_header"
+    if box.get("x", 0) < page_width * 0.12 and any(token in text_l for token in ("logo", "©", "copyright")):
+        return "logo_or_brand"
+    if any(token in text_l for token in ("click", "select", "reset", "back")):
+        return "button_or_instruction"
+    return "analytic_annotation"
+
+
+def _furniture_relationship(box: dict, visual_box: dict, page_height: float) -> tuple[str, str, float]:
+    band, distance = _distance_band(box, visual_box)
+    y = float(box.get("y", 0) or 0)
+    h = float(box.get("h", 0) or 0)
+    if band in {"overlap", "adjacent"}:
+        return "visual_furniture", band, distance
+    if y < page_height * 0.14:
+        return "page_furniture", band, distance
+    if y + h > page_height * 0.82:
+        return "page_furniture", band, distance
+    if band == "nearby":
+        return "visual_furniture", band, distance
+    return "page_furniture", band, distance
+
+
+def _static_furniture(section: dict, page_width: float, page_height: float, visual_box: dict | None = None) -> list[dict]:
     furniture: list[dict] = []
     for vc in section.get("visualContainers", []):
         cfg = _decode_config(vc)
@@ -261,16 +462,44 @@ def _static_furniture(section: dict, page_width: float, page_height: float) -> l
         if sv.get("visualType") != "textbox":
             continue
         box = _bbox(vc)
+        text = _textbox_text(vc)
+        relationship, band, distance = _furniture_relationship(box, visual_box or box, page_height)
         furniture.append(
             {
                 "visual_id": cfg.get("name", ""),
                 "visual_type": "textbox",
-                "text": _textbox_text(vc),
+                "text": text,
                 "bounding_box": box,
                 "page_zone": page_zone(box, width=page_width, height=page_height),
+                "relationship": relationship,
+                "proximity_band": band,
+                "distance_px": round(distance, 2),
+                "intent": _furniture_intent(text, box, page_width, page_height),
             }
         )
     return furniture
+
+
+def _group_containers(section: dict, visual_box: dict) -> list[dict]:
+    groups: list[dict] = []
+    for vc in section.get("visualContainers", []):
+        cfg = _decode_config(vc)
+        if "singleVisualGroup" not in cfg:
+            continue
+        box = _bbox(vc)
+        band, distance = _distance_band(box, visual_box)
+        if band == "distant":
+            continue
+        groups.append(
+            {
+                "visual_id": cfg.get("name", ""),
+                "bounding_box": box,
+                "relationship": "group_container",
+                "proximity_band": band,
+                "distance_px": round(distance, 2),
+            }
+        )
+    return groups
 
 
 def _visual_intent(family: str, scenarios: set[str]) -> str:
@@ -291,7 +520,6 @@ def extract_visual_dna_from_report(template_slug: str, report: dict) -> dict:
     for section in report.get("sections", []):
         page_width = float(section.get("width") or report.get("width") or 1280)
         page_height = float(section.get("height") or report.get("height") or 720)
-        furniture = _static_furniture(section, page_width, page_height)
         for vc in section.get("visualContainers", []):
             cfg = _decode_config(vc)
             sv = cfg.get("singleVisual") or {}
@@ -302,7 +530,10 @@ def extract_visual_dna_from_report(template_slug: str, report: dict) -> dict:
             roles = _projection_roles(sv)
             scenarios = _scenarios_from_roles(roles)
             box = _bbox(vc)
-            col_settings = _column_settings(sv.get("objects") or {})
+            objects = sv.get("objects") or {}
+            col_settings = _column_settings(objects)
+            derived_columns = zebra_derived_variance_columns(scenarios)
+            safe_objects = _sanitized_objects(objects)
             visuals.append(
                 {
                     "visual_id": cfg.get("name", ""),
@@ -315,12 +546,16 @@ def extract_visual_dna_from_report(template_slug: str, report: dict) -> dict:
                     "page_zone": page_zone(box, width=page_width, height=page_height),
                     "projection_roles": roles,
                     "scenario_pairing": _scenario_pairing(roles),
-                    "derived_variance_columns": zebra_derived_variance_columns(scenarios),
+                    "derived_variance_columns": derived_columns,
                     "column_settings": col_settings,
                     "column_markers": _column_markers(col_settings),
-                    "objects": _sanitized_objects(sv.get("objects") or {}),
-                    "style": _style(sv.get("objects") or {}),
-                    "static_furniture": furniture,
+                    "column_grammar": _column_grammar(col_settings, derived_columns),
+                    "objects": safe_objects,
+                    "safe_object_groups": sorted(safe_objects),
+                    "visual_object_grammar": _visual_object_grammar(objects),
+                    "style": _style(objects),
+                    "static_furniture": _static_furniture(section, page_width, page_height, box),
+                    "group_containers": _group_containers(section, box),
                     "visual_intent": _visual_intent(family, scenarios),
                 }
             )

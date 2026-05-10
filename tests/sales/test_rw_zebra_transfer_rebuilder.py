@@ -63,6 +63,18 @@ def _base_dna(**overrides):
             {"key": "actual-previousYear-percent", "label": "AC-PY %", "scenario_pair": ["AC", "PY"], "role": "relative", "format": 2},
         ],
         "column_settings": {"actual": {"tableView": {"markerStyle": 5, "showAsTable": 0, "hidden": False}}},
+        "column_grammar": {
+            "schema": "rw-zebra-native-transfer.columnGrammar.v1",
+            "columns": [
+                {"key": "actual", "order": 0, "markerStyle": 5, "hidden": False, "support_column": False, "intent": "data_bar"},
+                {"key": "previousYear", "order": 1, "markerStyle": 5, "hidden": False, "support_column": False, "intent": "data_bar"},
+                {"key": "actual-previousYear", "order": 2, "markerStyle": 5, "hidden": False, "support_column": False, "intent": "variance_delta"},
+                {"key": "actual-previousYear-percent", "order": 3, "hidden": False, "support_column": False, "intent": "variance_percent"},
+            ],
+            "intents": ["data_bar", "variance_delta", "variance_percent"],
+            "ordered_keys": ["actual", "previousYear", "actual-previousYear", "actual-previousYear-percent"],
+            "hidden_support_columns": [],
+        },
         "style": {"title": {"text": "Pipeline by stage"}},
         "static_furniture": [],
         "visual_intent": "variance table",
@@ -214,3 +226,46 @@ def test_transfer_qa_artifacts_are_written_outside_review_markdown(tmp_path):
     assert "# Zebra transfer gate: demo-template" in md_path.read_text()
     with pytest.raises(TransferGateError):
         write_transfer_qa_artifacts(gate, tmp_path, "demo-template", fail_on_error=True)
+
+
+def test_table_rebuild_uses_column_grammar_order_and_skips_hidden_support_columns():
+    dna = _base_dna(
+        scenario_pairing=["AC", "PY"],
+        column_grammar={
+            "schema": "rw-zebra-native-transfer.columnGrammar.v1",
+            "columns": [
+                {"key": "previousYear", "order": 0, "hidden": False, "support_column": False, "intent": "table_value"},
+                {"key": "_helper", "order": 1, "hidden": True, "support_column": True, "intent": "table_value"},
+                {"key": "actual", "order": 2, "hidden": False, "support_column": False, "intent": "data_bar"},
+                {"key": "actual-previousYear", "order": 3, "hidden": False, "support_column": False, "intent": "variance_delta"},
+            ],
+            "intents": ["data_bar", "variance_delta"],
+        },
+    )
+
+    visual = rebuild_visual_from_dna(dna, _catalog())[0]
+    sv = json.loads(visual["config"])["singleVisual"]
+
+    assert list(sv["columnProperties"]) == ["Data.Stage", "Data.PY", "Data.AC", "Data.AC-PY"]
+    assert "Data._helper" not in sv["columnProperties"]
+    assert "dataBars" in sv["objects"]
+
+
+def test_report_rebuild_does_not_emit_nearby_visual_furniture_as_page_textbox():
+    source_report = {"sections": [{"name": "p1", "displayName": "Home", "visualContainers": []}]}
+    dna = {
+        "template_slug": "demo",
+        "visuals": [
+            _base_dna(
+                static_furniture=[
+                    {"visual_id": "near", "visual_type": "textbox", "text": "local label", "relationship": "visual_furniture", "bounding_box": {"x": 8, "y": 90, "w": 100, "h": 20}},
+                    {"visual_id": "header", "visual_type": "textbox", "text": "Sales funnel", "relationship": "page_furniture", "bounding_box": {"x": 8, "y": 16, "w": 400, "h": 40}},
+                ]
+            )
+        ],
+    }
+
+    rebuilt = rebuild_native_report_from_dna(dna, source_report, _catalog())
+
+    textboxes = [json.loads(vc["config"])["singleVisual"] for vc in rebuilt["sections"][0]["visualContainers"] if json.loads(vc["config"])["singleVisual"].get("visualType") == "textbox"]
+    assert len(textboxes) == 1

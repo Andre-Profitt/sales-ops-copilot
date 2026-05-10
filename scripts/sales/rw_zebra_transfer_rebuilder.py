@@ -97,13 +97,16 @@ def _native_objects_from_dna(dna: dict[str, Any]) -> dict[str, Any]:
     title = (dna.get("style") or {}).get("title") or {}
     if title:
         objects["title"] = [{"properties": {k: v for k, v in title.items() if k in {"text", "fontSize", "fontFamily", "fontColor", "alignment"}}}]
+    grammar = dna.get("visual_object_grammar") or {}
+    if grammar:
+        objects["zebraGrammar"] = {"schema": grammar.get("schema"), "safe_groups": grammar.get("safe_groups", [])}
     return objects
 
 
 def _furniture_to_visual(f: dict[str, Any]) -> dict[str, Any] | None:
     bbox = f.get("bounding_box") or {}
     text = f.get("text") or ""
-    if f.get("visual_type") == "textbox" and text:
+    if f.get("visual_type") == "textbox" and text and f.get("relationship") != "visual_furniture":
         return build_textbox_visual(text=text, x=bbox.get("x", 0), y=bbox.get("y", 0), w=bbox.get("w", 200), h=bbox.get("h", 30), font_size_pt=12, color="#252423")
     return None
 
@@ -132,23 +135,61 @@ def _category_columns(dna: dict[str, Any]) -> list[dict[str, Any]]:
     return cols[:2]
 
 
+def _zebra_column_key_to_scenario(key: str) -> str | None:
+    normalized = key.replace("_", "-").lower()
+    return {
+        "actual": "AC",
+        "ac": "AC",
+        "previousyear": "PY",
+        "previous-year": "PY",
+        "py": "PY",
+        "plan": "PL",
+        "pl": "PL",
+        "forecast": "FC",
+        "fc": "FC",
+    }.get(normalized)
+
+
 def _table_columns_from_dna(dna: dict[str, Any], catalog: MeasureCatalog) -> list[dict[str, Any]]:
     columns = _category_columns(dna)
     refs_by_scenario = _scenario_refs(dna)
     projected = set(dna.get("scenario_pairing") or refs_by_scenario)
+    emitted: set[tuple[str, str, str]] = set()
+
+    def append_measure(scenario_or_label: str, title: str | None = None) -> None:
+        resolved = _resolve_scenario(scenario_or_label, refs_by_scenario, catalog) or catalog.resolve(scenario_or_label)
+        if not resolved:
+            return
+        key = (resolved[0], resolved[1], title or scenario_or_label)
+        if key in emitted:
+            return
+        emitted.add(key)
+        columns.append({"table": resolved[0], "field": resolved[1], "kind": "measure", "title": title or scenario_or_label})
+
+    grammar_columns = (dna.get("column_grammar") or {}).get("columns") or []
+    if grammar_columns:
+        derived_by_key = {v.get("key"): v for v in dna.get("derived_variance_columns") or []}
+        for spec in sorted(grammar_columns, key=lambda item: item.get("order", 0)):
+            if spec.get("hidden") or spec.get("support_column"):
+                continue
+            key = str(spec.get("key") or "")
+            scenario = _zebra_column_key_to_scenario(key)
+            if scenario and scenario in projected:
+                append_measure(scenario)
+                continue
+            derived = derived_by_key.get(key)
+            if derived and derived.get("label"):
+                append_measure(str(derived["label"]))
+        if any(c.get("kind") == "measure" for c in columns):
+            return columns
+
     for scenario in ("AC", "PY", "PL", "FC"):
-        if scenario not in projected:
-            continue
-        resolved = _resolve_scenario(scenario, refs_by_scenario, catalog)
-        if resolved:
-            columns.append({"table": resolved[0], "field": resolved[1], "kind": "measure", "title": scenario})
+        if scenario in projected:
+            append_measure(scenario)
     for variance in dna.get("derived_variance_columns") or []:
         label = variance.get("label")
-        if not label:
-            continue
-        resolved = catalog.resolve(label)
-        if resolved:
-            columns.append({"table": resolved[0], "field": resolved[1], "kind": "measure", "title": label})
+        if label:
+            append_measure(label)
     return columns
 
 
@@ -158,7 +199,8 @@ def _table_objects_from_dna(dna: dict[str, Any], columns: list[dict[str, Any]]) 
     databar_values: list[dict[str, Any]] = []
     first_measure = next((c for c in columns if c.get("kind") == "measure"), None)
     max_ref = f"{first_measure['table']}.{first_measure['field']}" if first_measure else None
-    wants_databar = any(
+    grammar_intents = set((dna.get("column_grammar") or {}).get("intents") or [])
+    wants_databar = "data_bar" in grammar_intents or any(
         (cfg.get("tableView") or {}).get("markerStyle") == 5
         for cfg in (dna.get("column_settings") or {}).values()
         if isinstance(cfg, dict)

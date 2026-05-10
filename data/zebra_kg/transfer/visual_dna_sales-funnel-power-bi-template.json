@@ -101,6 +101,120 @@
       ],
       "column_settings": {},
       "column_markers": {},
+      "column_grammar": {
+        "schema": "rw-zebra-native-transfer.columnGrammar.v1",
+        "columns": [
+          {
+            "key": "actual-plan",
+            "order": 0,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "AC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-plan-percent",
+            "order": 1,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "AC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-forecast",
+            "order": 2,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "AC",
+              "FC"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-forecast-percent",
+            "order": 3,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "AC",
+              "FC"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "forecast-plan",
+            "order": 4,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "FC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "forecast-plan-percent",
+            "order": 5,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "FC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          }
+        ],
+        "hidden_support_columns": [],
+        "ordered_keys": [
+          "actual-plan",
+          "actual-plan-percent",
+          "actual-forecast",
+          "actual-forecast-percent",
+          "forecast-plan",
+          "forecast-plan-percent"
+        ],
+        "intents": [
+          "variance_delta",
+          "variance_percent"
+        ]
+      },
       "objects": {
         "grid": [
           {
@@ -231,6 +345,35 @@
           }
         ]
       },
+      "safe_object_groups": [
+        "card",
+        "customData",
+        "grid",
+        "legend"
+      ],
+      "visual_object_grammar": {
+        "schema": "rw-zebra-native-transfer.visualObjectGrammar.v1",
+        "safe_groups": [
+          "grid"
+        ],
+        "groups": {
+          "grid": [
+            {
+              "selector": "general",
+              "index": 0,
+              "properties": {
+                "layoutPreset": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'default'"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
       "style": {
         "title": {},
         "data_labels": {},
@@ -300,7 +443,11 @@
             "w": 360.5874499332443,
             "h": 31.615487316421895
           },
-          "page_zone": "header_center"
+          "page_zone": "header_center",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 441.39,
+          "intent": "page_header"
         },
         {
           "visual_id": "b4bb4874cd38189c98e0",
@@ -312,7 +459,11 @@
             "w": 145.0,
             "h": 32.46995994659546
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "nearby",
+          "distance_px": 75.25,
+          "intent": "page_header"
         },
         {
           "visual_id": "7255b9833150424c5cd5",
@@ -324,7 +475,11 @@
             "w": 462.31805929919136,
             "h": 58.65229110512129
           },
-          "page_zone": "body_left"
+          "page_zone": "body_left",
+          "relationship": "visual_furniture",
+          "proximity_band": "overlap",
+          "distance_px": 0.0,
+          "intent": "button_or_instruction"
         },
         {
           "visual_id": "d053564049be64a46864",
@@ -336,7 +491,11 @@
             "w": 133.1511009870919,
             "h": 32.07289293849659
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "nearby",
+          "distance_px": 75.22,
+          "intent": "page_header"
         },
         {
           "visual_id": "916c06192e3e2198009d",
@@ -348,7 +507,49 @@
             "w": 408.0601503759398,
             "h": 52.932330827067666
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "nearby",
+          "distance_px": 50.35,
+          "intent": "page_header"
+        }
+      ],
+      "group_containers": [
+        {
+          "visual_id": "677347648455d97a890c",
+          "bounding_box": {
+            "x": 26.646785571684262,
+            "y": 65.01010786668563,
+            "w": 146.55114620912988,
+            "h": 35.987841945288764
+          },
+          "relationship": "group_container",
+          "proximity_band": "adjacent",
+          "distance_px": 8.06
+        },
+        {
+          "visual_id": "8a0a3e8c78a52d57ec36",
+          "bounding_box": {
+            "x": 0.0,
+            "y": 0.0,
+            "w": 1280.0,
+            "h": 720.0613967766692
+          },
+          "relationship": "group_container",
+          "proximity_band": "overlap",
+          "distance_px": 0.0
+        },
+        {
+          "visual_id": "59556de9091611922e02",
+          "bounding_box": {
+            "x": 221.90954773869345,
+            "y": 165.2823419413686,
+            "w": 77.1859296482412,
+            "h": 483.8752950408491
+          },
+          "relationship": "group_container",
+          "proximity_band": "adjacent",
+          "distance_px": 0.88
         }
       ],
       "visual_intent": "KPI strip"
@@ -449,6 +650,120 @@
       ],
       "column_settings": {},
       "column_markers": {},
+      "column_grammar": {
+        "schema": "rw-zebra-native-transfer.columnGrammar.v1",
+        "columns": [
+          {
+            "key": "actual-plan",
+            "order": 0,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "AC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-plan-percent",
+            "order": 1,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "AC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-forecast",
+            "order": 2,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "AC",
+              "FC"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-forecast-percent",
+            "order": 3,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "AC",
+              "FC"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "forecast-plan",
+            "order": 4,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "FC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "forecast-plan-percent",
+            "order": 5,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "FC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          }
+        ],
+        "hidden_support_columns": [],
+        "ordered_keys": [
+          "actual-plan",
+          "actual-plan-percent",
+          "actual-forecast",
+          "actual-forecast-percent",
+          "forecast-plan",
+          "forecast-plan-percent"
+        ],
+        "intents": [
+          "variance_delta",
+          "variance_percent"
+        ]
+      },
       "objects": {
         "proFeaturesSettings": [
           {
@@ -563,6 +878,38 @@
           }
         ]
       },
+      "safe_object_groups": [
+        "chartSettings",
+        "chartType",
+        "dataLabelSettings",
+        "designSettings",
+        "differenceHighlightSettings",
+        "proFeaturesSettings",
+        "visualCreatedVersion"
+      ],
+      "visual_object_grammar": {
+        "schema": "rw-zebra-native-transfer.visualObjectGrammar.v1",
+        "safe_groups": [
+          "dataLabelSettings"
+        ],
+        "groups": {
+          "dataLabelSettings": [
+            {
+              "selector": "general",
+              "index": 0,
+              "properties": {
+                "varianceLabelType": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "0D"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
       "style": {
         "title": {},
         "data_labels": {
@@ -656,7 +1003,11 @@
             "w": 360.5874499332443,
             "h": 31.615487316421895
           },
-          "page_zone": "header_center"
+          "page_zone": "header_center",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 363.03,
+          "intent": "page_header"
         },
         {
           "visual_id": "b4bb4874cd38189c98e0",
@@ -668,7 +1019,11 @@
             "w": 145.0,
             "h": 32.46995994659546
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 669.76,
+          "intent": "page_header"
         },
         {
           "visual_id": "7255b9833150424c5cd5",
@@ -680,7 +1035,11 @@
             "w": 462.31805929919136,
             "h": 58.65229110512129
           },
-          "page_zone": "body_left"
+          "page_zone": "body_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 138.5,
+          "intent": "button_or_instruction"
         },
         {
           "visual_id": "d053564049be64a46864",
@@ -692,7 +1051,11 @@
             "w": 133.1511009870919,
             "h": 32.07289293849659
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 678.94,
+          "intent": "page_header"
         },
         {
           "visual_id": "916c06192e3e2198009d",
@@ -704,7 +1067,25 @@
             "w": 408.0601503759398,
             "h": 52.932330827067666
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 469.1,
+          "intent": "page_header"
+        }
+      ],
+      "group_containers": [
+        {
+          "visual_id": "8a0a3e8c78a52d57ec36",
+          "bounding_box": {
+            "x": 0.0,
+            "y": 0.0,
+            "w": 1280.0,
+            "h": 720.0613967766692
+          },
+          "relationship": "group_container",
+          "proximity_band": "overlap",
+          "distance_px": 0.0
         }
       ],
       "visual_intent": "waterfall"
@@ -808,6 +1189,120 @@
       ],
       "column_settings": {},
       "column_markers": {},
+      "column_grammar": {
+        "schema": "rw-zebra-native-transfer.columnGrammar.v1",
+        "columns": [
+          {
+            "key": "actual-plan",
+            "order": 0,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "AC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-plan-percent",
+            "order": 1,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "AC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-forecast",
+            "order": 2,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "AC",
+              "FC"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-forecast-percent",
+            "order": 3,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "AC",
+              "FC"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "forecast-plan",
+            "order": 4,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "FC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "forecast-plan-percent",
+            "order": 5,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "FC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          }
+        ],
+        "hidden_support_columns": [],
+        "ordered_keys": [
+          "actual-plan",
+          "actual-plan-percent",
+          "actual-forecast",
+          "actual-forecast-percent",
+          "forecast-plan",
+          "forecast-plan-percent"
+        ],
+        "intents": [
+          "variance_delta",
+          "variance_percent"
+        ]
+      },
       "objects": {
         "grid": [
           {
@@ -945,6 +1440,35 @@
           }
         ]
       },
+      "safe_object_groups": [
+        "card",
+        "customData",
+        "grid",
+        "legend"
+      ],
+      "visual_object_grammar": {
+        "schema": "rw-zebra-native-transfer.visualObjectGrammar.v1",
+        "safe_groups": [
+          "grid"
+        ],
+        "groups": {
+          "grid": [
+            {
+              "selector": "general",
+              "index": 0,
+              "properties": {
+                "layoutPreset": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'default'"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
       "style": {
         "title": {},
         "data_labels": {},
@@ -1021,7 +1545,11 @@
             "w": 360.5874499332443,
             "h": 31.615487316421895
           },
-          "page_zone": "header_center"
+          "page_zone": "header_center",
+          "relationship": "page_furniture",
+          "proximity_band": "nearby",
+          "distance_px": 85.51,
+          "intent": "page_header"
         },
         {
           "visual_id": "b4bb4874cd38189c98e0",
@@ -1033,7 +1561,11 @@
             "w": 145.0,
             "h": 32.46995994659546
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 191.92,
+          "intent": "page_header"
         },
         {
           "visual_id": "7255b9833150424c5cd5",
@@ -1045,7 +1577,11 @@
             "w": 462.31805929919136,
             "h": 58.65229110512129
           },
-          "page_zone": "body_left"
+          "page_zone": "body_left",
+          "relationship": "visual_furniture",
+          "proximity_band": "overlap",
+          "distance_px": 0.0,
+          "intent": "button_or_instruction"
         },
         {
           "visual_id": "d053564049be64a46864",
@@ -1057,7 +1593,11 @@
             "w": 133.1511009870919,
             "h": 32.07289293849659
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 202.17,
+          "intent": "page_header"
         },
         {
           "visual_id": "916c06192e3e2198009d",
@@ -1069,7 +1609,49 @@
             "w": 408.0601503759398,
             "h": 52.932330827067666
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "nearby",
+          "distance_px": 73.39,
+          "intent": "page_header"
+        }
+      ],
+      "group_containers": [
+        {
+          "visual_id": "8a0a3e8c78a52d57ec36",
+          "bounding_box": {
+            "x": 0.0,
+            "y": 0.0,
+            "w": 1280.0,
+            "h": 720.0613967766692
+          },
+          "relationship": "group_container",
+          "proximity_band": "overlap",
+          "distance_px": 0.0
+        },
+        {
+          "visual_id": "d89d08ea727b5d575c9d",
+          "bounding_box": {
+            "x": 336.92034185521976,
+            "y": 65.55256064690026,
+            "w": 166.79933469464544,
+            "h": 36.22641509433963
+          },
+          "relationship": "group_container",
+          "proximity_band": "nearby",
+          "distance_px": 30.32
+        },
+        {
+          "visual_id": "59556de9091611922e02",
+          "bounding_box": {
+            "x": 221.90954773869345,
+            "y": 165.2823419413686,
+            "w": 77.1859296482412,
+            "h": 483.8752950408491
+          },
+          "relationship": "group_container",
+          "proximity_band": "adjacent",
+          "distance_px": 10.74
         }
       ],
       "visual_intent": "KPI strip"
@@ -1140,6 +1722,65 @@
           "format": null,
           "hidden": null
         }
+      },
+      "column_grammar": {
+        "schema": "rw-zebra-native-transfer.columnGrammar.v1",
+        "columns": [
+          {
+            "key": "expr",
+            "order": 0,
+            "markerStyle": null,
+            "showAsTable": null,
+            "scaleGroup": null,
+            "format": null,
+            "hidden": false,
+            "intent": "table_value",
+            "support_column": false
+          },
+          {
+            "key": "actual-plan",
+            "order": 1,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "AC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-plan-percent",
+            "order": 2,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "AC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          }
+        ],
+        "hidden_support_columns": [],
+        "ordered_keys": [
+          "expr",
+          "actual-plan",
+          "actual-plan-percent"
+        ],
+        "intents": [
+          "table_value",
+          "variance_delta",
+          "variance_percent"
+        ]
       },
       "objects": {
         "proFeaturesSettings": [
@@ -1306,17 +1947,60 @@
                     "Value": "'{\"calculationCorrectionFeature\":{\"visualVersion\":\"1.0.0\",\"isMigrationCompleted\":true}}'"
                   }
                 }
-              },
-              "activationLog": {
-                "expr": {
-                  "Literal": {
-                    "Value": "'{\"calculationCorrectionFeature\":{\"previewFeatureVersion\":\"1.0.0\"}}'"
-                  }
-                }
               }
             }
           }
         ]
+      },
+      "safe_object_groups": [
+        "annotationLayerSettings",
+        "averageLineSettings",
+        "categoriesMetadata",
+        "categorySettings",
+        "chartSettings",
+        "dataLabelSettings",
+        "migrationLog",
+        "previewSettings",
+        "proFeaturesSettings",
+        "sortSettings",
+        "version"
+      ],
+      "visual_object_grammar": {
+        "schema": "rw-zebra-native-transfer.visualObjectGrammar.v1",
+        "safe_groups": [
+          "chartSettings"
+        ],
+        "groups": {
+          "chartSettings": [
+            {
+              "selector": "general",
+              "index": 0,
+              "properties": {
+                "showGrandTotal": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "false"
+                    }
+                  }
+                },
+                "columnSettings": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'{\"actual\":{\"invert\":false,\"scaleGroup\":1,\"format\":0,\"useMeasureName\":false,\"suppressOthers\":false,\"tableView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]},\"chartView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]}},\"plan\":{\"invert\":false,\"scaleGroup\":1,\"format\":0,\"useMeasureName\":false,\"suppressOthers\":false,\"tableView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]},\"chartView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]}},\"actual-plan\":{\"invert\":false,\"scaleGroup\":1,\"format\":1,\"useMeasureName\":false,\"suppressOthers\":false,\"tableView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]},\"chartView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]}},\"actual-plan-percent\":{\"invert\":false,\"scaleGroup\":1,\"format\":2,\"useMeasureName\":false,\"suppressOthers\":false,\"tableView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]},\"chartView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]}}}'"
+                    }
+                  }
+                },
+                "firstTimeShowingColumnAdder": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "false"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
       },
       "style": {
         "title": {},
@@ -1387,7 +2071,11 @@
             "w": 360.5874499332443,
             "h": 31.615487316421895
           },
-          "page_zone": "header_center"
+          "page_zone": "header_center",
+          "relationship": "visual_furniture",
+          "proximity_band": "adjacent",
+          "distance_px": 9.08,
+          "intent": "page_header"
         },
         {
           "visual_id": "b4bb4874cd38189c98e0",
@@ -1399,7 +2087,11 @@
             "w": 145.0,
             "h": 32.46995994659546
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 522.06,
+          "intent": "page_header"
         },
         {
           "visual_id": "7255b9833150424c5cd5",
@@ -1411,7 +2103,11 @@
             "w": 462.31805929919136,
             "h": 58.65229110512129
           },
-          "page_zone": "body_left"
+          "page_zone": "body_left",
+          "relationship": "visual_furniture",
+          "proximity_band": "nearby",
+          "distance_px": 59.31,
+          "intent": "button_or_instruction"
         },
         {
           "visual_id": "d053564049be64a46864",
@@ -1423,7 +2119,11 @@
             "w": 133.1511009870919,
             "h": 32.07289293849659
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 533.8,
+          "intent": "page_header"
         },
         {
           "visual_id": "916c06192e3e2198009d",
@@ -1435,7 +2135,25 @@
             "w": 408.0601503759398,
             "h": 52.932330827067666
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 248.83,
+          "intent": "page_header"
+        }
+      ],
+      "group_containers": [
+        {
+          "visual_id": "8a0a3e8c78a52d57ec36",
+          "bounding_box": {
+            "x": 0.0,
+            "y": 0.0,
+            "w": 1280.0,
+            "h": 720.0613967766692
+          },
+          "relationship": "group_container",
+          "proximity_band": "overlap",
+          "distance_px": 0.0
         }
       ],
       "visual_intent": "variance table"
@@ -1493,6 +2211,52 @@
       ],
       "column_settings": {},
       "column_markers": {},
+      "column_grammar": {
+        "schema": "rw-zebra-native-transfer.columnGrammar.v1",
+        "columns": [
+          {
+            "key": "actual-forecast",
+            "order": 0,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "AC",
+              "FC"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-forecast-percent",
+            "order": 1,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "AC",
+              "FC"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          }
+        ],
+        "hidden_support_columns": [],
+        "ordered_keys": [
+          "actual-forecast",
+          "actual-forecast-percent"
+        ],
+        "intents": [
+          "variance_delta",
+          "variance_percent"
+        ]
+      },
       "objects": {
         "proFeaturesSettings": [
           {
@@ -1634,6 +2398,62 @@
           }
         ]
       },
+      "safe_object_groups": [
+        "categorySettings",
+        "chartSettings",
+        "chartType",
+        "dataLabelSettings",
+        "differenceHighlightSettings",
+        "proFeaturesSettings",
+        "titleSettings",
+        "visualCreatedVersion"
+      ],
+      "visual_object_grammar": {
+        "schema": "rw-zebra-native-transfer.visualObjectGrammar.v1",
+        "safe_groups": [
+          "dataLabelSettings",
+          "titleSettings"
+        ],
+        "groups": {
+          "dataLabelSettings": [
+            {
+              "selector": "general",
+              "index": 0,
+              "properties": {
+                "varianceLabelType": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "0D"
+                    }
+                  }
+                },
+                "labelDensity": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "5D"
+                    }
+                  }
+                }
+              }
+            }
+          ],
+          "titleSettings": [
+            {
+              "selector": "general",
+              "index": 0,
+              "properties": {
+                "show": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "false"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
       "style": {
         "title": {
           "show": {
@@ -1761,7 +2581,11 @@
             "w": 360.5874499332443,
             "h": 31.615487316421895
           },
-          "page_zone": "header_center"
+          "page_zone": "header_center",
+          "relationship": "page_furniture",
+          "proximity_band": "nearby",
+          "distance_px": 85.51,
+          "intent": "page_header"
         },
         {
           "visual_id": "b4bb4874cd38189c98e0",
@@ -1773,7 +2597,11 @@
             "w": 145.0,
             "h": 32.46995994659546
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 191.92,
+          "intent": "page_header"
         },
         {
           "visual_id": "7255b9833150424c5cd5",
@@ -1785,7 +2613,11 @@
             "w": 462.31805929919136,
             "h": 58.65229110512129
           },
-          "page_zone": "body_left"
+          "page_zone": "body_left",
+          "relationship": "visual_furniture",
+          "proximity_band": "overlap",
+          "distance_px": 0.0,
+          "intent": "button_or_instruction"
         },
         {
           "visual_id": "d053564049be64a46864",
@@ -1797,7 +2629,11 @@
             "w": 133.1511009870919,
             "h": 32.07289293849659
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 202.17,
+          "intent": "page_header"
         },
         {
           "visual_id": "916c06192e3e2198009d",
@@ -1809,7 +2645,49 @@
             "w": 408.0601503759398,
             "h": 52.932330827067666
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "nearby",
+          "distance_px": 73.39,
+          "intent": "page_header"
+        }
+      ],
+      "group_containers": [
+        {
+          "visual_id": "8a0a3e8c78a52d57ec36",
+          "bounding_box": {
+            "x": 0.0,
+            "y": 0.0,
+            "w": 1280.0,
+            "h": 720.0613967766692
+          },
+          "relationship": "group_container",
+          "proximity_band": "overlap",
+          "distance_px": 0.0
+        },
+        {
+          "visual_id": "d89d08ea727b5d575c9d",
+          "bounding_box": {
+            "x": 336.92034185521976,
+            "y": 65.55256064690026,
+            "w": 166.79933469464544,
+            "h": 36.22641509433963
+          },
+          "relationship": "group_container",
+          "proximity_band": "nearby",
+          "distance_px": 30.32
+        },
+        {
+          "visual_id": "59556de9091611922e02",
+          "bounding_box": {
+            "x": 221.90954773869345,
+            "y": 165.2823419413686,
+            "w": 77.1859296482412,
+            "h": 483.8752950408491
+          },
+          "relationship": "group_container",
+          "proximity_band": "adjacent",
+          "distance_px": 10.74
         }
       ],
       "visual_intent": "waterfall"
@@ -1913,6 +2791,120 @@
       ],
       "column_settings": {},
       "column_markers": {},
+      "column_grammar": {
+        "schema": "rw-zebra-native-transfer.columnGrammar.v1",
+        "columns": [
+          {
+            "key": "actual-plan",
+            "order": 0,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "AC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-plan-percent",
+            "order": 1,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "AC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-forecast",
+            "order": 2,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "AC",
+              "FC"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-forecast-percent",
+            "order": 3,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "AC",
+              "FC"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "forecast-plan",
+            "order": 4,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "FC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "forecast-plan-percent",
+            "order": 5,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "FC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          }
+        ],
+        "hidden_support_columns": [],
+        "ordered_keys": [
+          "actual-plan",
+          "actual-plan-percent",
+          "actual-forecast",
+          "actual-forecast-percent",
+          "forecast-plan",
+          "forecast-plan-percent"
+        ],
+        "intents": [
+          "variance_delta",
+          "variance_percent"
+        ]
+      },
       "objects": {
         "grid": [
           {
@@ -2050,6 +3042,35 @@
           }
         ]
       },
+      "safe_object_groups": [
+        "card",
+        "customData",
+        "grid",
+        "legend"
+      ],
+      "visual_object_grammar": {
+        "schema": "rw-zebra-native-transfer.visualObjectGrammar.v1",
+        "safe_groups": [
+          "grid"
+        ],
+        "groups": {
+          "grid": [
+            {
+              "selector": "general",
+              "index": 0,
+              "properties": {
+                "layoutPreset": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'default'"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
       "style": {
         "title": {},
         "data_labels": {},
@@ -2126,7 +3147,11 @@
             "w": 360.5874499332443,
             "h": 31.615487316421895
           },
-          "page_zone": "header_center"
+          "page_zone": "header_center",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 341.63,
+          "intent": "page_header"
         },
         {
           "visual_id": "b4bb4874cd38189c98e0",
@@ -2138,7 +3163,11 @@
             "w": 145.0,
             "h": 32.46995994659546
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 428.37,
+          "intent": "page_header"
         },
         {
           "visual_id": "7255b9833150424c5cd5",
@@ -2150,7 +3179,11 @@
             "w": 462.31805929919136,
             "h": 58.65229110512129
           },
-          "page_zone": "body_left"
+          "page_zone": "body_left",
+          "relationship": "visual_furniture",
+          "proximity_band": "nearby",
+          "distance_px": 94.91,
+          "intent": "button_or_instruction"
         },
         {
           "visual_id": "d053564049be64a46864",
@@ -2162,7 +3195,11 @@
             "w": 133.1511009870919,
             "h": 32.07289293849659
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 433.07,
+          "intent": "page_header"
         },
         {
           "visual_id": "916c06192e3e2198009d",
@@ -2174,7 +3211,37 @@
             "w": 408.0601503759398,
             "h": 52.932330827067666
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 370.0,
+          "intent": "page_header"
+        }
+      ],
+      "group_containers": [
+        {
+          "visual_id": "8a0a3e8c78a52d57ec36",
+          "bounding_box": {
+            "x": 0.0,
+            "y": 0.0,
+            "w": 1280.0,
+            "h": 720.0613967766692
+          },
+          "relationship": "group_container",
+          "proximity_band": "overlap",
+          "distance_px": 0.0
+        },
+        {
+          "visual_id": "59556de9091611922e02",
+          "bounding_box": {
+            "x": 221.90954773869345,
+            "y": 165.2823419413686,
+            "w": 77.1859296482412,
+            "h": 483.8752950408491
+          },
+          "relationship": "group_container",
+          "proximity_band": "adjacent",
+          "distance_px": 11.88
         }
       ],
       "visual_intent": "KPI strip"
@@ -2255,6 +3322,86 @@
       ],
       "column_settings": {},
       "column_markers": {},
+      "column_grammar": {
+        "schema": "rw-zebra-native-transfer.columnGrammar.v1",
+        "columns": [
+          {
+            "key": "actual-previousYear",
+            "order": 0,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "AC",
+              "PY"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-previousYear-percent",
+            "order": 1,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "AC",
+              "PY"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-plan",
+            "order": 2,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "AC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-plan-percent",
+            "order": 3,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "AC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          }
+        ],
+        "hidden_support_columns": [],
+        "ordered_keys": [
+          "actual-previousYear",
+          "actual-previousYear-percent",
+          "actual-plan",
+          "actual-plan-percent"
+        ],
+        "intents": [
+          "variance_delta",
+          "variance_percent"
+        ]
+      },
       "objects": {
         "proFeaturesSettings": [
           {
@@ -2311,6 +3458,37 @@
           }
         ]
       },
+      "safe_object_groups": [
+        "axisBreakSettings",
+        "chartType",
+        "dataLabelSettings",
+        "differenceHighlightSettings",
+        "proFeaturesSettings",
+        "visualCreatedVersion"
+      ],
+      "visual_object_grammar": {
+        "schema": "rw-zebra-native-transfer.visualObjectGrammar.v1",
+        "safe_groups": [
+          "dataLabelSettings"
+        ],
+        "groups": {
+          "dataLabelSettings": [
+            {
+              "selector": "general",
+              "index": 0,
+              "properties": {
+                "varianceLabelType": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "1D"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
       "style": {
         "title": {},
         "data_labels": {
@@ -2356,7 +3534,11 @@
             "w": 145.0,
             "h": 31.91374663072776
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 430.3,
+          "intent": "page_header"
         },
         {
           "visual_id": "d053564049be64a46864",
@@ -2368,7 +3550,11 @@
             "w": 165.0,
             "h": 31.91374663072776
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 429.85,
+          "intent": "page_header"
         },
         {
           "visual_id": "0ce3dc20c9b8120a1404",
@@ -2380,7 +3566,11 @@
             "w": 361.12449799196787,
             "h": 35.0
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 418.08,
+          "intent": "page_header"
         },
         {
           "visual_id": "6b5123832004c362e4ae",
@@ -2392,7 +3582,25 @@
             "w": 462.31805929919136,
             "h": 58.65229110512129
           },
-          "page_zone": "body_left"
+          "page_zone": "body_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 130.24,
+          "intent": "button_or_instruction"
+        }
+      ],
+      "group_containers": [
+        {
+          "visual_id": "50a0c66960508229be5e",
+          "bounding_box": {
+            "x": 0.0,
+            "y": 0.0,
+            "w": 1280.0,
+            "h": 720.0613967766692
+          },
+          "relationship": "group_container",
+          "proximity_band": "overlap",
+          "distance_px": 0.0
         }
       ],
       "visual_intent": "waterfall"
@@ -2463,6 +3671,65 @@
           "format": null,
           "hidden": null
         }
+      },
+      "column_grammar": {
+        "schema": "rw-zebra-native-transfer.columnGrammar.v1",
+        "columns": [
+          {
+            "key": "expr",
+            "order": 0,
+            "markerStyle": null,
+            "showAsTable": null,
+            "scaleGroup": null,
+            "format": null,
+            "hidden": false,
+            "intent": "table_value",
+            "support_column": false
+          },
+          {
+            "key": "actual-plan",
+            "order": 1,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "AC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-plan-percent",
+            "order": 2,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "AC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          }
+        ],
+        "hidden_support_columns": [],
+        "ordered_keys": [
+          "expr",
+          "actual-plan",
+          "actual-plan-percent"
+        ],
+        "intents": [
+          "table_value",
+          "variance_delta",
+          "variance_percent"
+        ]
       },
       "objects": {
         "proFeaturesSettings": [
@@ -2613,6 +3880,59 @@
           }
         ]
       },
+      "safe_object_groups": [
+        "categoriesMetadata",
+        "categorySettings",
+        "chartSettings",
+        "migrationLog",
+        "proFeaturesSettings",
+        "sortSettings",
+        "version"
+      ],
+      "visual_object_grammar": {
+        "schema": "rw-zebra-native-transfer.visualObjectGrammar.v1",
+        "safe_groups": [
+          "chartSettings"
+        ],
+        "groups": {
+          "chartSettings": [
+            {
+              "selector": "general",
+              "index": 0,
+              "properties": {
+                "columnSettings": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'{\"actual\":{\"invert\":false,\"scaleGroup\":1,\"format\":0,\"useMeasureName\":false,\"suppressOthers\":false,\"tableView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]},\"chartView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":1,\"hidden\":false,\"hiddenFromGroups\":[]}},\"plan\":{\"invert\":false,\"scaleGroup\":1,\"format\":0,\"useMeasureName\":false,\"suppressOthers\":false,\"tableView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]},\"chartView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]}},\"actual-plan\":{\"invert\":false,\"scaleGroup\":1,\"format\":1,\"useMeasureName\":false,\"suppressOthers\":false,\"tableView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]},\"chartView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"#F0F0F0\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":2,\"hidden\":false,\"hiddenFromGroups\":[]}},\"actual-plan-percent\":{\"invert\":false,\"scaleGroup\":1,\"format\":2,\"useMeasureName\":false,\"suppressOthers\":false,\"tableView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]},\"chartView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]}},\"previousYear\":{\"invert\":false,\"scaleGroup\":1,\"format\":0,\"tableView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]},\"chartView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]}},\"actual-previousYear\":{\"invert\":false,\"scaleGroup\":1,\"format\":1,\"tableView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]},\"chartView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":2,\"hidden\":false,\"hiddenFromGroups\":[]}},\"actual-previousYear-percent\":{\"invert\":false,\"scaleGroup\":1,\"format\":2,\"tableView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]},\"chartView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]}}}'"
+                    }
+                  }
+                },
+                "gridlineDensity": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "1L"
+                    }
+                  }
+                },
+                "showGrandTotal": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "true"
+                    }
+                  }
+                },
+                "firstTimeShowingColumnAdder": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "false"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
       "style": {
         "title": {},
         "data_labels": {},
@@ -2687,7 +4007,11 @@
             "w": 145.0,
             "h": 31.91374663072776
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "nearby",
+          "distance_px": 26.66,
+          "intent": "page_header"
         },
         {
           "visual_id": "d053564049be64a46864",
@@ -2699,7 +4023,11 @@
             "w": 165.0,
             "h": 31.91374663072776
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "nearby",
+          "distance_px": 26.21,
+          "intent": "page_header"
         },
         {
           "visual_id": "0ce3dc20c9b8120a1404",
@@ -2711,7 +4039,11 @@
             "w": 361.12449799196787,
             "h": 35.0
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "visual_furniture",
+          "proximity_band": "adjacent",
+          "distance_px": 14.44,
+          "intent": "page_header"
         },
         {
           "visual_id": "6b5123832004c362e4ae",
@@ -2723,7 +4055,37 @@
             "w": 462.31805929919136,
             "h": 58.65229110512129
           },
-          "page_zone": "body_left"
+          "page_zone": "body_left",
+          "relationship": "visual_furniture",
+          "proximity_band": "overlap",
+          "distance_px": 0.0,
+          "intent": "button_or_instruction"
+        }
+      ],
+      "group_containers": [
+        {
+          "visual_id": "99b72740b7d3770b95c7",
+          "bounding_box": {
+            "x": 632.2371967654987,
+            "y": 9.12655971479501,
+            "w": 148.08365884947466,
+            "h": 35.36541889483066
+          },
+          "relationship": "group_container",
+          "proximity_band": "nearby",
+          "distance_px": 46.45
+        },
+        {
+          "visual_id": "50a0c66960508229be5e",
+          "bounding_box": {
+            "x": 0.0,
+            "y": 0.0,
+            "w": 1280.0,
+            "h": 720.0613967766692
+          },
+          "relationship": "group_container",
+          "proximity_band": "overlap",
+          "distance_px": 0.0
         }
       ],
       "visual_intent": "variance table"
@@ -2827,6 +4189,120 @@
       ],
       "column_settings": {},
       "column_markers": {},
+      "column_grammar": {
+        "schema": "rw-zebra-native-transfer.columnGrammar.v1",
+        "columns": [
+          {
+            "key": "actual-plan",
+            "order": 0,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "AC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-plan-percent",
+            "order": 1,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "AC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-forecast",
+            "order": 2,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "AC",
+              "FC"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-forecast-percent",
+            "order": 3,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "AC",
+              "FC"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "forecast-plan",
+            "order": 4,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "FC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "forecast-plan-percent",
+            "order": 5,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "FC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          }
+        ],
+        "hidden_support_columns": [],
+        "ordered_keys": [
+          "actual-plan",
+          "actual-plan-percent",
+          "actual-forecast",
+          "actual-forecast-percent",
+          "forecast-plan",
+          "forecast-plan-percent"
+        ],
+        "intents": [
+          "variance_delta",
+          "variance_percent"
+        ]
+      },
       "objects": {
         "grid": [
           {
@@ -2964,6 +4440,35 @@
           }
         ]
       },
+      "safe_object_groups": [
+        "card",
+        "customData",
+        "grid",
+        "legend"
+      ],
+      "visual_object_grammar": {
+        "schema": "rw-zebra-native-transfer.visualObjectGrammar.v1",
+        "safe_groups": [
+          "grid"
+        ],
+        "groups": {
+          "grid": [
+            {
+              "selector": "general",
+              "index": 0,
+              "properties": {
+                "layoutPreset": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'default'"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
       "style": {
         "title": {},
         "data_labels": {},
@@ -3040,7 +4545,11 @@
             "w": 145.0,
             "h": 31.91374663072776
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 489.87,
+          "intent": "page_header"
         },
         {
           "visual_id": "d053564049be64a46864",
@@ -3052,7 +4561,11 @@
             "w": 165.0,
             "h": 31.91374663072776
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 469.89,
+          "intent": "page_header"
         },
         {
           "visual_id": "0ce3dc20c9b8120a1404",
@@ -3064,7 +4577,11 @@
             "w": 361.12449799196787,
             "h": 35.0
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 252.96,
+          "intent": "page_header"
         },
         {
           "visual_id": "6b5123832004c362e4ae",
@@ -3076,7 +4593,61 @@
             "w": 462.31805929919136,
             "h": 58.65229110512129
           },
-          "page_zone": "body_left"
+          "page_zone": "body_left",
+          "relationship": "visual_furniture",
+          "proximity_band": "nearby",
+          "distance_px": 30.7,
+          "intent": "button_or_instruction"
+        }
+      ],
+      "group_containers": [
+        {
+          "visual_id": "9db511032d870c11cad0",
+          "bounding_box": {
+            "x": 874.5640477376257,
+            "y": 435.095937148506,
+            "w": 54.31991294885745,
+            "h": 207.27551803530315
+          },
+          "relationship": "group_container",
+          "proximity_band": "adjacent",
+          "distance_px": 16.97
+        },
+        {
+          "visual_id": "99b72740b7d3770b95c7",
+          "bounding_box": {
+            "x": 632.2371967654987,
+            "y": 9.12655971479501,
+            "w": 148.08365884947466,
+            "h": 35.36541889483066
+          },
+          "relationship": "group_container",
+          "proximity_band": "nearby",
+          "distance_px": 24.25
+        },
+        {
+          "visual_id": "50a0c66960508229be5e",
+          "bounding_box": {
+            "x": 0.0,
+            "y": 0.0,
+            "w": 1280.0,
+            "h": 720.0613967766692
+          },
+          "relationship": "group_container",
+          "proximity_band": "overlap",
+          "distance_px": 0.0
+        },
+        {
+          "visual_id": "4f28007f618b7eec9748",
+          "bounding_box": {
+            "x": 875.2724481964696,
+            "y": 125.70530097183031,
+            "w": 55.011511895625475,
+            "h": 207.27551803530312
+          },
+          "relationship": "group_container",
+          "proximity_band": "adjacent",
+          "distance_px": 17.68
         }
       ],
       "visual_intent": "KPI strip"
@@ -3134,6 +4705,52 @@
       ],
       "column_settings": {},
       "column_markers": {},
+      "column_grammar": {
+        "schema": "rw-zebra-native-transfer.columnGrammar.v1",
+        "columns": [
+          {
+            "key": "actual-forecast",
+            "order": 0,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "AC",
+              "FC"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-forecast-percent",
+            "order": 1,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "AC",
+              "FC"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          }
+        ],
+        "hidden_support_columns": [],
+        "ordered_keys": [
+          "actual-forecast",
+          "actual-forecast-percent"
+        ],
+        "intents": [
+          "variance_delta",
+          "variance_percent"
+        ]
+      },
       "objects": {
         "proFeaturesSettings": [
           {
@@ -3275,6 +4892,62 @@
           }
         ]
       },
+      "safe_object_groups": [
+        "categorySettings",
+        "chartSettings",
+        "chartType",
+        "dataLabelSettings",
+        "differenceHighlightSettings",
+        "proFeaturesSettings",
+        "titleSettings",
+        "visualCreatedVersion"
+      ],
+      "visual_object_grammar": {
+        "schema": "rw-zebra-native-transfer.visualObjectGrammar.v1",
+        "safe_groups": [
+          "dataLabelSettings",
+          "titleSettings"
+        ],
+        "groups": {
+          "dataLabelSettings": [
+            {
+              "selector": "general",
+              "index": 0,
+              "properties": {
+                "varianceLabelType": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "0D"
+                    }
+                  }
+                },
+                "labelDensity": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "5D"
+                    }
+                  }
+                }
+              }
+            }
+          ],
+          "titleSettings": [
+            {
+              "selector": "general",
+              "index": 0,
+              "properties": {
+                "show": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "false"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
       "style": {
         "title": {
           "show": {
@@ -3402,7 +5075,11 @@
             "w": 145.0,
             "h": 31.91374663072776
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 806.08,
+          "intent": "page_header"
         },
         {
           "visual_id": "d053564049be64a46864",
@@ -3414,7 +5091,11 @@
             "w": 165.0,
             "h": 31.91374663072776
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 786.11,
+          "intent": "page_header"
         },
         {
           "visual_id": "0ce3dc20c9b8120a1404",
@@ -3426,7 +5107,11 @@
             "w": 361.12449799196787,
             "h": 35.0
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 569.29,
+          "intent": "page_header"
         },
         {
           "visual_id": "6b5123832004c362e4ae",
@@ -3438,7 +5123,61 @@
             "w": 462.31805929919136,
             "h": 58.65229110512129
           },
-          "page_zone": "body_left"
+          "page_zone": "body_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 345.11,
+          "intent": "button_or_instruction"
+        }
+      ],
+      "group_containers": [
+        {
+          "visual_id": "9db511032d870c11cad0",
+          "bounding_box": {
+            "x": 874.5640477376257,
+            "y": 435.095937148506,
+            "w": 54.31991294885745,
+            "h": 207.27551803530315
+          },
+          "relationship": "group_container",
+          "proximity_band": "adjacent",
+          "distance_px": 19.14
+        },
+        {
+          "visual_id": "56053912239bc63b9423",
+          "bounding_box": {
+            "x": 990.833515549823,
+            "y": 9.12655971479501,
+            "w": 165.0,
+            "h": 36.50623885918004
+          },
+          "relationship": "group_container",
+          "proximity_band": "nearby",
+          "distance_px": 58.23
+        },
+        {
+          "visual_id": "50a0c66960508229be5e",
+          "bounding_box": {
+            "x": 0.0,
+            "y": 0.0,
+            "w": 1280.0,
+            "h": 720.0613967766692
+          },
+          "relationship": "group_container",
+          "proximity_band": "overlap",
+          "distance_px": 0.0
+        },
+        {
+          "visual_id": "4f28007f618b7eec9748",
+          "bounding_box": {
+            "x": 875.2724481964696,
+            "y": 125.70530097183031,
+            "w": 55.011511895625475,
+            "h": 207.27551803530312
+          },
+          "relationship": "group_container",
+          "proximity_band": "adjacent",
+          "distance_px": 17.74
         }
       ],
       "visual_intent": "waterfall"
@@ -3542,6 +5281,120 @@
       ],
       "column_settings": {},
       "column_markers": {},
+      "column_grammar": {
+        "schema": "rw-zebra-native-transfer.columnGrammar.v1",
+        "columns": [
+          {
+            "key": "actual-plan",
+            "order": 0,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "AC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-plan-percent",
+            "order": 1,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "AC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-forecast",
+            "order": 2,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "AC",
+              "FC"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-forecast-percent",
+            "order": 3,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "AC",
+              "FC"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "forecast-plan",
+            "order": 4,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "FC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "forecast-plan-percent",
+            "order": 5,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "FC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          }
+        ],
+        "hidden_support_columns": [],
+        "ordered_keys": [
+          "actual-plan",
+          "actual-plan-percent",
+          "actual-forecast",
+          "actual-forecast-percent",
+          "forecast-plan",
+          "forecast-plan-percent"
+        ],
+        "intents": [
+          "variance_delta",
+          "variance_percent"
+        ]
+      },
       "objects": {
         "grid": [
           {
@@ -3686,6 +5539,35 @@
           }
         ]
       },
+      "safe_object_groups": [
+        "card",
+        "customData",
+        "grid",
+        "legend"
+      ],
+      "visual_object_grammar": {
+        "schema": "rw-zebra-native-transfer.visualObjectGrammar.v1",
+        "safe_groups": [
+          "grid"
+        ],
+        "groups": {
+          "grid": [
+            {
+              "selector": "general",
+              "index": 0,
+              "properties": {
+                "layoutPreset": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'default'"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
       "style": {
         "title": {},
         "data_labels": {},
@@ -3769,7 +5651,11 @@
             "w": 145.0,
             "h": 31.91374663072776
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 882.88,
+          "intent": "page_header"
         },
         {
           "visual_id": "d053564049be64a46864",
@@ -3781,7 +5667,11 @@
             "w": 165.0,
             "h": 31.91374663072776
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 864.54,
+          "intent": "page_header"
         },
         {
           "visual_id": "0ce3dc20c9b8120a1404",
@@ -3793,7 +5683,11 @@
             "w": 361.12449799196787,
             "h": 35.0
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 668.26,
+          "intent": "page_header"
         },
         {
           "visual_id": "6b5123832004c362e4ae",
@@ -3805,7 +5699,49 @@
             "w": 462.31805929919136,
             "h": 58.65229110512129
           },
-          "page_zone": "body_left"
+          "page_zone": "body_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 351.5,
+          "intent": "button_or_instruction"
+        }
+      ],
+      "group_containers": [
+        {
+          "visual_id": "9db511032d870c11cad0",
+          "bounding_box": {
+            "x": 874.5640477376257,
+            "y": 435.095937148506,
+            "w": 54.31991294885745,
+            "h": 207.27551803530315
+          },
+          "relationship": "group_container",
+          "proximity_band": "adjacent",
+          "distance_px": 19.08
+        },
+        {
+          "visual_id": "50a0c66960508229be5e",
+          "bounding_box": {
+            "x": 0.0,
+            "y": 0.0,
+            "w": 1280.0,
+            "h": 720.0613967766692
+          },
+          "relationship": "group_container",
+          "proximity_band": "overlap",
+          "distance_px": 0.0
+        },
+        {
+          "visual_id": "4f28007f618b7eec9748",
+          "bounding_box": {
+            "x": 875.2724481964696,
+            "y": 125.70530097183031,
+            "w": 55.011511895625475,
+            "h": 207.27551803530312
+          },
+          "relationship": "group_container",
+          "proximity_band": "nearby",
+          "distance_px": 70.07
         }
       ],
       "visual_intent": "KPI strip"
@@ -3909,6 +5845,120 @@
       ],
       "column_settings": {},
       "column_markers": {},
+      "column_grammar": {
+        "schema": "rw-zebra-native-transfer.columnGrammar.v1",
+        "columns": [
+          {
+            "key": "actual-plan",
+            "order": 0,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "AC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-plan-percent",
+            "order": 1,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "AC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-forecast",
+            "order": 2,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "AC",
+              "FC"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-forecast-percent",
+            "order": 3,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "AC",
+              "FC"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "forecast-plan",
+            "order": 4,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "FC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "forecast-plan-percent",
+            "order": 5,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "FC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          }
+        ],
+        "hidden_support_columns": [],
+        "ordered_keys": [
+          "actual-plan",
+          "actual-plan-percent",
+          "actual-forecast",
+          "actual-forecast-percent",
+          "forecast-plan",
+          "forecast-plan-percent"
+        ],
+        "intents": [
+          "variance_delta",
+          "variance_percent"
+        ]
+      },
       "objects": {
         "grid": [
           {
@@ -4053,6 +6103,35 @@
           }
         ]
       },
+      "safe_object_groups": [
+        "card",
+        "customData",
+        "grid",
+        "legend"
+      ],
+      "visual_object_grammar": {
+        "schema": "rw-zebra-native-transfer.visualObjectGrammar.v1",
+        "safe_groups": [
+          "grid"
+        ],
+        "groups": {
+          "grid": [
+            {
+              "selector": "general",
+              "index": 0,
+              "properties": {
+                "layoutPreset": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'default'"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
       "style": {
         "title": {},
         "data_labels": {},
@@ -4136,7 +6215,11 @@
             "w": 145.0,
             "h": 31.91374663072776
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 806.08,
+          "intent": "page_header"
         },
         {
           "visual_id": "d053564049be64a46864",
@@ -4148,7 +6231,11 @@
             "w": 165.0,
             "h": 31.91374663072776
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 786.11,
+          "intent": "page_header"
         },
         {
           "visual_id": "0ce3dc20c9b8120a1404",
@@ -4160,7 +6247,11 @@
             "w": 361.12449799196787,
             "h": 35.0
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 569.29,
+          "intent": "page_header"
         },
         {
           "visual_id": "6b5123832004c362e4ae",
@@ -4172,7 +6263,61 @@
             "w": 462.31805929919136,
             "h": 58.65229110512129
           },
-          "page_zone": "body_left"
+          "page_zone": "body_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 345.11,
+          "intent": "button_or_instruction"
+        }
+      ],
+      "group_containers": [
+        {
+          "visual_id": "9db511032d870c11cad0",
+          "bounding_box": {
+            "x": 874.5640477376257,
+            "y": 435.095937148506,
+            "w": 54.31991294885745,
+            "h": 207.27551803530315
+          },
+          "relationship": "group_container",
+          "proximity_band": "nearby",
+          "distance_px": 39.56
+        },
+        {
+          "visual_id": "56053912239bc63b9423",
+          "bounding_box": {
+            "x": 990.833515549823,
+            "y": 9.12655971479501,
+            "w": 165.0,
+            "h": 36.50623885918004
+          },
+          "relationship": "group_container",
+          "proximity_band": "nearby",
+          "distance_px": 58.23
+        },
+        {
+          "visual_id": "50a0c66960508229be5e",
+          "bounding_box": {
+            "x": 0.0,
+            "y": 0.0,
+            "w": 1280.0,
+            "h": 720.0613967766692
+          },
+          "relationship": "group_container",
+          "proximity_band": "overlap",
+          "distance_px": 0.0
+        },
+        {
+          "visual_id": "4f28007f618b7eec9748",
+          "bounding_box": {
+            "x": 875.2724481964696,
+            "y": 125.70530097183031,
+            "w": 55.011511895625475,
+            "h": 207.27551803530312
+          },
+          "relationship": "group_container",
+          "proximity_band": "adjacent",
+          "distance_px": 17.74
         }
       ],
       "visual_intent": "KPI strip"
@@ -4243,6 +6388,65 @@
           "format": null,
           "hidden": null
         }
+      },
+      "column_grammar": {
+        "schema": "rw-zebra-native-transfer.columnGrammar.v1",
+        "columns": [
+          {
+            "key": "expr",
+            "order": 0,
+            "markerStyle": null,
+            "showAsTable": null,
+            "scaleGroup": null,
+            "format": null,
+            "hidden": false,
+            "intent": "table_value",
+            "support_column": false
+          },
+          {
+            "key": "actual-forecast",
+            "order": 1,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "AC",
+              "FC"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-forecast-percent",
+            "order": 2,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "AC",
+              "FC"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          }
+        ],
+        "hidden_support_columns": [],
+        "ordered_keys": [
+          "expr",
+          "actual-forecast",
+          "actual-forecast-percent"
+        ],
+        "intents": [
+          "table_value",
+          "variance_delta",
+          "variance_percent"
+        ]
       },
       "objects": {
         "version": [
@@ -4332,6 +6536,50 @@
           }
         ]
       },
+      "safe_object_groups": [
+        "categoriesMetadata",
+        "chartSettings",
+        "migrationLog",
+        "proFeaturesSettings",
+        "version"
+      ],
+      "visual_object_grammar": {
+        "schema": "rw-zebra-native-transfer.visualObjectGrammar.v1",
+        "safe_groups": [
+          "chartSettings"
+        ],
+        "groups": {
+          "chartSettings": [
+            {
+              "selector": "general",
+              "index": 0,
+              "properties": {
+                "showGrandTotal": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "true"
+                    }
+                  }
+                },
+                "columnSettings": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'{\"actual\":{\"invert\":false,\"scaleGroup\":1,\"format\":0,\"useMeasureName\":false,\"suppressOthers\":false,\"tableView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]},\"chartView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]}},\"forecast\":{\"invert\":false,\"scaleGroup\":1,\"format\":0,\"useMeasureName\":false,\"suppressOthers\":false,\"tableView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]},\"chartView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]}},\"actual-forecast\":{\"invert\":false,\"scaleGroup\":1,\"format\":1,\"useMeasureName\":false,\"suppressOthers\":false,\"tableView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]},\"chartView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]}},\"actual-forecast-percent\":{\"invert\":false,\"scaleGroup\":1,\"format\":2,\"useMeasureName\":false,\"suppressOthers\":false,\"tableView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]},\"chartView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]}}}'"
+                    }
+                  }
+                },
+                "firstTimeShowingColumnAdder": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "false"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
       "style": {
         "title": {},
         "data_labels": {},
@@ -4385,7 +6633,11 @@
             "w": 165.0,
             "h": 31.91374663072776
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 383.07,
+          "intent": "page_header"
         },
         {
           "visual_id": "3f29996ee8480871648b",
@@ -4397,7 +6649,11 @@
             "w": 145.0,
             "h": 31.94295900178253
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 383.27,
+          "intent": "page_header"
         },
         {
           "visual_id": "77dac3d00ee98447a304",
@@ -4409,7 +6665,11 @@
             "w": 462.31805929919136,
             "h": 58.65229110512129
           },
-          "page_zone": "body_left"
+          "page_zone": "body_left",
+          "relationship": "visual_furniture",
+          "proximity_band": "nearby",
+          "distance_px": 83.7,
+          "intent": "button_or_instruction"
         },
         {
           "visual_id": "320cc7be9d4c04951040",
@@ -4421,7 +6681,11 @@
             "w": 360.52187260168836,
             "h": 31.43514965464313
           },
-          "page_zone": "body_center"
+          "page_zone": "body_center",
+          "relationship": "visual_furniture",
+          "proximity_band": "nearby",
+          "distance_px": 28.76,
+          "intent": "analytic_annotation"
         },
         {
           "visual_id": "19370d721327b763025c",
@@ -4433,7 +6697,25 @@
             "w": 360.52187260168836,
             "h": 31.43514965464313
           },
-          "page_zone": "body_left"
+          "page_zone": "body_left",
+          "relationship": "visual_furniture",
+          "proximity_band": "adjacent",
+          "distance_px": 3.93,
+          "intent": "analytic_annotation"
+        }
+      ],
+      "group_containers": [
+        {
+          "visual_id": "2cfc77e35dd05d442ebd",
+          "bounding_box": {
+            "x": 0.0,
+            "y": 0.0,
+            "w": 1280.0,
+            "h": 720.0613967766692
+          },
+          "relationship": "group_container",
+          "proximity_band": "overlap",
+          "distance_px": 0.0
         }
       ],
       "visual_intent": "variance table"
@@ -4504,6 +6786,65 @@
           "format": null,
           "hidden": null
         }
+      },
+      "column_grammar": {
+        "schema": "rw-zebra-native-transfer.columnGrammar.v1",
+        "columns": [
+          {
+            "key": "expr",
+            "order": 0,
+            "markerStyle": null,
+            "showAsTable": null,
+            "scaleGroup": null,
+            "format": null,
+            "hidden": false,
+            "intent": "table_value",
+            "support_column": false
+          },
+          {
+            "key": "actual-forecast",
+            "order": 1,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "AC",
+              "FC"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-forecast-percent",
+            "order": 2,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "AC",
+              "FC"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          }
+        ],
+        "hidden_support_columns": [],
+        "ordered_keys": [
+          "expr",
+          "actual-forecast",
+          "actual-forecast-percent"
+        ],
+        "intents": [
+          "table_value",
+          "variance_delta",
+          "variance_percent"
+        ]
       },
       "objects": {
         "version": [
@@ -4606,6 +6947,44 @@
           }
         ]
       },
+      "safe_object_groups": [
+        "categoriesMetadata",
+        "categorySettings",
+        "chartSettings",
+        "migrationLog",
+        "proFeaturesSettings",
+        "version"
+      ],
+      "visual_object_grammar": {
+        "schema": "rw-zebra-native-transfer.visualObjectGrammar.v1",
+        "safe_groups": [
+          "chartSettings"
+        ],
+        "groups": {
+          "chartSettings": [
+            {
+              "selector": "general",
+              "index": 0,
+              "properties": {
+                "columnSettings": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'{\"actual\":{\"invert\":false,\"scaleGroup\":1,\"format\":0,\"useMeasureName\":false,\"suppressOthers\":false,\"tableView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]},\"chartView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]}},\"forecast\":{\"invert\":false,\"scaleGroup\":1,\"format\":0,\"useMeasureName\":false,\"suppressOthers\":false,\"tableView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]},\"chartView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]}},\"actual-forecast\":{\"invert\":false,\"scaleGroup\":1,\"format\":1,\"useMeasureName\":false,\"suppressOthers\":false,\"tableView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]},\"chartView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]}},\"actual-forecast-percent\":{\"invert\":false,\"scaleGroup\":1,\"format\":2,\"useMeasureName\":false,\"suppressOthers\":false,\"tableView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]},\"chartView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]}}}'"
+                    }
+                  }
+                },
+                "firstTimeShowingColumnAdder": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "false"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
       "style": {
         "title": {},
         "data_labels": {},
@@ -4652,7 +7031,11 @@
             "w": 165.0,
             "h": 31.91374663072776
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 592.43,
+          "intent": "page_header"
         },
         {
           "visual_id": "3f29996ee8480871648b",
@@ -4664,7 +7047,11 @@
             "w": 145.0,
             "h": 31.94295900178253
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 607.95,
+          "intent": "page_header"
         },
         {
           "visual_id": "77dac3d00ee98447a304",
@@ -4676,7 +7063,11 @@
             "w": 462.31805929919136,
             "h": 58.65229110512129
           },
-          "page_zone": "body_left"
+          "page_zone": "body_left",
+          "relationship": "visual_furniture",
+          "proximity_band": "nearby",
+          "distance_px": 84.86,
+          "intent": "button_or_instruction"
         },
         {
           "visual_id": "320cc7be9d4c04951040",
@@ -4688,7 +7079,11 @@
             "w": 360.52187260168836,
             "h": 31.43514965464313
           },
-          "page_zone": "body_center"
+          "page_zone": "body_center",
+          "relationship": "visual_furniture",
+          "proximity_band": "adjacent",
+          "distance_px": 3.93,
+          "intent": "analytic_annotation"
         },
         {
           "visual_id": "19370d721327b763025c",
@@ -4700,7 +7095,25 @@
             "w": 360.52187260168836,
             "h": 31.43514965464313
           },
-          "page_zone": "body_left"
+          "page_zone": "body_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 236.78,
+          "intent": "analytic_annotation"
+        }
+      ],
+      "group_containers": [
+        {
+          "visual_id": "2cfc77e35dd05d442ebd",
+          "bounding_box": {
+            "x": 0.0,
+            "y": 0.0,
+            "w": 1280.0,
+            "h": 720.0613967766692
+          },
+          "relationship": "group_container",
+          "proximity_band": "overlap",
+          "distance_px": 0.0
         }
       ],
       "visual_intent": "variance table"
@@ -4804,6 +7217,120 @@
       ],
       "column_settings": {},
       "column_markers": {},
+      "column_grammar": {
+        "schema": "rw-zebra-native-transfer.columnGrammar.v1",
+        "columns": [
+          {
+            "key": "actual-plan",
+            "order": 0,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "AC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-plan-percent",
+            "order": 1,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "AC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-forecast",
+            "order": 2,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "AC",
+              "FC"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-forecast-percent",
+            "order": 3,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "AC",
+              "FC"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "forecast-plan",
+            "order": 4,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "FC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "forecast-plan-percent",
+            "order": 5,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "FC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          }
+        ],
+        "hidden_support_columns": [],
+        "ordered_keys": [
+          "actual-plan",
+          "actual-plan-percent",
+          "actual-forecast",
+          "actual-forecast-percent",
+          "forecast-plan",
+          "forecast-plan-percent"
+        ],
+        "intents": [
+          "variance_delta",
+          "variance_percent"
+        ]
+      },
       "objects": {
         "grid": [
           {
@@ -4885,6 +7412,17 @@
           }
         ]
       },
+      "safe_object_groups": [
+        "card",
+        "customData",
+        "grid",
+        "legend"
+      ],
+      "visual_object_grammar": {
+        "schema": "rw-zebra-native-transfer.visualObjectGrammar.v1",
+        "safe_groups": [],
+        "groups": {}
+      },
       "style": {
         "title": {},
         "data_labels": {},
@@ -4940,7 +7478,11 @@
             "w": 165.0,
             "h": 31.91374663072776
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "nearby",
+          "distance_px": 32.36,
+          "intent": "page_header"
         },
         {
           "visual_id": "3f29996ee8480871648b",
@@ -4952,7 +7494,11 @@
             "w": 145.0,
             "h": 31.94295900178253
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "nearby",
+          "distance_px": 52.36,
+          "intent": "page_header"
         },
         {
           "visual_id": "77dac3d00ee98447a304",
@@ -4964,7 +7510,11 @@
             "w": 462.31805929919136,
             "h": 58.65229110512129
           },
-          "page_zone": "body_left"
+          "page_zone": "body_left",
+          "relationship": "visual_furniture",
+          "proximity_band": "nearby",
+          "distance_px": 77.79,
+          "intent": "button_or_instruction"
         },
         {
           "visual_id": "320cc7be9d4c04951040",
@@ -4976,7 +7526,11 @@
             "w": 360.52187260168836,
             "h": 31.43514965464313
           },
-          "page_zone": "body_center"
+          "page_zone": "body_center",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 184.77,
+          "intent": "analytic_annotation"
         },
         {
           "visual_id": "19370d721327b763025c",
@@ -4988,7 +7542,85 @@
             "w": 360.52187260168836,
             "h": 31.43514965464313
           },
-          "page_zone": "body_left"
+          "page_zone": "body_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 184.77,
+          "intent": "analytic_annotation"
+        }
+      ],
+      "group_containers": [
+        {
+          "visual_id": "e17d13073ad735b3948a",
+          "bounding_box": {
+            "x": 110.13637157865554,
+            "y": 0.0,
+            "w": 1081.4973262032086,
+            "h": 200.0
+          },
+          "relationship": "group_container",
+          "proximity_band": "overlap",
+          "distance_px": 0.0
+        },
+        {
+          "visual_id": "34c28fc4cb7561e0e0ed",
+          "bounding_box": {
+            "x": 19.393939393939394,
+            "y": 197.36185383244205,
+            "w": 164.27807486631016,
+            "h": 36.50623885918004
+          },
+          "relationship": "group_container",
+          "proximity_band": "adjacent",
+          "distance_px": 13.69
+        },
+        {
+          "visual_id": "58c564014da2777066e4",
+          "bounding_box": {
+            "x": 19.393939393939394,
+            "y": 11.408199643493761,
+            "w": 145.2519610202129,
+            "h": 36.50623885918004
+          },
+          "relationship": "group_container",
+          "proximity_band": "nearby",
+          "distance_px": 32.72
+        },
+        {
+          "visual_id": "b7b0b46c312b7b866656",
+          "bounding_box": {
+            "x": 300.0356506238859,
+            "y": 160.85561497326202,
+            "w": 325.40463458110526,
+            "h": 52.47771836007129
+          },
+          "relationship": "group_container",
+          "proximity_band": "overlap",
+          "distance_px": 0.0
+        },
+        {
+          "visual_id": "4c2ebd4f3b00a367e845",
+          "bounding_box": {
+            "x": 800.7072130072978,
+            "y": 160.85561497326202,
+            "w": 325.40463458110526,
+            "h": 52.47771836007129
+          },
+          "relationship": "group_container",
+          "proximity_band": "overlap",
+          "distance_px": 0.0
+        },
+        {
+          "visual_id": "2cfc77e35dd05d442ebd",
+          "bounding_box": {
+            "x": 0.0,
+            "y": 0.0,
+            "w": 1280.0,
+            "h": 720.0613967766692
+          },
+          "relationship": "group_container",
+          "proximity_band": "overlap",
+          "distance_px": 0.0
         }
       ],
       "visual_intent": "KPI strip"
@@ -5092,6 +7724,120 @@
       ],
       "column_settings": {},
       "column_markers": {},
+      "column_grammar": {
+        "schema": "rw-zebra-native-transfer.columnGrammar.v1",
+        "columns": [
+          {
+            "key": "actual-plan",
+            "order": 0,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "AC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-plan-percent",
+            "order": 1,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "AC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-forecast",
+            "order": 2,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "AC",
+              "FC"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-forecast-percent",
+            "order": 3,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "AC",
+              "FC"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "forecast-plan",
+            "order": 4,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "FC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "forecast-plan-percent",
+            "order": 5,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "FC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          }
+        ],
+        "hidden_support_columns": [],
+        "ordered_keys": [
+          "actual-plan",
+          "actual-plan-percent",
+          "actual-forecast",
+          "actual-forecast-percent",
+          "forecast-plan",
+          "forecast-plan-percent"
+        ],
+        "intents": [
+          "variance_delta",
+          "variance_percent"
+        ]
+      },
       "objects": {
         "grid": [
           {
@@ -5173,6 +7919,17 @@
           }
         ]
       },
+      "safe_object_groups": [
+        "card",
+        "customData",
+        "grid",
+        "legend"
+      ],
+      "visual_object_grammar": {
+        "schema": "rw-zebra-native-transfer.visualObjectGrammar.v1",
+        "safe_groups": [],
+        "groups": {}
+      },
       "style": {
         "title": {},
         "data_labels": {},
@@ -5228,7 +7985,11 @@
             "w": 165.0,
             "h": 31.91374663072776
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 198.83,
+          "intent": "page_header"
         },
         {
           "visual_id": "3f29996ee8480871648b",
@@ -5240,7 +8001,11 @@
             "w": 145.0,
             "h": 31.94295900178253
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 211.67,
+          "intent": "page_header"
         },
         {
           "visual_id": "77dac3d00ee98447a304",
@@ -5252,7 +8017,11 @@
             "w": 462.31805929919136,
             "h": 58.65229110512129
           },
-          "page_zone": "body_left"
+          "page_zone": "body_left",
+          "relationship": "visual_furniture",
+          "proximity_band": "overlap",
+          "distance_px": 0.0,
+          "intent": "button_or_instruction"
         },
         {
           "visual_id": "320cc7be9d4c04951040",
@@ -5264,7 +8033,11 @@
             "w": 360.52187260168836,
             "h": 31.43514965464313
           },
-          "page_zone": "body_center"
+          "page_zone": "body_center",
+          "relationship": "visual_furniture",
+          "proximity_band": "adjacent",
+          "distance_px": 4.52,
+          "intent": "analytic_annotation"
         },
         {
           "visual_id": "19370d721327b763025c",
@@ -5276,7 +8049,49 @@
             "w": 360.52187260168836,
             "h": 31.43514965464313
           },
-          "page_zone": "body_left"
+          "page_zone": "body_left",
+          "relationship": "visual_furniture",
+          "proximity_band": "adjacent",
+          "distance_px": 4.52,
+          "intent": "analytic_annotation"
+        }
+      ],
+      "group_containers": [
+        {
+          "visual_id": "e17d13073ad735b3948a",
+          "bounding_box": {
+            "x": 110.13637157865554,
+            "y": 0.0,
+            "w": 1081.4973262032086,
+            "h": 200.0
+          },
+          "relationship": "group_container",
+          "proximity_band": "adjacent",
+          "distance_px": 0.0
+        },
+        {
+          "visual_id": "b7b0b46c312b7b866656",
+          "bounding_box": {
+            "x": 300.0356506238859,
+            "y": 160.85561497326202,
+            "w": 325.40463458110526,
+            "h": 52.47771836007129
+          },
+          "relationship": "group_container",
+          "proximity_band": "overlap",
+          "distance_px": 0.0
+        },
+        {
+          "visual_id": "2cfc77e35dd05d442ebd",
+          "bounding_box": {
+            "x": 0.0,
+            "y": 0.0,
+            "w": 1280.0,
+            "h": 720.0613967766692
+          },
+          "relationship": "group_container",
+          "proximity_band": "overlap",
+          "distance_px": 0.0
         }
       ],
       "visual_intent": "KPI strip"
@@ -5380,6 +8195,120 @@
       ],
       "column_settings": {},
       "column_markers": {},
+      "column_grammar": {
+        "schema": "rw-zebra-native-transfer.columnGrammar.v1",
+        "columns": [
+          {
+            "key": "actual-plan",
+            "order": 0,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "AC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-plan-percent",
+            "order": 1,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "AC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-forecast",
+            "order": 2,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "AC",
+              "FC"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-forecast-percent",
+            "order": 3,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "AC",
+              "FC"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "forecast-plan",
+            "order": 4,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "FC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "forecast-plan-percent",
+            "order": 5,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "FC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          }
+        ],
+        "hidden_support_columns": [],
+        "ordered_keys": [
+          "actual-plan",
+          "actual-plan-percent",
+          "actual-forecast",
+          "actual-forecast-percent",
+          "forecast-plan",
+          "forecast-plan-percent"
+        ],
+        "intents": [
+          "variance_delta",
+          "variance_percent"
+        ]
+      },
       "objects": {
         "grid": [
           {
@@ -5461,6 +8390,17 @@
           }
         ]
       },
+      "safe_object_groups": [
+        "card",
+        "customData",
+        "grid",
+        "legend"
+      ],
+      "visual_object_grammar": {
+        "schema": "rw-zebra-native-transfer.visualObjectGrammar.v1",
+        "safe_groups": [],
+        "groups": {}
+      },
       "style": {
         "title": {},
         "data_labels": {},
@@ -5516,7 +8456,11 @@
             "w": 165.0,
             "h": 31.91374663072776
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 640.9,
+          "intent": "page_header"
         },
         {
           "visual_id": "3f29996ee8480871648b",
@@ -5528,7 +8472,11 @@
             "w": 145.0,
             "h": 31.94295900178253
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 660.35,
+          "intent": "page_header"
         },
         {
           "visual_id": "77dac3d00ee98447a304",
@@ -5540,7 +8488,11 @@
             "w": 462.31805929919136,
             "h": 58.65229110512129
           },
-          "page_zone": "body_left"
+          "page_zone": "body_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 183.11,
+          "intent": "button_or_instruction"
         },
         {
           "visual_id": "320cc7be9d4c04951040",
@@ -5552,7 +8504,11 @@
             "w": 360.52187260168836,
             "h": 31.43514965464313
           },
-          "page_zone": "body_center"
+          "page_zone": "body_center",
+          "relationship": "visual_furniture",
+          "proximity_band": "adjacent",
+          "distance_px": 4.52,
+          "intent": "analytic_annotation"
         },
         {
           "visual_id": "19370d721327b763025c",
@@ -5564,7 +8520,49 @@
             "w": 360.52187260168836,
             "h": 31.43514965464313
           },
-          "page_zone": "body_left"
+          "page_zone": "body_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 405.88,
+          "intent": "analytic_annotation"
+        }
+      ],
+      "group_containers": [
+        {
+          "visual_id": "e17d13073ad735b3948a",
+          "bounding_box": {
+            "x": 110.13637157865554,
+            "y": 0.0,
+            "w": 1081.4973262032086,
+            "h": 200.0
+          },
+          "relationship": "group_container",
+          "proximity_band": "adjacent",
+          "distance_px": 0.0
+        },
+        {
+          "visual_id": "4c2ebd4f3b00a367e845",
+          "bounding_box": {
+            "x": 800.7072130072978,
+            "y": 160.85561497326202,
+            "w": 325.40463458110526,
+            "h": 52.47771836007129
+          },
+          "relationship": "group_container",
+          "proximity_band": "overlap",
+          "distance_px": 0.0
+        },
+        {
+          "visual_id": "2cfc77e35dd05d442ebd",
+          "bounding_box": {
+            "x": 0.0,
+            "y": 0.0,
+            "w": 1280.0,
+            "h": 720.0613967766692
+          },
+          "relationship": "group_container",
+          "proximity_band": "overlap",
+          "distance_px": 0.0
         }
       ],
       "visual_intent": "KPI strip"
@@ -5622,6 +8620,52 @@
       ],
       "column_settings": {},
       "column_markers": {},
+      "column_grammar": {
+        "schema": "rw-zebra-native-transfer.columnGrammar.v1",
+        "columns": [
+          {
+            "key": "actual-forecast",
+            "order": 0,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "AC",
+              "FC"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-forecast-percent",
+            "order": 1,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "AC",
+              "FC"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          }
+        ],
+        "hidden_support_columns": [],
+        "ordered_keys": [
+          "actual-forecast",
+          "actual-forecast-percent"
+        ],
+        "intents": [
+          "variance_delta",
+          "variance_percent"
+        ]
+      },
       "objects": {
         "proFeaturesSettings": [
           {
@@ -5763,6 +8807,62 @@
           }
         ]
       },
+      "safe_object_groups": [
+        "categorySettings",
+        "chartSettings",
+        "chartType",
+        "dataLabelSettings",
+        "differenceHighlightSettings",
+        "proFeaturesSettings",
+        "titleSettings",
+        "visualCreatedVersion"
+      ],
+      "visual_object_grammar": {
+        "schema": "rw-zebra-native-transfer.visualObjectGrammar.v1",
+        "safe_groups": [
+          "dataLabelSettings",
+          "titleSettings"
+        ],
+        "groups": {
+          "dataLabelSettings": [
+            {
+              "selector": "general",
+              "index": 0,
+              "properties": {
+                "varianceLabelType": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "0D"
+                    }
+                  }
+                },
+                "labelDensity": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "5D"
+                    }
+                  }
+                }
+              }
+            }
+          ],
+          "titleSettings": [
+            {
+              "selector": "general",
+              "index": 0,
+              "properties": {
+                "show": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "false"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
       "style": {
         "title": {
           "show": {
@@ -5890,7 +8990,11 @@
             "w": 165.0,
             "h": 31.91374663072776
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 349.9,
+          "intent": "page_header"
         },
         {
           "visual_id": "3f29996ee8480871648b",
@@ -5902,7 +9006,11 @@
             "w": 145.0,
             "h": 31.94295900178253
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "page_furniture",
+          "proximity_band": "distant",
+          "distance_px": 367.75,
+          "intent": "page_header"
         },
         {
           "visual_id": "77dac3d00ee98447a304",
@@ -5914,7 +9022,11 @@
             "w": 462.31805929919136,
             "h": 58.65229110512129
           },
-          "page_zone": "body_left"
+          "page_zone": "body_left",
+          "relationship": "visual_furniture",
+          "proximity_band": "overlap",
+          "distance_px": 0.0,
+          "intent": "button_or_instruction"
         },
         {
           "visual_id": "320cc7be9d4c04951040",
@@ -5926,7 +9038,11 @@
             "w": 360.52187260168836,
             "h": 31.43514965464313
           },
-          "page_zone": "body_center"
+          "page_zone": "body_center",
+          "relationship": "visual_furniture",
+          "proximity_band": "adjacent",
+          "distance_px": 10.23,
+          "intent": "analytic_annotation"
         },
         {
           "visual_id": "19370d721327b763025c",
@@ -5938,7 +9054,61 @@
             "w": 360.52187260168836,
             "h": 31.43514965464313
           },
-          "page_zone": "body_left"
+          "page_zone": "body_left",
+          "relationship": "visual_furniture",
+          "proximity_band": "nearby",
+          "distance_px": 93.83,
+          "intent": "analytic_annotation"
+        }
+      ],
+      "group_containers": [
+        {
+          "visual_id": "e17d13073ad735b3948a",
+          "bounding_box": {
+            "x": 110.13637157865554,
+            "y": 0.0,
+            "w": 1081.4973262032086,
+            "h": 200.0
+          },
+          "relationship": "group_container",
+          "proximity_band": "adjacent",
+          "distance_px": 0.0
+        },
+        {
+          "visual_id": "b7b0b46c312b7b866656",
+          "bounding_box": {
+            "x": 300.0356506238859,
+            "y": 160.85561497326202,
+            "w": 325.40463458110526,
+            "h": 52.47771836007129
+          },
+          "relationship": "group_container",
+          "proximity_band": "overlap",
+          "distance_px": 0.0
+        },
+        {
+          "visual_id": "4c2ebd4f3b00a367e845",
+          "bounding_box": {
+            "x": 800.7072130072978,
+            "y": 160.85561497326202,
+            "w": 325.40463458110526,
+            "h": 52.47771836007129
+          },
+          "relationship": "group_container",
+          "proximity_band": "overlap",
+          "distance_px": 0.0
+        },
+        {
+          "visual_id": "2cfc77e35dd05d442ebd",
+          "bounding_box": {
+            "x": 0.0,
+            "y": 0.0,
+            "w": 1280.0,
+            "h": 720.0613967766692
+          },
+          "relationship": "group_container",
+          "proximity_band": "overlap",
+          "distance_px": 0.0
         }
       ],
       "visual_intent": "waterfall"
@@ -6057,6 +9227,133 @@
           "hidden": null
         }
       },
+      "column_grammar": {
+        "schema": "rw-zebra-native-transfer.columnGrammar.v1",
+        "columns": [
+          {
+            "key": "expr",
+            "order": 0,
+            "markerStyle": null,
+            "showAsTable": null,
+            "scaleGroup": null,
+            "format": null,
+            "hidden": false,
+            "intent": "table_value",
+            "support_column": false
+          },
+          {
+            "key": "actual-plan",
+            "order": 1,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "AC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-plan-percent",
+            "order": 2,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "AC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-forecast",
+            "order": 3,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "AC",
+              "FC"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-forecast-percent",
+            "order": 4,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "AC",
+              "FC"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "forecast-plan",
+            "order": 5,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "FC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "forecast-plan-percent",
+            "order": 6,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "FC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          }
+        ],
+        "hidden_support_columns": [],
+        "ordered_keys": [
+          "expr",
+          "actual-plan",
+          "actual-plan-percent",
+          "actual-forecast",
+          "actual-forecast-percent",
+          "forecast-plan",
+          "forecast-plan-percent"
+        ],
+        "intents": [
+          "table_value",
+          "variance_delta",
+          "variance_percent"
+        ]
+      },
       "objects": {
         "version": [
           {
@@ -6165,6 +9462,74 @@
           }
         ]
       },
+      "safe_object_groups": [
+        "categoriesMetadata",
+        "chartSettings",
+        "migrationLog",
+        "proFeaturesSettings",
+        "titleSettings",
+        "version"
+      ],
+      "visual_object_grammar": {
+        "schema": "rw-zebra-native-transfer.visualObjectGrammar.v1",
+        "safe_groups": [
+          "chartSettings",
+          "titleSettings"
+        ],
+        "groups": {
+          "titleSettings": [
+            {
+              "selector": "general",
+              "index": 0,
+              "properties": {
+                "show": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "false"
+                    }
+                  }
+                }
+              }
+            }
+          ],
+          "chartSettings": [
+            {
+              "selector": "general",
+              "index": 0,
+              "properties": {
+                "columnSettings": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'{\"actual\":{\"invert\":false,\"order\":0,\"scaleGroup\":1,\"format\":0,\"useMeasureName\":false,\"suppressOthers\":false,\"tableView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]},\"chartView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":2,\"hidden\":false,\"hiddenFromGroups\":[]}},\"forecast\":{\"invert\":false,\"order\":4,\"scaleGroup\":1,\"format\":0,\"useMeasureName\":false,\"suppressOthers\":false,\"tableView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]},\"chartView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]}},\"actual-forecast\":{\"invert\":false,\"order\":5,\"scaleGroup\":1,\"format\":1,\"useMeasureName\":false,\"suppressOthers\":false,\"tableView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]},\"chartView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"#EFEEEE\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]}},\"actual-forecast-percent\":{\"invert\":false,\"order\":6,\"scaleGroup\":1,\"format\":2,\"useMeasureName\":false,\"suppressOthers\":false,\"tableView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]},\"chartView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]}},\"plan\":{\"invert\":false,\"order\":1,\"scaleGroup\":1,\"format\":0,\"useMeasureName\":false,\"suppressOthers\":false,\"tableView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]},\"chartView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]}},\"actual-plan\":{\"invert\":false,\"order\":2,\"scaleGroup\":1,\"format\":1,\"useMeasureName\":false,\"suppressOthers\":false,\"tableView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]},\"chartView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"#EFEFEF\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]}},\"actual-plan-percent\":{\"invert\":false,\"order\":3,\"scaleGroup\":1,\"format\":2,\"useMeasureName\":false,\"suppressOthers\":false,\"tableView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]},\"chartView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]}}}'"
+                    }
+                  }
+                },
+                "firstTimeShowingColumnAdder": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "false"
+                    }
+                  }
+                },
+                "showGridlines": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "false"
+                    }
+                  }
+                },
+                "showGrandTotal": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "true"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
       "style": {
         "title": {
           "show": {
@@ -6248,9 +9613,14 @@
             "w": 190.6199460916442,
             "h": 31.91374663072776
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "visual_furniture",
+          "proximity_band": "adjacent",
+          "distance_px": 12.08,
+          "intent": "page_header"
         }
       ],
+      "group_containers": [],
       "visual_intent": "variance table"
     },
     {
@@ -6366,6 +9736,133 @@
           "format": null,
           "hidden": null
         }
+      },
+      "column_grammar": {
+        "schema": "rw-zebra-native-transfer.columnGrammar.v1",
+        "columns": [
+          {
+            "key": "expr",
+            "order": 0,
+            "markerStyle": null,
+            "showAsTable": null,
+            "scaleGroup": null,
+            "format": null,
+            "hidden": false,
+            "intent": "table_value",
+            "support_column": false
+          },
+          {
+            "key": "actual-plan",
+            "order": 1,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "AC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-plan-percent",
+            "order": 2,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "AC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-forecast",
+            "order": 3,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "AC",
+              "FC"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "actual-forecast-percent",
+            "order": 4,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "AC",
+              "FC"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "forecast-plan",
+            "order": 5,
+            "markerStyle": 5,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 1,
+            "hidden": false,
+            "intent": "variance_delta",
+            "scenario_pair": [
+              "FC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          },
+          {
+            "key": "forecast-plan-percent",
+            "order": 6,
+            "markerStyle": null,
+            "showAsTable": true,
+            "scaleGroup": null,
+            "format": 2,
+            "hidden": false,
+            "intent": "variance_percent",
+            "scenario_pair": [
+              "FC",
+              "PL"
+            ],
+            "support_column": false,
+            "synthesized_by_zebra": true
+          }
+        ],
+        "hidden_support_columns": [],
+        "ordered_keys": [
+          "expr",
+          "actual-plan",
+          "actual-plan-percent",
+          "actual-forecast",
+          "actual-forecast-percent",
+          "forecast-plan",
+          "forecast-plan-percent"
+        ],
+        "intents": [
+          "table_value",
+          "variance_delta",
+          "variance_percent"
+        ]
       },
       "objects": {
         "version": [
@@ -6508,6 +10005,84 @@
             }
           }
         ]
+      },
+      "safe_object_groups": [
+        "categoriesMetadata",
+        "chartSettings",
+        "dataLabelSettings",
+        "migrationLog",
+        "proFeaturesSettings",
+        "titleSettings",
+        "version"
+      ],
+      "visual_object_grammar": {
+        "schema": "rw-zebra-native-transfer.visualObjectGrammar.v1",
+        "safe_groups": [
+          "chartSettings",
+          "dataLabelSettings",
+          "titleSettings"
+        ],
+        "groups": {
+          "dataLabelSettings": [
+            {
+              "selector": "general",
+              "index": 0,
+              "properties": {
+                "useBasisPointsFormat": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "true"
+                    }
+                  }
+                }
+              }
+            }
+          ],
+          "titleSettings": [
+            {
+              "selector": "general",
+              "index": 0,
+              "properties": {
+                "show": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "false"
+                    }
+                  }
+                }
+              }
+            }
+          ],
+          "chartSettings": [
+            {
+              "selector": "general",
+              "index": 0,
+              "properties": {
+                "columnSettings": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'{\"actual\":{\"invert\":false,\"order\":0,\"scaleGroup\":1,\"format\":0,\"useMeasureName\":false,\"pbiFormatString\":\"0.00%;-0.00%;0.00%\",\"suppressOthers\":false,\"tableView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]},\"chartView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":2,\"hidden\":false,\"hiddenFromGroups\":[]}},\"forecast\":{\"invert\":false,\"order\":4,\"scaleGroup\":1,\"format\":0,\"useMeasureName\":false,\"pbiFormatString\":\"0.00%;-0.00%;0.00%\",\"suppressOthers\":false,\"tableView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]},\"chartView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]}},\"actual-forecast\":{\"invert\":false,\"order\":5,\"scaleGroup\":1,\"format\":1,\"useMeasureName\":false,\"pbiFormatString\":\"0.00%;-0.00%;0.00%\",\"suppressOthers\":false,\"tableView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]},\"chartView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"#EFEEEE\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]}},\"actual-forecast-percent\":{\"invert\":false,\"order\":6,\"scaleGroup\":1,\"format\":2,\"useMeasureName\":false,\"pbiFormatString\":\"0.00%;-0.00%;0.00%\",\"suppressOthers\":false,\"tableView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]},\"chartView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]}},\"plan\":{\"invert\":false,\"order\":1,\"scaleGroup\":1,\"format\":0,\"useMeasureName\":false,\"pbiFormatString\":\"0.00%;-0.00%;0.00%\",\"suppressOthers\":false,\"tableView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]},\"chartView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]}},\"actual-plan\":{\"invert\":false,\"order\":2,\"scaleGroup\":1,\"format\":1,\"useMeasureName\":false,\"pbiFormatString\":\"0.00%;-0.00%;0.00%\",\"suppressOthers\":false,\"tableView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]},\"chartView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"#EFEFEF\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]}},\"actual-plan-percent\":{\"invert\":false,\"order\":3,\"scaleGroup\":1,\"format\":2,\"useMeasureName\":false,\"pbiFormatString\":\"0.00%;-0.00%;0.00%\",\"suppressOthers\":false,\"tableView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]},\"chartView\":{\"bold\":false,\"textColor\":\"\",\"backgroundFill\":\"\",\"markerStyle\":5,\"border\":\"\",\"showAsTable\":0,\"hidden\":false,\"hiddenFromGroups\":[]}}}'"
+                    }
+                  }
+                },
+                "firstTimeShowingColumnAdder": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "false"
+                    }
+                  }
+                },
+                "showGridlines": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "false"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
       },
       "style": {
         "title": {
@@ -6657,9 +10232,14 @@
             "w": 190.6199460916442,
             "h": 31.91374663072776
           },
-          "page_zone": "header_left"
+          "page_zone": "header_left",
+          "relationship": "visual_furniture",
+          "proximity_band": "adjacent",
+          "distance_px": 12.08,
+          "intent": "page_header"
         }
       ],
+      "group_containers": [],
       "visual_intent": "variance table"
     }
   ]

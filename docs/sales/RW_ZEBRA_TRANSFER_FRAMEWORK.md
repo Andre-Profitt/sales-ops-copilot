@@ -28,10 +28,12 @@ Each record captures:
 - projection roles: Category, Group, Values, PreviousYear, Plan, Forecast, Comments;
 - scenario pairing: AC/PY/PL/FC;
 - derived variance columns Zebra synthesizes, such as `actual-previousYear`, `actual-previousYear-percent`, `actual-plan`, `forecast-plan`;
-- raw `chartSettings.columnSettings`;
-- normalized marker fields: markerStyle, showAsTable, scaleGroup, format, hidden;
+- raw safe Zebra object groups, excluding license/activation material;
+- normalized visual object grammar for `chartSettings`, `designSettings`, `dataLabelSettings`, `titleSettings`, `grid`, `multipleLayout`, and `coreSettings`;
+- normalized column grammar: column order, markerStyle, showAsTable, scaleGroup, format, hidden/support-column behavior, and inferred native intent;
 - title, data-label, grid, border, background, accent, typography object groups;
-- static furniture around the visual: textboxes/shapes/section headers;
+- page-level and visual-local furniture with proximity/overlap bands instead of all textboxes on the page;
+- nearby `singleVisualGroup` containers;
 - intent classification: KPI strip, movement table, variance table, waterfall, bridge chart, detail ledger.
 
 Run locally:
@@ -105,19 +107,40 @@ Zebra synthesizes comparison columns from projected scenario pairs:
 
 The native rebuild requires these measures to exist in the target model before projecting them.  Missing synthesized measures are omitted instead of converted into fallback textboxes.
 
+### Visual object grammar
+
+The extractor now writes `visual_object_grammar.schema = rw-zebra-native-transfer.visualObjectGrammar.v1`.  This is a documented, safe subset of Zebra object groups rather than a blind raw-object dump.  The safe groups are:
+
+- `chartSettings`
+- `designSettings`
+- `dataLabelSettings`
+- `titleSettings`
+- `grid`
+- `multipleLayout`
+- `coreSettings`
+
+Within those groups, the extractor keeps only non-license/non-activation properties that describe transferable design behavior: color, font, title, label, grid, layout, padding, width, format, marker, scale, table/show/hidden, border/background, and transparency properties.  The raw sanitized `objects` block is still retained for auditability, but native emitters should consume the normalized grammar first.
+
 ### ColumnSettings grammar
 
 `chartSettings.columnSettings` is treated as the IBCS rendering grammar, not incidental style.  The transfer layer preserves the raw block and normalizes these fields per column:
 
-- `markerStyle` -> native data bar / marker intent;
+- `order` -> Zebra column display order;
+- `markerStyle` -> native data bar / marker / variance intent;
 - `showAsTable` -> table vs chart representation intent;
 - `scaleGroup` -> shared axis/databar scale hint;
 - `format` -> integer, signed variance, percent variance format intent;
-- `hidden` -> whether the native column should be suppressed or only used as support.
+- `hidden` -> whether the native column should be suppressed or only used as support;
+- `support_column` -> hidden/helper behavior for columns that should not be displayed directly;
+- `intent` -> one of `data_bar`, `bullet_or_variance_marker`, `chart_value`, `variance_delta`, `variance_percent`, or `table_value`.
+
+Zebra-synthesized variance columns are appended to the same grammar when they are implied by scenario roles but absent from explicit column settings.  This lets the native rebuilder keep IBCS order, skip hidden support columns, and add native data-bar conditional formatting without falling back to textboxes.
 
 ### Static furniture
 
-The extractor records nearby textboxes/shapes/section headers because Zebra template readability depends on the surrounding frame.  Rebuilders must normalize that furniture into native Power BI containers.  Dropping it is considered a failed transfer even when all data visuals convert.
+The extractor records page furniture and visual-local furniture separately.  Each item has `relationship`, `proximity_band`, `distance_px`, `page_zone`, and `intent`.  Proximity bands are `overlap`, `adjacent`, `nearby`, and `distant`; page headers/footers remain page furniture even when physically near an analytic visual.  Visual-local labels are preserved in DNA for analysis, but the native rebuilder does not re-emit them as generic standalone fallback textboxes.
+
+Nearby `singleVisualGroup` containers are captured as `group_containers` with their own bounding boxes and proximity bands.  Rebuilders can use them as layout hints, while gate checks still reject blank/unknown/custom visual leftovers.
 
 ### Intent classification
 
