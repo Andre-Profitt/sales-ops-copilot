@@ -1209,3 +1209,52 @@ allowed cross-motion value measure is still `Total Open Pipeline Value`.
 - `python3 -m scripts.sales.rw_dashboard_intelligence` regenerated the
   markdown and JSON matrix.
 - `.venv/bin/pytest tests/sales -q` succeeded: 178 passed, 1 skipped.
+
+
+## RW Fast KPI Coverage Upgrade - 2026-05-10
+
+Follow-up to the intelligence matrix. The prior rollup still had three
+model-ready KPIs not clearly surfaced. Those should not stay in the backlog
+when the model already has the measures.
+
+**Shipped:**
+
+- Added `sales_cycle_length` to `Stage Hygiene` with `Land Avg Sales Cycle Days`
+  and `Avg Sales Cycle Days` cards.
+- Added `closed_won_avg_deal_size` to `Growth Mix` with an `Avg Deal Size Won`
+  KPI card and detail-table column.
+- Promoted `lost_arr_quarterly` to the `Renewals` KPI contract; the page already
+  carried `Total Renewal ACV Lost`, now it counts as intentional KPI coverage.
+
+**Updated intelligence rollup:**
+
+| Status | Before | After |
+| --- | ---: | ---: |
+| Cleanly surfaced on dashboard pages | 14 | 17 |
+| Surfaced but still proxy/incomplete | 6 | 6 |
+| Model-available but not clearly surfaced | 3 | 0 |
+| Partial data or measure gap | 3 | 3 |
+| Source-data gap | 5 | 5 |
+| Total RW KPIs | 31 | 31 |
+
+**Page counts after composition:**
+
+| Page | VisualContainers |
+| --- | ---: |
+| Stage Hygiene | 19 |
+| Renewals | 14 |
+| Growth Mix | 15 |
+
+ARR/ACV separation is unchanged: `Stage Hygiene` and `Growth Mix` use
+Land+Expand ARR/process measures, `Renewals` uses Renewal ACV only.
+
+**Lab verification:**
+
+- `python3 -m scripts.sales.rw_apply_zebra_lab_proof` regenerated the local
+  Desktop PBIP.
+- `python3 -m scripts.sales.rw_validate --file ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json`
+  succeeded: 7 sections, 107 visualContainers, all refs resolve against 106
+  deployed measures.
+- `python3 -m scripts.sales.rw_dashboard_harness audit --source path --path ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json --label rw_fast_kpi_coverage_upgrade`
+  returned `no findings`.
+- `.venv/bin/pytest tests/sales -q` succeeded: 178 passed, 1 skipped.

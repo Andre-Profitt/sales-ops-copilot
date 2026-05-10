@@ -102,11 +102,18 @@ PAGE_KPI_CONTRACTS: dict[str, PageKPIContract] = {
     "Stage Hygiene": PageKPIContract(
         page="Stage Hygiene",
         job="Funnel diagnosis: stage conversion, backward movement, and time-in-stage bottlenecks.",
-        kpi_ids=("stage_conversion", "time_in_stage", "stage3_approvals_compliance"),
+        kpi_ids=(
+            "stage_conversion",
+            "time_in_stage",
+            "sales_cycle_length",
+            "stage3_approvals_compliance",
+        ),
         measures=(
             "Stage Forward Pct (LE)",
             "Stage Backward Pct (LE)",
             "Avg Days In Prior Stage (LE)",
+            "Avg Sales Cycle Days",
+            "Land Avg Sales Cycle Days",
             "Total Stage Transitions",
             "Stage Moves ARR 7d",
             "Stage 3 Forward Pct",
@@ -123,6 +130,7 @@ PAGE_KPI_CONTRACTS: dict[str, PageKPIContract] = {
         kpi_ids=(
             "renewal_retention_rate",
             "renewals_mom_trend",
+            "lost_arr_quarterly",
             "existing_arr_run_rate",
             "indexation_arr_growth",
         ),
@@ -143,6 +151,7 @@ PAGE_KPI_CONTRACTS: dict[str, PageKPIContract] = {
             "ilf_arr_pipeline",
             "alf_arr_pipeline",
             "new_customer_reporting",
+            "closed_won_avg_deal_size",
             "partner_opps_pct",
             "opp_source_effectiveness",
             "synergy_deals_won",
@@ -154,6 +163,7 @@ PAGE_KPI_CONTRACTS: dict[str, PageKPIContract] = {
             "Partner Pct",
             "Total Open Pipeline ARR",
             "Total Land Won Count",
+            "Avg Deal Size Won",
         ),
         motion="land_expand_arr",
         caveat="Land and Expand ARR only. Renewal ACV is excluded from this page.",

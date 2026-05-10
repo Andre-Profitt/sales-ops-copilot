@@ -1,9 +1,9 @@
 {
   "rollup": {
     "total_kpis": 31,
-    "surfaced": 14,
+    "surfaced": 17,
     "surfaced_partial": 6,
-    "model_available_not_surfaced": 3,
+    "model_available_not_surfaced": 0,
     "partial_data_or_measure_gap": 3,
     "source_data_gap": 5
   },
@@ -120,14 +120,16 @@
       "impact": "HIGH",
       "motion_filter": "land_expand",
       "source_coverage": "exists",
-      "dashboard_status": "model_available_not_surfaced",
-      "pages": [],
+      "dashboard_status": "surfaced",
+      "pages": [
+        "Stage Hygiene"
+      ],
       "model_measures": [
         "Avg Sales Cycle Days",
         "Land Avg Sales Cycle Days"
       ],
       "missing_measures": [],
-      "next_action": "Add to Stage Hygiene as cycle-time companion to time-in-stage."
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
     },
     {
       "kpi_id": "time_in_stage",
@@ -152,13 +154,15 @@
       "impact": "HIGH",
       "motion_filter": "land_expand",
       "source_coverage": "partial",
-      "dashboard_status": "model_available_not_surfaced",
-      "pages": [],
+      "dashboard_status": "surfaced",
+      "pages": [
+        "Growth Mix"
+      ],
       "model_measures": [
         "Avg Deal Size Won"
       ],
       "missing_measures": [],
-      "next_action": "Add to Growth Mix as value-tier / deal-size strip."
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
     },
     {
       "kpi_id": "closed_won_value_tier",
@@ -444,13 +448,15 @@
       "impact": "HIGH",
       "motion_filter": "renewal",
       "source_coverage": "partial",
-      "dashboard_status": "model_available_not_surfaced",
-      "pages": [],
+      "dashboard_status": "surfaced",
+      "pages": [
+        "Renewals"
+      ],
       "model_measures": [
         "Total Renewal ACV Lost"
       ],
       "missing_measures": [],
-      "next_action": "Add to Renewals as loss waterfall / reason table."
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
     },
     {
       "kpi_id": "business_at_risk",

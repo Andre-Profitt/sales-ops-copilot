@@ -34,9 +34,9 @@ def test_rollup_keeps_proxy_kpis_out_of_cleanly_surfaced_count():
 
     assert counts == {
         "total_kpis": 31,
-        "surfaced": 14,
+        "surfaced": 17,
         "surfaced_partial": 6,
-        "model_available_not_surfaced": 3,
+        "model_available_not_surfaced": 0,
         "partial_data_or_measure_gap": 3,
         "source_data_gap": 5,
     }
@@ -58,7 +58,7 @@ def test_partial_statuses_call_out_the_actual_missing_measure():
     assert rows["synergy_deals_won"].dashboard_status == "surfaced_partial"
 
 
-def test_model_available_queue_identifies_fast_page_upgrades():
+def test_model_available_queue_is_empty_after_fast_page_upgrades():
     rows = _row_map()
     fast_page_upgrades = {
         kpi_id
@@ -66,11 +66,7 @@ def test_model_available_queue_identifies_fast_page_upgrades():
         if row.dashboard_status == "model_available_not_surfaced"
     }
 
-    assert fast_page_upgrades == {
-        "sales_cycle_length",
-        "closed_won_avg_deal_size",
-        "lost_arr_quarterly",
-    }
+    assert fast_page_upgrades == set()
 
 
 def test_markdown_preserves_cardinal_rule_and_upgrade_lanes():
@@ -85,4 +81,6 @@ def test_markdown_preserves_cardinal_rule_and_upgrade_lanes():
     )
     assert "## Immediate Upgrade Lanes" in markdown
     assert "| KG Source Status | Dashboard Status |" in markdown
+    assert "Fast page-only upgrades; the model already has the measure" in markdown
+    assert "- None." in markdown
     assert "`pipeline_coverage_3x`: Add quota denominator" in markdown

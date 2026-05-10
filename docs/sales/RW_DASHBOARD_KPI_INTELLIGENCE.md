@@ -5,9 +5,9 @@ Generated from `scripts/sales/rw_kpi_graph.py`, `rw_page_kpi_contract.py`, and t
 ## Rollup
 
 - Total RW KPIs: 31
-- Surfaced cleanly on dashboard pages: 14
+- Surfaced cleanly on dashboard pages: 17
 - Surfaced but still partial: 6
-- Model-available but not clearly surfaced: 3
+- Model-available but not clearly surfaced: 0
 - Partial data or measure gap: 3
 - Source-data gap: 5
 
@@ -18,9 +18,7 @@ Cardinal rule: ARR is Land+Expand only; Renewal ACV is Renewal only. The only cr
 ## Immediate Upgrade Lanes
 
 Fast page-only upgrades; the model already has the measure, but the dashboard does not clearly surface it:
-- `sales_cycle_length`: Add to Stage Hygiene as cycle-time companion to time-in-stage.
-- `closed_won_avg_deal_size`: Add to Growth Mix as value-tier / deal-size strip.
-- `lost_arr_quarterly`: Add to Renewals as loss waterfall / reason table.
+- None.
 
 Semantic/model upgrades; a page exists or the KPI is close, but the current visual is still proxy/incomplete:
 - `pipeline_coverage_3x`: Add quota denominator and true 3x coverage ratio; current Forecast page shows the open-pipeline numerator.
@@ -50,9 +48,9 @@ Source-data upgrades; these need ETL/source-field work before a real dashboard v
 | `stage_conversion` | HIGH | land_expand | partial | surfaced | VP Ops Scorecard, What Changed, Stage Hygiene | Stage Forward Pct (LE), Stage Backward Pct (LE) | Keep in page QA; tighten visual treatment if Desktop review flags it. |
 | `opp_age` | MEDIUM | land_expand | missing | surfaced | What Changed | Avg Open Opp Age Days | Keep in page QA; tighten visual treatment if Desktop review flags it. |
 | `opp_source_effectiveness` | MEDIUM | land_expand | missing | surfaced | Growth Mix | Source ARR Won, Source Win Rate | Keep in page QA; tighten visual treatment if Desktop review flags it. |
-| `sales_cycle_length` | HIGH | land_expand | exists | model_available_not_surfaced | - | Avg Sales Cycle Days, Land Avg Sales Cycle Days | Add to Stage Hygiene as cycle-time companion to time-in-stage. |
+| `sales_cycle_length` | HIGH | land_expand | exists | surfaced | Stage Hygiene | Avg Sales Cycle Days, Land Avg Sales Cycle Days | Keep in page QA; tighten visual treatment if Desktop review flags it. |
 | `time_in_stage` | MEDIUM | land_expand | missing | surfaced | VP Ops Scorecard, Stage Hygiene | Avg Days In Prior Stage (LE) | Keep in page QA; tighten visual treatment if Desktop review flags it. |
-| `closed_won_avg_deal_size` | HIGH | land_expand | partial | model_available_not_surfaced | - | Avg Deal Size Won | Add to Growth Mix as value-tier / deal-size strip. |
+| `closed_won_avg_deal_size` | HIGH | land_expand | partial | surfaced | Growth Mix | Avg Deal Size Won | Keep in page QA; tighten visual treatment if Desktop review flags it. |
 | `closed_won_value_tier` | MEDIUM | land_expand | missing | source_data_gap | - | - | Add DAX value-tier measures or a calculated tier column, then surface on Growth Mix. |
 | `new_opps_by_region` | MEDIUM | land_expand | missing | surfaced | VP Ops Scorecard, What Changed | New Opps Created, New Opps Count 7d | Keep in page QA; tighten visual treatment if Desktop review flags it. |
 | `stage3_approvals_compliance` | MEDIUM | land_expand | partial | surfaced_partial | Stage Hygiene | Stage 3 Forward Pct, Avg Days In Stage 3 (missing: Commercial Approval Compliance Pct) | Add Commercial Approval compliance measure; current Stage Hygiene page only shows Stage 3 flow proxies. |
@@ -70,7 +68,7 @@ Source-data upgrades; these need ETL/source-field work before a real dashboard v
 | `cross_sell_to_acquired` | HIGH | land_expand | missing | source_data_gap | - | - (missing: Cross Sell To Acquired ARR) | Needs Axioma/acquired-account flag; then add to Growth Mix. |
 | `synergy_deals_won` | HIGH | land_expand | partial | surfaced_partial | Growth Mix | Total Land Won Count (missing: Synergy Deals Won) | Needs synergy flag; current Growth Mix page uses Land won count as a proxy. |
 | `synergy_deals_pipe` | MEDIUM | land_expand | partial | partial_data_or_measure_gap | - | - (missing: Synergy Deals Pipeline) | Needs synergy flag; then add open/won synergy strip to Growth Mix. |
-| `lost_arr_quarterly` | HIGH | renewal | partial | model_available_not_surfaced | - | Total Renewal ACV Lost | Add to Renewals as loss waterfall / reason table. |
+| `lost_arr_quarterly` | HIGH | renewal | partial | surfaced | Renewals | Total Renewal ACV Lost | Keep in page QA; tighten visual treatment if Desktop review flags it. |
 | `business_at_risk` | HIGH | renewal | partial | partial_data_or_measure_gap | - | - (missing: Business At Risk ARR) | Needs account/subscription health flag; then add to Renewals. |
 | `one_off_revenues` | MEDIUM | all | missing | source_data_gap | - | - (missing: One Off Revenues) | Needs one-off/PS product fields; likely Product/Pricing future page. |
 | `ps_arr_attach` | MEDIUM | land_expand | missing | source_data_gap | - | - (missing: PS ARR Attach Pct) | Needs PS/license product split; likely Product/Pricing future page. |
@@ -79,13 +77,10 @@ Source-data upgrades; these need ETL/source-field work before a real dashboard v
 ## High-Impact Follow-Up Queue
 
 - `pipeline_coverage_3x`: Add quota denominator and true 3x coverage ratio; current Forecast page shows the open-pipeline numerator.
-- `sales_cycle_length`: Add to Stage Hygiene as cycle-time companion to time-in-stage.
-- `closed_won_avg_deal_size`: Add to Growth Mix as value-tier / deal-size strip.
 - `commercial_approval_to_close_time`: Needs Commercial Approval date in ETL; then add to Stage Hygiene.
 - `forecast_accuracy`: Add real ForecastingItem/snapshot accuracy; current Forecast page only shows slips/upgrades movement proxies.
 - `existing_arr_run_rate`: Needs Asset/Subscription base; keep as Renewals caveat until staged.
 - `cross_sell_to_acquired`: Needs Axioma/acquired-account flag; then add to Growth Mix.
 - `synergy_deals_won`: Needs synergy flag; current Growth Mix page uses Land won count as a proxy.
-- `lost_arr_quarterly`: Add to Renewals as loss waterfall / reason table.
 - `business_at_risk`: Needs account/subscription health flag; then add to Renewals.
 - `saas_arr_yoy_growth`: Needs SaaS deployment field; likely Product/Pricing future page.

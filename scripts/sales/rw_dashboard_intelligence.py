@@ -181,6 +181,14 @@ def rollup(rows: tuple[KPIIntelligenceRow, ...]) -> dict[str, int]:
     return out
 
 
+def _append_queue(lines: list[str], rows: list[KPIIntelligenceRow]) -> None:
+    if not rows:
+        lines.append("- None.")
+        return
+    for row in rows:
+        lines.append(f"- `{row.kpi_id}`: {row.next_action}")
+
+
 def to_markdown(rows: tuple[KPIIntelligenceRow, ...]) -> str:
     counts = rollup(rows)
     fast_page_upgrades = [
@@ -216,20 +224,17 @@ def to_markdown(rows: tuple[KPIIntelligenceRow, ...]) -> str:
         "",
         "Fast page-only upgrades; the model already has the measure, but the dashboard does not clearly surface it:",
     ]
-    for row in fast_page_upgrades:
-        lines.append(f"- `{row.kpi_id}`: {row.next_action}")
+    _append_queue(lines, fast_page_upgrades)
     lines += [
         "",
         "Semantic/model upgrades; a page exists or the KPI is close, but the current visual is still proxy/incomplete:",
     ]
-    for row in semantic_upgrades:
-        lines.append(f"- `{row.kpi_id}`: {row.next_action}")
+    _append_queue(lines, semantic_upgrades)
     lines += [
         "",
         "Source-data upgrades; these need ETL/source-field work before a real dashboard visual can be trusted:",
     ]
-    for row in source_upgrades:
-        lines.append(f"- `{row.kpi_id}`: {row.next_action}")
+    _append_queue(lines, source_upgrades)
     lines += [
         "",
         "## KPI Matrix",
