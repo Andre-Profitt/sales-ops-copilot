@@ -172,6 +172,28 @@ from scripts.sales._pbir_helpers import (  # noqa: E402
 )
 
 
+def _card_literal(value: str | int | bool) -> dict:
+    if isinstance(value, bool):
+        encoded = "true" if value else "false"
+    elif isinstance(value, int):
+        encoded = f"{value}L"
+    else:
+        encoded = f"'{value}'"
+    return {"expr": {"Literal": {"Value": encoded}}}
+
+
+def _card_color(color: str) -> dict:
+    return {"solid": {"color": _card_literal(color)}}
+
+
+def zebra_card_style_objects(*, value_font_size: int = 18, label_font_size: int = 8, accent: str = "#083EA7") -> dict:
+    return {
+        "background": [{"properties": {"show": _card_literal(True), "color": _card_color("#FFFFFF"), "transparency": _card_literal(0)}}],
+        "border": [{"properties": {"show": _card_literal(True), "color": _card_color("#D8DEE8"), "radius": _card_literal(4)}}],
+        "labels": [{"properties": {"fontSize": _card_literal(value_font_size), "color": _card_color("#252423")}}],
+        "categoryLabels": [{"properties": {"fontSize": _card_literal(label_font_size), "color": _card_color(accent)}}],
+    }
+
 def build_composite_kpi_tile(
     label: str,
     value_table: str,
@@ -213,6 +235,7 @@ def build_composite_kpi_tile(
             y=y + header_h,
             w=w - variance_w,
             h=h - header_h,
+            objects=zebra_card_style_objects(value_font_size=18, label_font_size=8),
         ),
     ]
     if variance_measure:
@@ -220,11 +243,12 @@ def build_composite_kpi_tile(
             build_card_visual_with_objects(
                 measure_table=variance_table,
                 measure_name=variance_measure,
-                display_title=variance_measure,
+                display_title="",
                 x=x + (w - variance_w),
                 y=y + (h - variance_h),
                 w=variance_w,
                 h=variance_h,
+                objects=zebra_card_style_objects(value_font_size=6, label_font_size=4, accent="#3B8A3E"),
             )
         )
     return out

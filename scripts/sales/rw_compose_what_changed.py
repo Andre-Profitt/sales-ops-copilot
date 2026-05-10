@@ -46,8 +46,8 @@ def _compose(section: dict) -> None:
     Layout grid:
         y=12    Risk band header
         y=42    Risk band hero - 3 columns x (count card 320x78 + ARR card 320x56)
-        y=198   Change buckets header
-        y=228   Change buckets - compact cards
+        y=198   Movement ledger header
+        y=228   Movement ledger - compact one-row table of 7d measures
         y=386   Detail header
         y=414   Detail table - 1200x280 spanning the page
         Spec calls for a window slicer at (1000, 20). Field-parameter slicer
@@ -115,100 +115,63 @@ def _compose(section: dict) -> None:
             )
         )
 
-    # ── Phase 2: Change buckets (3 of 4 spec'd; Slips deferred) ──
+    # ── Phase 2: Movement ledger (compact matrix instead of card wall) ──
     section["visualContainers"].append(
-        build_textbox_visual("7-Day Operating Movement", x=20, y=198, w=1200, h=24, font_size_pt=12, color="#1A1D31")
+        build_textbox_visual("7-Day Operating Movement Ledger", x=20, y=198, w=1200, h=24, font_size_pt=12, color="#1A1D31")
     )
-    # Spec calls for Stage Moves · Slips · New Opps · Closed.
-    # Slips defers until f_ofh_close_date ETL ships
-    # (see docs/sales/RW_VPOPS_DASHBOARD_BUILD.md Foundation Phase).
-    change_buckets = [
-        # (table, measure, title, x, y, w, h, tint, accent, value_color, units)
-        (
-            "f_stage_transition",
-            "Stage Moves Count 7d",
-            "Stage Moves (7d)",
-            20,
-            228,
-            240,
-            90,
-            "#F4F7FB",
-            "#2B5C8A",
-            "#1A1D31",
-            None,
-        ),
-        (
-            "f_stage_transition",
-            "Stage Moves ARR 7d",
-            "Stage Moves (7d) - ARR",
-            20,
-            322,
-            240,
-            56,
-            "#F4F7FB",
-            "#2B5C8A",
-            "#1A1D31",
-            1000000,
-        ),
-        (
-            "f_opportunity",
-            "New Opps Count 7d",
-            "New Opps (7d)",
-            280,
-            228,
-            240,
-            90,
-            "#F4F7FB",
-            "#2B5C8A",
-            "#1A1D31",
-            None,
-        ),
-        (
-            "f_opportunity",
-            "Closed Won Count 7d",
-            "Won (7d)",
-            540,
-            228,
-            240,
-            90,
-            "#EEF9EE",
-            "#3B8A3E",
-            "#1F6F3B",
-            None,
-        ),
-        (
-            "f_opportunity",
-            "Closed Lost Count 7d",
-            "Lost (7d)",
-            800,
-            228,
-            240,
-            90,
-            "#FFEEEE",
-            "#C33A32",
-            "#B3261E",
-            None,
-        ),
-    ]
-    for tbl, msr, title, x, y, w, h, tint, accent, value_color, units in change_buckets:
-        section["visualContainers"].append(
-            build_rag_card_visual(
-                tbl,
-                msr,
-                title,
-                x=x,
-                y=y,
-                w=w,
-                h=h,
-                tint=tint,
-                accent=accent,
-                value_color=value_color,
-                label_color="#5C6670",
-                value_font_size=22 if h >= 72 else 18,
-                label_font_size=8,
-                display_units=units,
-            )
+    # Spec calls for Stage Moves · Slips · New Opps · Closed. The prior
+    # version rendered these as five micro-cards and tripped the visual QA
+    # wall_of_cards heuristic. Keep the same RW KPI intent, but consolidate the
+    # operational deltas into one consultant-grade one-row ledger. Slips still
+    # defers until f_ofh_close_date ETL ships (see RW_VPOPS_DASHBOARD_BUILD).
+    section["visualContainers"].append(
+        build_table_visual(
+            name="what_changed_movement_ledger",
+            columns=[
+                {
+                    "table": "f_stage_transition",
+                    "field": "Stage Moves Count 7d",
+                    "kind": "measure",
+                    "title": "Stage moves",
+                },
+                {
+                    "table": "f_stage_transition",
+                    "field": "Stage Moves ARR 7d",
+                    "kind": "measure",
+                    "title": "Stage move ARR",
+                },
+                {
+                    "table": "f_opportunity",
+                    "field": "New Opps Count 7d",
+                    "kind": "measure",
+                    "title": "New opps",
+                },
+                {
+                    "table": "f_opportunity",
+                    "field": "Closed Won Count 7d",
+                    "kind": "measure",
+                    "title": "Won",
+                },
+                {
+                    "table": "f_opportunity",
+                    "field": "Closed Lost Count 7d",
+                    "kind": "measure",
+                    "title": "Lost",
+                },
+            ],
+            x=20,
+            y=228,
+            w=1020,
+            h=150,
+            objects=build_table_style_objects(
+                header_fill="#EEF2F6",
+                header_text="#1A1D31",
+                row_text="#202124",
+                grid="#D8DEE8",
+                font_size=9,
+            ),
         )
+    )
 
     # ── Phase 3: Detail table ──────────────────────────────────
     section["visualContainers"].append(

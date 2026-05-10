@@ -1,0 +1,142 @@
+{
+  "source_template": "sales-funnel-power-bi-template",
+  "source_visual_dna_count": 20,
+  "learned_rules": {
+    "kpi_tile": "Zebra Cards -> textbox header + value card + variance card composite; keep AC primary and PY/PL/FC comparator in corner.",
+    "variance_table": "Zebra Tables -> tableEx/pivotTable ordered Category/Group, AC, PY, PL, FC, then synthesized delta and delta % columns.",
+    "waterfall_bridge": "Zebra Waterfall -> native waterfallChart where Category is axis and AC/bridge measure is Y.",
+    "static_furniture": "Textboxes/shapes near each visual are normalized and preserved as page section furniture, not dropped.",
+    "ibcs_style": "Use columnSettings markerStyle/showAsTable/scaleGroup/format/hidden to drive data bars, compact columns, shared typography, and variance formatting."
+  },
+  "rw_pages": [
+    {
+      "page_display_name": "Stage Hygiene",
+      "visual_count": 19,
+      "native_visual_counts": {
+        "textbox": 6,
+        "basicShape": 4,
+        "card": 7,
+        "pivotTable": 1,
+        "tableEx": 1
+      },
+      "applied_transfer_patterns": [
+        "kpi_tile",
+        "static_furniture",
+        "variance_table"
+      ],
+      "guardrails": [
+        "ARR = Land+Expand only",
+        "Renewal ACV = Renewal only",
+        "Do not blend except Total Open Pipeline Value"
+      ]
+    },
+    {
+      "page_display_name": "Forecast",
+      "visual_count": 13,
+      "native_visual_counts": {
+        "textbox": 4,
+        "card": 7,
+        "pivotTable": 1,
+        "tableEx": 1
+      },
+      "applied_transfer_patterns": [
+        "kpi_tile",
+        "static_furniture",
+        "variance_table"
+      ],
+      "guardrails": [
+        "ARR = Land+Expand only",
+        "Renewal ACV = Renewal only",
+        "Do not blend except Total Open Pipeline Value"
+      ]
+    },
+    {
+      "page_display_name": "Growth Mix",
+      "visual_count": 15,
+      "native_visual_counts": {
+        "textbox": 5,
+        "basicShape": 3,
+        "card": 5,
+        "clusteredBarChart": 1,
+        "tableEx": 1
+      },
+      "applied_transfer_patterns": [
+        "chart",
+        "kpi_tile",
+        "static_furniture",
+        "variance_table"
+      ],
+      "guardrails": [
+        "ARR = Land+Expand only",
+        "Renewal ACV = Renewal only",
+        "Do not blend except Total Open Pipeline Value"
+      ]
+    },
+    {
+      "page_display_name": "Renewals",
+      "visual_count": 14,
+      "native_visual_counts": {
+        "textbox": 5,
+        "basicShape": 3,
+        "card": 4,
+        "clusteredBarChart": 1,
+        "tableEx": 1
+      },
+      "applied_transfer_patterns": [
+        "chart",
+        "kpi_tile",
+        "static_furniture",
+        "variance_table"
+      ],
+      "guardrails": [
+        "ARR = Land+Expand only",
+        "Renewal ACV = Renewal only",
+        "Do not blend except Total Open Pipeline Value"
+      ]
+    },
+    {
+      "page_display_name": "What Changed",
+      "visual_count": 14,
+      "native_visual_counts": {
+        "textbox": 3,
+        "basicShape": 3,
+        "card": 6,
+        "tableEx": 2
+      },
+      "applied_transfer_patterns": [
+        "kpi_tile",
+        "static_furniture",
+        "variance_table"
+      ],
+      "guardrails": [
+        "ARR = Land+Expand only",
+        "Renewal ACV = Renewal only",
+        "Do not blend except Total Open Pipeline Value"
+      ]
+    },
+    {
+      "page_display_name": "VP Ops Scorecard",
+      "visual_count": 25,
+      "native_visual_counts": {
+        "textbox": 2,
+        "basicShape": 12,
+        "card": 8,
+        "tableEx": 1,
+        "clusteredBarChart": 1,
+        "pivotTable": 1
+      },
+      "applied_transfer_patterns": [
+        "chart",
+        "kpi_tile",
+        "static_furniture",
+        "variance_table"
+      ],
+      "guardrails": [
+        "ARR = Land+Expand only",
+        "Renewal ACV = Renewal only",
+        "Do not blend except Total Open Pipeline Value"
+      ]
+    }
+  ],
+  "local_report_json": "/Users/test/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json"
+}

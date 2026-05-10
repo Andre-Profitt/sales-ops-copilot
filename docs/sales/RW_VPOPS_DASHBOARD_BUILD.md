@@ -1258,3 +1258,40 @@ Land+Expand ARR/process measures, `Renewals` uses Renewal ACV only.
 - `python3 -m scripts.sales.rw_dashboard_harness audit --source path --path ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json --label rw_fast_kpi_coverage_upgrade`
   returned `no findings`.
 - `.venv/bin/pytest tests/sales -q` succeeded: 178 passed, 1 skipped.
+
+
+## What Changed Movement Ledger + Zebra Transfer Gate - 2026-05-10
+
+Follow-up to the visual QA wall-of-cards finding on `What Changed`.
+
+**Shipped:**
+
+- Replaced the five 7-day movement micro-cards with one styled movement ledger
+  table covering stage moves, stage move ARR, new opps, won, and lost.
+- Preserved the top RAG risk-band KPI strip and ARR/ACV separation guardrails.
+- Added a regression test that fails if `What Changed` returns to
+  medium-or-higher visual QA debt.
+- Added the local Zebra transfer framework:
+  - `scripts/sales/rw_zebra_transfer_dna.py`
+  - `scripts/sales/rw_zebra_transfer_rebuilder.py`
+  - `docs/sales/RW_ZEBRA_TRANSFER_FRAMEWORK.md`
+- Sanitized Zebra transfer DNA so license/activation object groups are not
+  persisted in generated artifacts.
+
+**Verification:**
+
+- `python3 -m scripts.sales.rw_apply_zebra_lab_proof` regenerated the local
+  Desktop PBIP.
+- `python3 -m scripts.sales.rw_validate --file ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json`
+  succeeded: 7 sections, 103 visualContainers, all refs resolve against 106
+  deployed measures.
+- `python3 -m scripts.sales.rw_dashboard_harness audit --source path --path ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json --label final_lab`
+  returned `no findings`.
+- `python3 -m scripts.sales.rw_dashboard_harness visual-qa --source path --path ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json --label final_lab --fail-on medium --markdown docs/sales/RW_DASHBOARD_VISUAL_QA.md`
+  returned 0 findings.
+- `python3 -m scripts.sales.rw_zebra_transfer_rebuilder --template sales-funnel-power-bi-template`
+  passed its transfer gate: 6/6 pages, 107/104 visualContainers, no custom
+  leftovers, no fallback textboxes, no lost Zebra visuals, no unresolved measure
+  refs.
+- `python3 -m pytest tests/sales -q` succeeded: 198 passed, 1 skipped,
+  2 warnings.

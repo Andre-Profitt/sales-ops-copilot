@@ -6,6 +6,7 @@ import json
 
 from scripts.sales.rw_compose_all_pages import compose_report, validate_contract_pages
 from scripts.sales.rw_dashboard_harness import audit
+from scripts.sales.rw_dashboard_visual_qa import audit_report
 from scripts.sales.rw_page_kpi_contract import PAGE_KPI_CONTRACTS, required_measures
 
 
@@ -67,6 +68,18 @@ def test_total_open_pipeline_value_is_the_only_cross_motion_measure():
     assert PAGE_KPI_CONTRACTS["Forecast"].caveat.startswith(
         "Total Open Pipeline Value is the only explicit cross-motion value measure"
     )
+
+
+def test_what_changed_visual_qa_has_no_wall_of_cards():
+    report = compose_report({"sections": []})
+    what_changed = _page(report, "What Changed")
+
+    result = audit_report({"sections": [what_changed]})
+    findings = [f for f in result["findings"] if f["severity"] in {"medium", "high", "critical"}]
+    card_count = sum(1 for vc in what_changed["visualContainers"] if _visual_type(vc) == "card")
+
+    assert card_count < 8
+    assert findings == []
 
 
 def test_arr_and_renewal_acv_contracts_stay_separate_by_page():
