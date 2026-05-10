@@ -21,6 +21,8 @@ Local environment:
 - Node and npm are present.
 - `npx -y @microsoft/powerbi-modeling-mcp@latest --help` works, so the official
   local Modeling MCP package is reachable.
+- Starting the package resolves to
+  `@microsoft/powerbi-modeling-mcp-darwin-arm64` version `0.5.0-beta.6`.
 - Power BI Desktop is installed in the Parallels VM:
   `C:\Program Files\Microsoft Power BI Desktop\bin\PBIDesktop.exe`.
 
@@ -29,6 +31,11 @@ Tenant/API probe:
 - Remote Power BI MCP endpoint:
   `https://api.fabric.microsoft.com/v1/mcp/powerbi`
   returned `403 FeatureNotAvailable`.
+- A real MCP `initialize` POST was tested with both token audiences:
+  `https://api.fabric.microsoft.com/.default` and
+  `https://analysis.windows.net/powerbi/api/.default`. Both returned
+  `403 FeatureNotAvailable`, so this is tenant feature availability, not a
+  client handshake or token-audience mistake.
 - That matches Microsoft docs: the Power BI admin must enable the tenant setting
   for the Power BI MCP endpoint before users can use it.
 - Fabric Core MCP endpoint:
