@@ -15,7 +15,9 @@ Usage:
     python3 -m scripts.sales.rw_dashboard_harness inventory --source desktop --page "What Changed"
     python3 -m scripts.sales.rw_dashboard_harness audit --source desktop
     python3 -m scripts.sales.rw_dashboard_harness visual-qa --source path --path <report.json>
+    python3 -m scripts.sales.rw_dashboard_harness unit-policy --source path --path <report.json>
     python3 -m scripts.sales.rw_dashboard_harness semantic-filter --source path --path <report.json>
+    python3 -m scripts.sales.rw_dashboard_harness data-surface-flow --source path --path <report.json>
     python3 -m scripts.sales.rw_dashboard_harness diff --before <snapshot.json> --after-desktop
     python3 -m scripts.sales.rw_dashboard_harness extract --source desktop --page "What Changed" --name e337
 """
@@ -477,6 +479,52 @@ def cmd_semantic_filter(args: argparse.Namespace) -> None:
     raise SystemExit(1 if blocking else 0)
 
 
+def cmd_unit_policy(args: argparse.Namespace) -> None:
+    from scripts.sales.rw_unit_policy import DEFAULT_MARKDOWN, audit_unit_policy, write_markdown
+
+    report = load_report(args.source, args.path)
+    result = audit_unit_policy(report=report)
+    label = slug(args.label or f"{args.source}_{timestamp()}")
+    json_path = args.out_dir / "unit_policy" / f"{label}.unit_policy.json"
+    markdown_path = args.markdown or DEFAULT_MARKDOWN
+    write_json(json_path, result)
+    write_markdown(result, markdown_path)
+    print(f"unit policy json: {json_path}")
+    print(f"unit policy markdown: {markdown_path}")
+    print(" ".join(f"{severity}={result['counts'][severity]}" for severity in result["counts"]))
+    if args.fail_on_high and (result["counts"]["high"] or result["counts"]["critical"]):
+        raise SystemExit(1)
+
+
+def cmd_data_surface_flow(args: argparse.Namespace) -> None:
+    from scripts.sales.rw_data_surface_flow_audit import (
+        DEFAULT_MARKDOWN,
+        SEVERITY_RANK,
+        audit_data_surface_flow,
+        write_markdown,
+    )
+
+    report = load_report(args.source, args.path)
+    result = audit_data_surface_flow(report=report)
+    label = slug(args.label or f"{args.source}_{timestamp()}")
+    json_path = args.out_dir / "data_surface_flow" / f"{label}.data_surface_flow.json"
+    markdown_path = args.markdown or DEFAULT_MARKDOWN
+    write_json(json_path, result)
+    write_markdown(result, markdown_path)
+    print(f"data surface flow json: {json_path}")
+    print(f"data surface flow markdown: {markdown_path}")
+    print(
+        f"verdict={result['summary']['verdict']} "
+        + " ".join(
+            f"{severity}={result['summary']['flow_severity_counts'][severity]}"
+            for severity in SEVERITY_RANK
+        )
+    )
+    threshold = SEVERITY_RANK[args.fail_on]
+    blocking = [f for f in result["findings"] if SEVERITY_RANK[f["severity"]] >= threshold]
+    raise SystemExit(1 if blocking else 0)
+
+
 def cmd_diff(args: argparse.Namespace) -> None:
     before = load_report_from_path(args.before)
     after = load_report_from_path(resolve_after_path(args))
@@ -560,6 +608,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_visual_qa.set_defaults(func=cmd_visual_qa)
 
+    p_unit_policy = sub.add_parser("unit-policy", help="Run RW unit-format/display-unit gate")
+    add_source_args(p_unit_policy)
+    p_unit_policy.add_argument("--markdown", type=Path, help="Markdown report path")
+    p_unit_policy.add_argument("--fail-on-high", action="store_true")
+    p_unit_policy.set_defaults(func=cmd_unit_policy)
+
     p_semantic_filter = sub.add_parser(
         "semantic-filter", help="Run semantic-model/page-filter flow gate"
     )
@@ -572,6 +626,19 @@ def build_parser() -> argparse.ArgumentParser:
         help="Exit non-zero when a finding at this severity or higher is present.",
     )
     p_semantic_filter.set_defaults(func=cmd_semantic_filter)
+
+    p_data_surface = sub.add_parser(
+        "data-surface-flow", help="Run source/model/KPI/page/visual readiness gate"
+    )
+    add_source_args(p_data_surface)
+    p_data_surface.add_argument("--markdown", type=Path, help="Markdown report path")
+    p_data_surface.add_argument(
+        "--fail-on",
+        choices=("info", "low", "medium", "high", "critical"),
+        default="critical",
+        help="Exit non-zero when a KPI-flow finding at this severity or higher is present.",
+    )
+    p_data_surface.set_defaults(func=cmd_data_surface_flow)
 
     p_diff = sub.add_parser("diff", help="Diff two report.json files")
     p_diff.add_argument("--before", type=Path, required=True)

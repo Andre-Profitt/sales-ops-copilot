@@ -121,9 +121,7 @@
           {
             "color": { "solid": { "color": "#1A1D31" } },
             "fontSize": 28,
-            "fontFamily": "Segoe UI Semibold",
-            "labelDisplayUnits": 1,
-            "labelPrecision": 1
+            "fontFamily": "Segoe UI Semibold"
           }
         ],
         "categoryLabels": [

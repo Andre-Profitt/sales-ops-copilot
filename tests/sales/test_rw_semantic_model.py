@@ -1,4 +1,5 @@
 from scripts.sales.rw_push_semantic_model import build_model_bim
+from scripts.sales.rw_unit_policy import CURRENCY_M_FORMAT
 
 
 def _measure_map() -> dict[str, dict]:
@@ -56,3 +57,17 @@ def test_partner_arr_matches_partner_substrings_not_exact_only():
 
     assert 'CONTAINSSTRING ( LOWER ( f_opportunity[lead_source] ), "partner" )' in expression
     assert 'f_opportunity[lead_source] = "Partner"' not in expression
+
+
+def test_currency_measure_formats_are_locked_to_eur_m():
+    measures = _measure_map()
+
+    for name in [
+        "Total Closed Won ARR",
+        "Total Open Pipeline ARR",
+        "Total Open Pipeline Value",
+        "Total Open Renewal ACV",
+        "Total Renewal ACV Won",
+        "Stage Moves ARR 7d",
+    ]:
+        assert measures[name]["formatString"] == CURRENCY_M_FORMAT

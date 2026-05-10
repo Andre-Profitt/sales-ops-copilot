@@ -11,6 +11,7 @@ from importlib import import_module
 
 from scripts.sales.rw_filter_bar import append_filter_bar
 from scripts.sales.rw_page_kpi_contract import validate_contract_pages
+from scripts.sales.rw_unit_policy import strip_report_unit_scaling
 
 
 COMPOSER_MODULES: dict[str, str] = {
@@ -58,6 +59,7 @@ def compose_report(rj: dict) -> dict:
         append_filter_bar(section, page=page)
     for ordinal, section in enumerate(rj.get("sections", [])):
         section["ordinal"] = ordinal
+    strip_report_unit_scaling(rj)
     return rj
 
 

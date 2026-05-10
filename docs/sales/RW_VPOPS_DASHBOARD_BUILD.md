@@ -1404,6 +1404,40 @@ Desktop review found two renderer-level issues: stage visuals were not consisten
 
 No Fabric publish was performed.  ARR remains Land+Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
 
+## 2026-05-10 — Unit policy and data-to-surface readiness gate
+
+Reviewing the schema-to-surface flow showed a separate executive-quality problem: monetary labels were not governed as a single unit.  Some Power BI theme/visual settings could still display values as K/MM/BMM or double-scale already-formatted model values.
+
+**Shipped:**
+
+- Locked RW monetary output to one unit: `EUR M`.
+- Changed every semantic-model currency/ARR/ACV/value measure format to `EUR #,0,,.0"M";(EUR #,0,,.0"M");"-"`.
+- Removed display-unit scaling from `themes/rw_simcorp_consulting.json`.
+- Added `scripts/sales/rw_unit_policy.py` and `rw_dashboard_harness unit-policy`.
+- Added a composer enforcement step that strips stale embedded Power BI `labelDisplayUnits`, `displayUnits`, `DisplayUnits`, and `labelPrecision` keys from the actual report payload.  This matters because existing PBIP/report JSON can carry an old `customTheme` even after the source theme file is fixed.
+- Added `scripts/sales/rw_data_surface_flow_audit.py` and `rw_dashboard_harness data-surface-flow`.
+- Added `docs/sales/RW_UNIT_POLICY.md` and `docs/sales/RW_DATA_SURFACE_FLOW_READINESS.md`.
+
+**Readiness verdict:**
+
+- The lab is guarded and inspectable, but not yet a finished executive operating system.
+- Data-surface verdict: `not_exec_complete`.
+- Current KPI flow: 31 RW KPIs, 17 cleanly surfaced, 6 partial/proxy, 3 model/measure gaps, 5 source-data gaps.
+- Current model footprint: 7 tables, 106 measures, 7 relationships.
+- Remaining high-impact blockers are not visual formatting problems; they require data/model work for quota coverage, commercial approval dates, forecast snapshots, renewal-base economics, Axioma/synergy/SaaS segmentation, and action drill paths.
+
+**Lab verification:**
+
+- `python3 -m scripts.sales.rw_apply_zebra_lab_proof` regenerated the local lab PBIP.
+- `python3 -m scripts.sales.rw_validate --file ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json` passed with 8 sections, 124 visualContainers, and all measure refs resolved.
+- `python3 -m scripts.sales.rw_dashboard_harness audit --source path --path ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json --label rw_data_surface_unit_policy` returned no findings.
+- `python3 -m scripts.sales.rw_dashboard_harness visual-qa --source path --path ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json --label rw_data_surface_unit_policy --fail-on medium --markdown docs/sales/RW_DASHBOARD_VISUAL_QA.md` returned 0 findings.
+- `python3 -m scripts.sales.rw_dashboard_harness unit-policy --source path --path ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json --label rw_data_surface_unit_policy --fail-on-high --markdown docs/sales/RW_UNIT_POLICY.md` passed with high=0, critical=0.
+- `python3 -m scripts.sales.rw_dashboard_harness data-surface-flow --source path --path ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json --label rw_data_surface_unit_policy --fail-on critical --markdown docs/sales/RW_DATA_SURFACE_FLOW_READINESS.md` passed with verdict `not_exec_complete`, high=8, critical=0.
+- `python3 -m pytest tests/sales -q` passed: 232 passed, 1 skipped.
+
+No Fabric publish was performed.  ARR remains Land+Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
+
 ## 2026-05-10 — Zebra schema architecture benchmark
 
 Follow-up review used Zebra's extracted semantic schemas, not just the visual DNA layer, to inform RW model/filter quality.  The goal was to make the architecture critique evidence-backed: how do polished Zebra templates actually structure dimensions, date roles, scenarios, KPI metadata, and relationships?
