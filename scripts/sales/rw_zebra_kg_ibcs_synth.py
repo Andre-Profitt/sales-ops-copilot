@@ -10,6 +10,7 @@ This module is pure (no I/O, no network); consumed by rw_zebra_kg_translator.
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -214,6 +215,27 @@ def _with_zebra_transfer_metadata(objects: dict, *, pattern: str, visual_intent:
         "safe_groups": ZEBRA_TRANSFER_SAFE_GROUPS,
     }
     return enriched
+
+
+def tag_visual_with_zebra_transfer_metadata(
+    visual: dict,
+    *,
+    pattern: str,
+    visual_intent: str,
+    grammar_schema: str = "rw-zebra-native-transfer.visualObjectGrammar.v1",
+) -> dict:
+    """Attach safe Zebra-DNA lineage metadata to an existing native visual."""
+    config = json.loads(visual["config"])
+    single_visual = config.setdefault("singleVisual", {})
+    objects = single_visual.setdefault("objects", {})
+    single_visual["objects"] = _with_zebra_transfer_metadata(
+        objects,
+        pattern=pattern,
+        visual_intent=visual_intent,
+        grammar_schema=grammar_schema,
+    )
+    visual["config"] = json.dumps(config)
+    return visual
 
 
 def zebra_native_card_objects(

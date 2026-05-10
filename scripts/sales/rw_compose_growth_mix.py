@@ -3,16 +3,20 @@
 from __future__ import annotations
 
 from scripts.sales._pbir_helpers import (
+    build_card_visual_with_objects,
     build_clustered_bar_chart_visual,
-    build_rag_card_visual,
     build_shape_visual,
-    build_table_style_objects,
     build_table_visual,
     build_textbox_visual,
 )
 from scripts.sales.rw_add_visual import REPORT_ID, WORKSPACE_ID, _token, get_current_report_json, push_report
 from scripts.sales.rw_page_kpi_contract import contract_for
 from scripts.sales.rw_validate import fetch_measures_by_table, validate_visual_dict
+from scripts.sales.rw_zebra_kg_ibcs_synth import (
+    tag_visual_with_zebra_transfer_metadata,
+    zebra_detail_table_objects,
+    zebra_native_card_objects,
+)
 
 PAGE = "Growth Mix"
 
@@ -28,6 +32,44 @@ def _panel(x: float, y: float, w: float, h: float) -> dict:
     return build_shape_visual(x=x, y=y, w=w, h=h, fill="#FFFFFF", line="#D8DEE8", z=40, radius=2)
 
 
+def _card(
+    measure: str,
+    title: str,
+    *,
+    x: float,
+    tint: str,
+    accent: str,
+    value_color: str = "#1A1D31",
+) -> dict:
+    return build_card_visual_with_objects(
+        measure_table="f_opportunity",
+        measure_name=measure,
+        display_title=title,
+        x=x,
+        y=104,
+        w=216,
+        h=76,
+        objects=zebra_native_card_objects(
+            pattern="growth-mix-kpi-card",
+            visual_intent="growth mix KPI strip",
+            tint=tint,
+            accent=accent,
+            value_color=value_color,
+            label_color=accent,
+            value_font_size=22,
+            label_font_size=9,
+        ),
+    )
+
+
+def _zebra_chart(visual: dict) -> dict:
+    return tag_visual_with_zebra_transfer_metadata(
+        visual,
+        pattern="growth-mix-region-chart",
+        visual_intent="Land and Expand ARR by region",
+    )
+
+
 def _compose(section: dict) -> None:
     contract = contract_for(PAGE)
     section["filters"] = "[]"
@@ -35,14 +77,14 @@ def _compose(section: dict) -> None:
         build_textbox_visual(PAGE, x=24, y=12, w=420, h=28, font_size_pt=18, color="#1A1D31"),
         build_textbox_visual("Open Land and Expand pipeline, partner contribution, and new-customer signal.", x=24, y=42, w=980, h=22, font_size_pt=9, color="#5C6670", bold=False),
         _panel(24, 84, 1232, 116),
-        build_rag_card_visual("f_opportunity", "Open Land ARR", "Open Land", x=40, y=104, w=216, h=76, tint="#F4F7FB", accent="#2B5C8A", value_color="#1A1D31", display_units=1000000, value_font_size=24),
-        build_rag_card_visual("f_opportunity", "Open Expand ARR", "Open Expand", x=280, y=104, w=216, h=76, tint="#F4F7FB", accent="#2B5C8A", value_color="#1A1D31", display_units=1000000, value_font_size=24),
-        build_rag_card_visual("f_opportunity", "Avg Deal Size Won", "Avg won deal", x=520, y=104, w=216, h=76, tint="#EEF9EE", accent="#3B8A3E", value_color="#1F6F3B", display_units=1000000, value_font_size=24),
-        build_rag_card_visual("f_opportunity", "Partner ARR", "Partner ARR", x=760, y=104, w=216, h=76, tint="#FFF8E6", accent="#D98A00", value_color="#1A1D31", display_units=1000000, value_font_size=24),
-        build_rag_card_visual("f_opportunity", "Partner Pct", "Partner %", x=1000, y=104, w=216, h=76, tint="#FFF8E6", accent="#D98A00", value_color="#1A1D31", display_units=None, value_font_size=24),
+        _card("Open Land ARR", "Open Land", x=40, tint="#F4F7FB", accent="#2B5C8A"),
+        _card("Open Expand ARR", "Open Expand", x=280, tint="#F4F7FB", accent="#2B5C8A"),
+        _card("Avg Deal Size Won", "Avg won deal", x=520, tint="#EEF9EE", accent="#3B8A3E", value_color="#1F6F3B"),
+        _card("Partner ARR", "Partner ARR", x=760, tint="#FFF8E6", accent="#D98A00"),
+        _card("Partner Pct", "Partner %", x=1000, tint="#FFF8E6", accent="#D98A00"),
         _panel(24, 224, 588, 456),
         build_textbox_visual("Open Land + Expand ARR by Region", x=40, y=236, w=420, h=24, font_size_pt=11, color="#1A1D31"),
-        build_clustered_bar_chart_visual(
+        _zebra_chart(build_clustered_bar_chart_visual(
             category_table="d_region",
             category_column="region",
             category_title="Region",
@@ -54,7 +96,7 @@ def _compose(section: dict) -> None:
             w=540,
             h=380,
             fill="#2B5C8A",
-        ),
+        )),
         _panel(636, 224, 620, 456),
         build_textbox_visual("Strategic Mix Detail", x=652, y=236, w=360, h=24, font_size_pt=11, color="#1A1D31"),
         build_table_visual(
@@ -73,7 +115,7 @@ def _compose(section: dict) -> None:
             y=270,
             w=580,
             h=328,
-            objects=build_table_style_objects(font_size=8),
+            objects=zebra_detail_table_objects(),
         ),
         build_textbox_visual(contract.caveat, x=652, y=612, w=560, h=44, font_size_pt=8, color="#5C6670", bold=False),
     ]

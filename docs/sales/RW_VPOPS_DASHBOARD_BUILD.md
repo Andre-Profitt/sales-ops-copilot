@@ -1404,6 +1404,58 @@ Desktop review found two renderer-level issues: stage visuals were not consisten
 
 No Fabric publish was performed.  ARR remains Land+Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
 
+## 2026-05-10 — All generated tabs crossed the Zebra-native visual standard
+
+The earlier enterprise gate proved that Forecast, Renewals, Growth Mix, and the Explorer were still visually behind What Changed / Stage Hygiene.  This pass moved the remaining generated tabs onto the same Zebra-native helper grammar so the standard now fails only on real data/model readiness, not tab polish.
+
+**Shipped:**
+
+- Forecast:
+  - hero cards now use `zebra_native_card_objects`
+  - Stage x Motion matrix uses Zebra/IBCS table grammar
+  - forecast discipline proxy cards use Zebra-native card grammar
+  - commit-risk detail table uses Zebra detail-ledger grammar
+- Renewals:
+  - ACV KPI strip uses Zebra-native card grammar
+  - regional bar chart carries Zebra transfer metadata
+  - renewal pressure table uses Zebra detail-ledger grammar
+- Growth Mix:
+  - KPI strip uses Zebra-native card grammar
+  - regional Land+Expand bar chart carries Zebra transfer metadata
+  - strategic mix table uses Zebra detail-ledger grammar
+- RW KPI Explorer:
+  - Land+Expand matrix moved from generic matrix styling to Zebra detail-ledger grammar
+- Added `tag_visual_with_zebra_transfer_metadata()` so native charts can be recognized by the enterprise standard without using custom visuals.
+
+**Enterprise standard result:**
+
+- Verdict: `not_enterprise_ready`.
+- Findings: medium=1, high=1, critical=0.
+- Remaining findings are data/model readiness only:
+  - semantic model debt: `d_stage` and explicit transition-date roles
+  - data-surface flow: 8 high-impact KPI flows incomplete
+- Zebra-native decision-visual coverage:
+  - VP Ops Scorecard: 10 / 11
+  - What Changed: 3 / 3
+  - Forecast: 9 / 9
+  - Stage Hygiene: 9 / 9
+  - Renewals: 6 / 6
+  - Growth Mix: 7 / 7
+  - RW KPI Explorer: 4 / 4
+
+**Lab verification:**
+
+- `python3 -m scripts.sales.rw_apply_zebra_lab_proof` regenerated the local lab PBIP.
+- `python3 -m scripts.sales.rw_validate --file ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json` passed with 8 sections, 124 visualContainers, and all measure refs resolved.
+- `python3 -m scripts.sales.rw_dashboard_harness audit --source path --path ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json --label rw_all_tabs_zebra_polish` returned no findings.
+- `python3 -m scripts.sales.rw_dashboard_harness visual-qa --source path --path ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json --label rw_all_tabs_zebra_polish --fail-on medium --markdown docs/sales/RW_DASHBOARD_VISUAL_QA.md` returned 0 findings.
+- `python3 -m scripts.sales.rw_dashboard_harness unit-policy --source path --path ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json --label rw_all_tabs_zebra_polish --fail-on-high --markdown docs/sales/RW_UNIT_POLICY.md` passed with high=0, critical=0.
+- `python3 -m scripts.sales.rw_dashboard_harness enterprise-standard --source path --path ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json --label rw_all_tabs_zebra_polish --fail-on critical --markdown docs/sales/RW_ENTERPRISE_ZEBRA_STANDARD.md` passed at critical threshold with verdict `not_enterprise_ready`.
+- `python3 -m scripts.sales.rw_dashboard_harness data-surface-flow --source path --path ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json --label rw_all_tabs_zebra_polish --fail-on critical --markdown docs/sales/RW_DATA_SURFACE_FLOW_READINESS.md` passed with verdict `not_exec_complete`, high=8, critical=0.
+- `python3 -m pytest tests/sales -q` passed: 235 passed, 1 skipped.
+
+No Fabric publish was performed.  Visual polish is now systematically covered across generated tabs; enterprise readiness still requires the data/model backlog.
+
 ## 2026-05-10 — Enterprise Zebra standard gate and VP Ops front-page transfer
 
 Created a single executable gate for the standard Andre is asking for: Zebra-native visual grammar plus consultant-grade decision flow plus data-engineering readiness.  The gate deliberately does not pass today; it makes the remaining work explicit and sequenced.

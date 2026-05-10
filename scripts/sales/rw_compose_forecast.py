@@ -20,10 +20,8 @@ Run:
 from __future__ import annotations
 
 from scripts.sales._pbir_helpers import (
+    build_card_visual_with_objects,
     build_matrix_visual,
-    build_matrix_style_objects,
-    build_rag_card_visual,
-    build_table_style_objects,
     build_table_visual,
     build_textbox_visual,
 )
@@ -35,6 +33,11 @@ from scripts.sales.rw_add_visual import (
     push_report,
 )
 from scripts.sales.rw_validate import fetch_measures_by_table, validate_visual_dict
+from scripts.sales.rw_zebra_kg_ibcs_synth import (
+    zebra_detail_table_objects,
+    zebra_native_card_objects,
+    zebra_stage_hygiene_table_objects,
+)
 
 PAGE = "Forecast"
 
@@ -53,21 +56,25 @@ def _kpi_card(
     value_color: str = "#1A1D31",
     display_units: int | None = None,
 ) -> dict:
-    return build_rag_card_visual(
-        table,
-        measure,
-        title,
+    return build_card_visual_with_objects(
+        measure_table=table,
+        measure_name=measure,
+        display_title=title,
         x=x,
         y=y,
         w=w,
         h=h,
-        tint=tint,
-        accent=accent,
-        value_color=value_color,
-        label_color="#5C6670",
-        value_font_size=24 if h >= 90 else 20,
-        label_font_size=9,
-        display_units=display_units,
+        objects=zebra_native_card_objects(
+            pattern="forecast-kpi-card",
+            visual_intent="forecast operating KPI",
+            tint=tint,
+            accent=accent,
+            value_color=value_color,
+            label_color=accent,
+            value_font_size=24 if h >= 90 else 20,
+            label_font_size=9,
+            display_units=display_units,
+        ),
     )
 
 
@@ -142,12 +149,10 @@ def _compose(section: dict) -> None:
             y=182,
             w=1200,
             h=210,
-            objects=build_matrix_style_objects(
-                header_fill="#EEF2F6",
-                header_text="#1A1D31",
-                row_text="#202124",
-                grid="#E3E7EE",
-                font_size=8,
+            objects=zebra_stage_hygiene_table_objects(
+                max_field="f_opportunity.Total Open Pipeline Value",
+                databar_column="f_opportunity.Total Open Pipeline Value",
+                accent="#2B5C8A",
             ),
         )
     )
@@ -262,13 +267,7 @@ def _compose(section: dict) -> None:
             y=560,
             w=1200,
             h=145,
-            objects=build_table_style_objects(
-                header_fill="#EEF2F6",
-                header_text="#1A1D31",
-                row_text="#202124",
-                grid="#E3E7EE",
-                font_size=8,
-            ),
+            objects=zebra_detail_table_objects(),
         )
     )
 

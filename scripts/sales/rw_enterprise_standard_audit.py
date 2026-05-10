@@ -35,6 +35,7 @@ Severity = Literal["info", "low", "medium", "high", "critical"]
 
 DEFAULT_JSON = Path("output/rw_dashboard_harness/enterprise_standard_audit.json")
 DEFAULT_MARKDOWN = Path("docs/sales/RW_ENTERPRISE_ZEBRA_STANDARD.md")
+ADDITIONAL_POLISHED_TABS = ("RW KPI Explorer",)
 
 DECISION_VISUAL_TYPES = {
     "card",
@@ -111,7 +112,7 @@ def _zebra_page_rows(report: dict) -> tuple[list[dict[str, Any]], list[dict[str,
     rows: list[dict[str, Any]] = []
     findings: list[dict[str, Any]] = []
 
-    for page in PAGE_KPI_CONTRACTS:
+    for page in (*PAGE_KPI_CONTRACTS, *ADDITIONAL_POLISHED_TABS):
         section = pages.get(page, {})
         decision_visuals = [
             visual
@@ -159,14 +160,14 @@ def _zebra_page_rows(report: dict) -> tuple[list[dict[str, Any]], list[dict[str,
                     evidence={"decision_visuals": len(decision_visuals)},
                 )
             )
-        elif coverage < 0.5:
+        elif coverage < 0.9:
             findings.append(
                 _finding(
                     finding_id="zebra_native_grammar_partial",
                     severity="medium",
                     lane="zebra visual grammar",
                     page=page,
-                    message=f"{page} has partial Zebra-native grammar coverage.",
+                    message=f"{page} has incomplete Zebra-native grammar coverage.",
                     next_action="Convert remaining generic decision visuals to Zebra/IBCS native helpers.",
                     evidence={
                         "decision_visuals": len(decision_visuals),
@@ -295,7 +296,7 @@ def _upgrade_backlog(data_surface: dict[str, Any], zebra_rows: list[dict[str, An
         },
     ]
     for row in zebra_rows:
-        if row["decision_visuals"] and row["zebra_native_coverage"] < 0.5:
+        if row["decision_visuals"] and row["zebra_native_coverage"] < 0.9:
             backlog.append(
                 {
                     "sequence": str(len(backlog) + 1),
@@ -404,7 +405,7 @@ def write_markdown(result: dict[str, Any], path: Path) -> None:
         "2. ARR and Renewal ACV stay separated; only `Total Open Pipeline Value` may cross motions and it must be labeled.",
         "3. Monetary values use `EUR M`; visual/theme display-unit scaling is forbidden.",
         "4. Executive pages use governed slicers only: Region and Close FQ unless a page-specific contract allows more.",
-        "5. Primary decision visuals use Zebra-derived native grammar or a documented native equivalent.",
+        "5. Primary decision visuals use Zebra-derived native grammar or a documented native equivalent on every generated tab.",
         "6. Stage, movement-date, forecast, renewal-base, and segmentation semantics exist before the page claims those decisions.",
         "7. Visual QA has zero medium/high/critical findings before Desktop review.",
         "",

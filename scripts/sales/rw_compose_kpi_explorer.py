@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from scripts.sales._pbir_helpers import (
-    build_matrix_style_objects,
     build_matrix_visual,
     build_shape_visual,
     build_table_visual,
@@ -54,13 +53,7 @@ def _compose(section: dict) -> None:
             y=130,
             w=560,
             h=212,
-            objects=build_matrix_style_objects(
-                header_fill="#EEF2F6",
-                header_text="#1A1D31",
-                row_text="#202124",
-                grid="#E3E7EE",
-                font_size=8,
-            ),
+            objects=zebra_detail_table_objects(),
         ),
         _panel(660, 86, 596, 276),
         build_textbox_visual(

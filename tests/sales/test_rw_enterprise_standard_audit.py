@@ -20,19 +20,20 @@ def test_enterprise_standard_audit_rolls_up_readiness_gates():
         finding["id"] == "kpi_flow_not_enterprise_complete"
         for finding in result["findings"]
     )
+    assert not any(finding["lane"] == "zebra visual grammar" for finding in result["findings"])
 
 
 def test_enterprise_standard_reports_zebra_native_page_coverage():
     result = audit_enterprise_standard(report=compose_report({"sections": []}))
     rows = {row["page"]: row for row in result["zebra_native_page_coverage"]}
 
-    assert set(rows) == set(PAGE_KPI_CONTRACTS)
+    assert set(rows) == {*PAGE_KPI_CONTRACTS, "RW KPI Explorer"}
     assert rows["What Changed"]["zebra_native_visuals"] > 0
     assert rows["Stage Hygiene"]["zebra_native_visuals"] > 0
-    assert any(
-        finding["id"] in {"zebra_native_grammar_absent", "zebra_native_grammar_partial"}
-        for finding in result["findings"]
-    )
+    assert rows["Forecast"]["zebra_native_coverage"] >= 0.9
+    assert rows["Renewals"]["zebra_native_coverage"] >= 0.9
+    assert rows["Growth Mix"]["zebra_native_coverage"] >= 0.9
+    assert rows["RW KPI Explorer"]["zebra_native_coverage"] >= 0.9
 
 
 def test_enterprise_standard_backlog_starts_with_data_engineering_spine():
@@ -42,4 +43,4 @@ def test_enterprise_standard_backlog_starts_with_data_engineering_spine():
     assert backlog[0]["lane"] == "semantic spine"
     assert "d_stage" in backlog[0]["work"]
     assert any(item["lane"] == "forecast data" for item in backlog)
-    assert any(item["lane"].startswith("page:") for item in backlog)
+    assert not any(item["lane"].startswith("page:") for item in backlog)
