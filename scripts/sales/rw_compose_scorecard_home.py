@@ -147,7 +147,7 @@ def _build_header() -> list[dict]:
             bold=True,
         ),
         build_textbox_visual(
-            text="Exceptions first. Movement and stage health beneath. ARR and Renewal ACV remain separate.",
+            text="Exceptions first. Basis stays explicit: ARR (L+E), renewal ACV, ARR-wtd %, count rates.",
             x=28,
             y=42,
             w=840,
@@ -173,25 +173,25 @@ def _build_exception_spine() -> dict:
                 "table": "f_opportunity",
                 "field": "Exception ARR",
                 "kind": "measure",
-                "title": "Exception ARR",
+                "title": "Exception ARR (L+E)",
             },
             {
                 "table": "f_opportunity",
                 "field": "Exception Opps Count",
                 "kind": "measure",
-                "title": "Opps",
+                "title": "Opp count",
             },
             {
                 "table": "f_opportunity",
                 "field": "At Risk Opps ARR",
                 "kind": "measure",
-                "title": "At Risk ARR",
+                "title": "At-risk ARR (L+E)",
             },
             {
                 "table": "f_opportunity",
                 "field": "Watch Opps ARR",
                 "kind": "measure",
-                "title": "Watch ARR",
+                "title": "Watch ARR (L+E)",
             },
         ],
         x=40,
@@ -209,7 +209,7 @@ def _build_kpi_strip() -> list[dict]:
         (
             "f_opportunity",
             "Total Closed Won ARR",
-            "Closed won ARR",
+            "Closed won ARR (L+E)",
             "#F4F7FB",
             "#2B5C8A",
             "#1A1D31",
@@ -218,7 +218,7 @@ def _build_kpi_strip() -> list[dict]:
         (
             "f_opportunity",
             "Win Rate ARR",
-            "Win rate",
+            "Win rate (ARR-wtd)",
             "#EEF9EE",
             "#3B8A3E",
             "#1F6F3B",
@@ -227,7 +227,7 @@ def _build_kpi_strip() -> list[dict]:
         (
             "f_opportunity",
             "Exception ARR",
-            "Exception ARR",
+            "Exception ARR (L+E)",
             "#FFEEEE",
             "#C33A32",
             "#B3261E",
@@ -236,7 +236,7 @@ def _build_kpi_strip() -> list[dict]:
         (
             "f_opportunity",
             "Renewal Retention Pct (Period)",
-            "Renewal retention",
+            "Retention % (ACV-wtd)",
             "#EEF9EE",
             "#3B8A3E",
             "#1F6F3B",
@@ -282,7 +282,7 @@ def _build_stage_distribution_panel() -> list[dict]:
         category_title="Stage",
         measure_table="f_opportunity",
         measure_name="Total Open Pipeline ARR",
-        measure_title="Open ARR",
+        measure_title="Open ARR (L+E)",
         x=820,
         y=258,
         w=420,
@@ -291,7 +291,7 @@ def _build_stage_distribution_panel() -> list[dict]:
     )
     return [
         _panel(804, 226, 452, 260),
-        _with_title(chart, "Open ARR by Stage"),
+        _with_title(chart, "Open ARR (L+E) by Stage"),
     ]
 
 
@@ -309,12 +309,12 @@ def _build_stage_hygiene_panel() -> list[dict]:
             {
                 "table": "f_stage_transition",
                 "field": "Stage Forward Pct (LE)",
-                "title": "Forward %",
+                "title": "Forward % (count, L+E)",
             },
             {
                 "table": "f_stage_transition",
                 "field": "Stage Backward Pct (LE)",
-                "title": "Backward %",
+                "title": "Backward % (count, L+E)",
             },
             {
                 "table": "f_stage_transition",
@@ -324,7 +324,7 @@ def _build_stage_hygiene_panel() -> list[dict]:
             {
                 "table": "f_stage_transition",
                 "field": "Stage Moves ARR 7d",
-                "title": "7d ARR moved",
+                "title": "7d ARR moved (L+E)",
             },
         ],
         x=40,
@@ -338,7 +338,7 @@ def _build_stage_hygiene_panel() -> list[dict]:
     )
     return [
         _panel(24, 508, 768, 188),
-        _with_title(matrix, "Stage Hygiene"),
+        _with_title(matrix, "Stage Hygiene (count rates, L+E)"),
     ]
 
 
@@ -347,7 +347,7 @@ def _build_movement_pulse() -> list[dict]:
         (
             "f_opportunity",
             "New Opps Count 7d",
-            "New opps 7d",
+            "New opp count 7d",
             "#F4F7FB",
             "#2B5C8A",
             None,
@@ -355,7 +355,7 @@ def _build_movement_pulse() -> list[dict]:
         (
             "f_opportunity",
             "Closed Won Count 7d",
-            "Won 7d",
+            "Won count 7d",
             "#EEF9EE",
             "#3B8A3E",
             None,
@@ -363,7 +363,7 @@ def _build_movement_pulse() -> list[dict]:
         (
             "f_stage_transition",
             "Stage Moves ARR 7d",
-            "Stage ARR 7d",
+            "Stage ARR 7d (L+E)",
             "#FFF8E6",
             "#D98A00",
             1000000,
@@ -371,7 +371,7 @@ def _build_movement_pulse() -> list[dict]:
         (
             "f_stage_transition",
             "Backward Moves Count 7d",
-            "Back moves",
+            "Back move count",
             "#FFEEEE",
             "#C33A32",
             None,

@@ -7,7 +7,7 @@ This is the governing standard for getting the RW Power BI dashboard to Zebra-na
 ## Current State
 
 - Visual QA counts: `{'info': 0, 'low': 0, 'medium': 0, 'high': 0, 'critical': 0}`
-- Unit policy counts: `{'info': 0, 'low': 0, 'medium': 0, 'high': 1, 'critical': 0}`
+- Unit policy counts: `{'info': 0, 'low': 0, 'medium': 0, 'high': 0, 'critical': 0}`
 - Semantic/filter counts: `{'info': 0, 'low': 0, 'medium': 3, 'high': 0, 'critical': 0}`
 - Data-surface verdict: `not_exec_complete`
 - KPI rollup: `25` clean, `4` partial/proxy, `1` model gaps, `1` source gaps out of `31` RW KPIs.
@@ -27,7 +27,6 @@ This is the governing standard for getting the RW Power BI dashboard to Zebra-na
 
 | Severity | Lane | Page | Finding | Next action |
 | --- | --- | --- | --- | --- |
-| `high` | unit governance | - | Unit policy has high/critical findings. | Keep all monetary values on EUR M and remove visual display-unit scaling. |
 | `medium` | semantic/filter architecture | - | Semantic/filter flow is guarded but still has model debt. | Add d_stage and explicit transition-date roles. |
 | `high` | data-to-surface flow | - | Data-surface verdict is not_exec_complete; 3 high-impact KPI flows are incomplete. | Close or explicitly descope the high-impact KPI flow blockers before production deployment. |
 

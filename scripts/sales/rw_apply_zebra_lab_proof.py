@@ -172,12 +172,12 @@ def apply_stage_hygiene_proof(report: dict) -> None:
                 {
                     "table": "f_stage_transition",
                     "field": "Stage Forward Pct (LE)",
-                    "title": "Forward %",
+                    "title": "Forward % (count, L+E)",
                 },
                 {
                     "table": "f_stage_transition",
                     "field": "Stage Backward Pct (LE)",
-                    "title": "Backward %",
+                    "title": "Backward % (count, L+E)",
                 },
                 {
                     "table": "f_stage_transition",
@@ -187,12 +187,12 @@ def apply_stage_hygiene_proof(report: dict) -> None:
                 {
                     "table": "f_stage_transition",
                     "field": "Total Stage Transitions",
-                    "title": "Moves",
+                    "title": "Move count",
                 },
                 {
                     "table": "f_stage_transition",
                     "field": "Stage Moves ARR 7d",
-                    "title": "7d ARR moved",
+                    "title": "7d ARR moved (L+E)",
                 },
             ],
             x=36,
@@ -249,22 +249,22 @@ def apply_zebra_exceptions_proof(report: dict) -> None:
                 {
                     "table": "f_opportunity",
                     "field": "Exception ARR",
-                    "title": "Exception ARR",
+                    "title": "Exception ARR (L+E)",
                 },
                 {
                     "table": "f_opportunity",
                     "field": "Exception Opps Count",
-                    "title": "Exception opps",
+                    "title": "Exception opp count",
                 },
                 {
                     "table": "f_opportunity",
                     "field": "At Risk Opps ARR",
-                    "title": "At-risk ARR",
+                    "title": "At-risk ARR (L+E)",
                 },
                 {
                     "table": "f_opportunity",
                     "field": "Watch Opps ARR",
-                    "title": "Watch ARR",
+                    "title": "Watch ARR (L+E)",
                 },
             ],
             x=36,

@@ -115,11 +115,11 @@ def _compose(section: dict) -> None:
         (
             "f_opportunity",
             "Total Open Pipeline Value",
-            "Open Pipeline (cross-motion)",
+            "Open Value (ARR+ACV)",
             420,
             1000000,
         ),
-        ("f_opportunity", "Total Closed Won ARR", "Closed Won ARR (FY26)", 820, 1000000),
+        ("f_opportunity", "Total Closed Won ARR", "Closed won ARR (L+E)", 820, 1000000),
     ]
     for tbl, msr, title, x, display_units in hero:
         section["visualContainers"].append(
@@ -128,7 +128,7 @@ def _compose(section: dict) -> None:
 
     # ── Stage × motion matrix ──────────────────────────────────
     section["visualContainers"].append(
-        build_textbox_visual("Stage x Motion Open Value", x=20, y=154, w=1200, h=24, font_size_pt=12, color="#1A1D31")
+        build_textbox_visual("Stage x Motion Open Value (ARR+ACV)", x=20, y=154, w=1200, h=24, font_size_pt=12, color="#1A1D31")
     )
     # Rows = stage_name, columns = motion_type, value = Total Open Pipeline Value
     # (which renders ARR for Land/Expand and ACV for Renewal — see measure
@@ -142,7 +142,7 @@ def _compose(section: dict) -> None:
                 {
                     "table": "f_opportunity",
                     "field": "Total Open Pipeline Value",
-                    "title": "Open Value",
+                    "title": "Open value (ARR+ACV)",
                 }
             ],
             x=20,
@@ -165,7 +165,7 @@ def _compose(section: dict) -> None:
         (
             "f_forecast_transition",
             "Forecast Slip Pct",
-            "Slip Rate (proxy)",
+            "Slip % (count proxy)",
             20,
             "#FFEEEE",
             "#C33A32",
@@ -174,7 +174,7 @@ def _compose(section: dict) -> None:
         (
             "f_forecast_transition",
             "Forecast Slips",
-            "Total Slips (proxy)",
+            "Slip count (proxy)",
             320,
             "#FFF8E6",
             "#D98A00",
@@ -183,7 +183,7 @@ def _compose(section: dict) -> None:
         (
             "f_forecast_transition",
             "Forecast Upgrades",
-            "Total Upgrades (qtr)",
+            "Upgrade count (qtr)",
             620,
             "#EEF9EE",
             "#3B8A3E",
@@ -192,7 +192,7 @@ def _compose(section: dict) -> None:
         (
             "f_forecast_transition",
             "Avg Days In Forecast Category",
-            "Avg Days In Category",
+            "Avg days/category",
             920,
             "#F4F7FB",
             "#2B5C8A",
@@ -248,7 +248,7 @@ def _compose(section: dict) -> None:
                     "table": "f_opportunity",
                     "field": "Total Open Pipeline Value",
                     "kind": "measure",
-                    "title": "Value",
+                    "title": "Value (ARR+ACV)",
                 },
                 {
                     "table": "f_opportunity",

@@ -1572,6 +1572,43 @@ Andre asked for a direct checklist of RW-expected KPIs versus what the current B
 
 ARR remains Land+Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
 
+## 2026-05-10 — Metric basis labels locked across the BI surface
+
+Andre asked whether the dashboard bases were right: weighted versus unweighted, ARR versus ACV, and unified labels across charts.  The issue was not the DAX definitions alone; several visible labels were still too generic for an executive reader (`Win rate`, `Retention`, `Open Value`, `Partner %`, `Won`, `Risk ARR`).
+
+**Standard now applied:**
+
+- Land/Expand value labels use `ARR (L+E)` or explicit `Land ARR` / `Expand ARR`.
+- Renewal opportunity value labels use `renewal ACV`.
+- Installed-base renewal labels use `active-base ARR` / `base ARR`.
+- The single cross-motion value is labeled `ARR+ACV`.
+- Weighted rates are labeled `ARR-wtd` or `ACV-wtd`.
+- Count-based rates and movement metrics include `count`.
+
+**Shipped:**
+
+- Updated visible titles/column labels across:
+  - VP Ops Scorecard
+  - What Changed
+  - Forecast
+  - Stage Hygiene
+  - Renewals
+  - Growth Mix
+  - RW KPI Explorer
+  - Zebra Exceptions lab proof page
+- Added `scripts/sales/rw_metric_basis_audit.py`.
+- Added `python3 -m scripts.sales.rw_dashboard_harness metric-basis ...`.
+- Added `docs/sales/RW_METRIC_BASIS_LABELS.md`.
+- Added regression coverage in `tests/sales/test_rw_metric_basis_audit.py`.
+
+**Lab verification:**
+
+- Metric-basis audit inspected `102` measure labels and returned `0` findings.
+- Visual QA returned `0` findings.
+- `rw_validate` passed with `124` measures, `8` sections, `129` visuals, and all measure refs resolved.
+
+This is now an executable publishing gate: future visual work must keep calculation basis visible, not just correct in hidden DAX.
+
 ## 2026-05-10 — Active asset ARR base staged for Renewals
 
 The previous Renewal page still used opportunity ACV as a proxy for business-at-risk exposure.  Salesforce has an installed-base source: `Apttus_Config2__AssetLineItem__c` with converted active asset ARR and account termination-risk context.  This pass staged that source and replaced the Renewal proxy with explicit active-base ARR measures.

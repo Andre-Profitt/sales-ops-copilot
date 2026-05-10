@@ -16,6 +16,7 @@ Usage:
     python3 -m scripts.sales.rw_dashboard_harness audit --source desktop
     python3 -m scripts.sales.rw_dashboard_harness visual-qa --source path --path <report.json>
     python3 -m scripts.sales.rw_dashboard_harness unit-policy --source path --path <report.json>
+    python3 -m scripts.sales.rw_dashboard_harness metric-basis --source path --path <report.json>
     python3 -m scripts.sales.rw_dashboard_harness semantic-filter --source path --path <report.json>
     python3 -m scripts.sales.rw_dashboard_harness data-surface-flow --source path --path <report.json>
     python3 -m scripts.sales.rw_dashboard_harness enterprise-standard --source path --path <report.json>
@@ -498,6 +499,33 @@ def cmd_unit_policy(args: argparse.Namespace) -> None:
         raise SystemExit(1)
 
 
+def cmd_metric_basis(args: argparse.Namespace) -> None:
+    from scripts.sales.rw_metric_basis_audit import (
+        DEFAULT_MARKDOWN,
+        SEVERITY_RANK,
+        audit_metric_basis,
+        write_markdown,
+    )
+
+    report = load_report(args.source, args.path)
+    result = audit_metric_basis(report)
+    label = slug(args.label or f"{args.source}_{timestamp()}")
+    json_path = args.out_dir / "metric_basis" / f"{label}.metric_basis.json"
+    markdown_path = args.markdown or DEFAULT_MARKDOWN
+    write_json(json_path, result)
+    write_markdown(result, markdown_path)
+    counts = result["summary"]["severity_counts"]
+    print(f"metric basis json: {json_path}")
+    print(f"metric basis markdown: {markdown_path}")
+    print(
+        f"findings={result['summary']['finding_count']} "
+        + " ".join(f"{severity}={counts[severity]}" for severity in SEVERITY_RANK)
+    )
+    threshold = SEVERITY_RANK[args.fail_on]
+    blocking = [f for f in result["findings"] if SEVERITY_RANK[f["severity"]] >= threshold]
+    raise SystemExit(1 if blocking else 0)
+
+
 def cmd_data_surface_flow(args: argparse.Namespace) -> None:
     from scripts.sales.rw_data_surface_flow_audit import (
         DEFAULT_MARKDOWN,
@@ -658,6 +686,17 @@ def build_parser() -> argparse.ArgumentParser:
     p_unit_policy.add_argument("--markdown", type=Path, help="Markdown report path")
     p_unit_policy.add_argument("--fail-on-high", action="store_true")
     p_unit_policy.set_defaults(func=cmd_unit_policy)
+
+    p_metric_basis = sub.add_parser("metric-basis", help="Run visible metric-basis label gate")
+    add_source_args(p_metric_basis)
+    p_metric_basis.add_argument("--markdown", type=Path, help="Markdown report path")
+    p_metric_basis.add_argument(
+        "--fail-on",
+        choices=("info", "low", "medium", "high", "critical"),
+        default="medium",
+        help="Exit non-zero when a finding at this severity or higher is present.",
+    )
+    p_metric_basis.set_defaults(func=cmd_metric_basis)
 
     p_semantic_filter = sub.add_parser(
         "semantic-filter", help="Run semantic-model/page-filter flow gate"
