@@ -2,8 +2,13 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+from unittest.mock import patch
 
-from scripts.sales.rw_zebra_kg_translator import BindMap, MeasureCatalog
+import pytest
+
+from scripts.sales.rw_zebra_kg_translator import BindMap, MeasureCatalog, translate_visual
 
 
 def test_measure_catalog_has_returns_true_for_known_measure():
@@ -36,10 +41,6 @@ def test_bindmap_lookup_returns_rw_field_for_zebra_field():
     assert bm.lookup("PnL.AC") == "Measures.Total Closed Won ARR"
     assert bm.lookup("Unknown.X") is None
 
-
-import json
-
-from scripts.sales.rw_zebra_kg_translator import translate_visual
 
 
 def _make_src_vc(visual_type: str, x=0, y=0, w=300, h=200) -> dict:
@@ -88,10 +89,6 @@ def test_translate_visual_invalid_config_string_passes_through():
     out = translate_visual(src, MeasureCatalog(), BindMap())
     assert out == [src]
 
-
-from pathlib import Path
-
-import pytest
 
 FIXTURES = Path(__file__).parent / "fixtures" / "zebra_translator"
 
@@ -172,13 +169,40 @@ def test_translate_visual_table_preserves_position():
     assert out[0]["height"] == src["height"]
 
 
+def test_translate_visual_table_applies_zebra_databar_object():
+    raw = json.loads((FIXTURES / "sample_table.json").read_text())
+    src = _layout_vc_from_raw(raw)
+    out = translate_visual(src, _catalog_for_refs(raw), _bindmap_for_refs(raw))
+    cfg = json.loads(out[0]["config"])
+    objects = cfg["singleVisual"].get("objects", {})
+    assert "dataBars" in objects
+    assert objects["dataBars"]["values"][0]["selector"]["metadata"] == "AC"
+
+
+def test_translate_visual_table_keeps_ibcs_scenario_order():
+    raw = json.loads((FIXTURES / "sample_table.json").read_text())
+    src = _layout_vc_from_raw(raw)
+    out = translate_visual(src, _catalog_for_refs(raw), _bindmap_for_refs(raw))
+    cfg = json.loads(out[0]["config"])
+    refs = [p["queryRef"] for p in cfg["singleVisual"]["projections"]["Values"]]
+    assert refs[:3] == ["AccountHierarchy.Account", "∑ Key Measures.AC", "∑ Key Measures.PY"]
+
+
+def test_translate_visual_card_with_group_emits_composite_tile():
+    raw = json.loads((FIXTURES / "sample_card.json").read_text())
+    src = _layout_vc_from_raw(raw)
+    out = translate_visual(src, _catalog_for_refs(raw), _bindmap_for_refs(raw))
+    visual_types = [json.loads(vc["config"])["singleVisual"]["visualType"] for vc in out]
+    assert visual_types == ["textbox", "card", "card"]
+
+
 def test_translate_visual_card_emits_native_card():
     raw = json.loads((FIXTURES / "sample_card.json").read_text())
     src = _layout_vc_from_raw(raw)
     out = translate_visual(src, _catalog_for_refs(raw), _bindmap_for_refs(raw))
     assert len(out) >= 1
-    cfg = json.loads(out[0]["config"])
-    assert cfg["singleVisual"]["visualType"] in {"card", "multiRowCard"}
+    visual_types = {json.loads(vc["config"])["singleVisual"]["visualType"] for vc in out}
+    assert visual_types & {"card", "multiRowCard"}
 
 
 @pytest.mark.skipif(
@@ -210,9 +234,6 @@ def test_translate_visual_corpus_smoke_no_exceptions():
             assert len(out) >= 1
             count += 1
     assert count > 0
-
-
-from unittest.mock import patch
 
 
 def test_native_emit_emit_native_visuals_calls_translate_visual():

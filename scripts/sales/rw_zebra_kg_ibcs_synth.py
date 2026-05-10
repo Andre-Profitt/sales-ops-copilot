@@ -11,6 +11,7 @@ This module is pure (no I/O, no network); consumed by rw_zebra_kg_translator.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 
 @dataclass(frozen=True)
@@ -30,7 +31,8 @@ class ColumnSpec:
     is_cost: bool = False
 
 
-from scripts.sales.rw_zebra_kg_translator import MeasureCatalog  # noqa: E402
+if TYPE_CHECKING:
+    from scripts.sales.rw_zebra_kg_translator import MeasureCatalog
 
 _FORMAT_STRINGS = {
     0: "#,##0",
