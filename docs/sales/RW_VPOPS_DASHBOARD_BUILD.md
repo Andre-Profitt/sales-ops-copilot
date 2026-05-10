@@ -1,8 +1,8 @@
 # RW VP Ops Scorecard — Power BI build (browser)
 
-The semantic model is live with **55 DAX measures** covering **16 of 31** Richard Wyeth target KPIs (the rest are Phase 3 — they need ForecastingItem snapshots, ApprovalProcess history, Asset/Subscription, or custom Account/Opp fields not yet in the model). This doc is the curated browser-side build spec — drag-and-drop in Power BI Service.
+This doc began as the curated browser-side build spec for Power BI Service. Current state: the semantic model is live with **106 DAX measures**, the Desktop lab PBIP has six KPI-targeted RW pages, and the current dashboard coverage truth table is generated at `docs/sales/RW_DASHBOARD_KPI_INTELLIGENCE.md`.
 
-The 16 covered KPIs are: `forecast_closed_won`, `pipeline_coverage_3x`, `opp_win_rate`, `closed_won_avg_deal_size`, `sales_cycle_length`, `opp_age`, `stage3_acv_value`, `partner_opps_pct`, `renewals_mom_trend`, `lost_arr_quarterly`, `renewal_retention_rate`, `new_opps_by_region`, `opp_source_effectiveness`, `new_customer_reporting`, `time_in_stage`, `stage_conversion`. Source of truth for KPI definitions, targets, motion filters, and caveats: `scripts/sales/rw_kpi_graph.py`.
+Source of truth for KPI definitions, targets, motion filters, and caveats: `scripts/sales/rw_kpi_graph.py`. Source of truth for current dashboard/page coverage, proxy status, missing measures, and next actions: `scripts/sales/rw_dashboard_intelligence.py`.
 
 ## Where to start
 
@@ -1158,3 +1158,54 @@ The semantic model is live with the new measures. The report layout changes are
 currently applied to the local Desktop lab PBIP; promote to the live RW report
 with `python3 -m scripts.sales.rw_compose_all_pages` after Desktop visual
 review.
+
+
+## RW Dashboard KPI Intelligence Matrix - 2026-05-10
+
+Andre's next review theme: the dashboard is improving visually, but it still
+needs sharper intelligence on whether all 31 RW KPIs are genuinely covered or
+only implied by generic/proxy visuals.
+
+**Shipped:**
+
+- Added `scripts/sales/rw_dashboard_intelligence.py`.
+- Generated `docs/sales/RW_DASHBOARD_KPI_INTELLIGENCE.md`.
+- Generated `docs/sales/RW_DASHBOARD_KPI_INTELLIGENCE.json`.
+
+**Current coverage rollup:**
+
+| Status | Count |
+| --- | ---: |
+| Cleanly surfaced on dashboard pages | 14 |
+| Surfaced but still proxy/incomplete | 6 |
+| Model-available but not clearly surfaced | 3 |
+| Partial data or measure gap | 3 |
+| Source-data gap | 5 |
+| Total RW KPIs | 31 |
+
+**Most important correction:**
+
+`pipeline_coverage_3x`, `forecast_accuracy`, `stage3_approvals_compliance`,
+`existing_arr_run_rate`, `indexation_arr_growth`, and `synergy_deals_won` are
+now explicitly marked `surfaced_partial`, not cleanly done. This prevents the
+dashboard from looking complete just because a page name or proxy measure
+mentions the KPI.
+
+**Next upgrade lanes:**
+
+- Fast page-only wins: surface `sales_cycle_length`,
+  `closed_won_avg_deal_size`, and `lost_arr_quarterly`.
+- Semantic/model work: add true pipeline coverage ratio, ForecastingItem
+  accuracy, Commercial Approval compliance, synergy measures, existing ARR
+  run-rate, indexation, business-at-risk, and SaaS YoY.
+- Source/ETL work: value tier, Commercial Approval close timing,
+  Axioma/acquired cross-sell, one-off revenues, and PS attach.
+
+ARR remains Land+Expand only, Renewal ACV remains Renewal only. The only
+allowed cross-motion value measure is still `Total Open Pipeline Value`.
+
+**Verification:**
+
+- `python3 -m scripts.sales.rw_dashboard_intelligence` regenerated the
+  markdown and JSON matrix.
+- `.venv/bin/pytest tests/sales -q` succeeded: 178 passed, 1 skipped.
