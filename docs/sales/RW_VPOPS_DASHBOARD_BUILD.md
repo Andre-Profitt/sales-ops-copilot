@@ -969,3 +969,78 @@ Power BI Modeling MCP status:
   process runs outside the logged-in Desktop user context. Use a Windows-side
   interactive MCP client for semantic-model edits, or continue using the
   repo's Fabric REST validation path for this lab.
+
+
+## RW KPI Targeting Pass - All Pages (2026-05-09)
+
+Andre's review after the native/Zebra lab pass: the visuals were directionally
+better, but the report still needed every tab rebuilt against the actual RW KPI
+contract rather than generic dashboard furniture.
+
+**Shipped in code:**
+
+- Added `scripts/sales/rw_page_kpi_contract.py` as the page-level contract:
+  every production tab declares its job, RW KPI IDs, required deployed
+  measures, motion lane, and caveat.
+- Added `scripts/sales/rw_compose_all_pages.py` as the all-tab compiler. It
+  rebuilds:
+  - `VP Ops Scorecard`
+  - `What Changed`
+  - `Forecast`
+  - `Stage Hygiene`
+  - `Renewals`
+  - `Growth Mix`
+- Added native KPI-targeted composers for the previously weak/empty tabs:
+  `rw_compose_stage_hygiene.py`, `rw_compose_renewals.py`, and
+  `rw_compose_growth_mix.py`.
+- Updated `scripts/sales/rw_apply_zebra_lab_proof.py` so the Desktop lab PBIP
+  now applies all KPI-targeted native pages, while preserving the separate
+  `Zebra Exceptions` proof page.
+- Reworked the front page into a 25-visual native layout:
+  KPI strip, exception spine, open ARR by stage, stage hygiene matrix, and
+  7-day movement pulse.
+
+**Business-rule guardrails:**
+
+- `Renewals` is Renewal ACV only.
+- `Growth Mix` is Land+Expand ARR only.
+- `Forecast` is the only page that contains `Total Open Pipeline Value`, and it
+  is explicitly the cross-motion value measure.
+- `VP Ops Scorecard` may place renewal retention beside ARR KPIs, but it does
+  not blend Renewal ACV into ARR.
+
+**Desktop lab output:**
+
+```text
+/Users/test/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json
+```
+
+Page counts after regeneration:
+
+| Page | VisualContainers |
+| --- | ---: |
+| Zebra Exceptions | 3 |
+| Stage Hygiene | 18 |
+| Forecast | 13 |
+| Growth Mix | 14 |
+| Renewals | 14 |
+| What Changed | 18 |
+| VP Ops Scorecard | 25 |
+
+Total: 7 sections, 105 visualContainers.
+
+**Verification:**
+
+- `python3 -m scripts.sales.rw_apply_zebra_lab_proof` succeeded and backed up
+  the prior lab report JSON.
+- `python3 -m scripts.sales.rw_validate --file ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json`
+  succeeded: all measure refs resolve against 102 deployed measures.
+- Contract validation passed: all declared RW KPI measures are present on their
+  target pages.
+- `.venv/bin/pytest tests/sales -q` succeeded: 167 passed, 1 skipped.
+
+**Promotion status:**
+
+This checkpoint updates the local Desktop lab and repo compiler only. The live
+production RW report was not pushed in this pass; promote with
+`python3 -m scripts.sales.rw_compose_all_pages` after Desktop visual review.

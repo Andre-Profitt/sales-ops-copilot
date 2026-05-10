@@ -204,21 +204,10 @@ def apply_stage_hygiene_proof(report: dict) -> None:
 
 
 def apply_spine_rebuild_to_main_page(report: dict) -> None:
-    """Apply the PR1 front-page rebuild to the main 'VP Ops Scorecard' section
-    in the lab PBIP. Imports the live composer to keep the binding source of
-    truth in one place.
-    """
-    from scripts.sales.rw_compose_scorecard_home import PAGE, _compose
+    """Apply all KPI-targeted native pages to the lab PBIP."""
+    from scripts.sales.rw_compose_all_pages import compose_report
 
-    section = next(
-        (s for s in report["sections"] if s.get("displayName") == PAGE),
-        None,
-    )
-    if section is None:
-        raise RuntimeError(
-            f"lab PBIP has no section with displayName={PAGE!r}; cannot apply spine rebuild"
-        )
-    _compose(section)
+    compose_report(report)
 
 
 def apply_zebra_exceptions_proof(report: dict) -> None:
