@@ -139,6 +139,9 @@ def test_build_slicer_visual_has_compact_native_chrome():
     assert sv["projections"]["Values"][0]["queryRef"] == "d_region.region"
     assert {"general", "header", "items"} <= set(sv["objects"])
     assert {"title", "visualHeader", "border", "background"} <= set(sv["vcObjects"])
+    assert sv["vcObjects"]["title"][0]["properties"]["show"]["expr"]["Literal"]["Value"] == "true"
+    assert sv["vcObjects"]["border"][0]["properties"]["color"]["solid"]["color"]["expr"]["Literal"]["Value"] == "'#AAB4C4'"
+    assert sv["objects"]["header"][0]["properties"]["background"]["solid"]["color"]["expr"]["Literal"]["Value"] == "'#EAF0F7'"
 
 
 def test_build_matrix_visual_axes():

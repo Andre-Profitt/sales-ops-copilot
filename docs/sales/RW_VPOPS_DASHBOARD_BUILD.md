@@ -1617,6 +1617,31 @@ Built the first product/churn surface as a native Power BI page: `Product Retent
 
 No Fabric publish was performed. ARR remains Land + Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
 
+## 2026-05-10 — Readable generated filter controls
+
+The generated executive slicers were technically present but too compressed for Desktop review: 142 x 48 px controls, 8pt text, weak border, and hidden title chrome.
+
+**Shipped:**
+
+- Enlarged generated slicers to 180 x 62 px.
+- Increased slicer header/item text to 10pt.
+- Made slicer titles visible.
+- Added a muted Zebra-style header fill and stronger neutral border.
+- Right-aligned the shared filter strip so two-filter and three-filter pages stay inside the 1280 px canvas.
+- Added regression coverage that every contracted page keeps slicers at readable dimensions.
+
+**Lab verification:**
+
+- `python3 -m scripts.sales.rw_apply_zebra_lab_proof` regenerated the local lab PBIP.
+- `rw_validate` passed with 9 sections, 149 visualContainers, and all measure refs resolved.
+- Harness audit returned no findings.
+- Visual QA passed with 0 findings.
+- Metric-basis labels passed with 0 findings.
+- Unit policy passed with 0 findings.
+- Semantic filter audit passed with medium=2, high=0, critical=0.
+
+No Fabric publish was performed.
+
 ## 2026-05-10 — Power BI artifact knowledge graph
 
 Built an executable knowledge graph of the current RW Power BI report artifact so the dashboard can be inspected tab-by-tab instead of by screenshots alone.

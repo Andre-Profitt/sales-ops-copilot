@@ -142,7 +142,7 @@ def build_slicer_visual(
     w: float = 240,
     h: float = 90,
     *,
-    font_size: int = 8,
+    font_size: int = 10,
 ) -> dict:
     """Construct a slicer visualContainer for a column on a dim table."""
     visual_name = uuid.uuid4().hex[:20]
@@ -193,7 +193,7 @@ def build_slicer_visual(
                         "properties": {
                             "textSize": _literal(font_size),
                             "fontColor": _solid_color("#1A1D31"),
-                            "background": _solid_color("#FFFFFF"),
+                            "background": _solid_color("#EAF0F7"),
                         }
                     }
                 ],
@@ -208,14 +208,24 @@ def build_slicer_visual(
                 ],
             },
             "vcObjects": {
-                "title": [{"properties": {"show": _literal(False)}}],
+                "title": [
+                    {
+                        "properties": {
+                            "show": _literal(True),
+                            "text": _literal(title),
+                            "fontSize": _literal(9),
+                            "fontColor": _solid_color("#3A4653"),
+                            "background": _solid_color("#FFFFFF"),
+                        }
+                    }
+                ],
                 "visualHeader": [{"properties": {"show": _literal(False)}}],
                 "border": [
                     {
                         "properties": {
                             "show": _literal(True),
-                            "color": _solid_color("#D8DEE8"),
-                            "radius": _literal(2),
+                            "color": _solid_color("#AAB4C4"),
+                            "radius": _literal(1),
                         }
                     }
                 ],

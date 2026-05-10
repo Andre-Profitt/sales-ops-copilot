@@ -66,14 +66,14 @@ def test_target_pages_follow_page_specific_slice_controls():
     report = compose_report({"sections": []})
 
     for page in PAGE_KPI_CONTRACTS:
-        slicers = [
-            _single_visual(vc)
-            for vc in _page(report, page)["visualContainers"]
-            if _visual_type(vc) == "slicer"
-        ]
+        slicer_visuals = [vc for vc in _page(report, page)["visualContainers"] if _visual_type(vc) == "slicer"]
+        slicers = [_single_visual(vc) for vc in slicer_visuals]
         refs = {slicer["projections"]["Values"][0]["queryRef"] for slicer in slicers}
         assert refs == FILTER_REFS_BY_PAGE[page], page
         assert FORBIDDEN_MOTION_SLICER_REF not in refs, page
+        for slicer in slicer_visuals:
+            assert slicer["width"] >= 180, page
+            assert slicer["height"] >= 62, page
 
 
 def test_kpi_explorer_adds_slice_and_dice_views_without_arr_acv_blend():

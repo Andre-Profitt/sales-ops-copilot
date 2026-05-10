@@ -109,33 +109,35 @@ def filter_policy_for_page(page: str) -> tuple[FilterSpec, ...]:
 def filter_bar_visuals(
     *,
     filters: tuple[FilterSpec, ...] = COMMON_FILTERS,
-    x: float = 790,
+    x: float = 840,
     y: float = 10,
-    w: float = 142,
-    h: float = 48,
-    gap: float = 10,
+    w: float = 180,
+    h: float = 62,
+    gap: float = 12,
 ) -> list[dict]:
-    """Build a compact top-right slicer strip."""
+    """Build a readable, right-aligned top slicer strip."""
+    total_width = len(filters) * w + max(len(filters) - 1, 0) * gap
+    start_x = min(x, 1256 - total_width)
     return [
         build_slicer_visual(
             table,
             column,
             title,
-            x=x + i * (w + gap),
+            x=start_x + i * (w + gap),
             y=y,
             w=w,
             h=h,
-            font_size=8,
+            font_size=10,
         )
         for i, (table, column, title) in enumerate(filters)
     ]
 
 
 def filter_bar_visuals_for_page(page: str) -> list[dict]:
-    return filter_bar_visuals(filters=filter_policy_for_page(page), x=790, w=142)
+    return filter_bar_visuals(filters=filter_policy_for_page(page))
 
 
 def append_filter_bar(section: dict, *, page: str | None = None, explorer: bool = False) -> None:
     page_name = page or section.get("displayName") or ""
     filters = EXPLORER_FILTERS if explorer else filter_policy_for_page(page_name)
-    section.setdefault("visualContainers", []).extend(filter_bar_visuals(filters=filters, x=790, w=142))
+    section.setdefault("visualContainers", []).extend(filter_bar_visuals(filters=filters))
