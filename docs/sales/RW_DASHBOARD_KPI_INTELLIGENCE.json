@@ -30,7 +30,7 @@
           "visual_role": "hero KPI",
           "motion_guardrail": "land_expand_arr",
           "data_status": "clean",
-          "label": "Closed won ARR (L+E)",
+          "label": "Closed won ARR (Land + Expand)",
           "secondary": false,
           "missing_measure": ""
         },
@@ -50,7 +50,7 @@
           "visual_role": "variance table",
           "motion_guardrail": "land_expand_arr",
           "data_status": "partial",
-          "label": "Stage hygiene (count rates, L+E)",
+          "label": "Stage hygiene (count rates, Land + Expand)",
           "secondary": false,
           "missing_measure": ""
         },
@@ -70,7 +70,7 @@
           "visual_role": "variance table",
           "motion_guardrail": "land_expand_arr",
           "data_status": "partial",
-          "label": "Stage hygiene (count rates, L+E)",
+          "label": "Stage hygiene (count rates, Land + Expand)",
           "secondary": true,
           "missing_measure": ""
         },
@@ -105,7 +105,7 @@
           "visual_role": "exception ledger",
           "motion_guardrail": "land_expand_arr",
           "data_status": "clean",
-          "label": "At-risk ARR (L+E)",
+          "label": "At-risk ARR (Land + Expand)",
           "secondary": false,
           "missing_measure": ""
         },
@@ -115,7 +115,7 @@
           "visual_role": "exception ledger",
           "motion_guardrail": "land_expand_arr",
           "data_status": "clean",
-          "label": "Watch ARR (L+E)",
+          "label": "Watch ARR (Land + Expand)",
           "secondary": false,
           "missing_measure": ""
         },
@@ -125,7 +125,7 @@
           "visual_role": "movement ledger",
           "motion_guardrail": "land_expand_arr",
           "data_status": "clean",
-          "label": "Stage ARR (L+E)",
+          "label": "Stage ARR (Land + Expand)",
           "secondary": false,
           "missing_measure": ""
         },
@@ -155,7 +155,7 @@
           "visual_role": "detail table",
           "motion_guardrail": "land_expand_arr",
           "data_status": "clean",
-          "label": "Top Open ARR (L+E) Movement Queue",
+          "label": "Top Open ARR (Land + Expand) Movement Queue",
           "secondary": false,
           "missing_measure": ""
         }
@@ -191,7 +191,7 @@
           "visual_role": "hero KPI",
           "motion_guardrail": "land_expand_arr",
           "data_status": "clean",
-          "label": "Closed won ARR (L+E)",
+          "label": "Closed won ARR (Land + Expand)",
           "secondary": false,
           "missing_measure": ""
         },
@@ -238,7 +238,7 @@
       ]
     },
     "Stage Hygiene": {
-      "executive_question": "Which stage is slowing or reversing Land+Expand opportunities, and is the Stage 3/4 control point healthy?",
+      "executive_question": "Which stage is slowing or reversing Land + Expand opportunities, and is the Stage 3/4 control point healthy?",
       "job": "Funnel diagnosis: stage conversion, backward movement, and time-in-stage bottlenecks.",
       "primary_kpis": [
         "stage_conversion",
@@ -258,7 +258,7 @@
           "visual_role": "hero KPI",
           "motion_guardrail": "land_expand_arr",
           "data_status": "partial",
-          "label": "Forward % (count, L+E)",
+          "label": "Forward % (count, Land + Expand)",
           "secondary": false,
           "missing_measure": ""
         },
@@ -268,7 +268,7 @@
           "visual_role": "hero KPI",
           "motion_guardrail": "land_expand_arr",
           "data_status": "partial",
-          "label": "Backward % (count, L+E)",
+          "label": "Backward % (count, Land + Expand)",
           "secondary": false,
           "missing_measure": ""
         },
@@ -278,7 +278,7 @@
           "visual_role": "hero KPI",
           "motion_guardrail": "land_expand_arr",
           "data_status": "partial",
-          "label": "Stage days (L+E)",
+          "label": "Stage days (Land + Expand)",
           "secondary": false,
           "missing_measure": ""
         },
@@ -298,7 +298,7 @@
           "visual_role": "hero KPI",
           "motion_guardrail": "land_expand_arr",
           "data_status": "clean",
-          "label": "L+E cycle days",
+          "label": "Land + Expand cycle days",
           "secondary": false,
           "missing_measure": ""
         },
@@ -308,7 +308,7 @@
           "visual_role": "variance table",
           "motion_guardrail": "land_expand_arr",
           "data_status": "partial",
-          "label": "Stage Conversion Matrix (count, L+E)",
+          "label": "Stage Conversion Matrix (count, Land + Expand)",
           "secondary": false,
           "missing_measure": ""
         },
@@ -489,7 +489,7 @@
           "visual_role": "hero KPI",
           "motion_guardrail": "land_expand_arr",
           "data_status": "partial",
-          "label": "Avg won ARR (L+E)",
+          "label": "Avg won ARR (Land + Expand)",
           "secondary": false,
           "missing_measure": ""
         },
@@ -499,7 +499,7 @@
           "visual_role": "hero KPI",
           "motion_guardrail": "land_expand_arr",
           "data_status": "clean",
-          "label": "Partner ARR (L+E)",
+          "label": "Partner ARR (Land + Expand)",
           "secondary": false,
           "missing_measure": ""
         },
@@ -559,7 +559,7 @@
           "visual_role": "detail table",
           "motion_guardrail": "land_expand_arr",
           "data_status": "clean",
-          "label": "Axioma ARR (L+E)",
+          "label": "Axioma ARR (Land + Expand)",
           "secondary": true,
           "missing_measure": ""
         },

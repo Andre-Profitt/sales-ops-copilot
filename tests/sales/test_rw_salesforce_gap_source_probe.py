@@ -10,7 +10,7 @@ def _probe_fixture() -> dict:
         "schema": "rw-salesforce-gap-source-probe.v1",
         "generated_at": "2026-05-10T12:00:00+00:00",
         "guardrail": (
-            "ARR is Land+Expand only; Renewal ACV is Renewal only. "
+            "ARR is Land + Expand only; Renewal ACV is Renewal only. "
             "Total Open Pipeline Value is the only explicitly labeled cross-motion value."
         ),
         "queries": {
@@ -75,7 +75,7 @@ def test_markdown_keeps_guardrail_and_next_engineering_moves():
     probe["findings"] = build_findings(probe)
     markdown = to_markdown(probe)
 
-    assert "ARR is Land+Expand only; Renewal ACV is Renewal only" in markdown
+    assert "ARR is Land + Expand only; Renewal ACV is Renewal only" in markdown
     assert "Bridgeable now from Salesforce: 3 KPI groups" in markdown
     assert "`existing_arr_run_rate`" in markdown
     assert "`business_at_risk`" in markdown

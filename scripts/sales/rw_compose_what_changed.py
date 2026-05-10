@@ -70,7 +70,7 @@ def _compose(section: dict) -> None:
                     "table": "f_opportunity",
                     "field": "At Risk Opps ARR",
                     "kind": "measure",
-                    "title": "At-risk ARR (L+E)",
+                    "title": "At-risk ARR (Land + Expand)",
                 },
                 {
                     "table": "f_opportunity",
@@ -82,7 +82,7 @@ def _compose(section: dict) -> None:
                     "table": "f_opportunity",
                     "field": "Watch Opps ARR",
                     "kind": "measure",
-                    "title": "Watch ARR (L+E)",
+                    "title": "Watch ARR (Land + Expand)",
                 },
                 {
                     "table": "f_opportunity",
@@ -94,7 +94,7 @@ def _compose(section: dict) -> None:
                     "table": "f_opportunity",
                     "field": "Healthy Moves ARR",
                     "kind": "measure",
-                    "title": "Healthy ARR (L+E)",
+                    "title": "Healthy ARR (Land + Expand)",
                 },
             ],
             x=20,
@@ -107,7 +107,7 @@ def _compose(section: dict) -> None:
 
     # ── Phase 2: Movement ledger (compact matrix instead of card wall) ──
     section["visualContainers"].append(
-        build_textbox_visual("7-Day Operating Movement Ledger (counts + ARR L+E)", x=20, y=188, w=1200, h=24, font_size_pt=12, color="#1A1D31")
+        build_textbox_visual("7-Day Operating Movement Ledger (counts + ARR Land + Expand)", x=20, y=188, w=1200, h=24, font_size_pt=12, color="#1A1D31")
     )
     # Spec calls for Stage Moves · Slips · New Opps · Closed. The prior
     # version rendered these as five micro-cards and tripped the visual QA
@@ -128,7 +128,7 @@ def _compose(section: dict) -> None:
                     "table": "f_stage_transition",
                     "field": "Stage Moves ARR 7d",
                     "kind": "measure",
-                    "title": "Stage ARR (L+E)",
+                    "title": "Stage ARR (Land + Expand)",
                 },
                 {
                     "table": "f_opportunity",
@@ -164,7 +164,7 @@ def _compose(section: dict) -> None:
     # ── Phase 3: Detail table ──────────────────────────────────
     section["visualContainers"].append(
         build_textbox_visual(
-            "Top Open ARR (L+E) Movement Queue", x=20, y=386, w=1200, h=24, font_size_pt=12, color="#1A1D31"
+            "Top Open ARR (Land + Expand) Movement Queue", x=20, y=386, w=1200, h=24, font_size_pt=12, color="#1A1D31"
         )
     )
     # Open opps by Open Pipeline ARR. Spec's "Change" + "Risk class"
@@ -193,7 +193,7 @@ def _compose(section: dict) -> None:
                     "table": "f_opportunity",
                     "field": "Total Open Pipeline ARR",
                     "kind": "measure",
-                    "title": "Open ARR (L+E)",
+                    "title": "Open ARR (Land + Expand)",
                 },
                 {
                     "table": "f_opportunity",

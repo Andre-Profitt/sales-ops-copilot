@@ -11,7 +11,7 @@ Generated from `scripts/sales/rw_kpi_graph.py`, `rw_page_kpi_contract.py`, and t
 - Partial data or measure gap: 1
 - Source-data gap: 1
 
-Cardinal rule: ARR is Land+Expand only; Renewal ACV is Renewal only. The only cross-motion value measure remains `Total Open Pipeline Value`.
+Cardinal rule: ARR is Land + Expand only; Renewal ACV is Renewal only. The only cross-motion value measure remains `Total Open Pipeline Value`.
 
 `KG Source Status` comes from the canonical RW KPI graph. `Dashboard Status` reflects the deployed model measures and current page contract.
 
@@ -53,11 +53,11 @@ The page contract is executable via `scripts/sales/rw_page_kpi_contract.py`; tes
 
 | KPI | Measure | Role | Motion | Data status | Label |
 | --- | --- | --- | --- | --- | --- |
-| `forecast_closed_won` | `Total Closed Won ARR` | hero KPI | `land_expand_arr` | clean | Closed won ARR (L+E) |
+| `forecast_closed_won` | `Total Closed Won ARR` | hero KPI | `land_expand_arr` | clean | Closed won ARR (Land + Expand) |
 | `opp_win_rate` | `Win Rate ARR` | hero KPI | `land_expand_arr` | clean | Win rate (ARR-wtd) |
-| `stage_conversion` | `Stage Forward Pct (LE)` | variance table | `land_expand_arr` | partial | Stage hygiene (count rates, L+E) |
+| `stage_conversion` | `Stage Forward Pct (LE)` | variance table | `land_expand_arr` | partial | Stage hygiene (count rates, Land + Expand) |
 | `renewal_retention_rate` | `Renewal Retention Pct (Period)` | hero KPI | `renewal_acv` | partial | Retention % (ACV-wtd) |
-| `time_in_stage` | `Avg Days In Prior Stage (LE)` | variance table | `land_expand_arr` | partial | Stage hygiene (count rates, L+E) |
+| `time_in_stage` | `Avg Days In Prior Stage (LE)` | variance table | `land_expand_arr` | partial | Stage hygiene (count rates, Land + Expand) |
 | `new_opps_by_region` | `New Opps Count 7d` | RAG card | `land_expand_arr` | clean | New opp count 7d |
 
 ### What Changed
@@ -70,12 +70,12 @@ The page contract is executable via `scripts/sales/rw_page_kpi_contract.py`; tes
 
 | KPI | Measure | Role | Motion | Data status | Label |
 | --- | --- | --- | --- | --- | --- |
-| `opp_age` | `At Risk Opps ARR` | exception ledger | `land_expand_arr` | clean | At-risk ARR (L+E) |
-| `opp_age` | `Watch Opps ARR` | exception ledger | `land_expand_arr` | clean | Watch ARR (L+E) |
-| `stage_conversion` | `Stage Moves ARR 7d` | movement ledger | `land_expand_arr` | clean | Stage ARR (L+E) |
+| `opp_age` | `At Risk Opps ARR` | exception ledger | `land_expand_arr` | clean | At-risk ARR (Land + Expand) |
+| `opp_age` | `Watch Opps ARR` | exception ledger | `land_expand_arr` | clean | Watch ARR (Land + Expand) |
+| `stage_conversion` | `Stage Moves ARR 7d` | movement ledger | `land_expand_arr` | clean | Stage ARR (Land + Expand) |
 | `new_opps_by_region` | `New Opps Count 7d` | movement ledger | `land_expand_arr` | clean | New opp count |
 | `forecast_closed_won` | `Closed Won Count 7d` | movement ledger | `land_expand_arr` | clean | Won count |
-| `opp_age` | `Total Open Pipeline ARR` | detail table | `land_expand_arr` | clean | Top Open ARR (L+E) Movement Queue |
+| `opp_age` | `Total Open Pipeline ARR` | detail table | `land_expand_arr` | clean | Top Open ARR (Land + Expand) Movement Queue |
 
 ### Forecast
 
@@ -88,7 +88,7 @@ The page contract is executable via `scripts/sales/rw_page_kpi_contract.py`; tes
 | KPI | Measure | Role | Motion | Data status | Label |
 | --- | --- | --- | --- | --- | --- |
 | `pipeline_coverage_3x` | `Total Open Pipeline Value` | hero KPI | `cross_motion_labeled` | partial | Open Value (ARR+ACV, cross-motion) |
-| `forecast_closed_won` | `Total Closed Won ARR` | hero KPI | `land_expand_arr` | clean | Closed won ARR (L+E) |
+| `forecast_closed_won` | `Total Closed Won ARR` | hero KPI | `land_expand_arr` | clean | Closed won ARR (Land + Expand) |
 | `pipeline_coverage_3x` | `Total Open Pipeline Value` | variance table | `cross_motion_labeled` | partial | Stage x Motion Open Value (ARR+ACV) |
 | `forecast_accuracy` | `Forecast Slip Pct` | RAG card | `land_expand_arr` | proxy | Slip % (count proxy) |
 | `forecast_accuracy` | `Forecast Slips` | RAG card | `land_expand_arr` | proxy | Slip count proxy |
@@ -96,7 +96,7 @@ The page contract is executable via `scripts/sales/rw_page_kpi_contract.py`; tes
 
 ### Stage Hygiene
 
-- Executive question: Which stage is slowing or reversing Land+Expand opportunities, and is the Stage 3/4 control point healthy?
+- Executive question: Which stage is slowing or reversing Land + Expand opportunities, and is the Stage 3/4 control point healthy?
 - Primary KPIs: `stage_conversion`, `time_in_stage`, `sales_cycle_length`
 - Secondary diagnostics: `stage3_approvals_compliance`, `commercial_approval_to_close_time`
 - Required motion guardrail: `process`
@@ -104,12 +104,12 @@ The page contract is executable via `scripts/sales/rw_page_kpi_contract.py`; tes
 
 | KPI | Measure | Role | Motion | Data status | Label |
 | --- | --- | --- | --- | --- | --- |
-| `stage_conversion` | `Stage Forward Pct (LE)` | hero KPI | `land_expand_arr` | partial | Forward % (count, L+E) |
-| `stage_conversion` | `Stage Backward Pct (LE)` | hero KPI | `land_expand_arr` | partial | Backward % (count, L+E) |
-| `time_in_stage` | `Avg Days In Prior Stage (LE)` | hero KPI | `land_expand_arr` | partial | Stage days (L+E) |
+| `stage_conversion` | `Stage Forward Pct (LE)` | hero KPI | `land_expand_arr` | partial | Forward % (count, Land + Expand) |
+| `stage_conversion` | `Stage Backward Pct (LE)` | hero KPI | `land_expand_arr` | partial | Backward % (count, Land + Expand) |
+| `time_in_stage` | `Avg Days In Prior Stage (LE)` | hero KPI | `land_expand_arr` | partial | Stage days (Land + Expand) |
 | `sales_cycle_length` | `Land Avg Sales Cycle Days` | hero KPI | `land_expand_arr` | clean | Land cycle days |
-| `sales_cycle_length` | `Avg Sales Cycle Days` | hero KPI | `land_expand_arr` | clean | L+E cycle days |
-| `stage_conversion` | `Stage Forward Pct (LE)` | variance table | `land_expand_arr` | partial | Stage Conversion Matrix (count, L+E) |
+| `sales_cycle_length` | `Avg Sales Cycle Days` | hero KPI | `land_expand_arr` | clean | Land + Expand cycle days |
+| `stage_conversion` | `Stage Forward Pct (LE)` | variance table | `land_expand_arr` | partial | Stage Conversion Matrix (count, Land + Expand) |
 | `stage3_approvals_compliance` | `Commercial Approval Compliance Pct` | RAG card | `land_expand_arr` | clean | Approval % (count) |
 | `commercial_approval_to_close_time` | `Commercial Approval To Close Days` | RAG card | `land_expand_arr` | clean | Approval-close days |
 
@@ -145,14 +145,14 @@ The page contract is executable via `scripts/sales/rw_page_kpi_contract.py`; tes
 | --- | --- | --- | --- | --- | --- |
 | `alf_arr_pipeline` | `Open Land ARR` | hero KPI | `land_expand_arr` | partial | Open Land ARR |
 | `ilf_arr_pipeline` | `Open Expand ARR` | hero KPI | `land_expand_arr` | partial | Open Expand ARR |
-| `closed_won_avg_deal_size` | `Avg Deal Size Won` | hero KPI | `land_expand_arr` | partial | Avg won ARR (L+E) |
-| `partner_opps_pct` | `Partner ARR` | hero KPI | `land_expand_arr` | clean | Partner ARR (L+E) |
+| `closed_won_avg_deal_size` | `Avg Deal Size Won` | hero KPI | `land_expand_arr` | partial | Avg won ARR (Land + Expand) |
+| `partner_opps_pct` | `Partner ARR` | hero KPI | `land_expand_arr` | clean | Partner ARR (Land + Expand) |
 | `partner_opps_pct` | `Partner Pct` | hero KPI | `land_expand_arr` | clean | Partner % ARR share |
 | `alf_arr_pipeline` | `Total Open Pipeline ARR` | bridge/waterfall | `land_expand_arr` | partial | Open Land + Expand ARR by Region |
 | `new_customer_reporting` | `Total Land Won Count` | detail table | `land_expand_arr` | clean | Land won count |
 | `opp_source_effectiveness` | `Partner ARR` | detail table | `land_expand_arr` | clean | Strategic Mix Detail |
 | `closed_won_value_tier` | `Closed Won Deals Count` | detail table | `land_expand_arr` | clean | Won value tier |
-| `cross_sell_to_acquired` | `Cross Sell To Acquired ARR` | detail table | `land_expand_arr` | clean | Axioma ARR (L+E) |
+| `cross_sell_to_acquired` | `Cross Sell To Acquired ARR` | detail table | `land_expand_arr` | clean | Axioma ARR (Land + Expand) |
 | `ps_arr_attach` | `PS ARR Attach Pct` | detail table | `land_expand_arr` | clean | PS attach % (ACV/ARR) |
 | `saas_arr_yoy_growth` | `SaaS YoY Growth Pct` | detail table | `process` | clean | SaaS ARR YoY % |
 | `synergy_deals_won` | `Total Land Won Count` | detail table | `land_expand_arr` | proxy | Land count proxy |

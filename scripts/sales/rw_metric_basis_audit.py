@@ -55,8 +55,8 @@ EXACT_RULES: dict[str, BasisRule] = {
     "Forecast Slip Pct": BasisRule("count_proxy_rate", (_tokens("count",), _tokens("proxy",))),
     "Forecast Slips": BasisRule("count_proxy", (_tokens("count", "slip"), _tokens("proxy",))),
     "Forecast Upgrades": BasisRule("count", (_tokens("count", "upgrade"),)),
-    "Stage Forward Pct (LE)": BasisRule("count_rate_land_expand", (_tokens("count",), _tokens("l+e", "land", "expand"))),
-    "Stage Backward Pct (LE)": BasisRule("count_rate_land_expand", (_tokens("count",), _tokens("l+e", "land", "expand"))),
+    "Stage Forward Pct (LE)": BasisRule("count_rate_land_expand", (_tokens("count",), _tokens("land",), _tokens("expand",))),
+    "Stage Backward Pct (LE)": BasisRule("count_rate_land_expand", (_tokens("count",), _tokens("land",), _tokens("expand",))),
     "Stage 4 Forward Pct": BasisRule("count_rate", (_tokens("count",),)),
     "Commercial Approval Compliance Pct": BasisRule("count_rate", (_tokens("count",),)),
     "Partner Pct": BasisRule("arr_share", (_tokens("arr",),)),
@@ -196,7 +196,7 @@ def rule_for_measure(measure: str) -> BasisRule | None:
     if RENEWAL_ACV_RE.search(measure):
         return BasisRule("renewal_acv", (_tokens("renewal",), _tokens("acv",)))
     if measure in LAND_EXPAND_ARR_MEASURES:
-        return BasisRule("land_expand_arr", (_tokens("arr",), _tokens("l+e", "land", "expand")))
+        return BasisRule("land_expand_arr", (_tokens("arr",), _tokens("land",), _tokens("expand",)))
     if COUNT_RE.search(measure):
         return BasisRule("count", (_tokens("count", "opp", "opps", "deal", "deals", "move", "moves", "slip", "upgrade", "transition"),))
     if DAY_RE.search(measure):
@@ -231,7 +231,7 @@ def finding(
         "basis": rule.basis,
         "required_basis_tokens": [list(group) for group in rule.required_groups],
         "message": f"{measure} is labeled {label!r} without explicit {rule.basis} basis.",
-        "next_action": "Use visible labels such as ARR (L+E), renewal ACV, active-base ARR, ARR-wtd, ACV-wtd, or count.",
+        "next_action": "Use visible labels such as ARR (Land + Expand), renewal ACV, active-base ARR, ARR-wtd, ACV-wtd, or count.",
     }
 
 
@@ -257,7 +257,7 @@ def audit_metric_basis(report: dict) -> dict[str, Any]:
         "schema": "rw-metric-basis-audit.v1",
         "generated_at": datetime.now(UTC).isoformat(timespec="seconds").replace("+00:00", "Z"),
         "basis_standard": {
-            "land_expand_arr": "ARR (L+E), or explicit Land ARR / Expand ARR",
+            "land_expand_arr": "ARR (Land + Expand), or explicit Land ARR / Expand ARR",
             "renewal_acv": "renewal ACV",
             "active_base_arr": "active-base ARR / base ARR",
             "cross_motion_arr_acv": "ARR+ACV or cross-motion value",

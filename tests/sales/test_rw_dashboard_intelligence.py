@@ -72,7 +72,7 @@ def test_markdown_preserves_cardinal_rule_and_upgrade_lanes():
     markdown = to_markdown(build_intelligence_rows())
 
     assert (
-        "ARR is Land+Expand only; Renewal ACV is Renewal only" in markdown
+        "ARR is Land + Expand only; Renewal ACV is Renewal only" in markdown
     )
     assert (
         "The only cross-motion value measure remains `Total Open Pipeline Value`"

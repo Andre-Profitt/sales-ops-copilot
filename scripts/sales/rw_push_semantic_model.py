@@ -168,18 +168,18 @@ def build_model_bim() -> dict:
     # "Total"/"Avg"/"Pct"/"Count" prefixes so they don't collide with raw
     # column names (lesson from sm_workforce_rw).
     measures = [
-        # Headlines (Land+Expand → ARR)
+        # Headlines (Land + Expand → ARR)
         {
             "name": "Total Closed Won ARR",
             "expression": 'CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), f_opportunity[is_won] = TRUE(), f_opportunity[motion_type] IN { "Land", "Expand" } )',
             "formatString": 'EUR #,0,,.0"M";(EUR #,0,,.0"M");"-"',
-            "description": "RW KPI: forecast_closed_won. ARR field, Land+Expand only.",
+            "description": "RW KPI: forecast_closed_won. ARR field, Land + Expand only.",
         },
         {
             "name": "Total Open Pipeline ARR",
             "expression": 'CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), f_opportunity[is_closed] = FALSE(), f_opportunity[motion_type] IN { "Land", "Expand" } )',
             "formatString": 'EUR #,0,,.0"M";(EUR #,0,,.0"M");"-"',
-            "description": "RW KPI: pipeline_coverage_3x (numerator). Open L+E ARR.",
+            "description": "RW KPI: pipeline_coverage_3x (numerator). Open Land + Expand ARR.",
         },
         {
             "name": "Total Closed Lost ARR",
@@ -261,7 +261,7 @@ def build_model_bim() -> dict:
             ),
             "formatString": 'EUR #,0,,.0"M";(EUR #,0,,.0"M");"-"',
             "description": (
-                "Open pipeline value combining ARR (Land+Expand) and ACV (Renewal) per "
+                "Open pipeline value combining ARR (Land + Expand) and ACV (Renewal) per "
                 "SimCorp business rules — never blend, but render in one column when "
                 "comparing motions side-by-side. Use ONLY for cross-motion visuals."
             ),
@@ -271,7 +271,7 @@ def build_model_bim() -> dict:
             "name": "Partner ARR",
             "expression": 'CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), f_opportunity[is_closed] = FALSE(), CONTAINSSTRING ( LOWER ( f_opportunity[lead_source] ), "partner" ), f_opportunity[motion_type] IN { "Land", "Expand" } )',
             "formatString": 'EUR #,0,,.0"M";(EUR #,0,,.0"M");"-"',
-            "description": "RW KPI: partner_opps_pct numerator. Open L+E ARR where lead source contains partner.",
+            "description": "RW KPI: partner_opps_pct numerator. Open Land + Expand ARR where lead source contains partner.",
         },
         {
             "name": "Partner Pct",
@@ -283,7 +283,7 @@ def build_model_bim() -> dict:
             "name": "Total Land Expand ARR",
             "expression": 'CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), f_opportunity[motion_type] IN { "Land", "Expand" } )',
             "formatString": 'EUR #,0,,.0"M";(EUR #,0,,.0"M");"-"',
-            "description": "All Land+Expand ARR in the current filter context. Denominator for mix/attach diagnostics; excludes Renewal ACV.",
+            "description": "All Land + Expand ARR in the current filter context. Denominator for mix/attach diagnostics; excludes Renewal ACV.",
         },
         {
             "name": "Closed Won Deals Count",
@@ -301,7 +301,7 @@ def build_model_bim() -> dict:
                 ") )"
             ),
             "formatString": "#,0",
-            "description": "Stage 3+ Land+Expand opps eligible for Commercial Approval monitoring.",
+            "description": "Stage 3+ Land + Expand opps eligible for Commercial Approval monitoring.",
         },
         {
             "name": "Commercial Approved Opps",
@@ -314,13 +314,13 @@ def build_model_bim() -> dict:
                 ") )"
             ),
             "formatString": "#,0",
-            "description": "Stage 3+ Land+Expand opps with Commercial Approval checked.",
+            "description": "Stage 3+ Land + Expand opps with Commercial Approval checked.",
         },
         {
             "name": "Commercial Approval Compliance Pct",
             "expression": "DIVIDE ( [Commercial Approved Opps], [Commercial Approval Eligible Opps] )",
             "formatString": "0.0%",
-            "description": "RW KPI: stage3_approvals_compliance. Stage 3+ Land+Expand approval compliance.",
+            "description": "RW KPI: stage3_approvals_compliance. Stage 3+ Land + Expand approval compliance.",
         },
         {
             "name": "Commercial Approval To Close Days",
@@ -342,19 +342,19 @@ def build_model_bim() -> dict:
             "name": "Cross Sell To Acquired ARR",
             "expression": 'CALCULATE ( SUM ( f_opportunity[axioma_order_inflow_org_ccy] ), f_opportunity[motion_type] IN { "Land", "Expand" } )',
             "formatString": 'EUR #,0,,.0"M";(EUR #,0,,.0"M");"-"',
-            "description": "RW KPI: cross_sell_to_acquired. Uses Axioma Order Inflow on Land+Expand opps.",
+            "description": "RW KPI: cross_sell_to_acquired. Uses Axioma Order Inflow on Land + Expand opps.",
         },
         {
             "name": "PS Recurring ACV",
             "expression": 'CALCULATE ( SUM ( f_opportunity[ps_recurring_acv_org_ccy] ), f_opportunity[motion_type] IN { "Land", "Expand" } )',
             "formatString": 'EUR #,0,,.0"M";(EUR #,0,,.0"M");"-"',
-            "description": "Recurring PS ACV on Land+Expand opps.",
+            "description": "Recurring PS ACV on Land + Expand opps.",
         },
         {
             "name": "PS ARR Attach Pct",
             "expression": "DIVIDE ( [PS Recurring ACV], [Total Land Expand ARR] )",
             "formatString": "0.0%",
-            "description": "RW KPI: ps_arr_attach. PS recurring ACV divided by Land+Expand ARR.",
+            "description": "RW KPI: ps_arr_attach. PS recurring ACV divided by Land + Expand ARR.",
         },
         {
             "name": "SaaS ARR",
@@ -530,7 +530,7 @@ def build_model_bim() -> dict:
         #   LAND   → ARR field, new business
         #   EXPAND → ARR field, existing customer growth (different from Land in conversion mechanics)
         #   RENEWAL → ACV field (already separated above)
-        # The blended L+E measures stay; these are additional drill-downs.
+        # The blended Land + Expand measures stay; these are additional drill-downs.
         {
             "name": "Open Land ARR",
             "expression": 'CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), f_opportunity[is_closed] = FALSE(), f_opportunity[motion_type] = "Land" )',
@@ -592,7 +592,7 @@ def build_model_bim() -> dict:
                 ") )"
             ),
             "formatString": "#,0",
-            "description": "Open Land+Expand opps with no stage movement in >14 days (Watch threshold).",
+            "description": "Open Land + Expand opps with no stage movement in >14 days (Watch threshold).",
         },
         {
             "name": "Stalled Open Opps ARR 14d",
@@ -605,7 +605,7 @@ def build_model_bim() -> dict:
                 ") )"
             ),
             "formatString": 'EUR #,0,,.0"M";(EUR #,0,,.0"M");"-"',
-            "description": "Open Land+Expand ARR for opps stalled >14 days.",
+            "description": "Open Land + Expand ARR for opps stalled >14 days.",
         },
         {
             "name": "Stalled Open Opps Count 21d",
@@ -618,7 +618,7 @@ def build_model_bim() -> dict:
                 ") )"
             ),
             "formatString": "#,0",
-            "description": "Open Land+Expand opps with no stage movement in >21 days (At-risk threshold).",
+            "description": "Open Land + Expand opps with no stage movement in >21 days (At-risk threshold).",
         },
         {
             "name": "Stalled Open Opps ARR 21d",
@@ -631,7 +631,7 @@ def build_model_bim() -> dict:
                 ") )"
             ),
             "formatString": 'EUR #,0,,.0"M";(EUR #,0,,.0"M");"-"',
-            "description": "Open Land+Expand ARR for opps stalled >21 days.",
+            "description": "Open Land + Expand ARR for opps stalled >21 days.",
         },
         # ── Risk classification (Tab 1 What Changed risk band) ──────────────
         # Stage 5+ open = IN {"5 - Preferred","6 - Contracting","7 - Sales Ops QC"}.
@@ -649,7 +649,7 @@ def build_model_bim() -> dict:
                 ") )"
             ),
             "formatString": "#,0",
-            "description": "At Risk: Stage 5+ open Land+Expand AND stalled >21d.",
+            "description": "At Risk: Stage 5+ open Land + Expand AND stalled >21d.",
         },
         {
             "name": "At Risk Opps ARR",
@@ -663,7 +663,7 @@ def build_model_bim() -> dict:
                 ") )"
             ),
             "formatString": 'EUR #,0,,.0"M";(EUR #,0,,.0"M");"-"',
-            "description": "Land+Expand ARR exposed in At Risk bucket (Stage 5+ stalled >21d).",
+            "description": "Land + Expand ARR exposed in At Risk bucket (Stage 5+ stalled >21d).",
         },
         {
             "name": "Watch Opps Count",
@@ -677,7 +677,7 @@ def build_model_bim() -> dict:
                 ") )"
             ),
             "formatString": "#,0",
-            "description": "Watch: Stage 3-4 open Land+Expand AND stalled >14d.",
+            "description": "Watch: Stage 3-4 open Land + Expand AND stalled >14d.",
         },
         {
             "name": "Watch Opps ARR",
@@ -691,19 +691,19 @@ def build_model_bim() -> dict:
                 ") )"
             ),
             "formatString": 'EUR #,0,,.0"M";(EUR #,0,,.0"M");"-"',
-            "description": "Land+Expand ARR exposed in Watch bucket (Stage 3-4 stalled >14d).",
+            "description": "Land + Expand ARR exposed in Watch bucket (Stage 3-4 stalled >14d).",
         },
         {
             "name": "Exception Opps Count",
             "expression": "[At Risk Opps Count] + [Watch Opps Count]",
             "formatString": "#,0",
-            "description": "Land+Expand exception count: At Risk + Watch. Keeps count universe aligned to ARR exposure.",
+            "description": "Land + Expand exception count: At Risk + Watch. Keeps count universe aligned to ARR exposure.",
         },
         {
             "name": "Exception ARR",
             "expression": "[At Risk Opps ARR] + [Watch Opps ARR]",
             "formatString": 'EUR #,0,,.0"M";(EUR #,0,,.0"M");"-"',
-            "description": "Land+Expand ARR exception exposure: At Risk + Watch.",
+            "description": "Land + Expand ARR exception exposure: At Risk + Watch.",
         },
         {
             "name": "Healthy Moves Count",
@@ -714,7 +714,7 @@ def build_model_bim() -> dict:
                 "f_stage_transition[transition_at] >= TODAY() - 7 )"
             ),
             "formatString": "#,0",
-            "description": "Land+Expand forward stage moves in the last 7 days.",
+            "description": "Land + Expand forward stage moves in the last 7 days.",
         },
         {
             "name": "Healthy Moves ARR",
@@ -727,7 +727,7 @@ def build_model_bim() -> dict:
                 "f_opportunity[opp_id] ) )"
             ),
             "formatString": 'EUR #,0,,.0"M";(EUR #,0,,.0"M");"-"',
-            "description": "Land+Expand ARR of opps with a forward stage move in the last 7 days.",
+            "description": "Land + Expand ARR of opps with a forward stage move in the last 7 days.",
         },
         # Window-bound deltas (Tab 1 What Changed) — 3 families × 3 windows = 9 measures.
         # Slips family deferred — requires f_ofh_close_date table not in current ETL.
@@ -769,7 +769,7 @@ def build_model_bim() -> dict:
             "formatString": "0.0%",
             "description": "Stage regression rate — pairs with Stage Forward Pct.",
         },
-        # Land+Expand motion filter, pushed from f_opportunity → f_stage_transition via TREATAS
+        # Land + Expand motion filter, pushed from f_opportunity → f_stage_transition via TREATAS
         # because rel_stage_opp is oneDirection. KG: stage_conversion.motion_filter = land_expand.
         {
             "name": "Stage Forward Pct (LE)",
@@ -781,7 +781,7 @@ def build_model_bim() -> dict:
                 "f_stage_transition[opp_id] ) )"
             ),
             "formatString": "0.0%",
-            "description": "Stage Forward Pct restricted to Land+Expand opps (excludes Renewal). RW KG motion_filter=land_expand.",
+            "description": "Stage Forward Pct restricted to Land + Expand opps (excludes Renewal). RW KG motion_filter=land_expand.",
         },
         # Per-stage forward rates — wrap [Stage Forward Pct (LE)] with from_stage_num filter.
         # Caveat (KG): ~70% of close-wons skip Stage 4 in OFH, so S3→S4 and S4→S5 are computed
@@ -790,39 +790,39 @@ def build_model_bim() -> dict:
             "name": "Stage 1 Forward Pct",
             "expression": "CALCULATE ( [Stage Forward Pct (LE)], f_stage_transition[from_stage_num] = 1 )",
             "formatString": "0.0%",
-            "description": "Prospecting → Discovery forward rate (Land+Expand). RW KPI stage_conversion target >70%.",
+            "description": "Prospecting → Discovery forward rate (Land + Expand). RW KPI stage_conversion target >70%.",
         },
         {
             "name": "Stage 2 Forward Pct",
             "expression": "CALCULATE ( [Stage Forward Pct (LE)], f_stage_transition[from_stage_num] = 2 )",
             "formatString": "0.0%",
-            "description": "Discovery → Engagement forward rate (Land+Expand). RW KPI stage_conversion target >70%.",
+            "description": "Discovery → Engagement forward rate (Land + Expand). RW KPI stage_conversion target >70%.",
         },
         {
             "name": "Stage 3 Forward Pct",
             "expression": "CALCULATE ( [Stage Forward Pct (LE)], f_stage_transition[from_stage_num] = 3 )",
             "formatString": "0.0%",
-            "description": "Engagement → Shortlisted forward rate (Land+Expand). Caveat: ~70% of close-wons skip Stage 4 — partial population.",
+            "description": "Engagement → Shortlisted forward rate (Land + Expand). Caveat: ~70% of close-wons skip Stage 4 — partial population.",
         },
         {
             "name": "Stage 4 Forward Pct",
             "expression": "CALCULATE ( [Stage Forward Pct (LE)], f_stage_transition[from_stage_num] = 4 )",
             "formatString": "0.0%",
-            "description": "Shortlisted → Preferred forward rate (Land+Expand). Caveat: small/skewed sample due to S4 funnel-skip pattern.",
+            "description": "Shortlisted → Preferred forward rate (Land + Expand). Caveat: small/skewed sample due to S4 funnel-skip pattern.",
         },
         {
             "name": "Stage 5 Forward Pct",
             "expression": "CALCULATE ( [Stage Forward Pct (LE)], f_stage_transition[from_stage_num] = 5 )",
             "formatString": "0.0%",
-            "description": "Preferred → Contracting forward rate (Land+Expand). RW KPI stage_conversion target >70%.",
+            "description": "Preferred → Contracting forward rate (Land + Expand). RW KPI stage_conversion target >70%.",
         },
         {
             "name": "Stage 6 Forward Pct",
             "expression": "CALCULATE ( [Stage Forward Pct (LE)], f_stage_transition[from_stage_num] = 6 )",
             "formatString": "0.0%",
-            "description": "Contracting → Won forward rate (Land+Expand). RW KPI stage_conversion target >70%.",
+            "description": "Contracting → Won forward rate (Land + Expand). RW KPI stage_conversion target >70%.",
         },
-        # Stage Backward Pct + per-stage variants (Land+Expand). Mirrors the forward family;
+        # Stage Backward Pct + per-stage variants (Land + Expand). Mirrors the forward family;
         # uses TREATAS to push motion filter from f_opportunity into f_stage_transition.
         {
             "name": "Stage Backward Pct (LE)",
@@ -834,45 +834,45 @@ def build_model_bim() -> dict:
                 "f_stage_transition[opp_id] ) )"
             ),
             "formatString": "0.0%",
-            "description": "Stage Backward Pct restricted to Land+Expand opps (excludes Renewal).",
+            "description": "Stage Backward Pct restricted to Land + Expand opps (excludes Renewal).",
         },
         {
             "name": "Stage 1 Backward Pct",
             "expression": "CALCULATE ( [Stage Backward Pct (LE)], f_stage_transition[from_stage_num] = 1 )",
             "formatString": "0.0%",
-            "description": "Backward rate out of Prospecting (Land+Expand). Pairs with Stage 1 Forward Pct.",
+            "description": "Backward rate out of Prospecting (Land + Expand). Pairs with Stage 1 Forward Pct.",
         },
         {
             "name": "Stage 2 Backward Pct",
             "expression": "CALCULATE ( [Stage Backward Pct (LE)], f_stage_transition[from_stage_num] = 2 )",
             "formatString": "0.0%",
-            "description": "Backward rate out of Discovery (Land+Expand).",
+            "description": "Backward rate out of Discovery (Land + Expand).",
         },
         {
             "name": "Stage 3 Backward Pct",
             "expression": "CALCULATE ( [Stage Backward Pct (LE)], f_stage_transition[from_stage_num] = 3 )",
             "formatString": "0.0%",
-            "description": "Backward rate out of Engagement (Land+Expand). Caveat: ~70% close-won S4 skip — partial population.",
+            "description": "Backward rate out of Engagement (Land + Expand). Caveat: ~70% close-won S4 skip — partial population.",
         },
         {
             "name": "Stage 4 Backward Pct",
             "expression": "CALCULATE ( [Stage Backward Pct (LE)], f_stage_transition[from_stage_num] = 4 )",
             "formatString": "0.0%",
-            "description": "Backward rate out of Shortlisted (Land+Expand). Caveat: small/skewed sample.",
+            "description": "Backward rate out of Shortlisted (Land + Expand). Caveat: small/skewed sample.",
         },
         {
             "name": "Stage 5 Backward Pct",
             "expression": "CALCULATE ( [Stage Backward Pct (LE)], f_stage_transition[from_stage_num] = 5 )",
             "formatString": "0.0%",
-            "description": "Backward rate out of Preferred (Land+Expand).",
+            "description": "Backward rate out of Preferred (Land + Expand).",
         },
         {
             "name": "Stage 6 Backward Pct",
             "expression": "CALCULATE ( [Stage Backward Pct (LE)], f_stage_transition[from_stage_num] = 6 )",
             "formatString": "0.0%",
-            "description": "Backward rate out of Contracting (Land+Expand).",
+            "description": "Backward rate out of Contracting (Land + Expand).",
         },
-        # Time-in-stage: Land+Expand restriction + per-stage variants of Avg Days In Prior Stage.
+        # Time-in-stage: Land + Expand restriction + per-stage variants of Avg Days In Prior Stage.
         {
             "name": "Avg Days In Prior Stage (LE)",
             "expression": (
@@ -883,43 +883,43 @@ def build_model_bim() -> dict:
                 "f_stage_transition[opp_id] ) )"
             ),
             "formatString": "0.0",
-            "description": "Avg days an opp spent in its prior stage before transitioning (Land+Expand only).",
+            "description": "Avg days an opp spent in its prior stage before transitioning (Land + Expand only).",
         },
         {
             "name": "Avg Days In Stage 1",
             "expression": "CALCULATE ( [Avg Days In Prior Stage (LE)], f_stage_transition[from_stage_num] = 1 )",
             "formatString": "0.0",
-            "description": "Avg days in Prospecting (Land+Expand).",
+            "description": "Avg days in Prospecting (Land + Expand).",
         },
         {
             "name": "Avg Days In Stage 2",
             "expression": "CALCULATE ( [Avg Days In Prior Stage (LE)], f_stage_transition[from_stage_num] = 2 )",
             "formatString": "0.0",
-            "description": "Avg days in Discovery (Land+Expand).",
+            "description": "Avg days in Discovery (Land + Expand).",
         },
         {
             "name": "Avg Days In Stage 3",
             "expression": "CALCULATE ( [Avg Days In Prior Stage (LE)], f_stage_transition[from_stage_num] = 3 )",
             "formatString": "0.0",
-            "description": "Avg days in Engagement (Land+Expand).",
+            "description": "Avg days in Engagement (Land + Expand).",
         },
         {
             "name": "Avg Days In Stage 4",
             "expression": "CALCULATE ( [Avg Days In Prior Stage (LE)], f_stage_transition[from_stage_num] = 4 )",
             "formatString": "0.0",
-            "description": "Avg days in Shortlisted (Land+Expand). Caveat: small/skewed sample due to S4 funnel-skip pattern.",
+            "description": "Avg days in Shortlisted (Land + Expand). Caveat: small/skewed sample due to S4 funnel-skip pattern.",
         },
         {
             "name": "Avg Days In Stage 5",
             "expression": "CALCULATE ( [Avg Days In Prior Stage (LE)], f_stage_transition[from_stage_num] = 5 )",
             "formatString": "0.0",
-            "description": "Avg days in Preferred (Land+Expand).",
+            "description": "Avg days in Preferred (Land + Expand).",
         },
         {
             "name": "Avg Days In Stage 6",
             "expression": "CALCULATE ( [Avg Days In Prior Stage (LE)], f_stage_transition[from_stage_num] = 6 )",
             "formatString": "0.0",
-            "description": "Avg days in Contracting (Land+Expand).",
+            "description": "Avg days in Contracting (Land + Expand).",
         },
         # Window-bound stage-transition deltas — 3 families × 3 windows = 9 measures.
         *_stage_window_measures(),

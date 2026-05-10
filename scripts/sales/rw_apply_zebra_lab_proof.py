@@ -172,12 +172,12 @@ def apply_stage_hygiene_proof(report: dict) -> None:
                 {
                     "table": "f_stage_transition",
                     "field": "Stage Forward Pct (LE)",
-                    "title": "Forward % (count, L+E)",
+                    "title": "Forward % (count, Land + Expand)",
                 },
                 {
                     "table": "f_stage_transition",
                     "field": "Stage Backward Pct (LE)",
-                    "title": "Backward % (count, L+E)",
+                    "title": "Backward % (count, Land + Expand)",
                 },
                 {
                     "table": "f_stage_transition",
@@ -192,7 +192,7 @@ def apply_stage_hygiene_proof(report: dict) -> None:
                 {
                     "table": "f_stage_transition",
                     "field": "Stage Moves ARR 7d",
-                    "title": "7d ARR moved (L+E)",
+                    "title": "7d ARR moved (Land + Expand)",
                 },
             ],
             x=36,
@@ -249,7 +249,7 @@ def apply_zebra_exceptions_proof(report: dict) -> None:
                 {
                     "table": "f_opportunity",
                     "field": "Exception ARR",
-                    "title": "Exception ARR (L+E)",
+                    "title": "Exception ARR (Land + Expand)",
                 },
                 {
                     "table": "f_opportunity",
@@ -259,12 +259,12 @@ def apply_zebra_exceptions_proof(report: dict) -> None:
                 {
                     "table": "f_opportunity",
                     "field": "At Risk Opps ARR",
-                    "title": "At-risk ARR (L+E)",
+                    "title": "At-risk ARR (Land + Expand)",
                 },
                 {
                     "table": "f_opportunity",
                     "field": "Watch Opps ARR",
-                    "title": "Watch ARR (L+E)",
+                    "title": "Watch ARR (Land + Expand)",
                 },
             ],
             x=36,

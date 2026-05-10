@@ -59,7 +59,7 @@ FILTER_RATIONALE_BY_PAGE: dict[str, str] = {
     "Forecast": "Region and close-quarter context; motion comparison is handled by the labeled Stage x Motion matrix.",
     "Stage Hygiene": "Region and close-quarter context define the selected opportunity cohort; transition-window measures remain explicit.",
     "Renewals": "Region and close-quarter context only; Renewal ACV measures enforce Renewal motion.",
-    "Growth Mix": "Region and close-quarter context only; Land/Expand mix is shown through separate ARR measures.",
+    "Growth Mix": "Region and close-quarter context only; Land + Expand mix is shown through separate ARR measures.",
     "RW KPI Explorer": "Region, close quarter, and current stage for interactive slicing; motion appears as visual columns, not a page slicer.",
 }
 

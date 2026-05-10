@@ -97,7 +97,7 @@ still gave the eye three equally weighted RAG blocks. V4 starts with the
 executive answer and then uses charts to explain where to act.
 
 Additional correction: the ARR exception measures now explicitly filter
-Land+Expand for both counts and dollars. This keeps renewal ACV out of ARR
+Land + Expand for both counts and dollars. This keeps renewal ACV out of ARR
 risk-count logic and preserves the SimCorp motion contract.
 
 The current pattern is:

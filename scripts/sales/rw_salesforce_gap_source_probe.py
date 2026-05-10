@@ -344,7 +344,7 @@ def build_probe() -> dict[str, Any]:
         "sf_org": SF_ORG,
         "api_version": API_VERSION,
         "guardrail": (
-            "ARR is Land+Expand only; Renewal ACV is Renewal only. "
+            "ARR is Land + Expand only; Renewal ACV is Renewal only. "
             "Total Open Pipeline Value is the only explicitly labeled cross-motion value."
         ),
         "queries": queries,

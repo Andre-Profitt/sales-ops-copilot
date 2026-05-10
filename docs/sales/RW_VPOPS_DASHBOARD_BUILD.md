@@ -54,11 +54,11 @@ d_calendar           (1,491 days)              — date hierarchy
 | ------------------------- | ---------------------------------- | ------------------- |
 | `Avg Days In Prior Stage` | time_in_stage                      | Baseline & optimize |
 | `Stage Forward Pct`       | stage_conversion (all motions)     | >70%                |
-| `Stage Forward Pct (LE)`  | stage_conversion (Land+Expand)     | >70%                |
+| `Stage Forward Pct (LE)`  | stage_conversion (Land + Expand)     | >70%                |
 | `Stage Backward Pct`      | (insight metric — flag regression) | track               |
 | `Total Stage Transitions` | helper                             | —                   |
 
-**Per-stage forward rates (Land+Expand only — `motion_filter='land_expand'` per KG)** — drag for stage-by-stage funnel hygiene. Stage 3→4 and Stage 4→5 carry the funnel-skip caveat from `rw_kpi_graph.py`: ~70% of close-wons skip Stage 4 in OFH, so those two measures are over a partial population. Surface that caveat as a footer note on those visuals.
+**Per-stage forward rates (Land + Expand only — `motion_filter='land_expand'` per KG)** — drag for stage-by-stage funnel hygiene. Stage 3→4 and Stage 4→5 carry the funnel-skip caveat from `rw_kpi_graph.py`: ~70% of close-wons skip Stage 4 in OFH, so those two measures are over a partial population. Surface that caveat as a footer note on those visuals.
 
 | Measure               | Transition                  | Target                     |
 | --------------------- | --------------------------- | -------------------------- |
@@ -170,7 +170,7 @@ For each KPI tile, set conditional formatting against the target:
 
 ## Compliance text box (paste on page 1, footer)
 
-> **Methodology + caveats.** ARR (Land+Expand) and ACV (Renewal) are tracked separately per SimCorp commercial rules — never blended. All values FX-converted to org currency at row level via SOQL `convertCurrency()`. Phase 3 KPIs not yet in model: forecast accuracy (ForecastingItem snapshots), commercial-approval timing (ApprovalProcess), existing ARR run-rate + indexation (Asset/Subscription), synergy / cross-sell-to-acquired (custom Account/Opp fields), product-mix (OpportunityLineItem). Source: `scripts/sales/rw_kpi_graph.py` schema v1.
+> **Methodology + caveats.** ARR (Land + Expand) and ACV (Renewal) are tracked separately per SimCorp commercial rules — never blended. All values FX-converted to org currency at row level via SOQL `convertCurrency()`. Phase 3 KPIs not yet in model: forecast accuracy (ForecastingItem snapshots), commercial-approval timing (ApprovalProcess), existing ARR run-rate + indexation (Asset/Subscription), synergy / cross-sell-to-acquired (custom Account/Opp fields), product-mix (OpportunityLineItem). Source: `scripts/sales/rw_kpi_graph.py` schema v1.
 
 ## Save + share
 
@@ -297,7 +297,7 @@ Composed via `scripts/sales/rw_compose_forecast.py`. Idempotent. Model now at 10
 - Forecast accuracy + Avg days in commit + WoW delta: ForecastingItem snapshots not in ETL
 - Commit-risk "Owner" + "Days late" columns: need d_user join + row-context measure
 
-**Cross-motion measure caveat:** `Total Open Pipeline Value` blends ARR (Land/Expand) and ACV (Renewal) into one column. Use ONLY for cross-motion comparison visuals like the Stage × Motion matrix. For any single-motion or motion-summable visual, keep using `Total Open Pipeline ARR` (L+E only) or `Total Renewal ACV Won` (Renewal-only) — the never-blend rule still applies.
+**Cross-motion measure caveat:** `Total Open Pipeline Value` blends ARR (Land + Expand) and ACV (Renewal) into one column. Use ONLY for cross-motion comparison visuals like the Stage × Motion matrix. For any single-motion or motion-summable visual, keep using `Total Open Pipeline ARR` (Land + Expand only) or `Total Renewal ACV Won` (Renewal-only) — the never-blend rule still applies.
 
 **To rebuild:** `python3 -m scripts.sales.rw_compose_forecast`
 
@@ -640,7 +640,7 @@ Power BI card layout. The v4 pass changes the pattern, not just the styling.
 
 The ARR exception family now explicitly filters `motion_type IN { "Land",
 "Expand" }` for both counts and dollars. This prevents Renewal rows from
-inflating counts while ARR exposure remains Land+Expand only.
+inflating counts while ARR exposure remains Land + Expand only.
 
 New measures:
 
@@ -769,7 +769,7 @@ sprawled exception cards with one executive exception table.
 - Desktop render after Power BI restart showed the Zebra table populated with
   RW region rows and totals, no Zebra license popup.
 - Business-rule check: `Exception ARR`, `At Risk Opps ARR`, and `Watch Opps ARR`
-  are Land+Expand ARR measures only. Renewal ACV is not present in this visual;
+  are Land + Expand ARR measures only. Renewal ACV is not present in this visual;
   `Total Open Pipeline Value` remains the only explicitly labeled cross-motion
   measure elsewhere.
 
@@ -803,7 +803,7 @@ spine is a textbox placeholder pending PR2's ARR-7d measure authoring.
 - Exception spine values (positional, locked by
   `test_exception_spine_value_order_matches_lab_proof`):
   `Exception ARR`, `Exception Opps Count`, `At Risk Opps ARR`,
-  `Watch Opps ARR`. All Land+Expand only — `motion_type IN { "Land", "Expand" }`
+  `Watch Opps ARR`. All Land + Expand only — `motion_type IN { "Land", "Expand" }`
   is enforced at the deployed-measure layer.
 - KPI strip measures: `Total Closed Won ARR` (f_opportunity),
   `Win Rate ARR` (f_opportunity), `Stage Forward Pct (LE)` (f_stage_transition),
@@ -1003,7 +1003,7 @@ contract rather than generic dashboard furniture.
 **Business-rule guardrails:**
 
 - `Renewals` is Renewal ACV only.
-- `Growth Mix` is Land+Expand ARR only.
+- `Growth Mix` is Land + Expand ARR only.
 - `Forecast` is the only page that contains `Total Open Pipeline Value`, and it
   is explicitly the cross-motion value measure.
 - `VP Ops Scorecard` may place renewal retention beside ARR KPIs, but it does
@@ -1101,8 +1101,8 @@ four tabs still read too generic.
 - `Renewals` was leading with closed-won Renewal ACV. Current-year data has
   meaningful open Renewal ACV, so a closed-won-first page can read as zero in
   the wrong filter context.
-- `Growth Mix` was leading with closed-won Land/Expand ARR. Current-year growth
-  review is more useful as open Land/Expand pipeline.
+- `Growth Mix` was leading with closed-won Land + Expand ARR. Current-year growth
+  review is more useful as open Land + Expand pipeline.
 - `Partner ARR` used exact `lead_source = "Partner"`, but the live data includes
   partner-like values such as `Limited Partner`; exact matching undercounted.
 
@@ -1111,7 +1111,7 @@ four tabs still read too generic.
 - 2026 open Renewal ACV: approximately `151.6M`.
 - 2026 open Land ARR: approximately `175.2M`.
 - 2026 open Expand ARR: approximately `141.0M`.
-- Partner-like open L+E ARR exists under lead-source strings containing
+- Partner-like open Land + Expand ARR exists under lead-source strings containing
   `partner`.
 
 **Semantic model changes deployed to `sm_sales_kpis_rw`:**
@@ -1122,7 +1122,7 @@ four tabs still read too generic.
 - Added `Open Expand ARR`.
 - Updated `Partner ARR` to use
   `CONTAINSSTRING(LOWER(f_opportunity[lead_source]), "partner")` while keeping
-  the Land+Expand ARR and open-pipeline filters.
+  the Land + Expand ARR and open-pipeline filters.
 
 The model now has 106 deployed measures. Fabric updateDefinition LRO succeeded
 for semantic model `3c58b5dd-b321-4aaa-a5cd-fb73e474edbb`; refresh was
@@ -1201,7 +1201,7 @@ mentions the KPI.
 - Source/ETL work: value tier, Commercial Approval close timing,
   Axioma/acquired cross-sell, one-off revenues, and PS attach.
 
-ARR remains Land+Expand only, Renewal ACV remains Renewal only. The only
+ARR remains Land + Expand only, Renewal ACV remains Renewal only. The only
 allowed cross-motion value measure is still `Total Open Pipeline Value`.
 
 **Verification:**
@@ -1246,7 +1246,7 @@ when the model already has the measures.
 | Growth Mix | 15 |
 
 ARR/ACV separation is unchanged: `Stage Hygiene` and `Growth Mix` use
-Land+Expand ARR/process measures, `Renewals` uses Renewal ACV only.
+Land + Expand ARR/process measures, `Renewals` uses Renewal ACV only.
 
 **Lab verification:**
 
@@ -1343,7 +1343,7 @@ Applied the proven Zebra-native grammar pattern to exactly one additional RW pag
 
 **Shipped:**
 
-- Kept the required Stage Hygiene KPI contract intact: forward rate, backward rate, stage aging, Land cycle, L+E cycle, Stage Conversion Matrix, and the Stage 3 forward proxy all remain present.
+- Kept the required Stage Hygiene KPI contract intact: forward rate, backward rate, stage aging, Land cycle, Land + Expand cycle, Stage Conversion Matrix, and the Stage 3 forward proxy all remain present.
 - Replaced the Stage Hygiene hero/process cards with object-bearing native card grammar (`stage-hygiene-process-kpi-card`) using the same safe Zebra visual-DNA lineage metadata as the What Changed proof.
 - Converted the Stage Conversion Matrix into a native `tableEx` diagnostic table in IBCS order: stage, forward %, backward %, average days, moves, and 7-day ARR moved.
 - Added native data-bar metadata only to the supported `Stage Moves ARR 7d` measure to carry Zebra marker/scale intent without inventing unsupported variance fields.
@@ -1356,7 +1356,7 @@ Applied the proven Zebra-native grammar pattern to exactly one additional RW pag
 - `python3 -m scripts.sales.rw_dashboard_harness visual-qa --source path --path ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json --label rw_stage_hygiene_zebra_native --fail-on medium --markdown docs/sales/RW_DASHBOARD_VISUAL_QA.md` returned 0 findings.
 - Focused contract tests now assert Stage Hygiene native visual types, no medium+ visual QA debt, object-bearing card grammar, and Zebra/IBCS table grammar.
 
-No Fabric publish was performed.  ARR remains Land+Expand only, Renewal ACV remains Renewal only, and no custom visuals were introduced to the native Stage Hygiene page.
+No Fabric publish was performed.  ARR remains Land + Expand only, Renewal ACV remains Renewal only, and no custom visuals were introduced to the native Stage Hygiene page.
 
 ## 2026-05-10 — Neutral Zebra/IBCS card surface hardening
 
@@ -1402,7 +1402,7 @@ Desktop review found two renderer-level issues: stage visuals were not consisten
 - `python3 -m pytest tests/sales -q` passed: 218 passed, 1 skipped.
 - `scripts/sales/rw_open_pbi_lab_in_parallels.sh --reset-cache` opened `rpt_vp_ops_scorecard_zebra_lab` in the active Windows user session.
 
-No Fabric publish was performed.  ARR remains Land+Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
+No Fabric publish was performed.  ARR remains Land + Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
 
 ## 2026-05-10 — All generated tabs crossed the Zebra-native visual standard
 
@@ -1421,10 +1421,10 @@ The earlier enterprise gate proved that Forecast, Renewals, Growth Mix, and the 
   - renewal pressure table uses Zebra detail-ledger grammar
 - Growth Mix:
   - KPI strip uses Zebra-native card grammar
-  - regional Land+Expand bar chart carries Zebra transfer metadata
+  - regional Land + Expand bar chart carries Zebra transfer metadata
   - strategic mix table uses Zebra detail-ledger grammar
 - RW KPI Explorer:
-  - Land+Expand matrix moved from generic matrix styling to Zebra detail-ledger grammar
+  - Land + Expand matrix moved from generic matrix styling to Zebra detail-ledger grammar
 - Added `tag_visual_with_zebra_transfer_metadata()` so native charts can be recognized by the enterprise standard without using custom visuals.
 
 **Enterprise standard result:**
@@ -1539,7 +1539,7 @@ Reviewing the schema-to-surface flow showed a separate executive-quality problem
 - `python3 -m scripts.sales.rw_dashboard_harness data-surface-flow --source path --path ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json --label rw_data_surface_unit_policy --fail-on critical --markdown docs/sales/RW_DATA_SURFACE_FLOW_READINESS.md` passed with verdict `not_exec_complete`, high=8, critical=0.
 - `python3 -m pytest tests/sales -q` passed: 232 passed, 1 skipped.
 
-No Fabric publish was performed.  ARR remains Land+Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
+No Fabric publish was performed.  ARR remains Land + Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
 
 ## 2026-05-10 — RW KPI coverage checklist
 
@@ -1570,7 +1570,7 @@ Andre asked for a direct checklist of RW-expected KPIs versus what the current B
 - `business_at_risk`: account/subscription health flag.
 - `saas_arr_yoy_growth`: SaaS deployment/product flag.
 
-ARR remains Land+Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
+ARR remains Land + Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
 
 ## 2026-05-10 — Metric basis labels locked across the BI surface
 
@@ -1578,7 +1578,7 @@ Andre asked whether the dashboard bases were right: weighted versus unweighted, 
 
 **Standard now applied:**
 
-- Land/Expand value labels use `ARR (L+E)` or explicit `Land ARR` / `Expand ARR`.
+- Land + Expand value labels use `ARR (Land + Expand)` or explicit `Land ARR` / `Expand ARR`.
 - Renewal opportunity value labels use `renewal ACV`.
 - Installed-base renewal labels use `active-base ARR` / `base ARR`.
 - The single cross-motion value is labeled `ARR+ACV`.
@@ -1637,7 +1637,7 @@ The previous Renewal page still used opportunity ACV as a proxy for business-at-
 - Replaced `Business At Risk ACV` proxy usage with `Business At Risk ARR`.
 - Added `Active ARR` and `Risk ARR` cards from the installed-base asset table.
 - Reworked the regional exposure visual and risk detail ledger to use active asset ARR, account risk, product family, and asset end date.
-- Kept Renewal opportunity ACV separate from active-base ARR.  Land/Expand opportunity ARR remains excluded from Renewals.
+- Kept Renewal opportunity ACV separate from active-base ARR.  Land + Expand opportunity ARR remains excluded from Renewals.
 
 **Coverage impact:**
 
@@ -1772,7 +1772,7 @@ Reviewing the data schema and page filter behavior showed the visual layer was a
 - `python3 -m scripts.sales.rw_dashboard_harness semantic-filter --source path --path ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json --label rw_semantic_filter_policy --fail-on high --markdown docs/sales/RW_SEMANTIC_FILTER_ARCHITECTURE.md` passed with medium=3, high=0, critical=0.
 - `python3 -m pytest tests/sales -q` passed: 222 passed, 1 skipped.
 
-No Fabric publish was performed.  ARR remains Land+Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
+No Fabric publish was performed.  ARR remains Land + Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
 
 ## 2026-05-10 — RW KPI coverage lift, Phase 4 source fields
 
@@ -1823,4 +1823,4 @@ The coverage checklist showed that several gaps were not truly missing data; the
 - Semantic filter audit passed with medium=3, high=0, critical=0.
 - Data-surface flow remains `not_exec_complete` because the remaining gaps are real data/model blockers, not visual issues.
 
-ARR remains Land+Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
+ARR remains Land + Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.

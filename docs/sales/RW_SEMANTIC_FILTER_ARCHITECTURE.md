@@ -13,7 +13,7 @@ The report is now guarded against the major executive-flow failure: page-level M
 | Forecast | `cross_motion_labeled` | `Close FQ`, `Region` | Region and close-quarter context; motion comparison is handled by the labeled Stage x Motion matrix. |
 | Stage Hygiene | `process` | `Close FQ`, `Region` | Region and close-quarter context define the selected opportunity cohort; transition-window measures remain explicit. |
 | Renewals | `renewal_acv` | `Close FQ`, `Region` | Region and close-quarter context only; Renewal ACV measures enforce Renewal motion. |
-| Growth Mix | `land_expand_arr` | `Close FQ`, `Region` | Region and close-quarter context only; Land/Expand mix is shown through separate ARR measures. |
+| Growth Mix | `land_expand_arr` | `Close FQ`, `Region` | Region and close-quarter context only; Land + Expand mix is shown through separate ARR measures. |
 | RW KPI Explorer | `explorer` | `Close FQ`, `Region`, `Stage` | Region, close quarter, and current stage for interactive slicing; motion appears as visual columns, not a page slicer. |
 
 ## Findings

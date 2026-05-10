@@ -84,11 +84,11 @@ PAGE_KPI_CONTRACTS: dict[str, PageKPIContract] = {
         measures=("Total Closed Won ARR", "Win Rate ARR", "Exception ARR", "Renewal Retention Pct (Period)", "Total Open Pipeline ARR", "Stage Forward Pct (LE)", "Stage Backward Pct (LE)", "Avg Days In Prior Stage (LE)", "Stage Moves ARR 7d", "New Opps Count 7d", "Closed Won Count 7d", "Backward Moves Count 7d"),
         motion="cross_motion_labeled",
         placements=(
-            p("forecast_closed_won", "Total Closed Won ARR", "hero KPI", "land_expand_arr", "clean", "Closed won ARR (L+E)"),
+            p("forecast_closed_won", "Total Closed Won ARR", "hero KPI", "land_expand_arr", "clean", "Closed won ARR (Land + Expand)"),
             p("opp_win_rate", "Win Rate ARR", "hero KPI", "land_expand_arr", "clean", "Win rate (ARR-wtd)"),
-            p("stage_conversion", "Stage Forward Pct (LE)", "variance table", "land_expand_arr", "partial", "Stage hygiene (count rates, L+E)"),
+            p("stage_conversion", "Stage Forward Pct (LE)", "variance table", "land_expand_arr", "partial", "Stage hygiene (count rates, Land + Expand)"),
             p("renewal_retention_rate", "Renewal Retention Pct (Period)", "hero KPI", "renewal_acv", "partial", "Retention % (ACV-wtd)"),
-            p("time_in_stage", "Avg Days In Prior Stage (LE)", "variance table", "land_expand_arr", "partial", "Stage hygiene (count rates, L+E)", secondary=True),
+            p("time_in_stage", "Avg Days In Prior Stage (LE)", "variance table", "land_expand_arr", "partial", "Stage hygiene (count rates, Land + Expand)", secondary=True),
             p("new_opps_by_region", "New Opps Count 7d", "RAG card", "land_expand_arr", "clean", "New opp count 7d", secondary=True),
         ),
         caveat="Renewal retention is displayed beside ARR KPIs but not blended into ARR.",
@@ -103,12 +103,12 @@ PAGE_KPI_CONTRACTS: dict[str, PageKPIContract] = {
         measures=("At Risk Opps Count", "At Risk Opps ARR", "Watch Opps Count", "Watch Opps ARR", "Healthy Moves Count", "Healthy Moves ARR", "Stage Moves Count 7d", "Stage Moves ARR 7d", "New Opps Count 7d", "Closed Won Count 7d", "Closed Lost Count 7d", "Total Open Pipeline ARR"),
         motion="land_expand_arr",
         placements=(
-            p("opp_age", "At Risk Opps ARR", "exception ledger", "land_expand_arr", "clean", "At-risk ARR (L+E)"),
-            p("opp_age", "Watch Opps ARR", "exception ledger", "land_expand_arr", "clean", "Watch ARR (L+E)"),
-            p("stage_conversion", "Stage Moves ARR 7d", "movement ledger", "land_expand_arr", "clean", "Stage ARR (L+E)"),
+            p("opp_age", "At Risk Opps ARR", "exception ledger", "land_expand_arr", "clean", "At-risk ARR (Land + Expand)"),
+            p("opp_age", "Watch Opps ARR", "exception ledger", "land_expand_arr", "clean", "Watch ARR (Land + Expand)"),
+            p("stage_conversion", "Stage Moves ARR 7d", "movement ledger", "land_expand_arr", "clean", "Stage ARR (Land + Expand)"),
             p("new_opps_by_region", "New Opps Count 7d", "movement ledger", "land_expand_arr", "clean", "New opp count"),
             p("forecast_closed_won", "Closed Won Count 7d", "movement ledger", "land_expand_arr", "clean", "Won count"),
-            p("opp_age", "Total Open Pipeline ARR", "detail table", "land_expand_arr", "clean", "Top Open ARR (L+E) Movement Queue"),
+            p("opp_age", "Total Open Pipeline ARR", "detail table", "land_expand_arr", "clean", "Top Open ARR (Land + Expand) Movement Queue"),
         ),
     ),
     "Forecast": PageKPIContract(
@@ -122,7 +122,7 @@ PAGE_KPI_CONTRACTS: dict[str, PageKPIContract] = {
         motion="cross_motion_labeled",
         placements=(
             p("pipeline_coverage_3x", "Total Open Pipeline Value", "hero KPI", "cross_motion_labeled", "partial", "Open Value (ARR+ACV, cross-motion)", missing_measure="Pipeline Coverage Ratio"),
-            p("forecast_closed_won", "Total Closed Won ARR", "hero KPI", "land_expand_arr", "clean", "Closed won ARR (L+E)"),
+            p("forecast_closed_won", "Total Closed Won ARR", "hero KPI", "land_expand_arr", "clean", "Closed won ARR (Land + Expand)"),
             p("pipeline_coverage_3x", "Total Open Pipeline Value", "variance table", "cross_motion_labeled", "partial", "Stage x Motion Open Value (ARR+ACV)", secondary=True, missing_measure="Pipeline Coverage Ratio"),
             p("forecast_accuracy", "Forecast Slip Pct", "RAG card", "land_expand_arr", "proxy", "Slip % (count proxy)", missing_measure="Forecast Accuracy"),
             p("forecast_accuracy", "Forecast Slips", "RAG card", "land_expand_arr", "proxy", "Slip count proxy", secondary=True, missing_measure="Forecast Accuracy"),
@@ -133,19 +133,19 @@ PAGE_KPI_CONTRACTS: dict[str, PageKPIContract] = {
     "Stage Hygiene": PageKPIContract(
         page="Stage Hygiene",
         job="Funnel diagnosis: stage conversion, backward movement, and time-in-stage bottlenecks.",
-        executive_question="Which stage is slowing or reversing Land+Expand opportunities, and is the Stage 3/4 control point healthy?",
+        executive_question="Which stage is slowing or reversing Land + Expand opportunities, and is the Stage 3/4 control point healthy?",
         primary_kpis=("stage_conversion", "time_in_stage", "sales_cycle_length"),
         secondary_diagnostics=("stage3_approvals_compliance", "commercial_approval_to_close_time"),
         kpi_ids=("stage_conversion", "time_in_stage", "sales_cycle_length", "stage3_approvals_compliance", "commercial_approval_to_close_time"),
         measures=("Stage Forward Pct (LE)", "Stage Backward Pct (LE)", "Avg Days In Prior Stage (LE)", "Avg Sales Cycle Days", "Land Avg Sales Cycle Days", "Total Stage Transitions", "Stage Moves ARR 7d", "Stage 4 Forward Pct", "Avg Days In Stage 4", "Commercial Approval Compliance Pct", "Commercial Approval To Close Days"),
         motion="process",
         placements=(
-            p("stage_conversion", "Stage Forward Pct (LE)", "hero KPI", "land_expand_arr", "partial", "Forward % (count, L+E)"),
-            p("stage_conversion", "Stage Backward Pct (LE)", "hero KPI", "land_expand_arr", "partial", "Backward % (count, L+E)"),
-            p("time_in_stage", "Avg Days In Prior Stage (LE)", "hero KPI", "land_expand_arr", "partial", "Stage days (L+E)"),
+            p("stage_conversion", "Stage Forward Pct (LE)", "hero KPI", "land_expand_arr", "partial", "Forward % (count, Land + Expand)"),
+            p("stage_conversion", "Stage Backward Pct (LE)", "hero KPI", "land_expand_arr", "partial", "Backward % (count, Land + Expand)"),
+            p("time_in_stage", "Avg Days In Prior Stage (LE)", "hero KPI", "land_expand_arr", "partial", "Stage days (Land + Expand)"),
             p("sales_cycle_length", "Land Avg Sales Cycle Days", "hero KPI", "land_expand_arr", "clean", "Land cycle days"),
-            p("sales_cycle_length", "Avg Sales Cycle Days", "hero KPI", "land_expand_arr", "clean", "L+E cycle days"),
-            p("stage_conversion", "Stage Forward Pct (LE)", "variance table", "land_expand_arr", "partial", "Stage Conversion Matrix (count, L+E)"),
+            p("sales_cycle_length", "Avg Sales Cycle Days", "hero KPI", "land_expand_arr", "clean", "Land + Expand cycle days"),
+            p("stage_conversion", "Stage Forward Pct (LE)", "variance table", "land_expand_arr", "partial", "Stage Conversion Matrix (count, Land + Expand)"),
             p("stage3_approvals_compliance", "Commercial Approval Compliance Pct", "RAG card", "land_expand_arr", "clean", "Approval % (count)", secondary=True),
             p("commercial_approval_to_close_time", "Commercial Approval To Close Days", "RAG card", "land_expand_arr", "clean", "Approval-close days", secondary=True),
         ),
@@ -195,14 +195,14 @@ PAGE_KPI_CONTRACTS: dict[str, PageKPIContract] = {
         placements=(
             p("alf_arr_pipeline", "Open Land ARR", "hero KPI", "land_expand_arr", "partial", "Open Land ARR"),
             p("ilf_arr_pipeline", "Open Expand ARR", "hero KPI", "land_expand_arr", "partial", "Open Expand ARR"),
-            p("closed_won_avg_deal_size", "Avg Deal Size Won", "hero KPI", "land_expand_arr", "partial", "Avg won ARR (L+E)"),
-            p("partner_opps_pct", "Partner ARR", "hero KPI", "land_expand_arr", "clean", "Partner ARR (L+E)"),
+            p("closed_won_avg_deal_size", "Avg Deal Size Won", "hero KPI", "land_expand_arr", "partial", "Avg won ARR (Land + Expand)"),
+            p("partner_opps_pct", "Partner ARR", "hero KPI", "land_expand_arr", "clean", "Partner ARR (Land + Expand)"),
             p("partner_opps_pct", "Partner Pct", "hero KPI", "land_expand_arr", "clean", "Partner % ARR share"),
             p("alf_arr_pipeline", "Total Open Pipeline ARR", "bridge/waterfall", "land_expand_arr", "partial", "Open Land + Expand ARR by Region"),
             p("new_customer_reporting", "Total Land Won Count", "detail table", "land_expand_arr", "clean", "Land won count"),
             p("opp_source_effectiveness", "Partner ARR", "detail table", "land_expand_arr", "clean", "Strategic Mix Detail", secondary=True),
             p("closed_won_value_tier", "Closed Won Deals Count", "detail table", "land_expand_arr", "clean", "Won value tier", secondary=True),
-            p("cross_sell_to_acquired", "Cross Sell To Acquired ARR", "detail table", "land_expand_arr", "clean", "Axioma ARR (L+E)", secondary=True),
+            p("cross_sell_to_acquired", "Cross Sell To Acquired ARR", "detail table", "land_expand_arr", "clean", "Axioma ARR (Land + Expand)", secondary=True),
             p("ps_arr_attach", "PS ARR Attach Pct", "detail table", "land_expand_arr", "clean", "PS attach % (ACV/ARR)", secondary=True),
             p("saas_arr_yoy_growth", "SaaS YoY Growth Pct", "detail table", "process", "clean", "SaaS ARR YoY %", secondary=True),
             p("synergy_deals_won", "Total Land Won Count", "detail table", "land_expand_arr", "proxy", "Land count proxy", secondary=True, missing_measure="Synergy Deals Won"),
@@ -306,7 +306,7 @@ def validate_decision_contracts(contracts: dict[str, PageKPIContract] | None = N
                 if "cross-motion" not in label_text and "cross motion" not in label_text:
                     errors.append(f"{page}: cross-motion measure {placement.measure!r} is not explicitly labeled")
             if placement.motion_guardrail == "land_expand_arr" and "Renewal ACV" in placement.measure:
-                errors.append(f"{page}: Land+Expand ARR placement uses Renewal ACV measure {placement.measure!r}")
+                errors.append(f"{page}: Land + Expand ARR placement uses Renewal ACV measure {placement.measure!r}")
             if placement.motion_guardrail == "renewal_acv" and placement.measure.endswith(" ARR"):
                 errors.append(f"{page}: Renewal ACV placement uses ARR measure {placement.measure!r}")
     return errors

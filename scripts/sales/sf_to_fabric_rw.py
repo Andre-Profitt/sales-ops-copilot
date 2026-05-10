@@ -21,7 +21,7 @@ Auth: AzureCliCredential (Fabric/OneLake) + sf CLI (Salesforce).
 Both expected pre-authenticated.
 
 Cardinal SimCorp rules (enforced):
-  - APTS_Opportunity_ARR__c → Land+Expand only (motion_filter = land/expand)
+  - APTS_Opportunity_ARR__c → Land + Expand only (motion_filter = land/expand)
   - APTS_Renewal_ACV__c → Renewal only
   - Never blend; the fact table carries both columns natively, the model
     layer decides which to surface per-KPI.

@@ -147,7 +147,7 @@ def _build_header() -> list[dict]:
             bold=True,
         ),
         build_textbox_visual(
-            text="Exceptions first. Basis stays explicit: ARR (L+E), renewal ACV, ARR-wtd %, count rates.",
+            text="Exceptions first. Basis stays explicit: ARR (Land + Expand), renewal ACV, ARR-wtd %, count rates.",
             x=28,
             y=42,
             w=840,
@@ -173,7 +173,7 @@ def _build_exception_spine() -> dict:
                 "table": "f_opportunity",
                 "field": "Exception ARR",
                 "kind": "measure",
-                "title": "Exception ARR (L+E)",
+                "title": "Exception ARR (Land + Expand)",
             },
             {
                 "table": "f_opportunity",
@@ -185,13 +185,13 @@ def _build_exception_spine() -> dict:
                 "table": "f_opportunity",
                 "field": "At Risk Opps ARR",
                 "kind": "measure",
-                "title": "At-risk ARR (L+E)",
+                "title": "At-risk ARR (Land + Expand)",
             },
             {
                 "table": "f_opportunity",
                 "field": "Watch Opps ARR",
                 "kind": "measure",
-                "title": "Watch ARR (L+E)",
+                "title": "Watch ARR (Land + Expand)",
             },
         ],
         x=40,
@@ -209,7 +209,7 @@ def _build_kpi_strip() -> list[dict]:
         (
             "f_opportunity",
             "Total Closed Won ARR",
-            "Closed won ARR (L+E)",
+            "Closed won ARR (Land + Expand)",
             "#F4F7FB",
             "#2B5C8A",
             "#1A1D31",
@@ -227,7 +227,7 @@ def _build_kpi_strip() -> list[dict]:
         (
             "f_opportunity",
             "Exception ARR",
-            "Exception ARR (L+E)",
+            "Exception ARR (Land + Expand)",
             "#FFEEEE",
             "#C33A32",
             "#B3261E",
@@ -282,7 +282,7 @@ def _build_stage_distribution_panel() -> list[dict]:
         category_title="Stage",
         measure_table="f_opportunity",
         measure_name="Total Open Pipeline ARR",
-        measure_title="Open ARR (L+E)",
+        measure_title="Open ARR (Land + Expand)",
         x=820,
         y=258,
         w=420,
@@ -291,7 +291,7 @@ def _build_stage_distribution_panel() -> list[dict]:
     )
     return [
         _panel(804, 226, 452, 260),
-        _with_title(chart, "Open ARR (L+E) by Stage"),
+        _with_title(chart, "Open ARR (Land + Expand) by Stage"),
     ]
 
 
@@ -309,12 +309,12 @@ def _build_stage_hygiene_panel() -> list[dict]:
             {
                 "table": "f_stage_transition",
                 "field": "Stage Forward Pct (LE)",
-                "title": "Forward % (count, L+E)",
+                "title": "Forward % (count, Land + Expand)",
             },
             {
                 "table": "f_stage_transition",
                 "field": "Stage Backward Pct (LE)",
-                "title": "Backward % (count, L+E)",
+                "title": "Backward % (count, Land + Expand)",
             },
             {
                 "table": "f_stage_transition",
@@ -324,7 +324,7 @@ def _build_stage_hygiene_panel() -> list[dict]:
             {
                 "table": "f_stage_transition",
                 "field": "Stage Moves ARR 7d",
-                "title": "7d ARR moved (L+E)",
+                "title": "7d ARR moved (Land + Expand)",
             },
         ],
         x=40,
@@ -338,7 +338,7 @@ def _build_stage_hygiene_panel() -> list[dict]:
     )
     return [
         _panel(24, 508, 768, 188),
-        _with_title(matrix, "Stage Hygiene (count rates, L+E)"),
+        _with_title(matrix, "Stage Hygiene (count rates, Land + Expand)"),
     ]
 
 
@@ -363,7 +363,7 @@ def _build_movement_pulse() -> list[dict]:
         (
             "f_stage_transition",
             "Stage Moves ARR 7d",
-            "Stage ARR 7d (L+E)",
+            "Stage ARR 7d (Land + Expand)",
             "#FFF8E6",
             "#D98A00",
             1000000,

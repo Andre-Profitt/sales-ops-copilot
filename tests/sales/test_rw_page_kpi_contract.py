@@ -362,7 +362,7 @@ def test_contract_gate_catches_wrong_arr_acv_motion():
 
     errors = validate_decision_contracts(broken)
 
-    assert any("Land+Expand ARR placement uses Renewal ACV" in error for error in errors)
+    assert any("Land + Expand ARR placement uses Renewal ACV" in error for error in errors)
 
 
 def test_contract_gate_catches_unlabeled_cross_motion_measure():

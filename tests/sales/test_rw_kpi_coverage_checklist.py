@@ -32,7 +32,7 @@ def test_checklist_keeps_arr_acv_guardrail_and_clear_status_labels():
     checklist = build_checklist()
     markdown = to_markdown(checklist)
 
-    assert "ARR is Land+Expand only; Renewal ACV is Renewal only" in markdown
+    assert "ARR is Land + Expand only; Renewal ACV is Renewal only" in markdown
     assert "Total Open Pipeline Value is the only explicitly labeled cross-motion value" in markdown
     assert "Checklist legend: `[x]` covered, `[~]` partial/proxy on BI, `[ ]` not dependable yet." in markdown
     assert "| Check | KPI | RW expects | Impact | Motion | BI coverage | Pages | Measure evidence | Gap / next action |" in markdown

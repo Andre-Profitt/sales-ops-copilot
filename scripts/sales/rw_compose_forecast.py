@@ -119,7 +119,7 @@ def _compose(section: dict) -> None:
             420,
             1000000,
         ),
-        ("f_opportunity", "Total Closed Won ARR", "Closed won ARR (L+E)", 820, 1000000),
+        ("f_opportunity", "Total Closed Won ARR", "Closed won ARR (Land + Expand)", 820, 1000000),
     ]
     for tbl, msr, title, x, display_units in hero:
         section["visualContainers"].append(
@@ -131,7 +131,7 @@ def _compose(section: dict) -> None:
         build_textbox_visual("Stage x Motion Open Value (ARR+ACV)", x=20, y=154, w=1200, h=24, font_size_pt=12, color="#1A1D31")
     )
     # Rows = stage_name, columns = motion_type, value = Total Open Pipeline Value
-    # (which renders ARR for Land/Expand and ACV for Renewal — see measure
+    # (which renders ARR for Land + Expand and ACV for Renewal — see measure
     # description). Filtering to S3+ stages happens via the visual's filter
     # pane manually for now.
     section["visualContainers"].append(

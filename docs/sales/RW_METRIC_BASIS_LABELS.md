@@ -1,10 +1,10 @@
 # RW Metric Basis Labels
 
-Generated: 2026-05-10T17:11:25Z
+Generated: 2026-05-10T17:22:47Z
 
 ## Basis Standard
 
-- `land_expand_arr`: ARR (L+E), or explicit Land ARR / Expand ARR
+- `land_expand_arr`: ARR (Land + Expand), or explicit Land ARR / Expand ARR
 - `renewal_acv`: renewal ACV
 - `active_base_arr`: active-base ARR / base ARR
 - `cross_motion_arr_acv`: ARR+ACV or cross-motion value

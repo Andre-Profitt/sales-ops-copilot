@@ -569,7 +569,7 @@ def audit_arr_acv_guardrails(page: str, vc: dict) -> list[dict]:
                 severity="critical",
                 page=page,
                 visual=vc,
-                message="Land/Expand KPI page references Renewal ACV value.",
+                message="Land + Expand KPI page references Renewal ACV value.",
                 evidence={"measures": measures},
                 recommendation="Keep Renewal ACV on Renewals, or use only explicitly labeled cross-motion Total Open Pipeline Value.",
             )

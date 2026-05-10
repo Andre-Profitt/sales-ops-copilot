@@ -98,7 +98,7 @@ Each of these should be authored with a TMDL comment block citing the pattern na
 measure 'New Opps ARR 7d' = ...
     /// Pattern: filter:calculate + time:date_add
     /// Lifted from: consolidated-financials-power-bi-template
-    /// Cardinal rule: Land+Expand only (motion_type filter applied)
+    /// Cardinal rule: Land + Expand only (motion_type filter applied)
 ```
 
 ## Limitations

@@ -14,7 +14,7 @@ contract — DAX measures, RAG thresholds, and target values flow from
 this file into the Power BI report.
 
 Cardinal SimCorp business rules (inherited):
-- ARR for Land+Expand → APTS_Opportunity_ARR__c
+- ARR for Land + Expand → APTS_Opportunity_ARR__c
 - ACV for Renewals → APTS_Renewal_ACV__c
 - NEVER blend Amount or sum across motions
 - Multi-currency: trust SF Report `s!field` aggregates (FX-converted),
@@ -269,7 +269,7 @@ _KPIS = (
         why_it_matters="Cycle compression = sales velocity. The 90d target is aggressive for SimCorp's typical complex sale.",
         soql_hint="AVG(CloseDate - CreatedDate) WHERE IsWon=true",
         caveats=(
-            "90d target may be Land-only; Land+Expand cycles often >180d in this org. Confirm scope.",
+            "90d target may be Land-only; Land + Expand cycles often >180d in this org. Confirm scope.",
         ),
     ),
     SalesKPI(
@@ -302,7 +302,7 @@ _KPIS = (
         direction="higher_is_better",
         motion_filter="land_expand",
         sf_source_id="00OTb000008msRJMAY",
-        sf_source_name="KPI · Closed Won ARR This Quarter (L+E)",
+        sf_source_name="KPI · Closed Won ARR This Quarter (Land + Expand)",
         coverage_status="exists",
         definition="Average ARR per Won opportunity, grouped by close month.",
         why_it_matters="Mix shift signal — declining avg deal size = downmarket drift or smaller-bite renewals.",
@@ -361,7 +361,7 @@ _KPIS = (
         coverage_status="exists",
         definition="Count of Stage 3+ Land deals with required Commercial Approval submitted.",
         why_it_matters="Governance gate compliance — Land deals MUST have Commercial Approval per the 8-stage process.",
-        soql_hint="Stage 3+ Land+Expand opps with Stage_20_Approval__c=true divided by eligible Stage 3+ opps",
+        soql_hint="Stage 3+ Land + Expand opps with Stage_20_Approval__c=true divided by eligible Stage 3+ opps",
         caveats=("Per memory: every Land deal requires Commercial Approval — non-negotiable.",),
     ),
     SalesKPI(
@@ -800,7 +800,7 @@ def to_llm_context() -> str:
         f"  - missing (real gaps, new build): {len(kpis_by_status('missing'))}",
         "",
         "## Cardinal rules (inherited from SimCorp shared agent directives)",
-        "  - APTS_Opportunity_ARR__c for Land+Expand. APTS_Renewal_ACV__c for Renewal. Never blend.",
+        "  - APTS_Opportunity_ARR__c for Land + Expand. APTS_Renewal_ACV__c for Renewal. Never blend.",
         "  - Multi-currency: trust SF Report `s!field` aggregates, not raw SOQL SUM.",
         "  - Type filter discipline ~98% in this org (per 2026-05-06 baseline).",
         "",

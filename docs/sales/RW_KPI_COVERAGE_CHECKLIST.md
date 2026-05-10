@@ -11,7 +11,7 @@ Generated from `scripts/sales/rw_kpi_graph.py`, `rw_dashboard_intelligence.py`, 
 - Model/measure gaps: 1
 - Source-data gaps: 1
 
-Cardinal guardrail: ARR is Land+Expand only; Renewal ACV is Renewal only. Total Open Pipeline Value is the only explicitly labeled cross-motion value.
+Cardinal guardrail: ARR is Land + Expand only; Renewal ACV is Renewal only. Total Open Pipeline Value is the only explicitly labeled cross-motion value.
 
 Checklist legend: `[x]` covered, `[~]` partial/proxy on BI, `[ ]` not dependable yet.
 
