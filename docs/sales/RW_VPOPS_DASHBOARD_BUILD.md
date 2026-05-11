@@ -1572,6 +1572,26 @@ Andre asked for a direct checklist of RW-expected KPIs versus what the current B
 
 ARR remains Land + Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
 
+## 2026-05-11 — Current Omitted pipeline excluded from Opportunity KPIs
+
+The 331M open Land + Expand ARR readout was caused by current `ForecastCategoryName = Omitted` opportunities still being present in `f_opportunity` measures.  Forecast-transition measures already excluded Omitted; this pass made the current Opportunity fact and semantic measures obey the same rule.
+
+**Shipped:**
+
+- Staged `Opportunity.ForecastCategoryName` as `f_opportunity[forecast_category]`.
+- Added `f_opportunity[forecast_category]` to `sm_sales_kpis_rw`.
+- Added the shared DAX predicate `NOT ( f_opportunity[forecast_category] = "Omitted" )` to open/current pipeline measures.
+- Covered open Land + Expand ARR, open Renewal ACV, partner ARR, open Land/Expand split cards, Stage 3+ ARR/ACV, risk/stall buckets, movement windows, one-off/product current-state measures, and renewal due/retention denominator.
+
+**Tie-out after restage:**
+
+- Open Land + Expand ARR, all current forecast categories: 331.6M EUR.
+- Current Omitted ARR removed: 92.1M EUR.
+- Non-Omitted open Land + Expand ARR: 239.5M EUR.
+- Non-Omitted Stage 3+ open Land + Expand ARR: 218.2M EUR, which is the view closest to the expected ~215M qualified-pipeline number.
+
+ARR remains Land + Expand only, Renewal ACV remains Renewal only, and Omitted pipeline is excluded before visuals render.
+
 ## 2026-05-11 — Omitted exclusion, real heatmap encoding, and no blended top-level value
 
 Desktop review and follow-up business-rule review found three defects in the current RW dashboard surface:

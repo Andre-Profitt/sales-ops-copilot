@@ -1,4 +1,5 @@
-from scripts.sales.rw_push_semantic_model import build_model_bim
+from scripts.sales.rw_push_semantic_model import NON_OMITTED_FORECAST_FILTER, build_model_bim
+from scripts.sales.sf_to_fabric_rw import SOQL_OPP
 from scripts.sales.rw_unit_policy import CURRENCY_M_FORMAT
 
 
@@ -41,20 +42,65 @@ def test_open_renewal_and_growth_measures_do_not_depend_on_closed_won_only():
 
     assert measures["Total Open Renewal ACV"]["expression"] == (
         'CALCULATE ( SUM ( f_opportunity[acv_org_ccy] ), '
+        f"{NON_OMITTED_FORECAST_FILTER}, "
         'f_opportunity[is_closed] = FALSE(), f_opportunity[motion_type] = "Renewal" )'
     )
     assert measures["Total Renewal ACV Due"]["expression"] == (
         'CALCULATE ( SUM ( f_opportunity[acv_org_ccy] ), '
+        f"{NON_OMITTED_FORECAST_FILTER}, "
         'f_opportunity[motion_type] = "Renewal" )'
     )
     assert measures["Open Land ARR"]["expression"] == (
         'CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), '
+        f"{NON_OMITTED_FORECAST_FILTER}, "
         'f_opportunity[is_closed] = FALSE(), f_opportunity[motion_type] = "Land" )'
     )
     assert measures["Open Expand ARR"]["expression"] == (
         'CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), '
+        f"{NON_OMITTED_FORECAST_FILTER}, "
         'f_opportunity[is_closed] = FALSE(), f_opportunity[motion_type] = "Expand" )'
     )
+
+
+def test_opportunity_fact_carries_current_forecast_category_for_omitted_filtering():
+    opp_cols = {column["name"] for column in _table_map()["f_opportunity"]["columns"]}
+
+    assert "ForecastCategoryName" in SOQL_OPP
+    assert "forecast_category" in opp_cols
+
+
+def test_open_pipeline_measures_exclude_current_omitted_forecast_category():
+    measures = _measure_map()
+
+    for name in [
+        "Total Open Pipeline ARR",
+        "Open Opp Count",
+        "Avg Open Opp Age Days",
+        "Stage 3 Plus ARR",
+        "S3 Plus Open ACV",
+        "Total Open Pipeline Value",
+        "Partner ARR",
+        "Total Open Renewal ACV",
+        "Business At Risk ACV",
+        "Open Land ARR",
+        "Open Expand ARR",
+        "Stalled Open Opps Count 14d",
+        "Stalled Open Opps ARR 14d",
+        "Stalled Open Opps Count 21d",
+        "Stalled Open Opps ARR 21d",
+        "At Risk Opps Count",
+        "At Risk Opps ARR",
+        "Watch Opps Count",
+        "Watch Opps ARR",
+        "Stage Moves Count 7d",
+        "Backward Moves Count 7d",
+        "Healthy Moves Count",
+        "Healthy Moves ARR",
+    ]:
+        assert NON_OMITTED_FORECAST_FILTER in measures[name]["expression"], name
+
+    for name in ["Stage Moves Count 7d", "Backward Moves Count 7d", "Healthy Moves Count"]:
+        assert "TREATAS" in measures[name]["expression"], name
 
 
 def test_active_asset_arr_measures_stay_out_of_renewal_acv_opportunity_proxy():
@@ -169,7 +215,8 @@ def test_one_off_revenue_is_staged_as_non_recurring_not_arr_or_acv():
         "one_off_revenue_org_ccy",
     } <= opp_cols
     assert measures["One Off Revenues"]["expression"] == (
-        "SUM ( f_opportunity[one_off_revenue_org_ccy] )"
+        "CALCULATE ( SUM ( f_opportunity[one_off_revenue_org_ccy] ), "
+        f"{NON_OMITTED_FORECAST_FILTER} )"
     )
     assert "arr_org_ccy" not in measures["One Off Revenues"]["expression"]
     assert "acv_org_ccy" not in measures["One Off Revenues"]["expression"]
