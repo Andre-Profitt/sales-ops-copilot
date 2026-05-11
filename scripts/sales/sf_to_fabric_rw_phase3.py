@@ -81,17 +81,26 @@ def transform(stage: pathlib.Path) -> pd.DataFrame:
                 )
             ) / 86400.0 as days_in_prior_category
         FROM raw_ofh
+        WHERE COALESCE("OldValue", '') <> 'Omitted'
+          AND COALESCE("NewValue", '') <> 'Omitted'
         ORDER BY opp_id, transition_at
     """).fetch_df()
 
+    # Defensive repeat of the SQL filter: Omitted is a hygiene bucket, not a
+    # committed forecast category, so transitions into or out of Omitted must not
+    # inflate slip/upgrade counts or days-in-category windows.
+    df = df[
+        ~df["from_category"].isin({"Omitted"})
+        & ~df["to_category"].isin({"Omitted"})
+    ].copy()
+
     # Forecast category ranking: lower number = more committed (closer to revenue)
-    # Pipeline (4) > Best Case (3) > Commit (2) > Closed (1) > Omitted (5, removed)
+    # Pipeline (4) > Best Case (3) > Commit (2) > Closed (1). Omitted is removed above.
     rank_map = {
         "Closed": 1,
         "Commit": 2,
         "Best Case": 3,
         "Pipeline": 4,
-        "Omitted": 5,
         "Forecast": 2,  # legacy alias, treat as Commit
     }
     df["from_rank"] = df["from_category"].map(rank_map).fillna(0)

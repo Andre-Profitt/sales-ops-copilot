@@ -1,13 +1,14 @@
 """Create the `sm_sales_kpis_rw` semantic model in Fabric.
 
-Direct Lake on `lkh_sales_kpis_rw`. 5 tables, 4 relationships, 15 DAX
+Direct Lake on `lkh_sales_kpis_rw`. Includes Opportunity, stage/forecast
+transition facts, and active Apttus asset line items for renewal-base ARR.
 measures in Phase 1 (the subset of the 31 RW KPIs that's computable
 from Opportunity + Account + User alone — no OFH, Approval, or Asset
 data yet). Region slicer-ready via d_region.
 
 Phase 2 (deferred): add OpportunityFieldHistory for stage_conversion +
 time_in_stage, ApprovalProcess for commercial-approval timing, and
-Asset/Subscription for existing_arr_run_rate + indexation.
+Asset/Subscription for indexation.
 
 Same Fabric REST pattern as scripts/workforce/wf_push_semantic_model.py.
 
@@ -34,6 +35,13 @@ FABRIC = "https://api.fabric.microsoft.com"
 FABRIC_RES = "https://api.fabric.microsoft.com/.default"
 PBI = "https://api.powerbi.com"
 PBI_RES = "https://analysis.windows.net/powerbi/api/.default"
+
+# Power BI custom numeric formats parse bare letters as formatting tokens.
+# Keep the EUR prefix quoted as a literal or Desktop renders the format string
+# itself in card/table cells.
+CURRENCY_M_FORMAT = '"EUR" #,0,,.0"M";("EUR" #,0,,.0"M");"-"'
+NON_OMITTED_FORECAST_FILTER = 'NOT ( f_opportunity[forecast_category] = "Omitted" )'
+CORE_STAGE_TRANSITION_FILTER = "f_stage_transition[from_stage_num] IN { 1, 2, 3, 4, 5, 6 }"
 
 
 def _b64(data: str | bytes) -> str:
@@ -68,6 +76,7 @@ def build_model_bim() -> dict:
         *,
         key: bool = False,
         fmt: str | None = None,
+        sort_by: str | None = None,
     ) -> dict:
         c: dict = {
             "name": name,
@@ -79,6 +88,8 @@ def build_model_bim() -> dict:
             c["isKey"] = True
         if fmt:
             c["formatString"] = fmt
+        if sort_by:
+            c["sortByColumn"] = sort_by
         return c
 
     def dl_partition(table_name: str) -> dict:
@@ -99,6 +110,8 @@ def build_model_bim() -> dict:
         "7d": "TODAY() - 7",
         "FQTD": "DATE(YEAR(TODAY()), CEILING(MONTH(TODAY())/3, 1)*3 - 2, 1)",
     }
+    non_omitted = NON_OMITTED_FORECAST_FILTER
+    core_stage = CORE_STAGE_TRANSITION_FILTER
 
     def _window_measures():
         out = []
@@ -106,9 +119,9 @@ def build_model_bim() -> dict:
             out.append(
                 {
                     "name": f"New Opps Count {label}",
-                    "expression": f"CALCULATE ( COUNTROWS ( f_opportunity ), f_opportunity[created_date] >= {since} )",
+                    "expression": f"CALCULATE ( COUNTROWS ( f_opportunity ), {non_omitted}, f_opportunity[created_date] >= {since} )",
                     "formatString": "#,0",
-                    "description": f"Opps created in the last {label} window.",
+                    "description": f"Non-Omitted opps created in the last {label} window.",
                 }
             )
             out.append(
@@ -135,17 +148,32 @@ def build_model_bim() -> dict:
             out.append(
                 {
                     "name": f"Stage Moves Count {label}",
-                    "expression": f"CALCULATE ( COUNTROWS ( f_stage_transition ), f_stage_transition[transition_at] >= {since} )",
+                    "expression": (
+                        "CALCULATE ( COUNTROWS ( f_stage_transition ), "
+                        f"{core_stage}, "
+                        f"f_stage_transition[transition_at] >= {since}, "
+                        "TREATAS ( "
+                        f"CALCULATETABLE ( VALUES ( f_opportunity[opp_id] ), {non_omitted} ), "
+                        "f_stage_transition[opp_id] ) )"
+                    ),
                     "formatString": "#,0",
-                    "description": f"Stage transitions (any direction) in the last {label} window.",
+                    "description": f"Stage transitions (any direction) in the last {label} window, excluding current Omitted pipeline.",
                 }
             )
             out.append(
                 {
                     "name": f"Backward Moves Count {label}",
-                    "expression": f'CALCULATE ( COUNTROWS ( f_stage_transition ), f_stage_transition[direction] = "backward", f_stage_transition[transition_at] >= {since} )',
+                    "expression": (
+                        "CALCULATE ( COUNTROWS ( f_stage_transition ), "
+                        f"{core_stage}, "
+                        'f_stage_transition[direction] = "backward", '
+                        f"f_stage_transition[transition_at] >= {since}, "
+                        "TREATAS ( "
+                        f"CALCULATETABLE ( VALUES ( f_opportunity[opp_id] ), {non_omitted} ), "
+                        "f_stage_transition[opp_id] ) )"
+                    ),
                     "formatString": "#,0",
-                    "description": f"Backward stage transitions in the last {label} window.",
+                    "description": f"Backward stage transitions in the last {label} window, excluding current Omitted pipeline.",
                 }
             )
             out.append(
@@ -153,37 +181,112 @@ def build_model_bim() -> dict:
                     "name": f"Stage Moves ARR {label}",
                     "expression": (
                         "CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), "
+                        f"{non_omitted}, "
                         "TREATAS ( "
-                        f"CALCULATETABLE ( VALUES ( f_stage_transition[opp_id] ), f_stage_transition[transition_at] >= {since} ), "
+                        f"CALCULATETABLE ( VALUES ( f_stage_transition[opp_id] ), {core_stage}, f_stage_transition[transition_at] >= {since} ), "
                         "f_opportunity[opp_id] ) )"
                     ),
-                    "formatString": '"$"#,0',
-                    "description": f"ARR of opps with any stage move in the last {label} window.",
+                    "formatString": CURRENCY_M_FORMAT,
+                    "description": f"ARR of non-Omitted opps with any stage move in the last {label} window.",
                 }
             )
         return out
+
+    def _heatmap_color_expression(
+        value_measure: str,
+        *,
+        table: str,
+        group_columns: tuple[str, ...],
+        palette: tuple[str, str, str, str],
+    ) -> str:
+        groups = ", ".join(f"{table}[{column}]" for column in group_columns)
+        low, mid, high, max_color = palette
+        return (
+            f"VAR _value = [{value_measure}] "
+            "VAR _max_value = "
+            f"MAXX ( SUMMARIZE ( ALLSELECTED ( {table} ), {groups}, "
+            f'"__rw_heat_value", [{value_measure}] ), [__rw_heat_value] ) '
+            "VAR _pct = DIVIDE ( _value, _max_value ) "
+            "RETURN "
+            "SWITCH ( "
+            "TRUE(), "
+            'ISBLANK ( _value ) || _value = 0, "#FFFFFF", '
+            f'_pct >= 0.75, "{max_color}", '
+            f'_pct >= 0.50, "{high}", '
+            f'_pct >= 0.25, "{mid}", '
+            f'"{low}" )'
+        )
+
+    def _heatmap_color_measure(
+        name: str,
+        value_measure: str,
+        *,
+        table: str,
+        group_columns: tuple[str, ...],
+        palette: tuple[str, str, str, str],
+        description: str,
+    ) -> dict:
+        return {
+            "name": name,
+            "expression": _heatmap_color_expression(
+                value_measure,
+                table=table,
+                group_columns=group_columns,
+                palette=palette,
+            ),
+            "description": description,
+        }
+
+    blue_heat = ("#EEF4FA", "#C9DBEF", "#6F9FD2", "#083EA7")
+    green_heat = ("#EEF8F0", "#CBE8D0", "#79B982", "#1F6F3B")
+    amber_heat = ("#FFF7E6", "#F3D28A", "#E6A329", "#A65E00")
+    red_heat = ("#FFF0EE", "#F4B8B3", "#DF6B61", "#8B2C25")
 
     # Phase 1 measures — computable from f_opportunity alone. Names use
     # "Total"/"Avg"/"Pct"/"Count" prefixes so they don't collide with raw
     # column names (lesson from sm_workforce_rw).
     measures = [
-        # Headlines (Land+Expand → ARR)
+        # Headlines (Land + Expand → ARR)
         {
             "name": "Total Closed Won ARR",
             "expression": 'CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), f_opportunity[is_won] = TRUE(), f_opportunity[motion_type] IN { "Land", "Expand" } )',
-            "formatString": '"$"#,0',
-            "description": "RW KPI: forecast_closed_won. ARR field, Land+Expand only.",
+            "formatString": CURRENCY_M_FORMAT,
+            "description": "RW KPI: forecast_closed_won. ARR field, Land + Expand only.",
         },
         {
             "name": "Total Open Pipeline ARR",
-            "expression": 'CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), f_opportunity[is_closed] = FALSE(), f_opportunity[motion_type] IN { "Land", "Expand" } )',
-            "formatString": '"$"#,0',
-            "description": "RW KPI: pipeline_coverage_3x (numerator). Open L+E ARR.",
+            "expression": (
+                "CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), "
+                f"{non_omitted}, "
+                'f_opportunity[is_closed] = FALSE(), f_opportunity[motion_type] IN { "Land", "Expand" } )'
+            ),
+            "formatString": CURRENCY_M_FORMAT,
+            "description": "RW KPI: pipeline_coverage_3x (numerator). Open Land + Expand ARR, excluding current Omitted pipeline.",
         },
+        _heatmap_color_measure(
+            "Total Open Pipeline ARR Heat Color",
+            "Total Open Pipeline ARR",
+            table="f_opportunity",
+            group_columns=("region", "motion_type"),
+            palette=blue_heat,
+            description="Field-value background color for Region x Motion Open ARR heatmaps.",
+        ),
         {
             "name": "Total Closed Lost ARR",
             "expression": 'CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), f_opportunity[is_closed] = TRUE(), f_opportunity[is_won] = FALSE(), f_opportunity[motion_type] IN { "Land", "Expand" } )',
-            "formatString": '"$"#,0',
+            "formatString": CURRENCY_M_FORMAT,
+        },
+        {
+            "name": "Total Closed Won ARR FYTD",
+            "expression": "CALCULATE ( [Total Closed Won ARR], REMOVEFILTERS ( d_calendar ), DATESBETWEEN ( d_calendar[date], DATE ( YEAR ( TODAY () ), 1, 1 ), TODAY () ) )",
+            "formatString": CURRENCY_M_FORMAT,
+            "description": "Current fiscal-year-to-date Closed Won ARR, Land + Expand only. FY = calendar year per d_calendar.",
+        },
+        {
+            "name": "Total Closed Lost ARR FYTD",
+            "expression": "CALCULATE ( [Total Closed Lost ARR], REMOVEFILTERS ( d_calendar ), DATESBETWEEN ( d_calendar[date], DATE ( YEAR ( TODAY () ), 1, 1 ), TODAY () ) )",
+            "formatString": CURRENCY_M_FORMAT,
+            "description": "Current fiscal-year-to-date Closed Lost ARR, Land + Expand only. FY = calendar year per d_calendar.",
         },
         # Win rate
         {
@@ -191,6 +294,12 @@ def build_model_bim() -> dict:
             "expression": "DIVIDE ( [Total Closed Won ARR], [Total Closed Won ARR] + [Total Closed Lost ARR] )",
             "formatString": "0.0%",
             "description": "RW KPI: opp_win_rate (ARR-weighted). Target >25%.",
+        },
+        {
+            "name": "Win Rate ARR FYTD",
+            "expression": "DIVIDE ( [Total Closed Won ARR FYTD], [Total Closed Won ARR FYTD] + [Total Closed Lost ARR FYTD] )",
+            "formatString": "0.0%",
+            "description": "Current fiscal-year-to-date ARR-weighted win rate, Land + Expand only.",
         },
         {
             "name": "Win Rate Count",
@@ -202,7 +311,7 @@ def build_model_bim() -> dict:
         {
             "name": "Avg Deal Size Won",
             "expression": 'CALCULATE ( AVERAGE ( f_opportunity[arr_org_ccy] ), f_opportunity[is_won] = TRUE(), f_opportunity[motion_type] IN { "Land", "Expand" } )',
-            "formatString": '"$"#,0',
+            "formatString": CURRENCY_M_FORMAT,
             "description": "RW KPI: closed_won_avg_deal_size. Target >$500K (verify with Richard).",
         },
         {
@@ -213,55 +322,251 @@ def build_model_bim() -> dict:
         },
         {
             "name": "Avg Open Opp Age Days",
-            "expression": 'CALCULATE ( AVERAGEX ( f_opportunity, DATEDIFF ( f_opportunity[created_date], TODAY (), DAY ) ), f_opportunity[is_closed] = FALSE(), f_opportunity[motion_type] IN { "Land", "Expand" } )',
+            "expression": (
+                "CALCULATE ( AVERAGEX ( f_opportunity, DATEDIFF ( f_opportunity[created_date], TODAY (), DAY ) ), "
+                f"{non_omitted}, "
+                'f_opportunity[is_closed] = FALSE(), f_opportunity[motion_type] IN { "Land", "Expand" } )'
+            ),
             "formatString": "0",
-            "description": "RW KPI: opp_age. Target <120d avg.",
+            "description": "RW KPI: opp_age. Non-Omitted Land + Expand open opps; target <120d avg.",
         },
         {
             "name": "Open Opp Count",
-            "expression": "CALCULATE ( COUNTROWS ( f_opportunity ), f_opportunity[is_closed] = FALSE() )",
+            "expression": f"CALCULATE ( COUNTROWS ( f_opportunity ), {non_omitted}, f_opportunity[is_closed] = FALSE() )",
             "formatString": "#,0",
         },
         # Stage 3+ proxy
         {
             "name": "Stage 3 Plus ARR",
-            "expression": 'CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), f_opportunity[is_closed] = FALSE(), f_opportunity[motion_type] IN { "Land", "Expand" }, NOT ( f_opportunity[stage_name] IN { "1. Prospecting", "2. Discovery" } ) )',
-            "formatString": '"$"#,0',
-            "description": "RW KPI: stage3_acv_value (proxy). Stage 3+ open ARR.",
+            "expression": (
+                "CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), "
+                f"{non_omitted}, "
+                'f_opportunity[is_closed] = FALSE(), f_opportunity[motion_type] IN { "Land", "Expand" }, NOT ( f_opportunity[stage_name] IN { "1. Prospecting", "2. Discovery" } ) )'
+            ),
+            "formatString": CURRENCY_M_FORMAT,
+            "description": "RW KPI: stage3_acv_value (proxy). Stage 3+ open ARR, excluding current Omitted pipeline.",
         },
         {
             "name": "S3 Plus Open ACV",
             "expression": (
                 "CALCULATE ( SUM ( f_opportunity[acv_org_ccy] ), "
+                f"{non_omitted}, "
                 "f_opportunity[is_closed] = FALSE(), "
                 'f_opportunity[stage_name] IN { "3 - Engagement", "4 - Shortlisted", "5 - Preferred", "6 - Contracting", "7 - Sales Ops QC" } )'
             ),
-            "formatString": '"$"#,0',
+            "formatString": CURRENCY_M_FORMAT,
             "description": "S3+ open ACV (companion to Stage 3 Plus ARR; covers Renewal motion via ACV field). Real stage-name list verified vs OpportunityStage.",
+        },
+        # ── Forecast tab support ───────────────────────────────────────
+        {
+            "name": "Days Remaining In FQ",
+            "expression": (
+                "VAR _today = TODAY () "
+                "VAR _q_end = EOMONTH ( _today, 3 - MOD ( MONTH ( _today ) - 1, 3 ) - 1 ) "
+                "RETURN DATEDIFF ( _today, _q_end, DAY )"
+            ),
+            "formatString": "0",
+            "description": "Calendar days from today to end-of-current-fiscal-quarter (FY = calendar year per d_calendar).",
+        },
+        {
+            "name": "Total Open Pipeline Value",
+            "expression": (
+                "CALCULATE ( "
+                'SUMX ( f_opportunity, IF ( f_opportunity[motion_type] = "Renewal", '
+                "f_opportunity[acv_org_ccy], f_opportunity[arr_org_ccy] ) ), "
+                f"{non_omitted}, "
+                "f_opportunity[is_closed] = FALSE() )"
+            ),
+            "formatString": CURRENCY_M_FORMAT,
+            "description": (
+                "Open pipeline value combining ARR (Land + Expand) and ACV (Renewal) per "
+                "SimCorp business rules — never blend, but render in one column when "
+                "comparing motions side-by-side. Use ONLY for cross-motion visuals."
+            ),
         },
         # Partner mix
         {
             "name": "Partner ARR",
-            "expression": 'CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), f_opportunity[is_closed] = FALSE(), f_opportunity[lead_source] = "Partner", f_opportunity[motion_type] IN { "Land", "Expand" } )',
-            "formatString": '"$"#,0',
+            "expression": (
+                "CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), "
+                f"{non_omitted}, "
+                'f_opportunity[is_closed] = FALSE(), CONTAINSSTRING ( LOWER ( f_opportunity[lead_source] ), "partner" ), f_opportunity[motion_type] IN { "Land", "Expand" } )'
+            ),
+            "formatString": CURRENCY_M_FORMAT,
+            "description": "RW KPI: partner_opps_pct numerator. Non-Omitted open Land + Expand ARR where lead source contains partner.",
         },
+        _heatmap_color_measure(
+            "Partner ARR Heat Color",
+            "Partner ARR",
+            table="f_opportunity",
+            group_columns=("region", "motion_type"),
+            palette=amber_heat,
+            description="Field-value background color for Region x Motion Partner ARR heatmaps.",
+        ),
         {
             "name": "Partner Pct",
             "expression": "DIVIDE ( [Partner ARR], [Total Open Pipeline ARR] )",
             "formatString": "0.0%",
             "description": "RW KPI: partner_opps_pct. Target 20% of pipeline.",
         },
+        {
+            "name": "Total Land Expand ARR",
+            "expression": (
+                "CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), "
+                f"{non_omitted}, "
+                'f_opportunity[motion_type] IN { "Land", "Expand" } )'
+            ),
+            "formatString": CURRENCY_M_FORMAT,
+            "description": "Non-Omitted Land + Expand ARR in the current filter context. Denominator for mix/attach diagnostics; excludes Renewal ACV.",
+        },
+        {
+            "name": "Closed Won Deals Count",
+            "expression": 'CALCULATE ( COUNTROWS ( f_opportunity ), f_opportunity[is_won] = TRUE(), f_opportunity[motion_type] IN { "Land", "Expand" } )',
+            "formatString": "#,0",
+            "description": "RW KPI: closed_won_value_tier. Slice by f_opportunity[won_value_tier].",
+        },
+        {
+            "name": "Commercial Approval Eligible Opps",
+            "expression": (
+                "COUNTROWS ( "
+                "FILTER ( f_opportunity, "
+                f"{non_omitted} && "
+                'f_opportunity[motion_type] IN { "Land", "Expand" } && '
+                "NOT ( f_opportunity[stage_name] IN { \"1 - Prospecting\", \"2 - Discovery\" } ) "
+                ") )"
+            ),
+            "formatString": "#,0",
+            "description": "Stage 3+ Land + Expand opps eligible for Commercial Approval monitoring.",
+        },
+        {
+            "name": "Commercial Approved Opps",
+            "expression": (
+                "COUNTROWS ( "
+                "FILTER ( f_opportunity, "
+                f"{non_omitted} && "
+                'f_opportunity[motion_type] IN { "Land", "Expand" } && '
+                "f_opportunity[commercial_approval] = TRUE() && "
+                "NOT ( f_opportunity[stage_name] IN { \"1 - Prospecting\", \"2 - Discovery\" } ) "
+                ") )"
+            ),
+            "formatString": "#,0",
+            "description": "Stage 3+ Land + Expand opps with Commercial Approval checked.",
+        },
+        {
+            "name": "Commercial Approval Compliance Pct",
+            "expression": "DIVIDE ( [Commercial Approved Opps], [Commercial Approval Eligible Opps] )",
+            "formatString": "0.0%",
+            "description": "RW KPI: stage3_approvals_compliance. Stage 3+ Land + Expand approval compliance.",
+        },
+        {
+            "name": "Commercial Approval To Close Days",
+            "expression": (
+                "CALCULATE ( "
+                "AVERAGEX ( "
+                "FILTER ( f_opportunity, "
+                "f_opportunity[is_won] = TRUE() && "
+                'f_opportunity[motion_type] IN { "Land", "Expand" } && '
+                "NOT ( ISBLANK ( f_opportunity[commercial_approval_date] ) ) "
+                "), "
+                "DATEDIFF ( f_opportunity[commercial_approval_date], f_opportunity[close_date], DAY ) "
+                ") )"
+            ),
+            "formatString": "0.0",
+            "description": "RW KPI: commercial_approval_to_close_time. Days from Commercial Approval date to won close.",
+        },
+        {
+            "name": "Cross Sell To Acquired ARR",
+            "expression": (
+                "CALCULATE ( SUM ( f_opportunity[axioma_order_inflow_org_ccy] ), "
+                f"{non_omitted}, "
+                'f_opportunity[motion_type] IN { "Land", "Expand" } )'
+            ),
+            "formatString": CURRENCY_M_FORMAT,
+            "description": "RW KPI: cross_sell_to_acquired. Uses Axioma Order Inflow on Land + Expand opps.",
+        },
+        {
+            "name": "PS Recurring ACV",
+            "expression": (
+                "CALCULATE ( SUM ( f_opportunity[ps_recurring_acv_org_ccy] ), "
+                f"{non_omitted}, "
+                'f_opportunity[motion_type] IN { "Land", "Expand" } )'
+            ),
+            "formatString": CURRENCY_M_FORMAT,
+            "description": "Recurring PS ACV on Land + Expand opps.",
+        },
+        {
+            "name": "One Off Revenues",
+            "expression": f"CALCULATE ( SUM ( f_opportunity[one_off_revenue_org_ccy] ), {non_omitted} )",
+            "formatString": CURRENCY_M_FORMAT,
+            "description": "RW KPI: one_off_revenues. Non-recurring/one-off revenue from Opportunity one-off fields; not ARR and not Renewal ACV.",
+        },
+        {
+            "name": "PS Non-Recurring Revenue",
+            "expression": f"CALCULATE ( SUM ( f_opportunity[ps_non_recurring_org_ccy] ), {non_omitted} )",
+            "formatString": CURRENCY_M_FORMAT,
+            "description": "PS non-recurring revenue component from APTS_PS_Non_Recurring_NPP_Display__c.",
+        },
+        {
+            "name": "One-Off Revenue Opp Count",
+            "expression": f"COUNTROWS ( FILTER ( f_opportunity, {non_omitted} && f_opportunity[one_off_revenue_org_ccy] > 0 ) )",
+            "formatString": "#,0",
+            "description": "Opportunity count with non-recurring/one-off revenue > 0.",
+        },
+        {
+            "name": "PS ARR Attach Pct",
+            "expression": "DIVIDE ( [PS Recurring ACV], [Total Land Expand ARR] )",
+            "formatString": "0.0%",
+            "description": "RW KPI: ps_arr_attach. PS recurring ACV divided by Land + Expand ARR.",
+        },
+        {
+            "name": "SaaS ARR",
+            "expression": f"CALCULATE ( SUM ( f_opportunity[saas_acv_org_ccy] ), {non_omitted} )",
+            "formatString": CURRENCY_M_FORMAT,
+            "description": "SimCorp SaaS ACV/ARR signal from APTS_RH_ASP_Annual__c.",
+        },
+        {
+            "name": "SaaS ARR LY YTD",
+            "expression": "CALCULATE ( [SaaS ARR], REMOVEFILTERS ( d_calendar ), DATESBETWEEN ( d_calendar[date], DATE ( YEAR ( TODAY () ) - 1, 1, 1 ), DATE ( YEAR ( TODAY () ) - 1, MONTH ( TODAY () ), DAY ( TODAY () ) ) ) )",
+            "formatString": CURRENCY_M_FORMAT,
+            "description": "SaaS ARR for Jan 1 -> same-day prior year.",
+        },
+        {
+            "name": "SaaS YoY Growth Pct",
+            "expression": "DIVIDE ( [SaaS ARR] - [SaaS ARR LY YTD], [SaaS ARR LY YTD] )",
+            "formatString": "0.0%",
+            "description": "RW KPI: saas_arr_yoy_growth. SaaS ARR growth rate; target growth >20% YoY.",
+        },
         # Renewals (ACV, never blend with ARR)
+        {
+            "name": "Total Open Renewal ACV",
+            "expression": (
+                "CALCULATE ( SUM ( f_opportunity[acv_org_ccy] ), "
+                f"{non_omitted}, "
+                'f_opportunity[is_closed] = FALSE(), f_opportunity[motion_type] = "Renewal" )'
+            ),
+            "formatString": CURRENCY_M_FORMAT,
+            "description": "Non-Omitted open renewal pipeline ACV. Renewal-only; never blended with ARR.",
+        },
+        {
+            "name": "Total Renewal ACV Due",
+            "expression": (
+                "CALCULATE ( SUM ( f_opportunity[acv_org_ccy] ), "
+                f"{non_omitted}, "
+                'f_opportunity[motion_type] = "Renewal" )'
+            ),
+            "formatString": CURRENCY_M_FORMAT,
+            "description": "Non-Omitted renewal ACV in current filter context: open + won + lost. Renewal-only denominator candidate.",
+        },
         {
             "name": "Total Renewal ACV Won",
             "expression": 'CALCULATE ( SUM ( f_opportunity[acv_org_ccy] ), f_opportunity[is_won] = TRUE(), f_opportunity[motion_type] = "Renewal" )',
-            "formatString": '"$"#,0',
+            "formatString": CURRENCY_M_FORMAT,
             "description": "RW KPI: renewals_mom_trend. ACV field, Renewal only.",
         },
         {
             "name": "Total Renewal ACV Lost",
             "expression": 'CALCULATE ( SUM ( f_opportunity[acv_org_ccy] ), f_opportunity[is_closed] = TRUE(), f_opportunity[is_won] = FALSE(), f_opportunity[motion_type] = "Renewal" )',
-            "formatString": '"$"#,0',
+            "formatString": CURRENCY_M_FORMAT,
             "description": "RW KPI: lost_arr_quarterly. ACV field, Renewal lost.",
         },
         {
@@ -270,30 +575,60 @@ def build_model_bim() -> dict:
             "formatString": "0.0%",
             "description": "RW KPI: renewal_retention_rate (partial — uses closed-period basis, not term-due basis). Target 95%.",
         },
+        {
+            "name": "Business At Risk ACV",
+            "expression": (
+                "CALCULATE ( "
+                "SUM ( f_opportunity[acv_org_ccy] ), "
+                f"{non_omitted}, "
+                'f_opportunity[motion_type] = "Renewal", '
+                "f_opportunity[is_closed] = FALSE(), "
+                'f_opportunity[risk_assessment_level] IN { "High", "Medium - High" } '
+                ")"
+            ),
+            "formatString": CURRENCY_M_FORMAT,
+            "description": "RW KPI proxy: business_at_risk. Open Renewal ACV with High or Medium-High opportunity risk; active ARR base still requires subscription data.",
+        },
         # New business pacing
         {
             "name": "New Opps Created",
-            "expression": "CALCULATE ( COUNTROWS ( f_opportunity ), USERELATIONSHIP ( f_opportunity[created_date], d_calendar[date] ) )",
+            "expression": f"CALCULATE ( COUNTROWS ( f_opportunity ), {non_omitted}, USERELATIONSHIP ( f_opportunity[created_date], d_calendar[date] ) )",
             "formatString": "#,0",
-            "description": "RW KPI: new_opps_by_region. Target 100/month per region.",
+            "description": "RW KPI: new_opps_by_region. Non-Omitted opportunity creation; target 100/month per region.",
         },
         # ── Phase 2.5: pure-DAX KPIs from existing data ─────────────────
         {
             "name": "Source ARR Won",
             "expression": 'CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), f_opportunity[is_won] = TRUE(), f_opportunity[motion_type] IN { "Land", "Expand" } )',
-            "formatString": '"$"#,0',
+            "formatString": CURRENCY_M_FORMAT,
             "description": "RW KPI: opp_source_effectiveness — slice by [lead_source] for per-source ARR.",
         },
+        _heatmap_color_measure(
+            "Source ARR Won Heat Color",
+            "Source ARR Won",
+            table="f_opportunity",
+            group_columns=("lead_source", "region"),
+            palette=blue_heat,
+            description="Field-value background color for Source x Region ARR heatmaps.",
+        ),
         {
             "name": "Source Win Rate",
             "expression": 'DIVIDE ( CALCULATE ( COUNTROWS ( f_opportunity ), f_opportunity[is_won] = TRUE(), f_opportunity[motion_type] IN { "Land", "Expand" } ), CALCULATE ( COUNTROWS ( f_opportunity ), f_opportunity[is_closed] = TRUE(), f_opportunity[motion_type] IN { "Land", "Expand" } ) )',
             "formatString": "0.0%",
             "description": "RW KPI: opp_source_effectiveness — slice by [lead_source] for per-source win rate.",
         },
+        _heatmap_color_measure(
+            "Source Win Rate Heat Color",
+            "Source Win Rate",
+            table="f_opportunity",
+            group_columns=("lead_source", "region"),
+            palette=green_heat,
+            description="Field-value background color for Source x Region win-rate heatmaps.",
+        ),
         {
             "name": "Total Land Won ARR",
             "expression": 'CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), f_opportunity[is_won] = TRUE(), f_opportunity[motion_type] = "Land" )',
-            "formatString": '"$"#,0',
+            "formatString": CURRENCY_M_FORMAT,
             "description": "RW KPI: new_customer_reporting (Land-only Won ARR). Slice by region × month.",
         },
         {
@@ -302,11 +637,19 @@ def build_model_bim() -> dict:
             "formatString": "#,0",
             "description": "RW KPI: new_customer_reporting (Land-only count). Slice by region × month.",
         },
+        _heatmap_color_measure(
+            "Total Land Won Count Heat Color",
+            "Total Land Won Count",
+            table="f_opportunity",
+            group_columns=("lead_source", "region"),
+            palette=blue_heat,
+            description="Field-value background color for Source x Region Land won count heatmaps.",
+        ),
         # ── YoY comparison measures (default page filter should be year=2026) ──
         {
             "name": "Closed Won ARR LY",
             "expression": "CALCULATE ( [Total Closed Won ARR], SAMEPERIODLASTYEAR ( d_calendar[date] ) )",
-            "formatString": '"$"#,0',
+            "formatString": CURRENCY_M_FORMAT,
             "description": "Same-period prior fiscal year. Pairs with Total Closed Won ARR for YoY math.",
         },
         {
@@ -318,7 +661,7 @@ def build_model_bim() -> dict:
         {
             "name": "Renewal ACV Won LY",
             "expression": "CALCULATE ( [Total Renewal ACV Won], SAMEPERIODLASTYEAR ( d_calendar[date] ) )",
-            "formatString": '"$"#,0',
+            "formatString": CURRENCY_M_FORMAT,
         },
         {
             "name": "Renewal ACV YoY Pct",
@@ -329,7 +672,7 @@ def build_model_bim() -> dict:
         {
             "name": "Pipeline ARR LY",
             "expression": "CALCULATE ( [Total Open Pipeline ARR], SAMEPERIODLASTYEAR ( d_calendar[date] ) )",
-            "formatString": '"$"#,0',
+            "formatString": CURRENCY_M_FORMAT,
         },
         {
             "name": "Pipeline ARR YoY Pct",
@@ -345,7 +688,7 @@ def build_model_bim() -> dict:
         {
             "name": "Closed Won ARR LY YTD",
             "expression": "CALCULATE ( [Total Closed Won ARR], REMOVEFILTERS ( d_calendar ), DATESBETWEEN ( d_calendar[date], DATE ( YEAR ( TODAY () ) - 1, 1, 1 ), DATE ( YEAR ( TODAY () ) - 1, MONTH ( TODAY () ), DAY ( TODAY () ) ) ) )",
-            "formatString": '"$"#,0',
+            "formatString": CURRENCY_M_FORMAT,
             "description": "Closed Won ARR for Jan 1 -> same-day prior year. Apples-to-apples vs current-YTD.",
         },
         {
@@ -357,7 +700,7 @@ def build_model_bim() -> dict:
         {
             "name": "Renewal ACV LY YTD",
             "expression": "CALCULATE ( [Total Renewal ACV Won], REMOVEFILTERS ( d_calendar ), DATESBETWEEN ( d_calendar[date], DATE ( YEAR ( TODAY () ) - 1, 1, 1 ), DATE ( YEAR ( TODAY () ) - 1, MONTH ( TODAY () ), DAY ( TODAY () ) ) ) )",
-            "formatString": '"$"#,0',
+            "formatString": CURRENCY_M_FORMAT,
         },
         {
             "name": "Renewal ACV YTD YoY Pct",
@@ -373,20 +716,35 @@ def build_model_bim() -> dict:
         # denominator, which is closer to "due to renew this period".
         {
             "name": "Renewal Retention Pct (Period)",
-            "expression": 'DIVIDE ( [Total Renewal ACV Won], CALCULATE ( SUM ( f_opportunity[acv_org_ccy] ), f_opportunity[motion_type] = "Renewal" ) )',
+            "expression": (
+                "DIVIDE ( [Total Renewal ACV Won], "
+                "CALCULATE ( SUM ( f_opportunity[acv_org_ccy] ), "
+                f"{non_omitted}, "
+                'f_opportunity[motion_type] = "Renewal" ) )'
+            ),
             "formatString": "0.0%",
-            "description": "RW KPI: renewal_retention_rate. Denom = all renewal opps with close_date in current filter (won + lost + open). Target 95%.",
+            "description": "RW KPI: renewal_retention_rate. Denom = non-Omitted renewal opps with close_date in current filter (won + lost + open). Target 95%.",
         },
         # ── Motion breakout (Land vs Expand vs Renewal) ─────────────────
         # Verbatim semantics from sales_process_graph._MOTIONS:
         #   LAND   → ARR field, new business
         #   EXPAND → ARR field, existing customer growth (different from Land in conversion mechanics)
         #   RENEWAL → ACV field (already separated above)
-        # The blended L+E measures stay; these are additional drill-downs.
+        # The blended Land + Expand measures stay; these are additional drill-downs.
+        {
+            "name": "Open Land ARR",
+            "expression": (
+                "CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), "
+                f"{non_omitted}, "
+                'f_opportunity[is_closed] = FALSE(), f_opportunity[motion_type] = "Land" )'
+            ),
+            "formatString": CURRENCY_M_FORMAT,
+            "description": "Non-Omitted open Land ARR. New-business pipeline; excludes Expand and Renewal.",
+        },
         {
             "name": "Land Closed Won ARR",
             "expression": 'CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), f_opportunity[is_won] = TRUE(), f_opportunity[motion_type] = "Land" )',
-            "formatString": '"$"#,0',
+            "formatString": CURRENCY_M_FORMAT,
             "description": "Land-only Won ARR. Excludes Expand and Renewal.",
         },
         {
@@ -402,9 +760,19 @@ def build_model_bim() -> dict:
             "description": "Land cycle length. RW target <90d most likely refers to this (Land deals).",
         },
         {
+            "name": "Open Expand ARR",
+            "expression": (
+                "CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), "
+                f"{non_omitted}, "
+                'f_opportunity[is_closed] = FALSE(), f_opportunity[motion_type] = "Expand" )'
+            ),
+            "formatString": CURRENCY_M_FORMAT,
+            "description": "Non-Omitted open Expand ARR. Existing-customer growth pipeline; excludes Land and Renewal.",
+        },
+        {
             "name": "Expand Closed Won ARR",
             "expression": 'CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), f_opportunity[is_won] = TRUE(), f_opportunity[motion_type] = "Expand" )',
-            "formatString": '"$"#,0',
+            "formatString": CURRENCY_M_FORMAT,
             "description": "Expand-only Won ARR. Existing-customer growth motion.",
         },
         {
@@ -426,48 +794,56 @@ def build_model_bim() -> dict:
             "expression": (
                 "COUNTROWS ( "
                 "FILTER ( f_opportunity, "
+                f"{non_omitted} && "
                 "f_opportunity[is_closed] = FALSE() && "
+                'f_opportunity[motion_type] IN { "Land", "Expand" } && '
                 "DATEDIFF ( f_opportunity[last_stage_change_date], TODAY(), DAY ) > 14 "
                 ") )"
             ),
             "formatString": "#,0",
-            "description": "Open opps with no stage movement in >14 days (Watch threshold).",
+            "description": "Open Land + Expand opps with no stage movement in >14 days (Watch threshold).",
         },
         {
             "name": "Stalled Open Opps ARR 14d",
             "expression": (
                 "CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), "
                 "FILTER ( f_opportunity, "
+                f"{non_omitted} && "
                 "f_opportunity[is_closed] = FALSE() && "
+                'f_opportunity[motion_type] IN { "Land", "Expand" } && '
                 "DATEDIFF ( f_opportunity[last_stage_change_date], TODAY(), DAY ) > 14 "
                 ") )"
             ),
-            "formatString": '"$"#,0',
-            "description": "Open ARR for opps stalled >14 days.",
+            "formatString": CURRENCY_M_FORMAT,
+            "description": "Open Land + Expand ARR for opps stalled >14 days.",
         },
         {
             "name": "Stalled Open Opps Count 21d",
             "expression": (
                 "COUNTROWS ( "
                 "FILTER ( f_opportunity, "
+                f"{non_omitted} && "
                 "f_opportunity[is_closed] = FALSE() && "
+                'f_opportunity[motion_type] IN { "Land", "Expand" } && '
                 "DATEDIFF ( f_opportunity[last_stage_change_date], TODAY(), DAY ) > 21 "
                 ") )"
             ),
             "formatString": "#,0",
-            "description": "Open opps with no stage movement in >21 days (At-risk threshold).",
+            "description": "Open Land + Expand opps with no stage movement in >21 days (At-risk threshold).",
         },
         {
             "name": "Stalled Open Opps ARR 21d",
             "expression": (
                 "CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), "
                 "FILTER ( f_opportunity, "
+                f"{non_omitted} && "
                 "f_opportunity[is_closed] = FALSE() && "
+                'f_opportunity[motion_type] IN { "Land", "Expand" } && '
                 "DATEDIFF ( f_opportunity[last_stage_change_date], TODAY(), DAY ) > 21 "
                 ") )"
             ),
-            "formatString": '"$"#,0',
-            "description": "Open ARR for opps stalled >21 days.",
+            "formatString": CURRENCY_M_FORMAT,
+            "description": "Open Land + Expand ARR for opps stalled >21 days.",
         },
         # ── Risk classification (Tab 1 What Changed risk band) ──────────────
         # Stage 5+ open = IN {"5 - Preferred","6 - Contracting","7 - Sales Ops QC"}.
@@ -478,74 +854,102 @@ def build_model_bim() -> dict:
             "expression": (
                 "COUNTROWS ( "
                 "FILTER ( f_opportunity, "
+                f"{non_omitted} && "
                 "f_opportunity[is_closed] = FALSE() && "
+                'f_opportunity[motion_type] IN { "Land", "Expand" } && '
                 'f_opportunity[stage_name] IN { "5 - Preferred", "6 - Contracting", "7 - Sales Ops QC" } && '
                 "DATEDIFF ( f_opportunity[last_stage_change_date], TODAY(), DAY ) > 21 "
                 ") )"
             ),
             "formatString": "#,0",
-            "description": "At Risk: Stage 5+ open AND stalled >21d.",
+            "description": "At Risk: Stage 5+ open Land + Expand AND stalled >21d.",
         },
         {
             "name": "At Risk Opps ARR",
             "expression": (
                 "CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), "
                 "FILTER ( f_opportunity, "
+                f"{non_omitted} && "
                 "f_opportunity[is_closed] = FALSE() && "
+                'f_opportunity[motion_type] IN { "Land", "Expand" } && '
                 'f_opportunity[stage_name] IN { "5 - Preferred", "6 - Contracting", "7 - Sales Ops QC" } && '
                 "DATEDIFF ( f_opportunity[last_stage_change_date], TODAY(), DAY ) > 21 "
                 ") )"
             ),
-            "formatString": '"$"#,0',
-            "description": "ARR exposed in At Risk bucket (Stage 5+ stalled >21d).",
+            "formatString": CURRENCY_M_FORMAT,
+            "description": "Land + Expand ARR exposed in At Risk bucket (Stage 5+ stalled >21d).",
         },
         {
             "name": "Watch Opps Count",
             "expression": (
                 "COUNTROWS ( "
                 "FILTER ( f_opportunity, "
+                f"{non_omitted} && "
                 "f_opportunity[is_closed] = FALSE() && "
+                'f_opportunity[motion_type] IN { "Land", "Expand" } && '
                 'f_opportunity[stage_name] IN { "3 - Engagement", "4 - Shortlisted" } && '
                 "DATEDIFF ( f_opportunity[last_stage_change_date], TODAY(), DAY ) > 14 "
                 ") )"
             ),
             "formatString": "#,0",
-            "description": "Watch: Stage 3-4 open AND stalled >14d.",
+            "description": "Watch: Stage 3-4 open Land + Expand AND stalled >14d.",
         },
         {
             "name": "Watch Opps ARR",
             "expression": (
                 "CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), "
                 "FILTER ( f_opportunity, "
+                f"{non_omitted} && "
                 "f_opportunity[is_closed] = FALSE() && "
+                'f_opportunity[motion_type] IN { "Land", "Expand" } && '
                 'f_opportunity[stage_name] IN { "3 - Engagement", "4 - Shortlisted" } && '
                 "DATEDIFF ( f_opportunity[last_stage_change_date], TODAY(), DAY ) > 14 "
                 ") )"
             ),
-            "formatString": '"$"#,0',
-            "description": "ARR exposed in Watch bucket (Stage 3-4 stalled >14d).",
+            "formatString": CURRENCY_M_FORMAT,
+            "description": "Land + Expand ARR exposed in Watch bucket (Stage 3-4 stalled >14d).",
+        },
+        {
+            "name": "Exception Opps Count",
+            "expression": "[At Risk Opps Count] + [Watch Opps Count]",
+            "formatString": "#,0",
+            "description": "Land + Expand exception count: At Risk + Watch. Keeps count universe aligned to ARR exposure.",
+        },
+        {
+            "name": "Exception ARR",
+            "expression": "[At Risk Opps ARR] + [Watch Opps ARR]",
+            "formatString": CURRENCY_M_FORMAT,
+            "description": "Land + Expand ARR exception exposure: At Risk + Watch.",
         },
         {
             "name": "Healthy Moves Count",
             "expression": (
                 "CALCULATE ( COUNTROWS ( f_stage_transition ), "
+                f"{core_stage}, "
                 'f_stage_transition[direction] = "forward", '
-                "f_stage_transition[transition_at] >= TODAY() - 7 )"
+                "f_stage_transition[transition_at] >= TODAY() - 7, "
+                "TREATAS ( "
+                "CALCULATETABLE ( VALUES ( f_opportunity[opp_id] ), "
+                f"{non_omitted}, "
+                'f_opportunity[motion_type] IN { "Land", "Expand" } ), '
+                "f_stage_transition[opp_id] ) )"
             ),
             "formatString": "#,0",
-            "description": "Forward stage moves in the last 7 days.",
+            "description": "Land + Expand forward stage moves in the last 7 days.",
         },
         {
             "name": "Healthy Moves ARR",
             "expression": (
                 "CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), "
+                f"{non_omitted}, "
+                'f_opportunity[motion_type] IN { "Land", "Expand" }, '
                 "TREATAS ( "
-                'CALCULATETABLE ( VALUES ( f_stage_transition[opp_id] ), f_stage_transition[direction] = "forward", '
+                f'CALCULATETABLE ( VALUES ( f_stage_transition[opp_id] ), {core_stage}, f_stage_transition[direction] = "forward", '
                 "f_stage_transition[transition_at] >= TODAY() - 7 ), "
                 "f_opportunity[opp_id] ) )"
             ),
-            "formatString": '"$"#,0',
-            "description": "ARR of opps with a forward stage move in the last 7 days.",
+            "formatString": CURRENCY_M_FORMAT,
+            "description": "Land + Expand ARR of opps with a forward stage move in the last 7 days.",
         },
         # Window-bound deltas (Tab 1 What Changed) — 3 families × 3 windows = 9 measures.
         # Slips family deferred — requires f_ofh_close_date table not in current ETL.
@@ -558,6 +962,96 @@ def build_model_bim() -> dict:
             "name": "Total Stage Transitions",
             "expression": "COUNTROWS ( f_stage_transition )",
             "formatString": "#,0",
+        },
+        {
+            "name": "Core Stage Transitions (LE)",
+            "expression": (
+                "VAR _stage = SELECTEDVALUE ( d_stage[stage_order] ) "
+                "VAR _oppids = CALCULATETABLE ( VALUES ( f_opportunity[opp_id] ), "
+                "REMOVEFILTERS ( d_stage ), "
+                f"{non_omitted}, "
+                'f_opportunity[motion_type] IN { "Land", "Expand" } ) '
+                "RETURN IF ( "
+                "NOT ( ISBLANK ( _stage ) ), "
+                "IF ( _stage >= 1 && _stage <= 6, CALCULATE ( COUNTROWS ( f_stage_transition ), f_stage_transition[from_stage_num] = _stage, TREATAS ( _oppids, f_stage_transition[opp_id] ) ) ), "
+                "CALCULATE ( COUNTROWS ( f_stage_transition ), "
+                f"{core_stage}, "
+                "TREATAS ( _oppids, f_stage_transition[opp_id] ) ) )"
+            ),
+            "formatString": "#,0",
+            "description": "Land + Expand transitions restricted to the real stage ladder: 1 Prospecting through 6 Contracting.",
+        },
+        {
+            "name": "Core Stage Forward Pct (LE)",
+            "expression": (
+                "VAR _stage = SELECTEDVALUE ( d_stage[stage_order] ) "
+                "VAR _oppids = CALCULATETABLE ( VALUES ( f_opportunity[opp_id] ), "
+                "REMOVEFILTERS ( d_stage ), "
+                f"{non_omitted}, "
+                'f_opportunity[motion_type] IN { "Land", "Expand" } ) '
+                "RETURN IF ( "
+                "NOT ( ISBLANK ( _stage ) ), "
+                "IF ( _stage >= 1 && _stage <= 6, "
+                "DIVIDE ( "
+                'CALCULATE ( COUNTROWS ( f_stage_transition ), f_stage_transition[from_stage_num] = _stage, f_stage_transition[direction] = "forward", TREATAS ( _oppids, f_stage_transition[opp_id] ) ), '
+                "CALCULATE ( COUNTROWS ( f_stage_transition ), f_stage_transition[from_stage_num] = _stage, TREATAS ( _oppids, f_stage_transition[opp_id] ) ) ) ), "
+                "CALCULATE ( [Stage Forward Pct (LE)], REMOVEFILTERS ( d_stage ) ) )"
+            ),
+            "formatString": "0.0%",
+            "description": "Stage Forward Pct (LE) projected onto canonical d_stage rows 1-6 only.",
+        },
+        {
+            "name": "Core Stage Backward Pct (LE)",
+            "expression": (
+                "VAR _stage = SELECTEDVALUE ( d_stage[stage_order] ) "
+                "VAR _oppids = CALCULATETABLE ( VALUES ( f_opportunity[opp_id] ), "
+                "REMOVEFILTERS ( d_stage ), "
+                f"{non_omitted}, "
+                'f_opportunity[motion_type] IN { "Land", "Expand" } ) '
+                "RETURN IF ( "
+                "NOT ( ISBLANK ( _stage ) ), "
+                "IF ( _stage >= 1 && _stage <= 6, "
+                "DIVIDE ( "
+                'CALCULATE ( COUNTROWS ( f_stage_transition ), f_stage_transition[from_stage_num] = _stage, f_stage_transition[direction] = "backward", TREATAS ( _oppids, f_stage_transition[opp_id] ) ), '
+                "CALCULATE ( COUNTROWS ( f_stage_transition ), f_stage_transition[from_stage_num] = _stage, TREATAS ( _oppids, f_stage_transition[opp_id] ) ) ) ), "
+                "CALCULATE ( [Stage Backward Pct (LE)], REMOVEFILTERS ( d_stage ) ) )"
+            ),
+            "formatString": "0.0%",
+            "description": "Stage Backward Pct (LE) projected onto canonical d_stage rows 1-6 only.",
+        },
+        {
+            "name": "Core Avg Days In Prior Stage (LE)",
+            "expression": (
+                "VAR _stage = SELECTEDVALUE ( d_stage[stage_order] ) "
+                "VAR _oppids = CALCULATETABLE ( VALUES ( f_opportunity[opp_id] ), "
+                "REMOVEFILTERS ( d_stage ), "
+                f"{non_omitted}, "
+                'f_opportunity[motion_type] IN { "Land", "Expand" } ) '
+                "RETURN IF ( "
+                "NOT ( ISBLANK ( _stage ) ), "
+                "IF ( _stage >= 1 && _stage <= 6, "
+                "CALCULATE ( AVERAGE ( f_stage_transition[days_in_prior_stage] ), f_stage_transition[from_stage_num] = _stage, TREATAS ( _oppids, f_stage_transition[opp_id] ) ) ), "
+                "CALCULATE ( [Avg Days In Prior Stage (LE)], REMOVEFILTERS ( d_stage ) ) )"
+            ),
+            "formatString": "0.0",
+            "description": "Avg days in prior stage projected onto canonical d_stage rows 1-6 only.",
+        },
+        {
+            "name": "Core Stage Moves ARR 7d",
+            "expression": (
+                "VAR _stage = SELECTEDVALUE ( d_stage[stage_order] ) "
+                "VAR _transition_oppids = CALCULATETABLE ( VALUES ( f_stage_transition[opp_id] ), f_stage_transition[from_stage_num] = _stage, f_stage_transition[transition_at] >= TODAY() - 7 ) "
+                "RETURN IF ( "
+                "NOT ( ISBLANK ( _stage ) ), "
+                "IF ( _stage >= 1 && _stage <= 6, "
+                "CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), REMOVEFILTERS ( d_stage ), "
+                f"{non_omitted}, "
+                'f_opportunity[motion_type] IN { "Land", "Expand" }, '
+                "TREATAS ( _transition_oppids, f_opportunity[opp_id] ) ) ), "
+                "CALCULATE ( [Stage Moves ARR 7d], REMOVEFILTERS ( d_stage ) ) )"
+            ),
+            "formatString": CURRENCY_M_FORMAT,
+            "description": "7-day Land + Expand ARR moved, projected onto canonical d_stage rows 1-6 only.",
         },
         {
             "name": "Avg Days In Prior Stage",
@@ -587,19 +1081,21 @@ def build_model_bim() -> dict:
             "formatString": "0.0%",
             "description": "Stage regression rate — pairs with Stage Forward Pct.",
         },
-        # Land+Expand motion filter, pushed from f_opportunity → f_stage_transition via TREATAS
+        # Land + Expand motion filter, pushed from f_opportunity → f_stage_transition via TREATAS
         # because rel_stage_opp is oneDirection. KG: stage_conversion.motion_filter = land_expand.
         {
             "name": "Stage Forward Pct (LE)",
             "expression": (
                 "CALCULATE ( [Stage Forward Pct], "
+                f"{core_stage}, "
                 "TREATAS ( "
                 "CALCULATETABLE ( VALUES ( f_opportunity[opp_id] ), "
+                f"{non_omitted}, "
                 'f_opportunity[motion_type] IN { "Land", "Expand" } ), '
                 "f_stage_transition[opp_id] ) )"
             ),
             "formatString": "0.0%",
-            "description": "Stage Forward Pct restricted to Land+Expand opps (excludes Renewal). RW KG motion_filter=land_expand.",
+            "description": "Stage Forward Pct restricted to Land + Expand opps (excludes Renewal). RW KG motion_filter=land_expand.",
         },
         # Per-stage forward rates — wrap [Stage Forward Pct (LE)] with from_stage_num filter.
         # Caveat (KG): ~70% of close-wons skip Stage 4 in OFH, so S3→S4 and S4→S5 are computed
@@ -608,136 +1104,140 @@ def build_model_bim() -> dict:
             "name": "Stage 1 Forward Pct",
             "expression": "CALCULATE ( [Stage Forward Pct (LE)], f_stage_transition[from_stage_num] = 1 )",
             "formatString": "0.0%",
-            "description": "Prospecting → Discovery forward rate (Land+Expand). RW KPI stage_conversion target >70%.",
+            "description": "Prospecting → Discovery forward rate (Land + Expand). RW KPI stage_conversion target >70%.",
         },
         {
             "name": "Stage 2 Forward Pct",
             "expression": "CALCULATE ( [Stage Forward Pct (LE)], f_stage_transition[from_stage_num] = 2 )",
             "formatString": "0.0%",
-            "description": "Discovery → Engagement forward rate (Land+Expand). RW KPI stage_conversion target >70%.",
+            "description": "Discovery → Engagement forward rate (Land + Expand). RW KPI stage_conversion target >70%.",
         },
         {
             "name": "Stage 3 Forward Pct",
             "expression": "CALCULATE ( [Stage Forward Pct (LE)], f_stage_transition[from_stage_num] = 3 )",
             "formatString": "0.0%",
-            "description": "Engagement → Shortlisted forward rate (Land+Expand). Caveat: ~70% of close-wons skip Stage 4 — partial population.",
+            "description": "Engagement → Shortlisted forward rate (Land + Expand). Caveat: ~70% of close-wons skip Stage 4 — partial population.",
         },
         {
             "name": "Stage 4 Forward Pct",
             "expression": "CALCULATE ( [Stage Forward Pct (LE)], f_stage_transition[from_stage_num] = 4 )",
             "formatString": "0.0%",
-            "description": "Shortlisted → Preferred forward rate (Land+Expand). Caveat: small/skewed sample due to S4 funnel-skip pattern.",
+            "description": "Shortlisted → Preferred forward rate (Land + Expand). Caveat: small/skewed sample due to S4 funnel-skip pattern.",
         },
         {
             "name": "Stage 5 Forward Pct",
             "expression": "CALCULATE ( [Stage Forward Pct (LE)], f_stage_transition[from_stage_num] = 5 )",
             "formatString": "0.0%",
-            "description": "Preferred → Contracting forward rate (Land+Expand). RW KPI stage_conversion target >70%.",
+            "description": "Preferred → Contracting forward rate (Land + Expand). RW KPI stage_conversion target >70%.",
         },
         {
             "name": "Stage 6 Forward Pct",
             "expression": "CALCULATE ( [Stage Forward Pct (LE)], f_stage_transition[from_stage_num] = 6 )",
             "formatString": "0.0%",
-            "description": "Contracting → Won forward rate (Land+Expand). RW KPI stage_conversion target >70%.",
+            "description": "Contracting → Won forward rate (Land + Expand). RW KPI stage_conversion target >70%.",
         },
-        # Stage Backward Pct + per-stage variants (Land+Expand). Mirrors the forward family;
+        # Stage Backward Pct + per-stage variants (Land + Expand). Mirrors the forward family;
         # uses TREATAS to push motion filter from f_opportunity into f_stage_transition.
         {
             "name": "Stage Backward Pct (LE)",
             "expression": (
                 "CALCULATE ( [Stage Backward Pct], "
+                f"{core_stage}, "
                 "TREATAS ( "
                 "CALCULATETABLE ( VALUES ( f_opportunity[opp_id] ), "
+                f"{non_omitted}, "
                 'f_opportunity[motion_type] IN { "Land", "Expand" } ), '
                 "f_stage_transition[opp_id] ) )"
             ),
             "formatString": "0.0%",
-            "description": "Stage Backward Pct restricted to Land+Expand opps (excludes Renewal).",
+            "description": "Stage Backward Pct restricted to Land + Expand opps (excludes Renewal).",
         },
         {
             "name": "Stage 1 Backward Pct",
             "expression": "CALCULATE ( [Stage Backward Pct (LE)], f_stage_transition[from_stage_num] = 1 )",
             "formatString": "0.0%",
-            "description": "Backward rate out of Prospecting (Land+Expand). Pairs with Stage 1 Forward Pct.",
+            "description": "Backward rate out of Prospecting (Land + Expand). Pairs with Stage 1 Forward Pct.",
         },
         {
             "name": "Stage 2 Backward Pct",
             "expression": "CALCULATE ( [Stage Backward Pct (LE)], f_stage_transition[from_stage_num] = 2 )",
             "formatString": "0.0%",
-            "description": "Backward rate out of Discovery (Land+Expand).",
+            "description": "Backward rate out of Discovery (Land + Expand).",
         },
         {
             "name": "Stage 3 Backward Pct",
             "expression": "CALCULATE ( [Stage Backward Pct (LE)], f_stage_transition[from_stage_num] = 3 )",
             "formatString": "0.0%",
-            "description": "Backward rate out of Engagement (Land+Expand). Caveat: ~70% close-won S4 skip — partial population.",
+            "description": "Backward rate out of Engagement (Land + Expand). Caveat: ~70% close-won S4 skip — partial population.",
         },
         {
             "name": "Stage 4 Backward Pct",
             "expression": "CALCULATE ( [Stage Backward Pct (LE)], f_stage_transition[from_stage_num] = 4 )",
             "formatString": "0.0%",
-            "description": "Backward rate out of Shortlisted (Land+Expand). Caveat: small/skewed sample.",
+            "description": "Backward rate out of Shortlisted (Land + Expand). Caveat: small/skewed sample.",
         },
         {
             "name": "Stage 5 Backward Pct",
             "expression": "CALCULATE ( [Stage Backward Pct (LE)], f_stage_transition[from_stage_num] = 5 )",
             "formatString": "0.0%",
-            "description": "Backward rate out of Preferred (Land+Expand).",
+            "description": "Backward rate out of Preferred (Land + Expand).",
         },
         {
             "name": "Stage 6 Backward Pct",
             "expression": "CALCULATE ( [Stage Backward Pct (LE)], f_stage_transition[from_stage_num] = 6 )",
             "formatString": "0.0%",
-            "description": "Backward rate out of Contracting (Land+Expand).",
+            "description": "Backward rate out of Contracting (Land + Expand).",
         },
-        # Time-in-stage: Land+Expand restriction + per-stage variants of Avg Days In Prior Stage.
+        # Time-in-stage: Land + Expand restriction + per-stage variants of Avg Days In Prior Stage.
         {
             "name": "Avg Days In Prior Stage (LE)",
             "expression": (
                 "CALCULATE ( [Avg Days In Prior Stage], "
+                f"{core_stage}, "
                 "TREATAS ( "
                 "CALCULATETABLE ( VALUES ( f_opportunity[opp_id] ), "
+                f"{non_omitted}, "
                 'f_opportunity[motion_type] IN { "Land", "Expand" } ), '
                 "f_stage_transition[opp_id] ) )"
             ),
             "formatString": "0.0",
-            "description": "Avg days an opp spent in its prior stage before transitioning (Land+Expand only).",
+            "description": "Avg days an opp spent in its prior stage before transitioning (Land + Expand only).",
         },
         {
             "name": "Avg Days In Stage 1",
             "expression": "CALCULATE ( [Avg Days In Prior Stage (LE)], f_stage_transition[from_stage_num] = 1 )",
             "formatString": "0.0",
-            "description": "Avg days in Prospecting (Land+Expand).",
+            "description": "Avg days in Prospecting (Land + Expand).",
         },
         {
             "name": "Avg Days In Stage 2",
             "expression": "CALCULATE ( [Avg Days In Prior Stage (LE)], f_stage_transition[from_stage_num] = 2 )",
             "formatString": "0.0",
-            "description": "Avg days in Discovery (Land+Expand).",
+            "description": "Avg days in Discovery (Land + Expand).",
         },
         {
             "name": "Avg Days In Stage 3",
             "expression": "CALCULATE ( [Avg Days In Prior Stage (LE)], f_stage_transition[from_stage_num] = 3 )",
             "formatString": "0.0",
-            "description": "Avg days in Engagement (Land+Expand).",
+            "description": "Avg days in Engagement (Land + Expand).",
         },
         {
             "name": "Avg Days In Stage 4",
             "expression": "CALCULATE ( [Avg Days In Prior Stage (LE)], f_stage_transition[from_stage_num] = 4 )",
             "formatString": "0.0",
-            "description": "Avg days in Shortlisted (Land+Expand). Caveat: small/skewed sample due to S4 funnel-skip pattern.",
+            "description": "Avg days in Shortlisted (Land + Expand). Caveat: small/skewed sample due to S4 funnel-skip pattern.",
         },
         {
             "name": "Avg Days In Stage 5",
             "expression": "CALCULATE ( [Avg Days In Prior Stage (LE)], f_stage_transition[from_stage_num] = 5 )",
             "formatString": "0.0",
-            "description": "Avg days in Preferred (Land+Expand).",
+            "description": "Avg days in Preferred (Land + Expand).",
         },
         {
             "name": "Avg Days In Stage 6",
             "expression": "CALCULATE ( [Avg Days In Prior Stage (LE)], f_stage_transition[from_stage_num] = 6 )",
             "formatString": "0.0",
-            "description": "Avg days in Contracting (Land+Expand).",
+            "description": "Avg days in Contracting (Land + Expand).",
         },
         # Window-bound stage-transition deltas — 3 families × 3 windows = 9 measures.
         *_stage_window_measures(),
@@ -747,20 +1247,21 @@ def build_model_bim() -> dict:
     forecast_measures = [
         {
             "name": "Total Forecast Transitions",
-            "expression": "COUNTROWS ( f_forecast_transition )",
+            "expression": 'CALCULATE ( COUNTROWS ( f_forecast_transition ), f_forecast_transition[from_category] <> "Omitted", f_forecast_transition[to_category] <> "Omitted" )',
             "formatString": "#,0",
+            "description": "Forecast-category transitions excluding Omitted; Omitted is pipeline hygiene, not executive forecast movement.",
         },
         {
             "name": "Forecast Upgrades",
-            "expression": 'CALCULATE ( COUNTROWS ( f_forecast_transition ), f_forecast_transition[direction] = "upgrade" )',
+            "expression": 'CALCULATE ( COUNTROWS ( f_forecast_transition ), f_forecast_transition[direction] = "upgrade", f_forecast_transition[from_category] <> "Omitted", f_forecast_transition[to_category] <> "Omitted" )',
             "formatString": "#,0",
-            "description": "Pipeline → Best Case → Commit → Closed direction.",
+            "description": "Pipeline → Best Case → Commit → Closed direction. Excludes Omitted transitions.",
         },
         {
             "name": "Forecast Slips",
-            "expression": 'CALCULATE ( COUNTROWS ( f_forecast_transition ), f_forecast_transition[direction] = "slip" )',
+            "expression": 'CALCULATE ( COUNTROWS ( f_forecast_transition ), f_forecast_transition[direction] = "slip", f_forecast_transition[from_category] <> "Omitted", f_forecast_transition[to_category] <> "Omitted" )',
             "formatString": "#,0",
-            "description": "Commit → Pipeline / Best Case → Pipeline (downgrade). RW pain — undermines forecast trust.",
+            "description": "Commit → Pipeline / Best Case → Pipeline (downgrade), excluding Omitted. RW pain — undermines forecast trust.",
         },
         {
             "name": "Forecast Slip Pct",
@@ -770,9 +1271,94 @@ def build_model_bim() -> dict:
         },
         {
             "name": "Avg Days In Forecast Category",
-            "expression": "AVERAGE ( f_forecast_transition[days_in_prior_category] )",
+            "expression": 'CALCULATE ( AVERAGE ( f_forecast_transition[days_in_prior_category] ), f_forecast_transition[from_category] <> "Omitted", f_forecast_transition[to_category] <> "Omitted" )',
             "formatString": "0.0",
-            "description": "How long opps sit in each forecast category before moving. Slice by from_category.",
+            "description": "How long opps sit in each non-Omitted forecast category before moving. Slice by from_category.",
+        },
+    ]
+
+    # Active Apttus asset base. These are ARR measures over installed assets,
+    # not Renewal-opportunity ACV, so they intentionally live on a separate fact.
+    asset_measures = [
+        {
+            "name": "Existing ARR Run Rate",
+            "expression": (
+                "CALCULATE ( "
+                "SUM ( f_asset_line_item[asset_arr_org_ccy] ), "
+                "f_asset_line_item[is_active_base] = TRUE(), "
+                "REMOVEFILTERS ( d_calendar ) )"
+            ),
+            "formatString": CURRENCY_M_FORMAT,
+            "description": "RW KPI: existing_arr_run_rate. Current active/non-expired installed ARR base from Apttus Asset Line Item; not Renewal ACV.",
+        },
+        _heatmap_color_measure(
+            "Existing ARR Run Rate Heat Color",
+            "Existing ARR Run Rate",
+            table="f_asset_line_item",
+            group_columns=("region", "termination_risk", "product_family", "industry"),
+            palette=blue_heat,
+            description="Field-value background color for active-base ARR heatmaps.",
+        ),
+        {
+            "name": "Existing ARR Expiring In Period",
+            "expression": (
+                "CALCULATE ( "
+                "SUM ( f_asset_line_item[asset_arr_org_ccy] ), "
+                "f_asset_line_item[is_active_base] = TRUE() )"
+            ),
+            "formatString": CURRENCY_M_FORMAT,
+            "description": "Active installed ARR filtered by asset end date / selected renewal period.",
+        },
+        _heatmap_color_measure(
+            "Existing ARR Expiring In Period Heat Color",
+            "Existing ARR Expiring In Period",
+            table="f_asset_line_item",
+            group_columns=("region", "termination_risk", "product_family", "industry"),
+            palette=blue_heat,
+            description="Field-value background color for expiring active-base ARR heatmaps.",
+        ),
+        {
+            "name": "Business At Risk ARR",
+            "expression": (
+                "CALCULATE ( "
+                "SUM ( f_asset_line_item[asset_arr_org_ccy] ), "
+                "f_asset_line_item[is_active_base] = TRUE(), "
+                'f_asset_line_item[termination_risk] IN { "High", "Medium" } )'
+            ),
+            "formatString": CURRENCY_M_FORMAT,
+            "description": "RW KPI: business_at_risk. Active installed ARR where Account termination risk is High or Medium; replaces Renewal-opportunity ACV proxy.",
+        },
+        _heatmap_color_measure(
+            "Business At Risk ARR Heat Color",
+            "Business At Risk ARR",
+            table="f_asset_line_item",
+            group_columns=("region", "termination_risk", "product_family", "industry"),
+            palette=red_heat,
+            description="Field-value background color for at-risk active-base ARR heatmaps.",
+        ),
+        {
+            "name": "Business At Risk Pct",
+            "expression": "DIVIDE ( [Business At Risk ARR], [Existing ARR Run Rate] )",
+            "formatString": "0.0%",
+            "description": "At-risk active ARR as a share of current installed ARR run-rate.",
+        },
+        _heatmap_color_measure(
+            "Business At Risk Pct Heat Color",
+            "Business At Risk Pct",
+            table="f_asset_line_item",
+            group_columns=("region", "termination_risk", "product_family", "industry"),
+            palette=amber_heat,
+            description="Field-value background color for active-base risk percent heatmaps.",
+        ),
+        {
+            "name": "Active Asset Line Count",
+            "expression": (
+                "CALCULATE ( "
+                "COUNTROWS ( f_asset_line_item ), "
+                "f_asset_line_item[is_active_base] = TRUE() )"
+            ),
+            "formatString": "#,0",
+            "description": "Active/non-expired Apttus asset line count.",
         },
     ]
 
@@ -792,7 +1378,8 @@ def build_model_bim() -> dict:
                         col("opp_name", "string"),
                         col("account_id", "string"),
                         col("owner_id", "string"),
-                        col("stage_name", "string"),
+                        col("stage_name", "string", sort_by="stage_order"),
+                        col("stage_order", "int64"),
                         col("motion_type", "string"),
                         col("record_type", "string"),
                         col("primary_quote_type", "string"),
@@ -801,8 +1388,24 @@ def build_model_bim() -> dict:
                         col("native_currency", "string"),
                         col("arr_org_ccy", "double"),
                         col("acv_org_ccy", "double"),
+                        col("saas_acv_org_ccy", "double"),
+                        col("axioma_order_inflow_org_ccy", "double"),
+                        col("ps_recurring_acv_org_ccy", "double"),
+                        col("ps_one_off_org_ccy", "double"),
+                        col("ps_non_recurring_org_ccy", "double"),
+                        col("third_party_one_off_org_ccy", "double"),
+                        col("cdd_one_off_tcv_org_ccy", "double"),
+                        col("pso_one_off_tcv_org_ccy", "double"),
+                        col("psi_psa_one_off_org_ccy", "double"),
+                        col("one_off_revenue_org_ccy", "double"),
+                        col("quota_org_ccy", "double"),
                         col("amount_org_ccy", "double"),
                         col("lead_source", "string"),
+                        col("forecast_category", "string"),
+                        col("commercial_approval", "boolean"),
+                        col("commercial_approval_date", "dateTime", fmt="yyyy-mm-dd"),
+                        col("commercial_approval_submit_date", "dateTime", fmt="yyyy-mm-dd"),
+                        col("risk_assessment_level", "string"),
                         col("is_won", "boolean"),
                         col("is_closed", "boolean"),
                         col("close_date", "dateTime", fmt="yyyy-mm-dd"),
@@ -812,6 +1415,7 @@ def build_model_bim() -> dict:
                         col("billing_country", "string"),
                         col("industry", "string"),
                         col("account_name", "string"),
+                        col("won_value_tier", "string"),
                     ],
                     "partitions": [dl_partition("f_opportunity")],
                     "measures": measures,
@@ -826,6 +1430,8 @@ def build_model_bim() -> dict:
                         col("industry", "string"),
                         col("owner_id", "string"),
                         col("account_type", "string"),
+                        col("axioma_client", "boolean"),
+                        col("termination_risk", "string"),
                     ],
                     "partitions": [dl_partition("d_account")],
                 },
@@ -849,6 +1455,16 @@ def build_model_bim() -> dict:
                         col("sort_order", "int64"),
                     ],
                     "partitions": [dl_partition("d_region")],
+                },
+                {
+                    "name": "d_stage",
+                    "columns": [
+                        col("stage_order", "int64", key=True),
+                        col("stage_name", "string", sort_by="stage_order"),
+                        col("stage_short_name", "string", sort_by="stage_order"),
+                        col("is_terminal", "boolean"),
+                    ],
+                    "partitions": [dl_partition("d_stage")],
                 },
                 {
                     "name": "d_calendar",
@@ -875,9 +1491,13 @@ def build_model_bim() -> dict:
                         col("prior_transition_at", "dateTime"),
                         col("days_in_prior_stage", "double"),
                         col("from_stage_num", "int64"),
-                        col("from_stage_name", "string"),
+                        col("from_stage_name", "string", sort_by="from_stage_order"),
+                        col("from_stage_order", "int64"),
+                        col("from_stage_display", "string", sort_by="from_stage_order"),
                         col("to_stage_num", "int64"),
-                        col("to_stage_name", "string"),
+                        col("to_stage_name", "string", sort_by="to_stage_order"),
+                        col("to_stage_order", "int64"),
+                        col("to_stage_display", "string", sort_by="to_stage_order"),
                         col("direction", "string"),
                     ],
                     "partitions": [dl_partition("f_stage_transition")],
@@ -898,6 +1518,34 @@ def build_model_bim() -> dict:
                     ],
                     "partitions": [dl_partition("f_forecast_transition")],
                     "measures": forecast_measures,
+                },
+                {
+                    "name": "f_asset_line_item",
+                    "columns": [
+                        col("asset_line_item_id", "string", key=True),
+                        col("asset_name", "string"),
+                        col("account_id", "string"),
+                        col("account_name", "string"),
+                        col("region", "string"),
+                        col("billing_country", "string"),
+                        col("industry", "string"),
+                        col("termination_risk", "string"),
+                        col("asset_status", "string"),
+                        col("is_inactive", "boolean"),
+                        col("asset_start_date", "dateTime", fmt="yyyy-mm-dd"),
+                        col("asset_end_date", "dateTime", fmt="yyyy-mm-dd"),
+                        col("product_id", "string"),
+                        col("product_name", "string"),
+                        col("product_family", "string"),
+                        col("product_area", "string"),
+                        col("product_type", "string"),
+                        col("native_currency", "string"),
+                        col("asset_arr_org_ccy", "double"),
+                        col("renewal_scope", "string"),
+                        col("is_active_base", "boolean"),
+                    ],
+                    "partitions": [dl_partition("f_asset_line_item")],
+                    "measures": asset_measures,
                 },
             ],
             "relationships": [
@@ -926,6 +1574,14 @@ def build_model_bim() -> dict:
                     "crossFilteringBehavior": "oneDirection",
                 },
                 {
+                    "name": "rel_opp_stage",
+                    "fromTable": "f_opportunity",
+                    "fromColumn": "stage_order",
+                    "toTable": "d_stage",
+                    "toColumn": "stage_order",
+                    "crossFilteringBehavior": "oneDirection",
+                },
+                {
                     "name": "rel_opp_close_date",
                     "fromTable": "f_opportunity",
                     "fromColumn": "close_date",
@@ -941,6 +1597,30 @@ def build_model_bim() -> dict:
                     "toColumn": "date",
                     "crossFilteringBehavior": "oneDirection",
                     "isActive": False,  # second relationship to date dim — activated by USERELATIONSHIP for "New Opps Created"
+                },
+                {
+                    "name": "rel_asset_account",
+                    "fromTable": "f_asset_line_item",
+                    "fromColumn": "account_id",
+                    "toTable": "d_account",
+                    "toColumn": "account_id",
+                    "crossFilteringBehavior": "oneDirection",
+                },
+                {
+                    "name": "rel_asset_region",
+                    "fromTable": "f_asset_line_item",
+                    "fromColumn": "region",
+                    "toTable": "d_region",
+                    "toColumn": "region",
+                    "crossFilteringBehavior": "oneDirection",
+                },
+                {
+                    "name": "rel_asset_end_date",
+                    "fromTable": "f_asset_line_item",
+                    "fromColumn": "asset_end_date",
+                    "toTable": "d_calendar",
+                    "toColumn": "date",
+                    "crossFilteringBehavior": "oneDirection",
                 },
                 {
                     "name": "rel_forecast_opp",

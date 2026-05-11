@@ -233,7 +233,7 @@ def build_visuals() -> dict[str, dict]:
         _new_id(), 320, 20, 280, 80, "d_calendar", "fiscal_quarter", "Fiscal Quarter"
     )
     visuals[_new_id()] = visual_slicer(
-        _new_id(), 620, 20, 280, 80, "f_opportunity", "motion_type", "Motion (Land/Expand/Renewal)"
+        _new_id(), 620, 20, 280, 80, "f_opportunity", "motion_type", "Motion (Land + Expand/Renewal)"
     )
 
     # Second row: 5 KPI cards (220×110 each, 20px gap)

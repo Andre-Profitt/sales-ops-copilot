@@ -25,3 +25,25 @@ _windows_test/
 assets/golden/
 assets/*.pre-*.pptx
 .superpowers/
+
+# track:rw — zebra KG derived artifacts (keep README, ignore generated)
+data/zebra_kg/*.jsonl
+data/zebra_kg/*.csv
+data/zebra_kg/*.json
+data/zebra_kg_rw/*.jsonl
+data/zebra_kg_rw/*.csv
+data/zebra_kg_rw/*.json
+data/zebra_kg/schemas/*/
+!data/zebra_kg/README.md
+!data/zebra_kg_rw/README.md
+
+# track:rw — zebra infrastructure miner outputs.
+# Heavy / IP-bearing extracts stay local; curated atlases are committed.
+data/zebra_kg/infrastructure/raw_configs.jsonl
+data/zebra_kg/infrastructure/visual_packages.json
+data/zebra_kg/graphrag/*.jsonl
+data/zebra_kg/graphrag/*.json
+data/zebra_kg/graphrag/*.npy
+
+# track:rw — quick test dashboard outputs (regenerable from translator).
+data/zebra_kg/test_dashboards/*.json

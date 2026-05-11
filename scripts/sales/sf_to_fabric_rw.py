@@ -1,4 +1,4 @@
-"""Stage SF Opportunity / Account / User detail rows into Fabric Lakehouse
+"""Stage SF Opportunity / Asset / Account / User detail rows into Fabric Lakehouse
 `lkh_sales_kpis_rw` for Richard Wyeth's VP Ops scorecard.
 
 Detail-row staging (not pre-aggregated) so Power BI slicers — Region,
@@ -11,6 +11,7 @@ Output Lakehouse:
 
 Tables written:
   f_opportunity      (fact: open + closed deals; one row per opp)
+  f_asset_line_item  (fact: active/non-expired installed ARR base)
   d_account          (dim: account, region, country, industry)
   d_user             (dim: owner identity + role for region pivots)
   d_region           (small dim: 7 distinct Region__c values)
@@ -20,7 +21,7 @@ Auth: AzureCliCredential (Fabric/OneLake) + sf CLI (Salesforce).
 Both expected pre-authenticated.
 
 Cardinal SimCorp rules (enforced):
-  - APTS_Opportunity_ARR__c → Land+Expand only (motion_filter = land/expand)
+  - APTS_Opportunity_ARR__c → Land + Expand only (motion_filter = land/expand)
   - APTS_Renewal_ACV__c → Renewal only
   - Never blend; the fact table carries both columns natively, the model
     layer decides which to surface per-KPI.
@@ -37,6 +38,8 @@ import duckdb
 import pandas as pd
 from azure.identity import AzureCliCredential
 from deltalake import write_deltalake
+
+from scripts.sales.rw_stage_order import stage_dimension_rows, stage_order_for_label
 
 WORKSPACE_ID = "b66233d5-9d4a-44ba-89a8-b70206d98ae7"
 LAKEHOUSE_NAME = "lkh_sales_kpis_rw"
@@ -59,8 +62,23 @@ SELECT
     CurrencyIsoCode,
     convertCurrency(APTS_Opportunity_ARR__c),
     convertCurrency(APTS_Renewal_ACV__c),
+    convertCurrency(APTS_RH_ASP_Annual__c),
+    convertCurrency(APTS_RUS_Axioma_Order_Inflow__c),
+    convertCurrency(APTS_PS_Recurring_ACV_Display__c),
+    convertCurrency(APTS_RH_PS_One_Off__c),
+    convertCurrency(APTS_PS_Non_Recurring_NPP_Display__c),
+    convertCurrency(APTS_RH_3rd_Party_One_Off__c),
+    convertCurrency(APTS_CDD_One_Off_TCV_Display__c),
+    convertCurrency(APTS_PSO_One_Off_TCV_Display__c),
+    convertCurrency(APTS_RUS_PSI_PSA_One_Off__c),
+    convertCurrency(Quota_Amount__c),
     convertCurrency(Amount),
     LeadSource,
+    ForecastCategoryName,
+    Stage_20_Approval__c,
+    Stage_20_Approval_Date__c,
+    Submit_for_Stage_20_Review_Date__c,
+    Risk_Assessment_Level__c,
     IsWon, IsClosed,
     CloseDate, CreatedDate,
     LastStageChangeDate,
@@ -71,9 +89,48 @@ WHERE (CloseDate = LAST_N_FISCAL_YEARS:3 OR CloseDate = THIS_FISCAL_YEAR)
 """
 
 SOQL_ACCOUNT = """
-SELECT Id, Name, Region__c, BillingCountry, Industry, OwnerId, Type
+SELECT Id, Name, Region__c, BillingCountry, Industry, OwnerId, Type,
+       Axioma_Client__c, Risk_of_Potential_Termination__c
 FROM Account
 WHERE Id IN (SELECT AccountId FROM Opportunity WHERE (CloseDate = LAST_N_FISCAL_YEARS:3 OR CloseDate = THIS_FISCAL_YEAR))
+"""
+
+SOQL_ASSET = """
+SELECT
+    Id, Name,
+    Apttus_Config2__AccountId__c,
+    Apttus_Config2__AccountId__r.Name,
+    Apttus_Config2__AccountId__r.Region__c,
+    Apttus_Config2__AccountId__r.BillingCountry,
+    Apttus_Config2__AccountId__r.Industry,
+    Apttus_Config2__AccountId__r.Risk_of_Potential_Termination__c,
+    Apttus_Config2__AssetStatus__c,
+    Apttus_Config2__IsInactive__c,
+    Apttus_Config2__StartDate__c,
+    Apttus_Config2__EndDate__c,
+    Apttus_Config2__ProductId__c,
+    Apttus_Config2__ProductId__r.Name,
+    APTS_Product_Family__c,
+    APTS_Product_Area__c,
+    APTS_Product_Type__c,
+    CurrencyIsoCode,
+    convertCurrency(APTS_Asset_Line_Item_ARR__c),
+    APTS_Renewal_Scope__c
+FROM Apttus_Config2__AssetLineItem__c
+WHERE Apttus_Config2__IsInactive__c = false
+  AND Apttus_Config2__EndDate__c >= TODAY
+"""
+
+SOQL_ASSET_ACCOUNT = """
+SELECT Id, Name, Region__c, BillingCountry, Industry, OwnerId, Type,
+       Axioma_Client__c, Risk_of_Potential_Termination__c
+FROM Account
+WHERE Id IN (
+    SELECT Apttus_Config2__AccountId__c
+    FROM Apttus_Config2__AssetLineItem__c
+    WHERE Apttus_Config2__IsInactive__c = false
+      AND Apttus_Config2__EndDate__c >= TODAY
+)
 """
 
 SOQL_USER = """
@@ -84,18 +141,27 @@ WHERE Id IN (SELECT OwnerId FROM Opportunity WHERE (CloseDate = LAST_N_FISCAL_YE
 
 
 def _run_soql(query: str, target_csv: pathlib.Path) -> int:
-    """Bulk-export SOQL to CSV via sf CLI. Returns row count."""
+    """Bulk-export SOQL to CSV via Bulk API 2.0. Returns row count."""
     proc = subprocess.run(
         [
             "sf",
             "data",
-            "query",
-            "-o",
+            "export",
+            "bulk",
+            "--target-org",
             SF_ORG,
-            "-q",
+            "--api-version",
+            "66.0",
+            "--query",
             " ".join(query.split()),
-            "-r",
+            "--output-file",
+            str(target_csv),
+            "--result-format",
             "csv",
+            "--wait",
+            "30",
+            "--line-ending",
+            "LF",
         ],
         capture_output=True,
         text=True,
@@ -103,9 +169,8 @@ def _run_soql(query: str, target_csv: pathlib.Path) -> int:
     )
     if proc.returncode != 0:
         print("  SF query failed:", proc.stderr[:500], file=sys.stderr)
-        raise RuntimeError("sf data query failed")
-    target_csv.write_text(proc.stdout)
-    n = sum(1 for _ in proc.stdout.splitlines()) - 1
+        raise RuntimeError("sf data export bulk failed")
+    n = sum(1 for _ in target_csv.read_text().splitlines()) - 1
     return max(0, n)
 
 
@@ -124,8 +189,15 @@ def transform(stage: pathlib.Path) -> dict[str, pd.DataFrame]:
         f"CREATE TABLE raw_acc AS SELECT * FROM read_csv_auto('{stage / 'account.csv'}', sample_size=20000)"
     )
     con.execute(
+        f"CREATE TABLE raw_asset AS SELECT * FROM read_csv_auto('{stage / 'asset.csv'}', sample_size=20000)"
+    )
+    con.execute(
+        f"CREATE TABLE raw_asset_acc AS SELECT * FROM read_csv_auto('{stage / 'asset_account.csv'}', sample_size=20000)"
+    )
+    con.execute(
         f"CREATE TABLE raw_usr AS SELECT * FROM read_csv_auto('{stage / 'user.csv'}', sample_size=20000)"
     )
+    con.execute("CREATE TABLE raw_acc_all AS SELECT * FROM raw_acc UNION SELECT * FROM raw_asset_acc")
 
     f_opp = con.execute("""
         SELECT
@@ -142,8 +214,31 @@ def transform(stage: pathlib.Path) -> dict[str, pd.DataFrame]:
             "CurrencyIsoCode" as native_currency,
             CAST("APTS_Opportunity_ARR__c" AS DOUBLE) as arr_org_ccy,
             CAST("APTS_Renewal_ACV__c" AS DOUBLE) as acv_org_ccy,
+            CAST("APTS_RH_ASP_Annual__c" AS DOUBLE) as saas_acv_org_ccy,
+            CAST("APTS_RUS_Axioma_Order_Inflow__c" AS DOUBLE) as axioma_order_inflow_org_ccy,
+            CAST("APTS_PS_Recurring_ACV_Display__c" AS DOUBLE) as ps_recurring_acv_org_ccy,
+            CAST("APTS_RH_PS_One_Off__c" AS DOUBLE) as ps_one_off_org_ccy,
+            CAST("APTS_PS_Non_Recurring_NPP_Display__c" AS DOUBLE) as ps_non_recurring_org_ccy,
+            CAST("APTS_RH_3rd_Party_One_Off__c" AS DOUBLE) as third_party_one_off_org_ccy,
+            CAST("APTS_CDD_One_Off_TCV_Display__c" AS DOUBLE) as cdd_one_off_tcv_org_ccy,
+            CAST("APTS_PSO_One_Off_TCV_Display__c" AS DOUBLE) as pso_one_off_tcv_org_ccy,
+            CAST("APTS_RUS_PSI_PSA_One_Off__c" AS DOUBLE) as psi_psa_one_off_org_ccy,
+            (
+                COALESCE(CAST("APTS_RH_PS_One_Off__c" AS DOUBLE), 0)
+                + COALESCE(CAST("APTS_PS_Non_Recurring_NPP_Display__c" AS DOUBLE), 0)
+                + COALESCE(CAST("APTS_RH_3rd_Party_One_Off__c" AS DOUBLE), 0)
+                + COALESCE(CAST("APTS_CDD_One_Off_TCV_Display__c" AS DOUBLE), 0)
+                + COALESCE(CAST("APTS_PSO_One_Off_TCV_Display__c" AS DOUBLE), 0)
+                + COALESCE(CAST("APTS_RUS_PSI_PSA_One_Off__c" AS DOUBLE), 0)
+            ) as one_off_revenue_org_ccy,
+            CAST("Quota_Amount__c" AS DOUBLE) as quota_org_ccy,
             CAST("Amount" AS DOUBLE) as amount_org_ccy,
             "LeadSource" as lead_source,
+            "ForecastCategoryName" as forecast_category,
+            CAST("Stage_20_Approval__c" AS BOOLEAN) as commercial_approval,
+            CAST("Stage_20_Approval_Date__c" AS DATE) as commercial_approval_date,
+            CAST("Submit_for_Stage_20_Review_Date__c" AS DATE) as commercial_approval_submit_date,
+            "Risk_Assessment_Level__c" as risk_assessment_level,
             CAST("IsWon" AS BOOLEAN) as is_won,
             CAST("IsClosed" AS BOOLEAN) as is_closed,
             CAST("CloseDate" AS DATE) as close_date,
@@ -156,6 +251,32 @@ def transform(stage: pathlib.Path) -> dict[str, pd.DataFrame]:
         FROM raw_opp
     """).fetch_df()
 
+    f_asset = con.execute("""
+        SELECT
+            "Id" as asset_line_item_id,
+            "Name" as asset_name,
+            "Apttus_Config2__AccountId__c" as account_id,
+            "Apttus_Config2__AccountId__r.Name" as account_name,
+            "Apttus_Config2__AccountId__r.Region__c" as region,
+            "Apttus_Config2__AccountId__r.BillingCountry" as billing_country,
+            "Apttus_Config2__AccountId__r.Industry" as industry,
+            "Apttus_Config2__AccountId__r.Risk_of_Potential_Termination__c" as termination_risk,
+            "Apttus_Config2__AssetStatus__c" as asset_status,
+            CAST("Apttus_Config2__IsInactive__c" AS BOOLEAN) as is_inactive,
+            CAST("Apttus_Config2__StartDate__c" AS DATE) as asset_start_date,
+            CAST("Apttus_Config2__EndDate__c" AS DATE) as asset_end_date,
+            "Apttus_Config2__ProductId__c" as product_id,
+            "Apttus_Config2__ProductId__r.Name" as product_name,
+            "APTS_Product_Family__c" as product_family,
+            "APTS_Product_Area__c" as product_area,
+            "APTS_Product_Type__c" as product_type,
+            "CurrencyIsoCode" as native_currency,
+            CAST("APTS_Asset_Line_Item_ARR__c" AS DOUBLE) as asset_arr_org_ccy,
+            "APTS_Renewal_Scope__c" as renewal_scope,
+            TRUE as is_active_base
+        FROM raw_asset
+    """).fetch_df()
+
     d_acc = con.execute("""
         SELECT
             "Id" as account_id,
@@ -164,8 +285,10 @@ def transform(stage: pathlib.Path) -> dict[str, pd.DataFrame]:
             "BillingCountry" as billing_country,
             "Industry" as industry,
             "OwnerId" as owner_id,
-            "Type" as account_type
-        FROM raw_acc
+            "Type" as account_type,
+            CAST("Axioma_Client__c" AS BOOLEAN) as axioma_client,
+            "Risk_of_Potential_Termination__c" as termination_risk
+        FROM raw_acc_all
     """).fetch_df()
 
     d_usr = con.execute("""
@@ -190,15 +313,38 @@ def transform(stage: pathlib.Path) -> dict[str, pd.DataFrame]:
         "United Kingdom & Ireland",
         "Middle East & Africa",
     ]
-    regions_in_data = sorted(set(f_opp["region"].dropna().tolist()))
+    region_values = set(f_opp["region"].dropna().tolist())
+    region_values.update(f_asset["region"].dropna().tolist())
+    regions_in_data = sorted(region_values)
     ordered = [r for r in region_order if r in regions_in_data] + [
         r for r in regions_in_data if r not in region_order
     ]
     d_region = pd.DataFrame({"region": ordered, "sort_order": range(1, len(ordered) + 1)})
 
+    def _value_tier(value: float | None) -> str:
+        if pd.isna(value) or value is None or value <= 0:
+            return "No ARR"
+        if value < 250_000:
+            return "<250k"
+        if value < 500_000:
+            return "250k-500k"
+        if value < 1_000_000:
+            return "500k-1M"
+        return "1M+"
+
+    f_opp["won_value_tier"] = f_opp["arr_org_ccy"].apply(_value_tier)
+    f_opp["stage_order"] = f_opp["stage_name"].apply(stage_order_for_label).astype("int64")
+    d_stage = pd.DataFrame(stage_dimension_rows())
+
     # Date dim spanning data window
-    min_d = pd.to_datetime(f_opp["close_date"]).min()
-    max_d = pd.to_datetime(f_opp["close_date"]).max()
+    min_d = min(
+        pd.to_datetime(f_opp["close_date"]).min(),
+        pd.to_datetime(f_asset["asset_start_date"]).min(),
+    )
+    max_d = max(
+        pd.to_datetime(f_opp["close_date"]).max(),
+        pd.to_datetime(f_asset["asset_end_date"]).max(),
+    )
     if pd.isna(min_d) or pd.isna(max_d):
         date_range = pd.date_range("2023-01-01", "2026-12-31", freq="D")
     else:
@@ -221,9 +367,11 @@ def transform(stage: pathlib.Path) -> dict[str, pd.DataFrame]:
 
     return {
         "f_opportunity": f_opp,
+        "f_asset_line_item": f_asset,
         "d_account": d_acc,
         "d_user": d_usr,
         "d_region": d_region,
+        "d_stage": d_stage,
         "d_calendar": d_calendar,
     }
 
@@ -266,7 +414,13 @@ def write_to_onelake(lakehouse_id: str, frames: dict[str, pd.DataFrame]) -> None
     storage_options = {"bearer_token": token, "use_fabric_endpoint": "true"}
     base = ONELAKE_BASE_FMT.format(ws=WORKSPACE_ID, lh=lakehouse_id)
     for name, df in frames.items():
-        write_deltalake(f"{base}/{name}", df, mode="overwrite", storage_options=storage_options)
+        write_deltalake(
+            f"{base}/{name}",
+            df,
+            mode="overwrite",
+            schema_mode="overwrite",
+            storage_options=storage_options,
+        )
         print(f"  {name}: {len(df):,} rows -> {base}/{name}")
 
 
@@ -278,11 +432,15 @@ def write_to_onelake(lakehouse_id: str, frames: dict[str, pd.DataFrame]) -> None
 def main() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         stage = pathlib.Path(tmp)
-        print("Step 1/4: SF bulk export (Opportunity, Account, User)...")
+        print("Step 1/4: SF bulk export (Opportunity, Asset, Account, User)...")
         n_opp = _run_soql(SOQL_OPP, stage / "opp.csv")
         print(f"  Opportunity: {n_opp:,} rows")
         n_acc = _run_soql(SOQL_ACCOUNT, stage / "account.csv")
-        print(f"  Account: {n_acc:,} rows")
+        print(f"  Opportunity Account: {n_acc:,} rows")
+        n_asset = _run_soql(SOQL_ASSET, stage / "asset.csv")
+        print(f"  Asset Line Item: {n_asset:,} rows")
+        n_asset_acc = _run_soql(SOQL_ASSET_ACCOUNT, stage / "asset_account.csv")
+        print(f"  Asset Account: {n_asset_acc:,} rows")
         n_usr = _run_soql(SOQL_USER, stage / "user.csv")
         print(f"  User: {n_usr:,} rows")
 

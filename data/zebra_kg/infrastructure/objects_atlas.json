@@ -1,0 +1,4814 @@
+{
+  "ZebraBITables": {
+    "version": {
+      "entry_count": 146,
+      "template_count": 20,
+      "templates": [
+        "annual-comparative-statement-power-bi-template",
+        "athletic-footwear-benchmarking-financial-analysis-template",
+        "brand-product-portfolio-analysis-automotive-power-bi-template",
+        "brand-product-portfolio-analysis-fmcg-power-bi-template",
+        "consolidated-financials-power-bi-template",
+        "cost-benefit-analysis-power-bi-template",
+        "cost-management-power-bi-template",
+        "daily-sales-flash-power-bi-dashboard",
+        "dynamic-comments-power-bi-template",
+        "food-beverage-financial-analysis-benchmarking-powerbi-template",
+        "hr-analytics-power-bi-template",
+        "income-statement-dashboard-in-power-bi",
+        "inventory-power-bi-template",
+        "manufacturing-oee-power-bi-template",
+        "price-volume-mix-analysis-power-bi-template",
+        "saas-sales-power-bi-dashboard-template",
+        "sales-dashboard-power-bi-template",
+        "sales-funnel-power-bi-template",
+        "social-media-power-bi-template",
+        "working-capital-in-power-bi-template"
+      ],
+      "properties": {
+        "version": {
+          "occurrences": 146,
+          "distinct_value_count": 7,
+          "sample_values": [
+            "7.7.0.17726213625",
+            "7.5.0",
+            "7.4.1",
+            "7.6.0.16365763958",
+            "7.1.0",
+            "6.3.0",
+            "7.2.0"
+          ]
+        }
+      }
+    },
+    "migrationLog": {
+      "entry_count": 128,
+      "template_count": 19,
+      "templates": [
+        "annual-comparative-statement-power-bi-template",
+        "athletic-footwear-benchmarking-financial-analysis-template",
+        "brand-product-portfolio-analysis-automotive-power-bi-template",
+        "brand-product-portfolio-analysis-fmcg-power-bi-template",
+        "consolidated-financials-power-bi-template",
+        "cost-benefit-analysis-power-bi-template",
+        "cost-management-power-bi-template",
+        "daily-sales-flash-power-bi-dashboard",
+        "dynamic-comments-power-bi-template",
+        "food-beverage-financial-analysis-benchmarking-powerbi-template",
+        "hr-analytics-power-bi-template",
+        "income-statement-dashboard-in-power-bi",
+        "inventory-power-bi-template",
+        "manufacturing-oee-power-bi-template",
+        "price-volume-mix-analysis-power-bi-template",
+        "saas-sales-power-bi-dashboard-template",
+        "sales-funnel-power-bi-template",
+        "social-media-power-bi-template",
+        "working-capital-in-power-bi-template"
+      ],
+      "properties": {
+        "isMigrating": {
+          "occurrences": 48,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "false"
+          ]
+        },
+        "migrations": {
+          "occurrences": 113,
+          "distinct_value_count": 8,
+          "sample_values": [
+            [
+              {
+                "from": "7.2.0",
+                "to": "7.4.1",
+                "unixTime": 1739530342
+              }
+            ],
+            [
+              {
+                "from": "7.2.0",
+                "to": "7.4.1",
+                "unixTime": 1739530443
+              }
+            ],
+            [
+              {
+                "from": "7.2.0",
+                "to": "7.4.1",
+                "unixTime": 1739530616
+              }
+            ],
+            [
+              {
+                "from": "7.2.0",
+                "to": "7.4.1",
+                "unixTime": 1739530912
+              }
+            ],
+            [
+              {
+                "from": "7.1.0",
+                "to": "7.4.1",
+                "unixTime": 1739531097
+              }
+            ],
+            [
+              {
+                "from": "7.1.0",
+                "to": "7.4.1",
+                "unixTime": 1739531137
+              }
+            ],
+            [
+              {
+                "from": "7.1.0",
+                "to": "7.4.1",
+                "unixTime": 1739531164
+              }
+            ],
+            [
+              {
+                "from": "7.2.0",
+                "to": "7.4.1",
+                "unixTime": 1739534752
+              }
+            ]
+          ]
+        }
+      }
+    },
+    "proFeaturesSettings": {
+      "entry_count": 107,
+      "template_count": 16,
+      "templates": [
+        "annual-comparative-statement-power-bi-template",
+        "athletic-footwear-benchmarking-financial-analysis-template",
+        "brand-product-portfolio-analysis-fmcg-power-bi-template",
+        "consolidated-financials-power-bi-template",
+        "cost-management-power-bi-template",
+        "daily-sales-flash-power-bi-dashboard",
+        "dynamic-comments-power-bi-template",
+        "food-beverage-financial-analysis-benchmarking-powerbi-template",
+        "hr-analytics-power-bi-template",
+        "income-statement-dashboard-in-power-bi",
+        "price-volume-mix-analysis-power-bi-template",
+        "saas-sales-power-bi-dashboard-template",
+        "sales-dashboard-power-bi-template",
+        "sales-funnel-power-bi-template",
+        "social-media-power-bi-template",
+        "working-capital-in-power-bi-template"
+      ],
+      "properties": {
+        "show": {
+          "occurrences": 106,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "true"
+          ]
+        },
+        "proFeaturesUnlocked": {
+          "occurrences": 19,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "true",
+            "false"
+          ]
+        },
+        "proFeaturesDisabledByUser": {
+          "occurrences": 19,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "false"
+          ]
+        }
+      }
+    },
+    "chartSettings": {
+      "entry_count": 146,
+      "template_count": 20,
+      "templates": [
+        "annual-comparative-statement-power-bi-template",
+        "athletic-footwear-benchmarking-financial-analysis-template",
+        "brand-product-portfolio-analysis-automotive-power-bi-template",
+        "brand-product-portfolio-analysis-fmcg-power-bi-template",
+        "consolidated-financials-power-bi-template",
+        "cost-benefit-analysis-power-bi-template",
+        "cost-management-power-bi-template",
+        "daily-sales-flash-power-bi-dashboard",
+        "dynamic-comments-power-bi-template",
+        "food-beverage-financial-analysis-benchmarking-powerbi-template",
+        "hr-analytics-power-bi-template",
+        "income-statement-dashboard-in-power-bi",
+        "inventory-power-bi-template",
+        "manufacturing-oee-power-bi-template",
+        "price-volume-mix-analysis-power-bi-template",
+        "saas-sales-power-bi-dashboard-template",
+        "sales-dashboard-power-bi-template",
+        "sales-funnel-power-bi-template",
+        "social-media-power-bi-template",
+        "working-capital-in-power-bi-template"
+      ],
+      "properties": {
+        "firstTimeShowingColumnAdder": {
+          "occurrences": 146,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "false"
+          ]
+        },
+        "valueChart": {
+          "occurrences": 96,
+          "distinct_value_count": 5,
+          "sample_values": [
+            "2D",
+            "5D",
+            "0D",
+            "1D",
+            "4D"
+          ]
+        },
+        "columnSettings": {
+          "occurrences": 146,
+          "distinct_value_count": 8,
+          "sample_values": [
+            "{\"actual\": {\"chartView\": {\"backgroundFill\": \"\", \"bold\": false, \"border\": \"\", \"hidden\": false, \"hiddenFromGroups\": [], \"markerStyle\": 5, \"showAsTable\": 2, \"textColor\": \"\"}, \"format\": 0, \"invert\": false...",
+            "{\"actual\": {\"chartView\": {\"backgroundFill\": \"\", \"bold\": false, \"border\": \"\", \"hidden\": false, \"hiddenFromGroups\": [], \"markerStyle\": 5, \"showAsTable\": 2, \"textColor\": \"\"}, \"format\": 0, \"invert\": false...",
+            "{\"actual\": {\"chartView\": {\"backgroundFill\": \"\", \"bold\": false, \"border\": \"\", \"hidden\": false, \"hiddenFromGroups\": [], \"markerStyle\": 5, \"showAsTable\": 1, \"textColor\": \"\"}, \"format\": 0, \"invert\": false...",
+            "{\"actual\": {\"chartView\": {\"backgroundFill\": \"\", \"bold\": false, \"border\": \"\", \"hidden\": false, \"hiddenFromGroups\": [], \"markerStyle\": 5, \"showAsTable\": 2, \"textColor\": \"\"}, \"format\": 0, \"invert\": false...",
+            "{\"actual\": {\"chartView\": {\"backgroundFill\": \"\", \"bold\": false, \"border\": \"\", \"hidden\": false, \"hiddenFromGroups\": [], \"markerStyle\": 5, \"showAsTable\": 2, \"textColor\": \"\"}, \"format\": 0, \"invert\": false...",
+            "{\"actual\": {\"chartView\": {\"backgroundFill\": \"\", \"bold\": false, \"border\": \"\", \"hidden\": false, \"hiddenFromGroups\": [], \"markerStyle\": 5, \"showAsTable\": 1, \"textColor\": \"\"}, \"format\": 0, \"invert\": false...",
+            "{\"actual\": {\"chartView\": {\"backgroundFill\": \"\", \"bold\": false, \"border\": \"\", \"hidden\": false, \"hiddenFromGroups\": [], \"markerStyle\": 5, \"showAsTable\": 0, \"textColor\": \"\"}, \"format\": 0, \"invert\": false...",
+            "{\"actual\": {\"chartView\": {\"backgroundFill\": \"\", \"bold\": false, \"border\": \"\", \"hidden\": false, \"hiddenFromGroups\": [], \"markerStyle\": 5, \"showAsTable\": 2, \"textColor\": \"\"}, \"format\": 0, \"invert\": false..."
+          ]
+        },
+        "relativeChart": {
+          "occurrences": 13,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "0D",
+            "1D"
+          ]
+        },
+        "showGridlines": {
+          "occurrences": 37,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "true",
+            "false"
+          ]
+        },
+        "absoluteChart": {
+          "occurrences": 70,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "2D",
+            "0D",
+            "1D"
+          ]
+        },
+        "scaleGroupsResizeFactorsChartView": {
+          "occurrences": 14,
+          "distinct_value_count": 8,
+          "sample_values": [
+            {
+              "1": 1
+            },
+            {
+              "1": 0.69
+            },
+            {
+              "1": 1.05,
+              "2": 0.87
+            },
+            {
+              "1": 1.15,
+              "2": 0.87
+            },
+            {
+              "2": 0.67,
+              "-1": 0.88
+            },
+            {
+              "-1": 1
+            },
+            {
+              "1": 0.42
+            },
+            {
+              "1": 0.6
+            }
+          ]
+        },
+        "scaleGroupsResizeFactorsTableView": {
+          "occurrences": 14,
+          "distinct_value_count": 1,
+          "sample_values": [
+            {}
+          ]
+        },
+        "showGrandTotal": {
+          "occurrences": 80,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "false",
+            "true"
+          ]
+        },
+        "groupsCollapsed": {
+          "occurrences": 6,
+          "distinct_value_count": 5,
+          "sample_values": [
+            [],
+            [
+              2022,
+              2023,
+              2024
+            ],
+            [
+              2023,
+              "2024/Q2",
+              "2024/Q3",
+              "2022/Q3",
+              2022,
+              "2024/Q4",
+              "2024/Q1"
+            ],
+            [
+              "Q1",
+              "Q2"
+            ],
+            [
+              "Before due"
+            ]
+          ]
+        },
+        "showTotals": {
+          "occurrences": 6,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "1D",
+            "2D"
+          ]
+        },
+        "showMajorGridlines": {
+          "occurrences": 2,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "true"
+          ]
+        },
+        "types": {
+          "occurrences": 26,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "Absolute / Relative",
+            "Actual / Absolute / Relative",
+            "Absolute"
+          ]
+        },
+        "showAsTable": {
+          "occurrences": 69,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "false",
+            "true"
+          ]
+        },
+        "gridlineDensity": {
+          "occurrences": 72,
+          "distinct_value_count": 4,
+          "sample_values": [
+            "1L",
+            "5L",
+            "0L",
+            "7L"
+          ]
+        },
+        "minChartWidth": {
+          "occurrences": 56,
+          "distinct_value_count": 8,
+          "sample_values": [
+            "120D",
+            "80D",
+            "130D",
+            "100D",
+            "110D",
+            "50D",
+            "140D",
+            "40D"
+          ]
+        },
+        "suppressZeros": {
+          "occurrences": 14,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "true",
+            "false"
+          ]
+        },
+        "suppressNulls": {
+          "occurrences": 15,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "true",
+            "false"
+          ]
+        },
+        "suppressAbsoluteVariances": {
+          "occurrences": 5,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "false",
+            "true"
+          ]
+        },
+        "suppressEmptyColumns": {
+          "occurrences": 10,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "false",
+            "true"
+          ]
+        },
+        "showPrefixes": {
+          "occurrences": 4,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "false"
+          ]
+        },
+        "limitOutliers": {
+          "occurrences": 4,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "false"
+          ]
+        },
+        "maxOutlierValue": {
+          "occurrences": 3,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "100D"
+          ]
+        },
+        "minOutlierValue": {
+          "occurrences": 3,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "100D"
+          ]
+        },
+        "groupsInColumns": {
+          "occurrences": 27,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "true",
+            "false"
+          ]
+        },
+        "calculations": {
+          "occurrences": 37,
+          "distinct_value_count": 8,
+          "sample_values": [
+            [
+              "forecast-plan",
+              "actual-plan"
+            ],
+            [
+              "actual-plan"
+            ],
+            [
+              "actual-previousYear",
+              "actual-plan"
+            ],
+            [
+              null,
+              "plan-actual",
+              "plan2-actual"
+            ],
+            [
+              "forecast-plan"
+            ],
+            [
+              "actual-plan",
+              "actual-previousYear"
+            ],
+            [
+              "actual-plan",
+              "forecast-plan"
+            ],
+            []
+          ]
+        },
+        "freezeGrandTotal": {
+          "occurrences": 5,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "false",
+            "true"
+          ]
+        },
+        "grandTotalLabel": {
+          "occurrences": 5,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "Net Cost/Benefit",
+            "Total"
+          ]
+        },
+        "invert": {
+          "occurrences": 21,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "true",
+            "false"
+          ]
+        },
+        "grandTotalGap": {
+          "occurrences": 4,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "false"
+          ]
+        },
+        "showColumnGrandTotal": {
+          "occurrences": 3,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "true",
+            "false"
+          ]
+        },
+        "showColumnTotals": {
+          "occurrences": 1,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "false"
+          ]
+        }
+      }
+    },
+    "sortSettings": {
+      "entry_count": 117,
+      "template_count": 20,
+      "templates": [
+        "annual-comparative-statement-power-bi-template",
+        "athletic-footwear-benchmarking-financial-analysis-template",
+        "brand-product-portfolio-analysis-automotive-power-bi-template",
+        "brand-product-portfolio-analysis-fmcg-power-bi-template",
+        "consolidated-financials-power-bi-template",
+        "cost-benefit-analysis-power-bi-template",
+        "cost-management-power-bi-template",
+        "daily-sales-flash-power-bi-dashboard",
+        "dynamic-comments-power-bi-template",
+        "food-beverage-financial-analysis-benchmarking-powerbi-template",
+        "hr-analytics-power-bi-template",
+        "income-statement-dashboard-in-power-bi",
+        "inventory-power-bi-template",
+        "manufacturing-oee-power-bi-template",
+        "price-volume-mix-analysis-power-bi-template",
+        "saas-sales-power-bi-dashboard-template",
+        "sales-dashboard-power-bi-template",
+        "sales-funnel-power-bi-template",
+        "social-media-power-bi-template",
+        "working-capital-in-power-bi-template"
+      ],
+      "properties": {
+        "columnName": {
+          "occurrences": 116,
+          "distinct_value_count": 8,
+          "sample_values": [
+            "actual",
+            "Units Sold ∆PY",
+            "% of Product category",
+            "actual-plan",
+            "forecast-plan-percent",
+            "AC",
+            "Hires rate",
+            "Terminations - rate"
+          ]
+        },
+        "chartSort": {
+          "occurrences": 112,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "0D",
+            "1D",
+            "2D"
+          ]
+        },
+        "categorySort": {
+          "occurrences": 112,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "0D",
+            "1D",
+            "2D"
+          ]
+        },
+        "sortReferenceChart": {
+          "occurrences": 27,
+          "distinct_value_count": 4,
+          "sample_values": [
+            "0D",
+            "11D",
+            "2D",
+            "6D"
+          ]
+        }
+      }
+    },
+    "categoriesMetadata": {
+      "entry_count": 142,
+      "template_count": 20,
+      "templates": [
+        "annual-comparative-statement-power-bi-template",
+        "athletic-footwear-benchmarking-financial-analysis-template",
+        "brand-product-portfolio-analysis-automotive-power-bi-template",
+        "brand-product-portfolio-analysis-fmcg-power-bi-template",
+        "consolidated-financials-power-bi-template",
+        "cost-benefit-analysis-power-bi-template",
+        "cost-management-power-bi-template",
+        "daily-sales-flash-power-bi-dashboard",
+        "dynamic-comments-power-bi-template",
+        "food-beverage-financial-analysis-benchmarking-powerbi-template",
+        "hr-analytics-power-bi-template",
+        "income-statement-dashboard-in-power-bi",
+        "inventory-power-bi-template",
+        "manufacturing-oee-power-bi-template",
+        "price-volume-mix-analysis-power-bi-template",
+        "saas-sales-power-bi-dashboard-template",
+        "sales-dashboard-power-bi-template",
+        "sales-funnel-power-bi-template",
+        "social-media-power-bi-template",
+        "working-capital-in-power-bi-template"
+      ],
+      "properties": {
+        "invertCalculationCategories": {
+          "occurrences": 29,
+          "distinct_value_count": 8,
+          "sample_values": [
+            "[{\"category\": \"Cost of Goods Sold (COGS)\", \"hierarchyIdentity\": \"AccountHierarchy.Account\", \"level\": 0}, {\"category\": \"Total Operating Expenses\", \"hierarchyIdentity\": \"AccountHierarchy.Account\", \"leve...",
+            [],
+            "[{\"category\": \"COGS excluding D&A\", \"hierarchyIdentity\": \"dimAccount.Account\", \"level\": 0}, {\"category\": \"Depreciation & Amortization Expense\", \"hierarchyIdentity\": \"dimAccount.Account\", \"level\": 0}, ...",
+            "[{\"category\": \"COGS excluding D&A\", \"hierarchyIdentity\": \"dimAccount.Account\", \"level\": 0}, {\"category\": \"Depreciation & Amortization Expense\", \"hierarchyIdentity\": \"dimAccount.Account\", \"level\": 0}, ...",
+            "[{\"category\": \"COGS\", \"hierarchyIdentity\": \"AccountHierarchyTable.General Ledger Account\", \"level\": 0}, {\"category\": \"OPEX\", \"hierarchyIdentity\": \"AccountHierarchyTable.General Ledger Account\", \"level...",
+            [
+              {
+                "hierarchyIdentity": "Accounts.Account",
+                "category": "Provision for income taxes",
+                "level": 1
+              },
+              {
+                "hierarchyIdentity": "Accounts.Account group",
+                "category": "One time O expenses",
+                "level": 0
+              }
+            ],
+            [
+              {
+                "hierarchyIdentity": "Accounts.Account",
+                "category": "Provision for income taxes",
+                "level": 1
+              }
+            ],
+            [
+              {
+                "hierarchyIdentity": "Accounts.Account",
+                "category": "DPO",
+                "level": 0
+              },
+              {
+                "hierarchyIdentity": "Accounts.Account",
+                "category": "CCC",
+                "level": 0
+              }
+            ]
+          ]
+        },
+        "userOverrides": {
+          "occurrences": 45,
+          "distinct_value_count": 8,
+          "sample_values": [
+            [
+              "Cost of Goods Sold (COGS)",
+              "Total Operating Expenses",
+              "Interest Expense",
+              "Taxes"
+            ],
+            [
+              "Gross Profit",
+              "Operating Income (EBIT)",
+              "Interest Expense",
+              "Net Income",
+              "EBITDA"
+            ],
+            [
+              "Cost of Goods Sold (COGS)",
+              "Gross Profit",
+              "Total Operating Expenses",
+              "Operating Income (EBIT)",
+              "Interest Expense",
+              "Taxes",
+              "Net Income",
+              "EBITDA"
+            ],
+            [
+              "R&D",
+              "Production Labor",
+              "Packaging & Distribution",
+              "Contract Manufacturing",
+              "Sales & Marketing",
+              "General & Administrative",
+              "Taxes",
+              "Raw Materials",
+              "Interest Expense"
+            ],
+            "[\"Cost of Goods Sold (COGS) incl. D&A\", \"SG&A Expense\", \"Unusual Expense\", \"Non Operating Income/Expense\", \"Equity in Affiliates (Pretax)\", \"Interest Expense\", \"Income Tax\", \"Equity in Affiliates\", \"M...",
+            "[\"Cost of Goods Sold (COGS) incl. D&A\", \"SG&A Expense\", \"Unusual Expense\", \"Non Operating Income/Expense\", \"Equity in Affiliates (Pretax)\", \"Interest Expense\", \"Income Tax\", \"Equity in Affiliates\", \"M...",
+            "[\"Cost of Goods Sold (COGS) incl. D&A\", \"SG&A Expense\", \"Unusual Expense\", \"Non Operating Income/Expense\", \"Equity in Affiliates (Pretax)\", \"Interest Expense\", \"Income Tax\", \"Equity in Affiliates\", \"M...",
+            "[\"COGS excluding D&A\", \"Depreciation & Amortization Expense\", \"SG&A Expense\", \"Gross Income\", \"COGS excl. D&A\", \"Other Operating Expense\", \"Inventory as % of Sales\", \"WC as % of Sales\", \"Net debt to E..."
+          ]
+        },
+        "collapsedVirtually": {
+          "occurrences": 131,
+          "distinct_value_count": 8,
+          "sample_values": [
+            [],
+            "[\"Cost of Goods Sold (COGS)\", \"Gross Profit\", \"Operating Income (EBIT)\", \"Interest Expense\", \"Taxes\", \"Net Income\", \"EBITDA\", \"Total Revenue Licensing & Royalties\", \"Total Revenue Over-the-Counter (OT...",
+            "[\"Total Revenue Contract Manufacturing\", \"Total Revenue Licensing & Royalties\", \"Total Revenue Over-the-Counter (OTC) Sales\", \"Total Revenue Prescription Drug Sales\", \"Cost of Goods Sold (COGS)\", \"Tot...",
+            "[\"Prescription Drug Sales Cardiovascular\", \"Prescription Drug Sales Immunology\", \"Prescription Drug Sales Oncology\", \"Over-the-Counter (OTC) Sales Pain Relief\", \"Over-the-Counter (OTC) Sales Cold & Fl...",
+            [
+              "Total Revenue",
+              "Cost of Goods Sold (COGS)",
+              "Total Operating Expenses"
+            ],
+            "[\"Gross Income\", \"COGS excl. D&A\", \"Depreciation & Amortization Expense\", \"Equity in Affiliates (Pretax)\", \"Income Tax\", \"Pretax Income\", \"EBITDA\", \"Non Operating Income/Expense\", \"Non-Operating Inter...",
+            "[\"COGS excl. D&A\", \"Depreciation & Amortization Expense\", \"Equity in Affiliates (Pretax)\", \"Equity in Affiliates\", \"Other After Tax Income (Expense)\", \"EBIT\", \"Net Change in Cash\", \"Free Cash Flow\", \"...",
+            "[\"Gross Income\", \"Exchange Rate Effect\", \"Net Change in Cash\", \"COGS excl. D&A\", \"Depreciation & Amortization Expense\", \"Non Operating Income/Expense\", \"Non-Operating Interest Income\", \"Equity in Affi..."
+          ]
+        },
+        "flatResultCalculationCategories": {
+          "occurrences": 22,
+          "distinct_value_count": 8,
+          "sample_values": [
+            "[{\"category\": \"Gross Profit\", \"hierarchyIdentity\": \"AccountHierarchy.Account\", \"level\": 0}, {\"category\": \"Operating Income (EBIT)\", \"hierarchyIdentity\": \"AccountHierarchy.Account\", \"level\": 0}, {\"cate...",
+            [],
+            "[{\"category\": \"Gross profit\", \"hierarchyIdentity\": \"dimAccount.Account\", \"level\": 0}, {\"category\": \"EBITDA\", \"hierarchyIdentity\": \"dimAccount.Account\", \"level\": 0}, {\"category\": \"EBIT\", \"hierarchyIden...",
+            "[{\"category\": \"Gross profit\", \"hierarchyIdentity\": \"AccountHierarchyTable.General Ledger Account\", \"level\": 0}, {\"category\": \"Operating profit\", \"hierarchyIdentity\": \"AccountHierarchyTable.General Led...",
+            "[{\"category\": \"Gross profit\", \"hierarchyIdentity\": \"AccountHierarchyTable.General Ledger Account\", \"level\": 0}, {\"category\": \"Operating income\", \"hierarchyIdentity\": \"AccountHierarchyTable.General Led...",
+            "[{\"category\": \"Working capital\", \"hierarchyIdentity\": \"Accounts.Account\", \"level\": 0}, {\"category\": \"Revenue\", \"hierarchyIdentity\": \"Accounts.Account\", \"level\": 0}, {\"category\": \"COGS\", \"hierarchyIden...",
+            [
+              {
+                "hierarchyIdentity": "Quantity movement.Attribute",
+                "category": "Stock End",
+                "level": 0
+              }
+            ],
+            [
+              {
+                "hierarchyIdentity": "Selected KPIs.KPI",
+                "category": "Net New",
+                "level": 0
+              }
+            ]
+          ]
+        },
+        "categoryFormatSettings": {
+          "occurrences": 33,
+          "distinct_value_count": 8,
+          "sample_values": [
+            {
+              "Total Revenue": {
+                "isBold": true,
+                "isItalic": false,
+                "textColor": "",
+                "highlightColor": "",
+                "topBorder": false
+              }
+            },
+            {
+              "EBITDA": {
+                "isBold": false,
+                "isItalic": false,
+                "textColor": "#0078D4",
+                "highlightColor": "",
+                "topBorder": false
+              }
+            },
+            {
+              "Raw Materials": {
+                "isBold": false,
+                "isItalic": false,
+                "textColor": "",
+                "highlightColor": "",
+                "topBorder": false
+              }
+            },
+            "{\"EBITDA\": {\"highlightColor\": \"\", \"isBold\": false, \"isItalic\": false, \"textColor\": \"\", \"topBorder\": false}, \"Free Cash Flow\": {\"highlightColor\": \"#0A008B\", \"isBold\": false, \"isItalic\": false, \"textCol...",
+            "{\"EBIT (after UE)\": {\"highlightColor\": \"\", \"isBold\": false, \"isItalic\": false, \"textColor\": \"\", \"topBorder\": false}, \"EBITDA\": {\"highlightColor\": \"\", \"isBold\": false, \"isItalic\": false, \"textColor\": \"...",
+            "{\"EBITDA\": {\"highlightColor\": \"\", \"isBold\": false, \"isItalic\": false, \"textColor\": \"\", \"topBorder\": false}, \"Free Cash Flow\": {\"highlightColor\": \"#0A008B\", \"isBold\": false, \"isItalic\": false, \"textCol...",
+            "{\"EBIT\": {\"highlightColor\": \"\", \"isBold\": true, \"isItalic\": false, \"textColor\": \"\", \"topBorder\": false}, \"EBITDA\": {\"highlightColor\": \"\", \"isBold\": true, \"isItalic\": false, \"textColor\": \"\", \"topBorder...",
+            "{\"Gross Income\": {\"highlightColor\": \"\", \"isBold\": true, \"isItalic\": false, \"rowBackgroundColor\": \"#ffffffff\", \"textColor\": \"\", \"topBorder\": false}, \"Gross income (%)\": {\"highlightColor\": \"\", \"isBold\":..."
+          ]
+        },
+        "invertedHierarchies": {
+          "occurrences": 44,
+          "distinct_value_count": 8,
+          "sample_values": [
+            [],
+            "[{\"category\": \"Cost of Goods Sold (COGS)\", \"hierarchyIdentity\": \"AccountHierarchy.Account\", \"level\": 0}, {\"category\": \"Total Operating Expenses\", \"hierarchyIdentity\": \"AccountHierarchy.Account\", \"leve...",
+            "[{\"category\": \"R&D\", \"hierarchyIdentity\": \"AccountHierarchy.PC Level 1\", \"level\": 0}, {\"category\": \"Production Labor\", \"hierarchyIdentity\": \"AccountHierarchy.PC Level 1\", \"level\": 0}, {\"category\": \"Pa...",
+            "[{\"category\": \"Liabilities & Equity\", \"hierarchyIdentity\": \"dimAccount.Account group\", \"level\": 0}, {\"category\": \"COGS excl. D&A\", \"hierarchyIdentity\": \"dimAccount.Account group\", \"level\": 0}, {\"categ...",
+            "[{\"category\": \"Liabilities & Equity\", \"hierarchyIdentity\": \"dimAccount.Account group\", \"level\": 0}, {\"category\": \"COGS excl. D&A\", \"hierarchyIdentity\": \"dimAccount.Account group\", \"level\": 0}, {\"categ...",
+            "",
+            [
+              {
+                "hierarchyIdentity": "Dimension Table.Category Group",
+                "category": "Costs",
+                "level": 0
+              }
+            ],
+            [
+              {
+                "hierarchyIdentity": "Dimension Table.Category Group",
+                "category": "Costs",
+                "level": 0
+              },
+              {
+                "hierarchyIdentity": "Category_Hierarchy.Category Group",
+                "category": "Costs",
+                "level": 0
+              }
+            ]
+          ]
+        },
+        "invertCalculationCategoriesValues": {
+          "occurrences": 44,
+          "distinct_value_count": 8,
+          "sample_values": [
+            "[{\"category\": \"Cost of Goods Sold (COGS)\", \"hierarchyIdentity\": \"AccountHierarchy.Account\", \"level\": 0, \"type\": 0}, {\"category\": \"Total Operating Expenses\", \"hierarchyIdentity\": \"AccountHierarchy.Acco...",
+            [],
+            "[{\"category\": \"COGS excluding D&A\", \"hierarchyIdentity\": \"dimAccount.Account\", \"level\": 0, \"type\": 0}, {\"category\": \"Depreciation & Amortization Expense\", \"hierarchyIdentity\": \"dimAccount.Account\", \"l...",
+            "[{\"category\": \"COGS excluding D&A\", \"hierarchyIdentity\": \"dimAccount.Account\", \"level\": 0, \"type\": 0}, {\"category\": \"Depreciation & Amortization Expense\", \"hierarchyIdentity\": \"dimAccount.Account\", \"l...",
+            "",
+            "[{\"category\": \"Provision for income taxes\", \"hierarchyIdentity\": \"Accounts.Account\", \"level\": 1, \"type\": 0}, {\"category\": \"One time O expenses\", \"hierarchyIdentity\": \"Accounts.Account group\", \"level\":...",
+            [
+              {
+                "hierarchyIdentity": "Accounts.Account",
+                "category": "Provision for income taxes",
+                "level": 1,
+                "type": 0
+              }
+            ],
+            "[{\"category\": \"CCC\", \"hierarchyIdentity\": \"Accounts.Account\", \"level\": 0, \"type\": 0}, {\"category\": \"Account receivable\", \"hierarchyIdentity\": \"Accounts.Account\", \"level\": 0}, {\"category\": \"DSO\", \"hier..."
+          ]
+        },
+        "invertTotalCalculationCategories": {
+          "occurrences": 16,
+          "distinct_value_count": 8,
+          "sample_values": [
+            "[{\"category\": \"Cost of Goods Sold (COGS)\", \"hierarchyIdentity\": \"AccountHierarchy.Account\", \"level\": 0}, {\"category\": \"Total Operating Expenses\", \"hierarchyIdentity\": \"AccountHierarchy.Account\", \"leve...",
+            "[{\"category\": \"Liabilities & Equity\", \"hierarchyIdentity\": \"dimAccount.Account group\", \"level\": 0}, {\"category\": \"COGS excl. D&A\", \"hierarchyIdentity\": \"dimAccount.Account group\", \"level\": 0}, {\"categ...",
+            "[{\"category\": \"Liabilities & Equity\", \"hierarchyIdentity\": \"dimAccount.Account group\", \"level\": 0}, {\"category\": \"COGS excl. D&A\", \"hierarchyIdentity\": \"dimAccount.Account group\", \"level\": 0}, {\"categ...",
+            [
+              {
+                "hierarchyIdentity": "Dimension Table.Category Group",
+                "category": "Costs",
+                "level": 0
+              }
+            ],
+            "[{\"category\": \"COGS\", \"hierarchyIdentity\": \"Accounts.Account group\", \"level\": 0}, {\"category\": \"Operating expenses\", \"hierarchyIdentity\": \"Accounts.Account group\", \"level\": 0}, {\"category\": \"One time ...",
+            "[{\"category\": \"COGS\", \"hierarchyIdentity\": \"Accounts.Account group\", \"level\": 0}, {\"category\": \"Operating expenses\", \"hierarchyIdentity\": \"Accounts.Account group\", \"level\": 0}, {\"category\": \"Liabiliti...",
+            [
+              {
+                "hierarchyIdentity": "Accounts.Account group",
+                "category": "COGS",
+                "level": 0
+              },
+              {
+                "hierarchyIdentity": "Accounts.Account group",
+                "category": "Operating expenses",
+                "level": 0
+              }
+            ],
+            []
+          ]
+        },
+        "resultCalculationCategories": {
+          "occurrences": 15,
+          "distinct_value_count": 7,
+          "sample_values": [
+            "[{\"category\": \"Gross Profit\", \"hierarchyIdentity\": \"AccountHierarchy.Account\", \"level\": 0}, {\"category\": \"Operating Income (EBIT)\", \"hierarchyIdentity\": \"AccountHierarchy.Account\", \"level\": 0}, {\"cate...",
+            "[{\"category\": \"Gross Profit\", \"hierarchyIdentity\": \"dimAccount.Account group\", \"level\": 0}, {\"category\": \"Pretax Income\", \"hierarchyIdentity\": \"dimAccount.Account group\", \"level\": 0}, {\"category\": \"Co...",
+            "[{\"category\": \"Net Change in Cash\", \"hierarchyIdentity\": \"dimAccount.Account group\", \"level\": 0}, {\"category\": \"Gross Profit\", \"hierarchyIdentity\": \"dimAccount.Account group\", \"level\": 0}, {\"category\"...",
+            "[{\"category\": \"Gross Profit\", \"hierarchyIdentity\": \"dimAccount.Account group\", \"level\": 0}, {\"category\": \"Pretax Income\", \"hierarchyIdentity\": \"dimAccount.Account group\", \"level\": 0}, {\"category\": \"Co...",
+            "[{\"category\": \"Revenue\", \"hierarchyIdentity\": \"Accounts.Account group\", \"level\": 0}, {\"category\": \"Gross margin\", \"hierarchyIdentity\": \"Accounts.Account group\", \"level\": 0}, {\"category\": \"Operating in...",
+            "[{\"category\": \"Revenue\", \"hierarchyIdentity\": \"Accounts.Account group\", \"level\": 0}, {\"category\": \"Gross margin\", \"hierarchyIdentity\": \"Accounts.Account group\", \"level\": 0}, {\"category\": \"Operating in...",
+            "[{\"category\": \"Gross profit\", \"hierarchyIdentity\": \"Accounts.Account group\", \"level\": 0, \"sourcedFromModel\": true, \"type\": 1}, {\"category\": \"Operating income\", \"hierarchyIdentity\": \"Accounts.Account g..."
+          ]
+        },
+        "userChangedExpandCollapse": {
+          "occurrences": 75,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "true"
+          ]
+        },
+        "displayAsInvertCategories": {
+          "occurrences": 7,
+          "distinct_value_count": 1,
+          "sample_values": [
+            []
+          ]
+        },
+        "addedFormulas": {
+          "occurrences": 26,
+          "distinct_value_count": 8,
+          "sample_values": [
+            "[{\"bold\": false, \"decimalPlaces\": -1, \"expression\": \"[EBITDA] / [Total Revenue]\", \"hierarchyIdentity\": \"AccountHierarchy.Account\", \"identity\": \"EBITDA margin\", \"italic\": true, \"position\": \"EBITDA\", \"u...",
+            "[{\"bold\": true, \"decimalPlaces\": -1, \"expression\": \"[Net Income] / [Sales/Revenue]\", \"fontColor\": \"#788CFF\", \"hierarchyIdentity\": \"dimAccount.Account group\", \"identity\": \"Net Margin %\", \"italic\": true...",
+            "[{\"bold\": true, \"decimalPlaces\": -1, \"expression\": \"[Net Income] / [Sales/Revenue]\", \"fontColor\": \"#788CFF\", \"hierarchyIdentity\": \"dimAccount.Account group\", \"identity\": \"Net Margin %\", \"italic\": true...",
+            "[{\"bold\": true, \"decimalPlaces\": 1, \"expression\": \"[Net Income] / [Total Assets]\", \"hierarchyIdentity\": \"dimAccount.Account\", \"identity\": \"ROA (%)\", \"italic\": true, \"position\": \"Total Assets\", \"units\"...",
+            "[{\"bold\": true, \"decimalPlaces\": 1, \"expression\": \"[Net Income] / [Total Assets]\", \"hierarchyIdentity\": \"dimAccount.Account\", \"identity\": \"ROA (%)\", \"italic\": true, \"position\": \"Total Assets\", \"units\"...",
+            "[{\"bold\": true, \"decimalPlaces\": -1, \"expression\": \"[Gross margin (ZBI)] - [SG&A Expense]\", \"hierarchyIdentity\": \"dimAccount.Account\", \"identity\": \"EBITDA\", \"italic\": false, \"position\": \"SG&A Expense\"...",
+            "[{\"bold\": false, \"decimalPlaces\": 1, \"expression\": \"[Operating profit] / [Revenue]\", \"hierarchyIdentity\": \"AccountHierarchyTable.General Ledger Account\", \"identity\": \"Operating margin\", \"italic\": true...",
+            "[{\"bold\": false, \"decimalPlaces\": 1, \"expression\": \"[Operating profit] / [Revenue]\", \"hierarchyIdentity\": \"AccountHierarchyTable.General Ledger Account\", \"identity\": \"Operating margin\", \"italic\": true..."
+          ]
+        },
+        "skipCalculationCategories": {
+          "occurrences": 26,
+          "distinct_value_count": 8,
+          "sample_values": [
+            [
+              {
+                "hierarchyIdentity": "AccountHierarchy.Account",
+                "category": "EBITDA margin",
+                "level": 0
+              }
+            ],
+            "[{\"category\": \"Gross Margin %\", \"hierarchyIdentity\": \"dimAccount.Account group\", \"level\": 0}, {\"category\": \"Net Income %\", \"hierarchyIdentity\": \"dimAccount.Account group\", \"level\": 0}, {\"category\": \"E...",
+            "[{\"category\": \"Gross margin (ZBI)\", \"hierarchyIdentity\": \"dimAccount.Account\", \"level\": 0}, {\"category\": \"Gross margin (ZBI %)\", \"hierarchyIdentity\": \"dimAccount.Account\", \"level\": 0}, {\"category\": \"E...",
+            "[{\"category\": \"Gross margin (%)\", \"hierarchyIdentity\": \"dimAccount.Account\", \"level\": 0}, {\"category\": \"EBITDA\", \"hierarchyIdentity\": \"dimAccount.Account\", \"level\": 0}, {\"category\": \"Gross margin (ZBI...",
+            "[{\"category\": \"Operating margin\", \"hierarchyIdentity\": \"AccountHierarchyTable.General Ledger Account\", \"level\": 0}, {\"category\": \"Gross margin\", \"hierarchyIdentity\": \"AccountHierarchyTable.General Led...",
+            [
+              {
+                "hierarchyIdentity": "AccountHierarchyTable.General Ledger Account",
+                "category": "Operating margin",
+                "level": 0
+              }
+            ],
+            "[{\"category\": \"Gross margin %\", \"hierarchyIdentity\": \"Accounts.Account group\", \"level\": 0}, {\"category\": \"Operating income %\", \"hierarchyIdentity\": \"Accounts.Account group\", \"level\": 0}, {\"category\": ...",
+            [
+              {
+                "hierarchyIdentity": "Accounts.Account group",
+                "category": "Gross margin %",
+                "level": 0
+              }
+            ]
+          ]
+        },
+        "highlightedCustomColors": {
+          "occurrences": 2,
+          "distinct_value_count": 1,
+          "sample_values": [
+            [
+              {
+                "No Order": "#FF0000"
+              }
+            ]
+          ]
+        },
+        "highlighted": {
+          "occurrences": 1,
+          "distinct_value_count": 1,
+          "sample_values": [
+            [
+              "Others"
+            ]
+          ]
+        }
+      }
+    },
+    "coreSettings": {
+      "entry_count": 34,
+      "template_count": 11,
+      "templates": [
+        "annual-comparative-statement-power-bi-template",
+        "athletic-footwear-benchmarking-financial-analysis-template",
+        "brand-product-portfolio-analysis-automotive-power-bi-template",
+        "brand-product-portfolio-analysis-fmcg-power-bi-template",
+        "consolidated-financials-power-bi-template",
+        "cost-benefit-analysis-power-bi-template",
+        "cost-management-power-bi-template",
+        "food-beverage-financial-analysis-benchmarking-powerbi-template",
+        "income-statement-dashboard-in-power-bi",
+        "inventory-power-bi-template",
+        "saas-sales-power-bi-dashboard-template"
+      ],
+      "properties": {
+        "forceVisualRefreshTimestamp": {
+          "occurrences": 34,
+          "distinct_value_count": 8,
+          "sample_values": [
+            "1743766019760L",
+            "1745564240731L",
+            "1743765697038L",
+            "1742994928747L",
+            "1716537599300L",
+            "1716458602557L",
+            "1716463754875L",
+            "1716469150171L"
+          ]
+        }
+      }
+    },
+    "annotationLayerSettings": {
+      "entry_count": 69,
+      "template_count": 17,
+      "templates": [
+        "annual-comparative-statement-power-bi-template",
+        "athletic-footwear-benchmarking-financial-analysis-template",
+        "brand-product-portfolio-analysis-automotive-power-bi-template",
+        "brand-product-portfolio-analysis-fmcg-power-bi-template",
+        "consolidated-financials-power-bi-template",
+        "cost-benefit-analysis-power-bi-template",
+        "cost-management-power-bi-template",
+        "daily-sales-flash-power-bi-dashboard",
+        "dynamic-comments-power-bi-template",
+        "food-beverage-financial-analysis-benchmarking-powerbi-template",
+        "income-statement-dashboard-in-power-bi",
+        "inventory-power-bi-template",
+        "saas-sales-power-bi-dashboard-template",
+        "sales-dashboard-power-bi-template",
+        "sales-funnel-power-bi-template",
+        "social-media-power-bi-template",
+        "working-capital-in-power-bi-template"
+      ],
+      "properties": {
+        "annotationComments": {
+          "occurrences": 69,
+          "distinct_value_count": 8,
+          "sample_values": [
+            "[{\"categoryFields\": [], \"commentType\": 1, \"content\": \"\", \"createdAt\": \"2025-03-26T14:33:16.646Z\", \"dataPointSelection\": {\"identifier\": {\"fullCategory\": \"Total Revenue\", \"fullGroup\": \"\"}}, \"dataPropert...",
+            "[{\"categoryFields\": [], \"commentType\": 1, \"content\": \"\", \"createdAt\": \"2025-04-25T06:50:43.687Z\", \"dataPointSelection\": {\"identifier\": {\"fullCategory\": \"Total Revenue Contract Manufacturing\", \"fullGro...",
+            "[{\"categoryFields\": [], \"commentType\": 1, \"content\": \"\", \"createdAt\": \"2025-03-26T14:30:59.798Z\", \"dataPointSelection\": {\"identifier\": {\"fullCategory\": \"Total Revenue\", \"fullGroup\": \"\"}}, \"dataPropert...",
+            [],
+            "[{\"categoryFields\": [], \"commentType\": 1, \"content\": \"comment\\n\", \"createdAt\": \"2024-05-23T08:59:11.144Z\", \"dataPointSelection\": {\"identifier\": {\"fullCategory\": \"Toyota Highlander\", \"fullGroup\": \"Reve...",
+            "[{\"categoryFields\": [], \"commentType\": 1, \"content\": \"comment here\\n\", \"createdAt\": \"2024-05-23T08:35:41.989Z\", \"dataPointSelection\": {\"identifier\": {\"fullCategory\": \"GM\", \"fullGroup\": \"\"}}, \"dataProp...",
+            "[{\"categoryFields\": [], \"commentType\": 1, \"content\": \"Comment about this brand''s market share performance\", \"createdAt\": \"2024-05-23T10:47:33.541Z\", \"dataPointSelection\": {\"identifier\": {\"fullCategor...",
+            "[{\"categoryFields\": [], \"commentType\": 1, \"content\": \"\", \"createdAt\": \"2025-03-19T11:36:27.740Z\", \"dataPointSelection\": {\"identifier\": {\"fullCategory\": \"Costs Non-recurring costs\", \"fullGroup\": \"Year ..."
+          ]
+        },
+        "annotationHighlights": {
+          "occurrences": 49,
+          "distinct_value_count": 5,
+          "sample_values": [
+            [],
+            "[{\"createdAt\": \"2025-03-25T17:00:38.152Z\", \"dataPointSelections\": [{\"identifier\": {\"fullCategory\": \"Benefits Cost savings Reduced Staffing Cost (including Overtime)\", \"fullGroup\": \"Year 5\"}}, {\"identi...",
+            "[{\"createdAt\": \"2025-03-19T11:48:48.130Z\", \"dataPointSelections\": [{\"identifier\": {\"fullCategory\": \"Benefits Cost savings Reduced Staff Turnover Costs\", \"fullGroup\": \"Year 1\"}}, {\"identifier\": {\"fullC...",
+            "[{\"createdAt\": \"2024-11-20T11:18:31.964Z\", \"dataPointSelections\": [{\"identifier\": {\"fullCategory\": \"Toys Toy Car\", \"fullGroup\": \"Warehouse_B\"}}, {\"identifier\": {\"fullCategory\": \"Toys RC Helicopter\", \"...",
+            "[{\"createdAt\": \"2024-04-10T08:28:15.811Z\", \"dataPointSelections\": [{\"identifier\": {\"fullCategory\": \"Net New\", \"fullGroup\": \"\"}}], \"dataProperties\": [0, 2, 3], \"filterContexts\": [], \"highlightType\": 0,..."
+          ]
+        }
+      }
+    },
+    "commentBoxSettings": {
+      "entry_count": 43,
+      "template_count": 12,
+      "templates": [
+        "annual-comparative-statement-power-bi-template",
+        "athletic-footwear-benchmarking-financial-analysis-template",
+        "brand-product-portfolio-analysis-automotive-power-bi-template",
+        "brand-product-portfolio-analysis-fmcg-power-bi-template",
+        "consolidated-financials-power-bi-template",
+        "cost-benefit-analysis-power-bi-template",
+        "cost-management-power-bi-template",
+        "dynamic-comments-power-bi-template",
+        "food-beverage-financial-analysis-benchmarking-powerbi-template",
+        "income-statement-dashboard-in-power-bi",
+        "inventory-power-bi-template",
+        "saas-sales-power-bi-dashboard-template"
+      ],
+      "properties": {
+        "show": {
+          "occurrences": 38,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "true",
+            "false"
+          ]
+        },
+        "placement": {
+          "occurrences": 5,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "3D",
+            "0D"
+          ]
+        },
+        "size": {
+          "occurrences": 34,
+          "distinct_value_count": 8,
+          "sample_values": [
+            "0.5476661951909477",
+            "0.7875270367700073",
+            "0.7510454217736122",
+            "0.7804901148336687",
+            "0.8030400616063147",
+            "0.6787562354506153",
+            "0.6875740360207906",
+            "0.790189830021484"
+          ]
+        },
+        "shadow": {
+          "occurrences": 16,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "true",
+            "false"
+          ]
+        },
+        "itemsMargin": {
+          "occurrences": 13,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "10L",
+            "5L"
+          ]
+        },
+        "padding": {
+          "occurrences": 13,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "10L",
+            "5L"
+          ]
+        },
+        "title": {
+          "occurrences": 17,
+          "distinct_value_count": 4,
+          "sample_values": [
+            "3D",
+            "4D",
+            "2D",
+            "1D"
+          ]
+        },
+        "varianceIcon": {
+          "occurrences": 14,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "2D",
+            "1D"
+          ]
+        },
+        "showVariance": {
+          "occurrences": 19,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "1D",
+            "0D",
+            "2D"
+          ]
+        },
+        "borderWidth": {
+          "occurrences": 2,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "0L"
+          ]
+        },
+        "borderRadius": {
+          "occurrences": 2,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "0L"
+          ]
+        },
+        "borderColor": {
+          "occurrences": 2,
+          "distinct_value_count": 1,
+          "sample_values": [
+            {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "ThemeDataColor": {
+                      "ColorId": 1,
+                      "Percent": 0
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "plotCommentsHierarchically": {
+          "occurrences": 2,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "true"
+          ]
+        },
+        "commentMarkersDataProperties": {
+          "occurrences": 4,
+          "distinct_value_count": 3,
+          "sample_values": [
+            {
+              "{\"fullCategory\":\"Other Operating Expense\",\"fullGroup\":\"Coca-Cola\"}": 2
+            },
+            {
+              "{\"fullCategory\":\"SG&A Expense\",\"fullGroup\":\"Nike\"}": 3,
+              "{\"fullCategory\":\"COGS\",\"fullGroup\":\"Nike\"}": 2
+            },
+            {
+              "{\"fullCategory\":\"Service and other revenue\",\"fullGroup\":\"\"}": 5,
+              "{\"fullCategory\":\"Service and other costs\",\"fullGroup\":\"\"}": 5
+            }
+          ]
+        },
+        "customTitleStyle": {
+          "occurrences": 6,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "false",
+            "true"
+          ]
+        },
+        "fontSizeTitle": {
+          "occurrences": 6,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "14L",
+            "15L",
+            "12L"
+          ]
+        },
+        "customTextStyle": {
+          "occurrences": 6,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "false",
+            "true"
+          ]
+        },
+        "fontSizeText": {
+          "occurrences": 6,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "14L",
+            "12L"
+          ]
+        },
+        "fontColorTitle": {
+          "occurrences": 2,
+          "distinct_value_count": 2,
+          "sample_values": [
+            {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "ThemeDataColor": {
+                      "ColorId": 1,
+                      "Percent": 0
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "solid": {
+                "color": "#808080"
+              }
+            }
+          ]
+        },
+        "fontColorText": {
+          "occurrences": 4,
+          "distinct_value_count": 2,
+          "sample_values": [
+            {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "ThemeDataColor": {
+                      "ColorId": 1,
+                      "Percent": 0.4
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "solid": {
+                "color": "#000000"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "titleSettings": {
+      "entry_count": 113,
+      "template_count": 20,
+      "templates": [
+        "annual-comparative-statement-power-bi-template",
+        "athletic-footwear-benchmarking-financial-analysis-template",
+        "brand-product-portfolio-analysis-automotive-power-bi-template",
+        "brand-product-portfolio-analysis-fmcg-power-bi-template",
+        "consolidated-financials-power-bi-template",
+        "cost-benefit-analysis-power-bi-template",
+        "cost-management-power-bi-template",
+        "daily-sales-flash-power-bi-dashboard",
+        "dynamic-comments-power-bi-template",
+        "food-beverage-financial-analysis-benchmarking-powerbi-template",
+        "hr-analytics-power-bi-template",
+        "income-statement-dashboard-in-power-bi",
+        "inventory-power-bi-template",
+        "manufacturing-oee-power-bi-template",
+        "price-volume-mix-analysis-power-bi-template",
+        "saas-sales-power-bi-dashboard-template",
+        "sales-dashboard-power-bi-template",
+        "sales-funnel-power-bi-template",
+        "social-media-power-bi-template",
+        "working-capital-in-power-bi-template"
+      ],
+      "properties": {
+        "fontFamily": {
+          "occurrences": 71,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "''Segoe UI'', wf_segoe-ui_normal, helvetica, arial, sans-serif",
+            "Segoe UI Bold",
+            "Segoe UI"
+          ]
+        },
+        "fontSize": {
+          "occurrences": 87,
+          "distinct_value_count": 5,
+          "sample_values": [
+            "12D",
+            "14D",
+            "13D",
+            "15",
+            "14"
+          ]
+        },
+        "text": {
+          "occurrences": 87,
+          "distinct_value_count": 8,
+          "sample_values": [
+            "[Selected Year] P&L, in USD ",
+            "in USD",
+            "[Selected Region], in USD ",
+            " [Selected Year] [Selected Region], in USD ",
+            "[Selected Account] [Selected Year], in USD",
+            "[Selected Year], in M USD ",
+            "by Region, in USD",
+            ""
+          ]
+        },
+        "fontColor": {
+          "occurrences": 64,
+          "distinct_value_count": 3,
+          "sample_values": [
+            {
+              "solid": {
+                "color": "#000"
+              }
+            },
+            {
+              "solid": {
+                "color": "#000000"
+              }
+            },
+            {
+              "solid": {
+                "color": "#484848"
+              }
+            }
+          ]
+        },
+        "fontWeight": {
+          "occurrences": 39,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "normal"
+          ]
+        },
+        "fontStyle": {
+          "occurrences": 39,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "normal"
+          ]
+        },
+        "alignment": {
+          "occurrences": 48,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "left"
+          ]
+        },
+        "wrapLongTitle": {
+          "occurrences": 39,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "true"
+          ]
+        },
+        "show": {
+          "occurrences": 37,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "false",
+            "true"
+          ]
+        }
+      }
+    },
+    "previewSettings": {
+      "entry_count": 44,
+      "template_count": 11,
+      "templates": [
+        "annual-comparative-statement-power-bi-template",
+        "athletic-footwear-benchmarking-financial-analysis-template",
+        "brand-product-portfolio-analysis-fmcg-power-bi-template",
+        "consolidated-financials-power-bi-template",
+        "cost-benefit-analysis-power-bi-template",
+        "dynamic-comments-power-bi-template",
+        "food-beverage-financial-analysis-benchmarking-powerbi-template",
+        "income-statement-dashboard-in-power-bi",
+        "inventory-power-bi-template",
+        "sales-funnel-power-bi-template",
+        "social-media-power-bi-template"
+      ],
+      "properties": {
+        "migrationsLog": {
+          "occurrences": 44,
+          "distinct_value_count": 2,
+          "sample_values": [
+            {
+              "calculationCorrectionFeature": {
+                "visualVersion": "1.0.0",
+                "isMigrationCompleted": true
+              }
+            },
+            {}
+          ]
+        },
+        "activationLog": {
+          "occurrences": 44,
+          "distinct_value_count": 2,
+          "sample_values": [
+            {
+              "calculationCorrectionFeature": {
+                "previewFeatureVersion": "1.0.0"
+              }
+            },
+            {}
+          ]
+        },
+        "calculationCorrectionFeature": {
+          "occurrences": 35,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "true",
+            "false"
+          ]
+        }
+      }
+    },
+    "drillSettings": {
+      "entry_count": 34,
+      "template_count": 7,
+      "templates": [
+        "annual-comparative-statement-power-bi-template",
+        "athletic-footwear-benchmarking-financial-analysis-template",
+        "brand-product-portfolio-analysis-fmcg-power-bi-template",
+        "consolidated-financials-power-bi-template",
+        "cost-benefit-analysis-power-bi-template",
+        "food-beverage-financial-analysis-benchmarking-powerbi-template",
+        "income-statement-dashboard-in-power-bi"
+      ],
+      "properties": {
+        "loadStrategy": {
+          "occurrences": 34,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "no_drill",
+            "drill"
+          ]
+        }
+      }
+    },
+    "dataLabelSettings": {
+      "entry_count": 95,
+      "template_count": 18,
+      "templates": [
+        "annual-comparative-statement-power-bi-template",
+        "athletic-footwear-benchmarking-financial-analysis-template",
+        "brand-product-portfolio-analysis-automotive-power-bi-template",
+        "consolidated-financials-power-bi-template",
+        "cost-benefit-analysis-power-bi-template",
+        "cost-management-power-bi-template",
+        "daily-sales-flash-power-bi-dashboard",
+        "dynamic-comments-power-bi-template",
+        "food-beverage-financial-analysis-benchmarking-powerbi-template",
+        "hr-analytics-power-bi-template",
+        "income-statement-dashboard-in-power-bi",
+        "inventory-power-bi-template",
+        "manufacturing-oee-power-bi-template",
+        "price-volume-mix-analysis-power-bi-template",
+        "saas-sales-power-bi-dashboard-template",
+        "sales-dashboard-power-bi-template",
+        "sales-funnel-power-bi-template",
+        "social-media-power-bi-template"
+      ],
+      "properties": {
+        "decimalPlaces": {
+          "occurrences": 78,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "0L",
+            "1L"
+          ]
+        },
+        "decimalPlacesPercentage": {
+          "occurrences": 33,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "0L",
+            "1L"
+          ]
+        },
+        "percentagePointDecimals": {
+          "occurrences": 23,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "1L",
+            "0L"
+          ]
+        },
+        "units": {
+          "occurrences": 53,
+          "distinct_value_count": 7,
+          "sample_values": [
+            "G",
+            "M",
+            "PowerBI",
+            "Auto",
+            "None",
+            "P",
+            "K"
+          ]
+        },
+        "showUnits": {
+          "occurrences": 41,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "1D",
+            "0D"
+          ]
+        },
+        "useBasisPointsFormat": {
+          "occurrences": 17,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "true",
+            "false"
+          ]
+        },
+        "basisPointUnit": {
+          "occurrences": 9,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "bp"
+          ]
+        },
+        "negativeValuesFormat": {
+          "occurrences": 8,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "1D"
+          ]
+        },
+        "suppressSmallValues": {
+          "occurrences": 3,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "true",
+            "false"
+          ]
+        },
+        "show": {
+          "occurrences": 3,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "true"
+          ]
+        },
+        "suppressRelativeVariancePercentageValues": {
+          "occurrences": 11,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "false",
+            "true"
+          ]
+        },
+        "fontSize": {
+          "occurrences": 12,
+          "distinct_value_count": 5,
+          "sample_values": [
+            "12D",
+            "11D",
+            "14",
+            "13",
+            "14D"
+          ]
+        },
+        "fontColor": {
+          "occurrences": 1,
+          "distinct_value_count": 1,
+          "sample_values": [
+            {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "ThemeDataColor": {
+                      "ColorId": 1,
+                      "Percent": 0
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "suppressLargeRelativeVariance": {
+          "occurrences": 1,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "true"
+          ]
+        }
+      }
+    },
+    "categorySettings": {
+      "entry_count": 106,
+      "template_count": 20,
+      "templates": [
+        "annual-comparative-statement-power-bi-template",
+        "athletic-footwear-benchmarking-financial-analysis-template",
+        "brand-product-portfolio-analysis-automotive-power-bi-template",
+        "brand-product-portfolio-analysis-fmcg-power-bi-template",
+        "consolidated-financials-power-bi-template",
+        "cost-benefit-analysis-power-bi-template",
+        "cost-management-power-bi-template",
+        "daily-sales-flash-power-bi-dashboard",
+        "dynamic-comments-power-bi-template",
+        "food-beverage-financial-analysis-benchmarking-powerbi-template",
+        "hr-analytics-power-bi-template",
+        "income-statement-dashboard-in-power-bi",
+        "inventory-power-bi-template",
+        "manufacturing-oee-power-bi-template",
+        "price-volume-mix-analysis-power-bi-template",
+        "saas-sales-power-bi-dashboard-template",
+        "sales-dashboard-power-bi-template",
+        "sales-funnel-power-bi-template",
+        "social-media-power-bi-template",
+        "working-capital-in-power-bi-template"
+      ],
+      "properties": {
+        "displayOptions": {
+          "occurrences": 67,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "2D",
+            "1D",
+            "0D"
+          ]
+        },
+        "width": {
+          "occurrences": 23,
+          "distinct_value_count": 8,
+          "sample_values": [
+            "185D",
+            "90D",
+            "70D",
+            "140D",
+            "130D",
+            "150D",
+            "158D",
+            "124D"
+          ]
+        },
+        "rowHeight": {
+          "occurrences": 47,
+          "distinct_value_count": 5,
+          "sample_values": [
+            "0D",
+            "1D",
+            "3D",
+            "5D",
+            "2D"
+          ]
+        },
+        "topNSettings": {
+          "occurrences": 59,
+          "distinct_value_count": 8,
+          "sample_values": [
+            "[{\"category\": \"Company\", \"columnName\": \"actual\", \"dataProperty\": 0, \"level\": 0, \"number\": 5, \"numberInFocusMode\": 25, \"type\": 1}, {\"category\": \"Company\", \"columnName\": \"actual\", \"dataProperty\": 0, \"le...",
+            [
+              {
+                "category": "Company",
+                "dataProperty": 0,
+                "columnName": "actual",
+                "level": 0,
+                "number": 25,
+                "numberInFocusMode": 25,
+                "type": 1
+              }
+            ],
+            [
+              {
+                "category": "Business unit",
+                "dataProperty": 2,
+                "columnName": "forecast-plan",
+                "level": 0,
+                "number": 7,
+                "type": 3
+              }
+            ],
+            [
+              {
+                "category": "",
+                "dataProperty": 2,
+                "level": 0,
+                "number": 5,
+                "type": 3,
+                "columnName": "actual-plan"
+              }
+            ],
+            [],
+            [
+              {
+                "category": "Category",
+                "dataProperty": 2,
+                "level": 2,
+                "number": 5,
+                "numberInFocusMode": 20,
+                "type": 0,
+                "columnName": "actual-plan"
+              }
+            ],
+            [
+              {
+                "category": "Vendor",
+                "dataProperty": 2,
+                "columnName": "actual-plan",
+                "level": 0,
+                "number": 14,
+                "numberInFocusMode": 20,
+                "type": 3
+              }
+            ],
+            [
+              {
+                "category": "General Ledger Account",
+                "dataProperty": 2,
+                "columnName": "actual-plan",
+                "level": 0,
+                "number": 7,
+                "numberInFocusMode": 20,
+                "type": 3
+              }
+            ]
+          ]
+        },
+        "showTopNForm": {
+          "occurrences": 29,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "false"
+          ]
+        },
+        "gapBetweenColumnsPercent": {
+          "occurrences": 8,
+          "distinct_value_count": 4,
+          "sample_values": [
+            "45L",
+            "30L",
+            "40L",
+            "28L"
+          ]
+        },
+        "freeze": {
+          "occurrences": 29,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "false"
+          ]
+        },
+        "showTopNCategories": {
+          "occurrences": 3,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "true"
+          ]
+        },
+        "height": {
+          "occurrences": 5,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "21D",
+            "20D",
+            "24D"
+          ]
+        }
+      }
+    },
+    "groupsMetadata": {
+      "entry_count": 27,
+      "template_count": 9,
+      "templates": [
+        "annual-comparative-statement-power-bi-template",
+        "brand-product-portfolio-analysis-automotive-power-bi-template",
+        "daily-sales-flash-power-bi-dashboard",
+        "inventory-power-bi-template",
+        "manufacturing-oee-power-bi-template",
+        "saas-sales-power-bi-dashboard-template",
+        "sales-dashboard-power-bi-template",
+        "social-media-power-bi-template",
+        "working-capital-in-power-bi-template"
+      ],
+      "properties": {
+        "inverted": {
+          "occurrences": 22,
+          "distinct_value_count": 8,
+          "sample_values": [
+            [
+              "Cost of Goods Sold (COGS)",
+              "Total Operating Expenses",
+              "Interest Expense",
+              "Taxes"
+            ],
+            [
+              "Avg Days on Lot"
+            ],
+            [
+              "Stockout orders"
+            ],
+            [
+              "Inventory Value End",
+              "Average Inventory"
+            ],
+            [
+              "Inventory as % of Sales (Monthly)",
+              "Inventory as % of Sales"
+            ],
+            [
+              "Downsell",
+              "Churn"
+            ],
+            [
+              "Cost"
+            ],
+            []
+          ]
+        },
+        "names": {
+          "occurrences": 3,
+          "distinct_value_count": 2,
+          "sample_values": [
+            {
+              "EOM": "Month"
+            },
+            {
+              "Overdue/1/29/2022": ""
+            }
+          ]
+        }
+      }
+    },
+    "legendHeaderSettings": {
+      "entry_count": 17,
+      "template_count": 10,
+      "templates": [
+        "brand-product-portfolio-analysis-automotive-power-bi-template",
+        "daily-sales-flash-power-bi-dashboard",
+        "dynamic-comments-power-bi-template",
+        "hr-analytics-power-bi-template",
+        "income-statement-dashboard-in-power-bi",
+        "inventory-power-bi-template",
+        "manufacturing-oee-power-bi-template",
+        "saas-sales-power-bi-dashboard-template",
+        "social-media-power-bi-template",
+        "working-capital-in-power-bi-template"
+      ],
+      "properties": {
+        "actual": {
+          "occurrences": 11,
+          "distinct_value_count": 8,
+          "sample_values": [
+            "Revenue",
+            "MTD",
+            "Avg. salary ($)",
+            "Hires",
+            "Terminations",
+            "# of stops",
+            "AC",
+            "Days"
+          ]
+        },
+        "actual-previousYear": {
+          "occurrences": 3,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "ΔPMTD",
+            "ΔPW"
+          ]
+        },
+        "previousYear": {
+          "occurrences": 3,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "PMTD",
+            "PW"
+          ]
+        },
+        "actual-previousYear-percent": {
+          "occurrences": 2,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "ΔPMTD%"
+          ]
+        },
+        "absoluteDifferenceHeader": {
+          "occurrences": 1,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "ΔPL"
+          ]
+        },
+        "secondAbsoluteDifferenceHeader": {
+          "occurrences": 1,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "ΔPL"
+          ]
+        },
+        "actual-plan": {
+          "occurrences": 7,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "Δ Company''s avg. salary ($)",
+            "ΔPL",
+            "ΔPM"
+          ]
+        },
+        "plan": {
+          "occurrences": 1,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "PM"
+          ]
+        },
+        "actual-plan-percent": {
+          "occurrences": 1,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "ΔPM%"
+          ]
+        }
+      }
+    },
+    "groupTitleSettings": {
+      "entry_count": 17,
+      "template_count": 5,
+      "templates": [
+        "brand-product-portfolio-analysis-fmcg-power-bi-template",
+        "income-statement-dashboard-in-power-bi",
+        "price-volume-mix-analysis-power-bi-template",
+        "sales-dashboard-power-bi-template",
+        "working-capital-in-power-bi-template"
+      ],
+      "properties": {
+        "fontFamily": {
+          "occurrences": 4,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "''Segoe UI Bold'', wf_segoe-ui_bold, helvetica, arial, sans-serif",
+            "Segoe UI Light",
+            "Segoe UI"
+          ]
+        },
+        "fontSize": {
+          "occurrences": 11,
+          "distinct_value_count": 5,
+          "sample_values": [
+            "14D",
+            "12D",
+            "18D",
+            "14",
+            "15"
+          ]
+        },
+        "alignment": {
+          "occurrences": 6,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "center",
+            "left"
+          ]
+        },
+        "fontColor": {
+          "occurrences": 8,
+          "distinct_value_count": 3,
+          "sample_values": [
+            {
+              "solid": {
+                "color": "#999999"
+              }
+            },
+            {
+              "solid": {
+                "color": "#666666"
+              }
+            },
+            {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "ThemeDataColor": {
+                      "ColorId": 1,
+                      "Percent": 0
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "displayOptions": {
+          "occurrences": 1,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "2D"
+          ]
+        },
+        "width": {
+          "occurrences": 1,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "62D"
+          ]
+        }
+      }
+    },
+    "designSettings": {
+      "entry_count": 4,
+      "template_count": 3,
+      "templates": [
+        "dynamic-comments-power-bi-template",
+        "income-statement-dashboard-in-power-bi",
+        "sales-dashboard-power-bi-template"
+      ],
+      "properties": {
+        "style": {
+          "occurrences": 4,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "0D"
+          ]
+        },
+        "highlightColor": {
+          "occurrences": 1,
+          "distinct_value_count": 1,
+          "sample_values": [
+            {
+              "solid": {
+                "color": "#0014FF"
+              }
+            }
+          ]
+        },
+        "neutralColor": {
+          "occurrences": 1,
+          "distinct_value_count": 1,
+          "sample_values": [
+            {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "ThemeDataColor": {
+                      "ColorId": 1,
+                      "Percent": 0.2
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "averageLineSettings": {
+      "entry_count": 3,
+      "template_count": 2,
+      "templates": [
+        "hr-analytics-power-bi-template",
+        "sales-funnel-power-bi-template"
+      ],
+      "properties": {
+        "show": {
+          "occurrences": 2,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "true"
+          ]
+        },
+        "style": {
+          "occurrences": 1,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "8,4"
+          ]
+        }
+      }
+    },
+    "interactionSettings": {
+      "entry_count": 1,
+      "template_count": 1,
+      "templates": [
+        "sales-dashboard-power-bi-template"
+      ],
+      "properties": {
+        "show": {
+          "occurrences": 1,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "true"
+          ]
+        },
+        "allowChartChange": {
+          "occurrences": 1,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "false"
+          ]
+        }
+      }
+    }
+  },
+  "ZebraWaterfall": {
+    "visualCreatedVersion": {
+      "entry_count": 140,
+      "template_count": 20,
+      "templates": [
+        "annual-comparative-statement-power-bi-template",
+        "athletic-footwear-benchmarking-financial-analysis-template",
+        "brand-product-portfolio-analysis-automotive-power-bi-template",
+        "brand-product-portfolio-analysis-fmcg-power-bi-template",
+        "consolidated-financials-power-bi-template",
+        "cost-benefit-analysis-power-bi-template",
+        "cost-management-power-bi-template",
+        "daily-sales-flash-power-bi-dashboard",
+        "dynamic-comments-power-bi-template",
+        "food-beverage-financial-analysis-benchmarking-powerbi-template",
+        "hr-analytics-power-bi-template",
+        "income-statement-dashboard-in-power-bi",
+        "inventory-power-bi-template",
+        "manufacturing-oee-power-bi-template",
+        "price-volume-mix-analysis-power-bi-template",
+        "saas-sales-power-bi-dashboard-template",
+        "sales-dashboard-power-bi-template",
+        "sales-funnel-power-bi-template",
+        "social-media-power-bi-template",
+        "working-capital-in-power-bi-template"
+      ],
+      "properties": {
+        "version": {
+          "occurrences": 140,
+          "distinct_value_count": 8,
+          "sample_values": [
+            "7.5.0.0",
+            "6.4.2",
+            "7.1.1.1",
+            "6.2.0",
+            "7.3.0.1",
+            "7.3.0.2",
+            "6.0.0",
+            "6.3.0"
+          ]
+        }
+      }
+    },
+    "proFeaturesSettings": {
+      "entry_count": 113,
+      "template_count": 17,
+      "templates": [
+        "annual-comparative-statement-power-bi-template",
+        "athletic-footwear-benchmarking-financial-analysis-template",
+        "brand-product-portfolio-analysis-automotive-power-bi-template",
+        "brand-product-portfolio-analysis-fmcg-power-bi-template",
+        "consolidated-financials-power-bi-template",
+        "daily-sales-flash-power-bi-dashboard",
+        "dynamic-comments-power-bi-template",
+        "food-beverage-financial-analysis-benchmarking-powerbi-template",
+        "hr-analytics-power-bi-template",
+        "income-statement-dashboard-in-power-bi",
+        "manufacturing-oee-power-bi-template",
+        "price-volume-mix-analysis-power-bi-template",
+        "saas-sales-power-bi-dashboard-template",
+        "sales-dashboard-power-bi-template",
+        "sales-funnel-power-bi-template",
+        "social-media-power-bi-template",
+        "working-capital-in-power-bi-template"
+      ],
+      "properties": {
+        "show": {
+          "occurrences": 113,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "true"
+          ]
+        },
+        "proFeaturesUnlocked": {
+          "occurrences": 16,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "true",
+            "false"
+          ]
+        },
+        "proFeaturesDisabledByUser": {
+          "occurrences": 16,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "false"
+          ]
+        }
+      }
+    },
+    "chartType": {
+      "entry_count": 136,
+      "template_count": 20,
+      "templates": [
+        "annual-comparative-statement-power-bi-template",
+        "athletic-footwear-benchmarking-financial-analysis-template",
+        "brand-product-portfolio-analysis-automotive-power-bi-template",
+        "brand-product-portfolio-analysis-fmcg-power-bi-template",
+        "consolidated-financials-power-bi-template",
+        "cost-benefit-analysis-power-bi-template",
+        "cost-management-power-bi-template",
+        "daily-sales-flash-power-bi-dashboard",
+        "dynamic-comments-power-bi-template",
+        "food-beverage-financial-analysis-benchmarking-powerbi-template",
+        "hr-analytics-power-bi-template",
+        "income-statement-dashboard-in-power-bi",
+        "inventory-power-bi-template",
+        "manufacturing-oee-power-bi-template",
+        "price-volume-mix-analysis-power-bi-template",
+        "saas-sales-power-bi-dashboard-template",
+        "sales-dashboard-power-bi-template",
+        "sales-funnel-power-bi-template",
+        "social-media-power-bi-template",
+        "working-capital-in-power-bi-template"
+      ],
+      "properties": {
+        "chartType": {
+          "occurrences": 135,
+          "distinct_value_count": 6,
+          "sample_values": [
+            "3D",
+            "0D",
+            "1D",
+            "7D",
+            "4D",
+            "2D"
+          ]
+        }
+      }
+    },
+    "axisBreakSettings": {
+      "entry_count": 76,
+      "template_count": 19,
+      "templates": [
+        "annual-comparative-statement-power-bi-template",
+        "athletic-footwear-benchmarking-financial-analysis-template",
+        "brand-product-portfolio-analysis-automotive-power-bi-template",
+        "brand-product-portfolio-analysis-fmcg-power-bi-template",
+        "consolidated-financials-power-bi-template",
+        "cost-benefit-analysis-power-bi-template",
+        "cost-management-power-bi-template",
+        "dynamic-comments-power-bi-template",
+        "food-beverage-financial-analysis-benchmarking-powerbi-template",
+        "hr-analytics-power-bi-template",
+        "income-statement-dashboard-in-power-bi",
+        "inventory-power-bi-template",
+        "manufacturing-oee-power-bi-template",
+        "price-volume-mix-analysis-power-bi-template",
+        "saas-sales-power-bi-dashboard-template",
+        "sales-dashboard-power-bi-template",
+        "sales-funnel-power-bi-template",
+        "social-media-power-bi-template",
+        "working-capital-in-power-bi-template"
+      ],
+      "properties": {
+        "show": {
+          "occurrences": 75,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "true",
+            "false"
+          ]
+        },
+        "axisBreakPercent": {
+          "occurrences": 8,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "90D",
+            "99D",
+            "80"
+          ]
+        }
+      }
+    },
+    "groupsMetadata": {
+      "entry_count": 44,
+      "template_count": 14,
+      "templates": [
+        "annual-comparative-statement-power-bi-template",
+        "athletic-footwear-benchmarking-financial-analysis-template",
+        "brand-product-portfolio-analysis-automotive-power-bi-template",
+        "brand-product-portfolio-analysis-fmcg-power-bi-template",
+        "cost-benefit-analysis-power-bi-template",
+        "cost-management-power-bi-template",
+        "food-beverage-financial-analysis-benchmarking-powerbi-template",
+        "income-statement-dashboard-in-power-bi",
+        "inventory-power-bi-template",
+        "manufacturing-oee-power-bi-template",
+        "saas-sales-power-bi-dashboard-template",
+        "sales-dashboard-power-bi-template",
+        "social-media-power-bi-template",
+        "working-capital-in-power-bi-template"
+      ],
+      "properties": {
+        "inverted": {
+          "occurrences": 33,
+          "distinct_value_count": 8,
+          "sample_values": [
+            [
+              "Cost of Goods Sold (COGS)",
+              "Total Operating Expenses"
+            ],
+            [
+              "Interest Expense",
+              "Total Operating Expenses",
+              "Cost of Goods Sold (COGS)",
+              "Taxes"
+            ],
+            [
+              "Liabilities & Equity",
+              "SG&A Expense",
+              "Income Tax",
+              "Unusual Expense",
+              "Interest Expense",
+              "Minority Interest Expense",
+              "Other Operating Expense",
+              "COGS"
+            ],
+            [
+              "COGS excl. D&A",
+              "Other SG&A",
+              "Income Tax",
+              "SG&A Expense",
+              "ST Debt & Current Portion LT Debt",
+              "Long-Term Debt excl. Capitalized Leases",
+              "Accounts Payable"
+            ],
+            [
+              "SG&A Expense",
+              "Unusual Expense",
+              "Income Tax",
+              "Cost of Goods Sold (COGS) incl. D&A"
+            ],
+            [
+              "Avg Days on Lot"
+            ],
+            [
+              "Non-recurring costs",
+              "Recurring costs"
+            ],
+            [
+              "OPEX",
+              "COGS"
+            ]
+          ]
+        },
+        "highlighted": {
+          "occurrences": 14,
+          "distinct_value_count": 6,
+          "sample_values": [
+            [],
+            [
+              "Procter & Gamble",
+              "Belle Bloom Essentials"
+            ],
+            [
+              "Procter & Gamble"
+            ],
+            [
+              "Procter & Gamble",
+              "Natural Vibe",
+              "Pure Petal",
+              "Harmony Head",
+              "Grand Groom",
+              "Herbal Harmony",
+              "Aura Aegis"
+            ],
+            [
+              "Procter & Gamble",
+              "Saffron Splendor"
+            ],
+            [
+              "No Order"
+            ]
+          ]
+        },
+        "highlightedCustomColors": {
+          "occurrences": 11,
+          "distinct_value_count": 4,
+          "sample_values": [
+            [
+              {
+                "Procter & Gamble": "#0033AB"
+              }
+            ],
+            [
+              {
+                "Procter & Gamble": "#0032AA"
+              }
+            ],
+            [],
+            [
+              {
+                "No Order": "#C9B2F5"
+              }
+            ]
+          ]
+        }
+      }
+    },
+    "titleSettings": {
+      "entry_count": 107,
+      "template_count": 19,
+      "templates": [
+        "annual-comparative-statement-power-bi-template",
+        "athletic-footwear-benchmarking-financial-analysis-template",
+        "brand-product-portfolio-analysis-automotive-power-bi-template",
+        "brand-product-portfolio-analysis-fmcg-power-bi-template",
+        "consolidated-financials-power-bi-template",
+        "cost-benefit-analysis-power-bi-template",
+        "cost-management-power-bi-template",
+        "daily-sales-flash-power-bi-dashboard",
+        "dynamic-comments-power-bi-template",
+        "food-beverage-financial-analysis-benchmarking-powerbi-template",
+        "hr-analytics-power-bi-template",
+        "income-statement-dashboard-in-power-bi",
+        "inventory-power-bi-template",
+        "manufacturing-oee-power-bi-template",
+        "price-volume-mix-analysis-power-bi-template",
+        "saas-sales-power-bi-dashboard-template",
+        "sales-dashboard-power-bi-template",
+        "sales-funnel-power-bi-template",
+        "working-capital-in-power-bi-template"
+      ],
+      "properties": {
+        "fontFamily": {
+          "occurrences": 71,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "''Segoe UI'', wf_segoe-ui_normal, helvetica, arial, sans-serif",
+            "Segoe UI"
+          ]
+        },
+        "fontSize": {
+          "occurrences": 85,
+          "distinct_value_count": 6,
+          "sample_values": [
+            "12D",
+            "14D",
+            "13D",
+            "18D",
+            "15D",
+            "14"
+          ]
+        },
+        "text": {
+          "occurrences": 79,
+          "distinct_value_count": 8,
+          "sample_values": [
+            "Trends, in USD",
+            "Growth rates [Selected Region] ",
+            "[Selected Account], in USD",
+            "in USD",
+            "",
+            "YoY Growth (in unit and as %)",
+            "[Selected KPI_] AC and PY by Month for [Selected Year_] ",
+            "[Selected KPI_] "
+          ]
+        },
+        "fontColor": {
+          "occurrences": 72,
+          "distinct_value_count": 3,
+          "sample_values": [
+            {
+              "solid": {
+                "color": "#000"
+              }
+            },
+            {
+              "solid": {
+                "color": "#000000"
+              }
+            },
+            {
+              "solid": {
+                "color": "#484848"
+              }
+            }
+          ]
+        },
+        "fontWeight": {
+          "occurrences": 58,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "normal"
+          ]
+        },
+        "fontStyle": {
+          "occurrences": 58,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "normal"
+          ]
+        },
+        "alignment": {
+          "occurrences": 58,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "left"
+          ]
+        },
+        "wrapLongTitle": {
+          "occurrences": 58,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "true"
+          ]
+        },
+        "show": {
+          "occurrences": 28,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "false",
+            "true"
+          ]
+        }
+      }
+    },
+    "chartSettings": {
+      "entry_count": 106,
+      "template_count": 20,
+      "templates": [
+        "annual-comparative-statement-power-bi-template",
+        "athletic-footwear-benchmarking-financial-analysis-template",
+        "brand-product-portfolio-analysis-automotive-power-bi-template",
+        "brand-product-portfolio-analysis-fmcg-power-bi-template",
+        "consolidated-financials-power-bi-template",
+        "cost-benefit-analysis-power-bi-template",
+        "cost-management-power-bi-template",
+        "daily-sales-flash-power-bi-dashboard",
+        "dynamic-comments-power-bi-template",
+        "food-beverage-financial-analysis-benchmarking-powerbi-template",
+        "hr-analytics-power-bi-template",
+        "income-statement-dashboard-in-power-bi",
+        "inventory-power-bi-template",
+        "manufacturing-oee-power-bi-template",
+        "price-volume-mix-analysis-power-bi-template",
+        "saas-sales-power-bi-dashboard-template",
+        "sales-dashboard-power-bi-template",
+        "sales-funnel-power-bi-template",
+        "social-media-power-bi-template",
+        "working-capital-in-power-bi-template"
+      ],
+      "properties": {
+        "chartLayout": {
+          "occurrences": 40,
+          "distinct_value_count": 7,
+          "sample_values": [
+            "Absolute / Relative",
+            "Relative",
+            "Integrated",
+            "Responsive",
+            "Waterfall",
+            "Actual / Absolute",
+            "Actual"
+          ]
+        },
+        "referenceDisplayType": {
+          "occurrences": 4,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "1D"
+          ]
+        },
+        "showVerticalCharts": {
+          "occurrences": 7,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "false",
+            "true"
+          ]
+        },
+        "minChartHeight": {
+          "occurrences": 37,
+          "distinct_value_count": 8,
+          "sample_values": [
+            "16D",
+            "159D",
+            "176D",
+            "121D",
+            "145D",
+            "136D",
+            "239D",
+            "138D"
+          ]
+        },
+        "showGrandTotal": {
+          "occurrences": 39,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "false",
+            "true"
+          ]
+        },
+        "handleNullsAsZeros": {
+          "occurrences": 20,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "false"
+          ]
+        },
+        "invert": {
+          "occurrences": 25,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "false",
+            "true"
+          ]
+        },
+        "grandTotalLabel": {
+          "occurrences": 1,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "Net Cost/Benefit"
+          ]
+        },
+        "limitOutliers": {
+          "occurrences": 3,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "false"
+          ]
+        },
+        "plotOverlappedReference": {
+          "occurrences": 4,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "true"
+          ]
+        },
+        "maxOutlierValue": {
+          "occurrences": 1,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "100D"
+          ]
+        },
+        "minOutlierValue": {
+          "occurrences": 1,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "100D"
+          ]
+        }
+      }
+    },
+    "multipleLayout": {
+      "entry_count": 69,
+      "template_count": 17,
+      "templates": [
+        "annual-comparative-statement-power-bi-template",
+        "athletic-footwear-benchmarking-financial-analysis-template",
+        "brand-product-portfolio-analysis-automotive-power-bi-template",
+        "brand-product-portfolio-analysis-fmcg-power-bi-template",
+        "consolidated-financials-power-bi-template",
+        "cost-benefit-analysis-power-bi-template",
+        "cost-management-power-bi-template",
+        "daily-sales-flash-power-bi-dashboard",
+        "dynamic-comments-power-bi-template",
+        "food-beverage-financial-analysis-benchmarking-powerbi-template",
+        "income-statement-dashboard-in-power-bi",
+        "inventory-power-bi-template",
+        "manufacturing-oee-power-bi-template",
+        "price-volume-mix-analysis-power-bi-template",
+        "saas-sales-power-bi-dashboard-template",
+        "sales-dashboard-power-bi-template",
+        "social-media-power-bi-template"
+      ],
+      "properties": {
+        "showMultiplesGrid": {
+          "occurrences": 58,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "true",
+            "false"
+          ]
+        },
+        "showOuterBorders": {
+          "occurrences": 26,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "false",
+            "true"
+          ]
+        },
+        "sort": {
+          "occurrences": 20,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "0D",
+            "2D"
+          ]
+        },
+        "layoutType": {
+          "occurrences": 50,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "Rows",
+            "Auto",
+            "LargestFirst"
+          ]
+        },
+        "multiplesAxisLabelsOptions": {
+          "occurrences": 19,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "3D",
+            "0D",
+            "4D"
+          ]
+        },
+        "multiples2dRowsSort": {
+          "occurrences": 3,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "0D"
+          ]
+        },
+        "multiples2dColumnsSort": {
+          "occurrences": 3,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "0D"
+          ]
+        },
+        "gridlineStyle": {
+          "occurrences": 26,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "1D",
+            "2D",
+            "0D"
+          ]
+        },
+        "multiplesGridlinesColor": {
+          "occurrences": 11,
+          "distinct_value_count": 3,
+          "sample_values": [
+            {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "ThemeDataColor": {
+                      "ColorId": 0,
+                      "Percent": -0.2
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "ThemeDataColor": {
+                      "ColorId": 1,
+                      "Percent": 0.6
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "ThemeDataColor": {
+                      "ColorId": 0,
+                      "Percent": -0.1
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "showTopNChartsOptions": {
+          "occurrences": 29,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "0D",
+            "1D",
+            "2D"
+          ]
+        },
+        "topNChartsToKeep": {
+          "occurrences": 25,
+          "distinct_value_count": 8,
+          "sample_values": [
+            "8L",
+            "7L",
+            "17L",
+            "15L",
+            "19L",
+            "29L",
+            "4L",
+            "3L"
+          ]
+        },
+        "topNChartsPercentage": {
+          "occurrences": 2,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "83L",
+            "90L"
+          ]
+        }
+      }
+    },
+    "categorySettings": {
+      "entry_count": 78,
+      "template_count": 19,
+      "templates": [
+        "annual-comparative-statement-power-bi-template",
+        "athletic-footwear-benchmarking-financial-analysis-template",
+        "brand-product-portfolio-analysis-automotive-power-bi-template",
+        "brand-product-portfolio-analysis-fmcg-power-bi-template",
+        "consolidated-financials-power-bi-template",
+        "cost-benefit-analysis-power-bi-template",
+        "cost-management-power-bi-template",
+        "daily-sales-flash-power-bi-dashboard",
+        "dynamic-comments-power-bi-template",
+        "food-beverage-financial-analysis-benchmarking-powerbi-template",
+        "hr-analytics-power-bi-template",
+        "income-statement-dashboard-in-power-bi",
+        "inventory-power-bi-template",
+        "manufacturing-oee-power-bi-template",
+        "price-volume-mix-analysis-power-bi-template",
+        "saas-sales-power-bi-dashboard-template",
+        "sales-dashboard-power-bi-template",
+        "sales-funnel-power-bi-template",
+        "working-capital-in-power-bi-template"
+      ],
+      "properties": {
+        "categoryWidth": {
+          "occurrences": 57,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "1D",
+            "0D"
+          ]
+        },
+        "minWidth": {
+          "occurrences": 57,
+          "distinct_value_count": 8,
+          "sample_values": [
+            "40D",
+            "21D",
+            "28D",
+            "29D",
+            "27D",
+            "26D",
+            "12D",
+            "18D"
+          ]
+        },
+        "axisLabelDensity": {
+          "occurrences": 12,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "2D",
+            "0D",
+            "1D"
+          ]
+        },
+        "axisLabelDensityEveryNthLabel": {
+          "occurrences": 5,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "2L",
+            "5L"
+          ]
+        },
+        "displayOptions": {
+          "occurrences": 16,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "2D",
+            "0D",
+            "1D"
+          ]
+        },
+        "gapBetweenColumnsPercent": {
+          "occurrences": 5,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "40L",
+            "25L",
+            "20L"
+          ]
+        },
+        "categoryLabelsOptions": {
+          "occurrences": 11,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "0D",
+            "1D"
+          ]
+        },
+        "showTopNCategories": {
+          "occurrences": 8,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "true",
+            "false"
+          ]
+        },
+        "topNCategoriesToKeep": {
+          "occurrences": 8,
+          "distinct_value_count": 5,
+          "sample_values": [
+            "6L",
+            "8L",
+            "10L",
+            "5L",
+            "7L"
+          ]
+        },
+        "topNOtherLabel": {
+          "occurrences": 2,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "Others"
+          ]
+        },
+        "fontSize": {
+          "occurrences": 6,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "10D",
+            "15D",
+            "9D"
+          ]
+        },
+        "categoriesFontColor": {
+          "occurrences": 5,
+          "distinct_value_count": 2,
+          "sample_values": [
+            {
+              "solid": {
+                "color": "#000"
+              }
+            },
+            {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "ThemeDataColor": {
+                      "ColorId": 1,
+                      "Percent": 0.6
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "categoriesFontFamily": {
+          "occurrences": 2,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "''Segoe UI'', wf_segoe-ui_normal, helvetica, arial, sans-serif"
+          ]
+        },
+        "showCategoriesFontSettings": {
+          "occurrences": 7,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "false",
+            "true"
+          ]
+        }
+      }
+    },
+    "dataLabelSettings": {
+      "entry_count": 113,
+      "template_count": 20,
+      "templates": [
+        "annual-comparative-statement-power-bi-template",
+        "athletic-footwear-benchmarking-financial-analysis-template",
+        "brand-product-portfolio-analysis-automotive-power-bi-template",
+        "brand-product-portfolio-analysis-fmcg-power-bi-template",
+        "consolidated-financials-power-bi-template",
+        "cost-benefit-analysis-power-bi-template",
+        "cost-management-power-bi-template",
+        "daily-sales-flash-power-bi-dashboard",
+        "dynamic-comments-power-bi-template",
+        "food-beverage-financial-analysis-benchmarking-powerbi-template",
+        "hr-analytics-power-bi-template",
+        "income-statement-dashboard-in-power-bi",
+        "inventory-power-bi-template",
+        "manufacturing-oee-power-bi-template",
+        "price-volume-mix-analysis-power-bi-template",
+        "saas-sales-power-bi-dashboard-template",
+        "sales-dashboard-power-bi-template",
+        "sales-funnel-power-bi-template",
+        "social-media-power-bi-template",
+        "working-capital-in-power-bi-template"
+      ],
+      "properties": {
+        "fontSize": {
+          "occurrences": 33,
+          "distinct_value_count": 6,
+          "sample_values": [
+            "12D",
+            "11D",
+            "14",
+            "16D",
+            "14D",
+            "12"
+          ]
+        },
+        "decimalPlacesPercentage": {
+          "occurrences": 38,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "0L",
+            "1L"
+          ]
+        },
+        "decimalPlaces": {
+          "occurrences": 71,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "0L",
+            "1L"
+          ]
+        },
+        "varianceLabelType": {
+          "occurrences": 66,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "1D",
+            "0D",
+            "2D"
+          ]
+        },
+        "units": {
+          "occurrences": 64,
+          "distinct_value_count": 7,
+          "sample_values": [
+            "G",
+            "Auto",
+            "P",
+            "PowerBI",
+            "None",
+            "M",
+            "K"
+          ]
+        },
+        "showUnits": {
+          "occurrences": 48,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "1D",
+            "0D"
+          ]
+        },
+        "negativeValuesFormat": {
+          "occurrences": 13,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "1D",
+            "0D"
+          ]
+        },
+        "labelDensity": {
+          "occurrences": 33,
+          "distinct_value_count": 5,
+          "sample_values": [
+            "6D",
+            "0D",
+            "7D",
+            "5D",
+            "3D"
+          ]
+        },
+        "labelBackgroundTransparency": {
+          "occurrences": 1,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "0L"
+          ]
+        },
+        "percentageInLabel": {
+          "occurrences": 1,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "true"
+          ]
+        }
+      }
+    },
+    "coreSettings": {
+      "entry_count": 18,
+      "template_count": 8,
+      "templates": [
+        "annual-comparative-statement-power-bi-template",
+        "brand-product-portfolio-analysis-fmcg-power-bi-template",
+        "cost-benefit-analysis-power-bi-template",
+        "cost-management-power-bi-template",
+        "income-statement-dashboard-in-power-bi",
+        "inventory-power-bi-template",
+        "saas-sales-power-bi-dashboard-template",
+        "sales-dashboard-power-bi-template"
+      ],
+      "properties": {
+        "forceVisualRefreshTimestamp": {
+          "occurrences": 18,
+          "distinct_value_count": 8,
+          "sample_values": [
+            "1743766168447L",
+            "1716467613685L",
+            "1716311830547L",
+            "1741950564542L",
+            "1742387247688L",
+            "1741869875864L",
+            "1726221136701L",
+            "1725867873221L"
+          ]
+        }
+      }
+    },
+    "annotationLayerSettings": {
+      "entry_count": 18,
+      "template_count": 8,
+      "templates": [
+        "annual-comparative-statement-power-bi-template",
+        "brand-product-portfolio-analysis-fmcg-power-bi-template",
+        "cost-benefit-analysis-power-bi-template",
+        "cost-management-power-bi-template",
+        "income-statement-dashboard-in-power-bi",
+        "inventory-power-bi-template",
+        "saas-sales-power-bi-dashboard-template",
+        "sales-dashboard-power-bi-template"
+      ],
+      "properties": {
+        "annotationComments": {
+          "occurrences": 18,
+          "distinct_value_count": 8,
+          "sample_values": [
+            "[{\"categoryFields\": [\"Year\"], \"commentType\": 1, \"content\": \"\", \"createdAt\": \"2025-03-28T09:23:16.753Z\", \"dataPointSelection\": {\"identifier\": {\"fullCategory\": \"2021\", \"fullGroup\": null}}, \"deltaContent...",
+            [],
+            "[{\"categoryFields\": [\"Year\"], \"commentType\": 1, \"content\": \"\", \"createdAt\": \"2025-03-19T09:57:19.333Z\", \"dataPointSelection\": {\"identifier\": {\"fullCategory\": \"Year 1\", \"fullGroup\": null}}, \"deltaConte...",
+            "[{\"categoryFields\": [\"Year\", \"Quarter Name\"], \"commentType\": 1, \"content\": \"Margins improved as global supply chains began to stabilize and raw material costs normalized.\", \"contentMigratedToDeltaCont...",
+            "[{\"categoryFields\": [\"Month Name\"], \"commentType\": 1, \"content\": \"\", \"createdAt\": \"2024-08-30T06:17:08.204Z\", \"dataPointSelection\": {\"identifier\": {\"fullCategory\": \"FC\", \"fullGroup\": null}}, \"filterCo...",
+            "[{\"categoryFields\": [\"Month Name\"], \"commentType\": 1, \"content\": \"The significant reduction in September\\u2019s OPEX is a direct result of cost-control measures that focused on minimizing non-essentia...",
+            "[{\"categoryFields\": [\"CashFlowAccount\"], \"commentType\": 1, \"content\": \"\", \"createdAt\": \"2025-06-06T09:34:45.134Z\", \"dataPointSelection\": {\"identifier\": {\"fullCategory\": \"Net income FCF\", \"fullGroup\": ...",
+            "[{\"categoryFields\": [\"Month Name\"], \"commentType\": 1, \"content\": \"\", \"createdAt\": \"2024-10-24T08:55:50.543Z\", \"dataPointSelection\": {\"identifier\": {\"fullCategory\": \"Aug\", \"fullGroup\": null}}, \"deltaCo..."
+          ]
+        }
+      }
+    },
+    "commentBoxSettings": {
+      "entry_count": 37,
+      "template_count": 13,
+      "templates": [
+        "annual-comparative-statement-power-bi-template",
+        "athletic-footwear-benchmarking-financial-analysis-template",
+        "brand-product-portfolio-analysis-fmcg-power-bi-template",
+        "consolidated-financials-power-bi-template",
+        "cost-benefit-analysis-power-bi-template",
+        "cost-management-power-bi-template",
+        "dynamic-comments-power-bi-template",
+        "food-beverage-financial-analysis-benchmarking-powerbi-template",
+        "income-statement-dashboard-in-power-bi",
+        "inventory-power-bi-template",
+        "saas-sales-power-bi-dashboard-template",
+        "sales-dashboard-power-bi-template",
+        "social-media-power-bi-template"
+      ],
+      "properties": {
+        "show": {
+          "occurrences": 18,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "true",
+            "false"
+          ]
+        },
+        "size": {
+          "occurrences": 30,
+          "distinct_value_count": 8,
+          "sample_values": [
+            "0.8359419437089342",
+            "0.7466656852642426",
+            "0.7761757352065722",
+            "0.7932689012269518",
+            "0.7988553019398177",
+            "0.7698060182329153",
+            "0.01082565391417667",
+            "0.834687953740572"
+          ]
+        },
+        "expandedGroup": {
+          "occurrences": 6,
+          "distinct_value_count": 4,
+          "sample_values": [
+            "Sales/Revenue",
+            "Mondelez International - EBIT (after UE)",
+            "",
+            "EBITDA"
+          ]
+        },
+        "userChangedExpandedGroup": {
+          "occurrences": 6,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "true"
+          ]
+        },
+        "shadow": {
+          "occurrences": 15,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "true",
+            "false"
+          ]
+        },
+        "itemsMargin": {
+          "occurrences": 12,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "10L",
+            "5L",
+            "1L"
+          ]
+        },
+        "padding": {
+          "occurrences": 12,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "10L",
+            "5L",
+            "1L"
+          ]
+        },
+        "title": {
+          "occurrences": 14,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "3D",
+            "2D",
+            "0D"
+          ]
+        },
+        "varianceIcon": {
+          "occurrences": 11,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "2D"
+          ]
+        },
+        "showVariance": {
+          "occurrences": 15,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "1D",
+            "2D",
+            "0D"
+          ]
+        },
+        "customTitleStyle": {
+          "occurrences": 7,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "true",
+            "false"
+          ]
+        },
+        "fontSizeTitle": {
+          "occurrences": 6,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "14L",
+            "12L"
+          ]
+        },
+        "customTextStyle": {
+          "occurrences": 7,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "true"
+          ]
+        },
+        "fontSizeText": {
+          "occurrences": 7,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "14L",
+            "12L",
+            "11L"
+          ]
+        },
+        "fontFamilyTitle": {
+          "occurrences": 3,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "''Segoe UI Semibold'', wf_segoe-ui_semibold, helvetica, arial, sans-serif"
+          ]
+        },
+        "fontFamilyText": {
+          "occurrences": 3,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "''Segoe UI'', wf_segoe-ui_normal, helvetica, arial, sans-serif"
+          ]
+        },
+        "fontColorText": {
+          "occurrences": 3,
+          "distinct_value_count": 1,
+          "sample_values": [
+            {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "ThemeDataColor": {
+                      "ColorId": 1,
+                      "Percent": 0.2
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "placement": {
+          "occurrences": 7,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "2D",
+            "0D",
+            "3D"
+          ]
+        },
+        "backgroundColor": {
+          "occurrences": 2,
+          "distinct_value_count": 1,
+          "sample_values": [
+            {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "ThemeDataColor": {
+                      "ColorId": 0,
+                      "Percent": 0
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "borderWidth": {
+          "occurrences": 2,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "0L"
+          ]
+        },
+        "borderColor": {
+          "occurrences": 2,
+          "distinct_value_count": 1,
+          "sample_values": [
+            {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "ThemeDataColor": {
+                      "ColorId": 0,
+                      "Percent": -0.1
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "listHorizontal": {
+          "occurrences": 1,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "true"
+          ]
+        }
+      }
+    },
+    "differenceHighlightSettings": {
+      "entry_count": 85,
+      "template_count": 17,
+      "templates": [
+        "annual-comparative-statement-power-bi-template",
+        "athletic-footwear-benchmarking-financial-analysis-template",
+        "brand-product-portfolio-analysis-automotive-power-bi-template",
+        "brand-product-portfolio-analysis-fmcg-power-bi-template",
+        "consolidated-financials-power-bi-template",
+        "cost-benefit-analysis-power-bi-template",
+        "cost-management-power-bi-template",
+        "daily-sales-flash-power-bi-dashboard",
+        "food-beverage-financial-analysis-benchmarking-powerbi-template",
+        "hr-analytics-power-bi-template",
+        "income-statement-dashboard-in-power-bi",
+        "inventory-power-bi-template",
+        "manufacturing-oee-power-bi-template",
+        "price-volume-mix-analysis-power-bi-template",
+        "saas-sales-power-bi-dashboard-template",
+        "sales-dashboard-power-bi-template",
+        "sales-funnel-power-bi-template"
+      ],
+      "properties": {
+        "show": {
+          "occurrences": 79,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "true",
+            "false"
+          ]
+        },
+        "differenceLabelType": {
+          "occurrences": 76,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "2D",
+            "0D",
+            "1D"
+          ]
+        },
+        "showDifferenceHighlightSubtotals": {
+          "occurrences": 61,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "true"
+          ]
+        },
+        "differenceHighlightEllipse": {
+          "occurrences": 39,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "2D",
+            "0D",
+            "1D"
+          ]
+        },
+        "differenceHighlightCustomFont": {
+          "occurrences": 11,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "false",
+            "true"
+          ]
+        },
+        "differenceHighlightArrowStyle": {
+          "occurrences": 13,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "2D"
+          ]
+        },
+        "differenceHighlightLineWidth": {
+          "occurrences": 2,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "2L"
+          ]
+        },
+        "differenceHighlightFromTo": {
+          "occurrences": 20,
+          "distinct_value_count": 5,
+          "sample_values": [
+            "0D",
+            "1D",
+            "10D",
+            "2D",
+            "11D"
+          ]
+        },
+        "differenceHighlightEllipseBorderPadding": {
+          "occurrences": 7,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "18L",
+            "13L"
+          ]
+        },
+        "differenceHighlightEllipseFillOpacity": {
+          "occurrences": 3,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "6L"
+          ]
+        },
+        "fontSize": {
+          "occurrences": 3,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "14D"
+          ]
+        },
+        "differenceHighlightConnectingLineStyle": {
+          "occurrences": 1,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "0D"
+          ]
+        }
+      }
+    },
+    "categoriesMetadata": {
+      "entry_count": 49,
+      "template_count": 14,
+      "templates": [
+        "athletic-footwear-benchmarking-financial-analysis-template",
+        "brand-product-portfolio-analysis-automotive-power-bi-template",
+        "consolidated-financials-power-bi-template",
+        "cost-benefit-analysis-power-bi-template",
+        "cost-management-power-bi-template",
+        "dynamic-comments-power-bi-template",
+        "food-beverage-financial-analysis-benchmarking-powerbi-template",
+        "income-statement-dashboard-in-power-bi",
+        "inventory-power-bi-template",
+        "manufacturing-oee-power-bi-template",
+        "price-volume-mix-analysis-power-bi-template",
+        "saas-sales-power-bi-dashboard-template",
+        "sales-dashboard-power-bi-template",
+        "social-media-power-bi-template"
+      ],
+      "properties": {
+        "inverted": {
+          "occurrences": 8,
+          "distinct_value_count": 5,
+          "sample_values": [
+            [
+              "Sustaining capex paid"
+            ],
+            [
+              "Costs"
+            ],
+            [
+              "Non-recurring costs​",
+              "Recurring costs​",
+              "Recurring costs",
+              "Non-recurring costs"
+            ],
+            [],
+            [
+              "Cost"
+            ]
+          ]
+        },
+        "highlighted": {
+          "occurrences": 7,
+          "distinct_value_count": 4,
+          "sample_values": [
+            [
+              "Year 3"
+            ],
+            [
+              "Q3\n2023"
+            ],
+            [
+              "Jul\n2024"
+            ],
+            []
+          ]
+        },
+        "results": {
+          "occurrences": 7,
+          "distinct_value_count": 3,
+          "sample_values": [
+            [
+              "Year 1",
+              "Year 3",
+              "Year 2",
+              "Total"
+            ],
+            [
+              "Cash BOP",
+              "Cash EOP"
+            ],
+            [
+              "Revenue PY",
+              "Revenue AC"
+            ]
+          ]
+        },
+        "highlightedCustomColors": {
+          "occurrences": 2,
+          "distinct_value_count": 1,
+          "sample_values": [
+            [
+              {
+                "No Order": "#FF0000"
+              }
+            ]
+          ]
+        }
+      }
+    },
+    "groupTitleSettings": {
+      "entry_count": 20,
+      "template_count": 6,
+      "templates": [
+        "athletic-footwear-benchmarking-financial-analysis-template",
+        "brand-product-portfolio-analysis-automotive-power-bi-template",
+        "brand-product-portfolio-analysis-fmcg-power-bi-template",
+        "food-beverage-financial-analysis-benchmarking-powerbi-template",
+        "saas-sales-power-bi-dashboard-template",
+        "sales-dashboard-power-bi-template"
+      ],
+      "properties": {
+        "fontColor": {
+          "occurrences": 5,
+          "distinct_value_count": 3,
+          "sample_values": [
+            {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "ThemeDataColor": {
+                      "ColorId": 0,
+                      "Percent": 0
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "solid": {
+                "color": "#666666"
+              }
+            },
+            {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "ThemeDataColor": {
+                      "ColorId": 1,
+                      "Percent": 0
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "alignment": {
+          "occurrences": 3,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "left"
+          ]
+        },
+        "fontFamily": {
+          "occurrences": 12,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "''Segoe UI Semibold'', wf_segoe-ui_semibold, helvetica, arial, sans-serif",
+            "''Segoe UI Bold'', wf_segoe-ui_bold, helvetica, arial, sans-serif",
+            "Segoe UI"
+          ]
+        },
+        "fontSize": {
+          "occurrences": 5,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "12D",
+            "10D",
+            "14"
+          ]
+        },
+        "verticalAlignment": {
+          "occurrences": 4,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "AlwaysOnTop",
+            "Auto"
+          ]
+        }
+      }
+    },
+    "designSettings": {
+      "entry_count": 31,
+      "template_count": 13,
+      "templates": [
+        "athletic-footwear-benchmarking-financial-analysis-template",
+        "brand-product-portfolio-analysis-automotive-power-bi-template",
+        "brand-product-portfolio-analysis-fmcg-power-bi-template",
+        "consolidated-financials-power-bi-template",
+        "cost-management-power-bi-template",
+        "dynamic-comments-power-bi-template",
+        "food-beverage-financial-analysis-benchmarking-powerbi-template",
+        "income-statement-dashboard-in-power-bi",
+        "inventory-power-bi-template",
+        "manufacturing-oee-power-bi-template",
+        "saas-sales-power-bi-dashboard-template",
+        "sales-dashboard-power-bi-template",
+        "sales-funnel-power-bi-template"
+      ],
+      "properties": {
+        "varianceDisplayType": {
+          "occurrences": 11,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "1D"
+          ]
+        },
+        "referenceMarkerSize": {
+          "occurrences": 2,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "0D"
+          ]
+        },
+        "style": {
+          "occurrences": 24,
+          "distinct_value_count": 4,
+          "sample_values": [
+            "0D",
+            "-1D",
+            "4D",
+            "1D"
+          ]
+        },
+        "neutralColor": {
+          "occurrences": 17,
+          "distinct_value_count": 4,
+          "sample_values": [
+            {
+              "solid": {
+                "color": "#232D6E"
+              }
+            },
+            {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "ThemeDataColor": {
+                      "ColorId": 7,
+                      "Percent": -0.25
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "ThemeDataColor": {
+                      "ColorId": 1,
+                      "Percent": 0.4
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "solid": {
+                "color": "#BBBBBB"
+              }
+            }
+          ]
+        },
+        "negativeColor": {
+          "occurrences": 7,
+          "distinct_value_count": 1,
+          "sample_values": [
+            {
+              "solid": {
+                "color": "#C01212"
+              }
+            }
+          ]
+        },
+        "positiveColor": {
+          "occurrences": 7,
+          "distinct_value_count": 1,
+          "sample_values": [
+            {
+              "solid": {
+                "color": "#6D9B27"
+              }
+            }
+          ]
+        },
+        "highlightColor": {
+          "occurrences": 1,
+          "distinct_value_count": 1,
+          "sample_values": [
+            {
+              "solid": {
+                "color": "#0004ff"
+              }
+            }
+          ]
+        },
+        "areaVarianceOpacity": {
+          "occurrences": 1,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "20D"
+          ]
+        },
+        "areaNeutralOpacity": {
+          "occurrences": 6,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "13D",
+            "0"
+          ]
+        },
+        "lightenOverlapped": {
+          "occurrences": 5,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "true"
+          ]
+        }
+      }
+    },
+    "stackedChartSettings": {
+      "entry_count": 18,
+      "template_count": 9,
+      "templates": [
+        "athletic-footwear-benchmarking-financial-analysis-template",
+        "brand-product-portfolio-analysis-automotive-power-bi-template",
+        "brand-product-portfolio-analysis-fmcg-power-bi-template",
+        "daily-sales-flash-power-bi-dashboard",
+        "food-beverage-financial-analysis-benchmarking-powerbi-template",
+        "income-statement-dashboard-in-power-bi",
+        "manufacturing-oee-power-bi-template",
+        "saas-sales-power-bi-dashboard-template",
+        "social-media-power-bi-template"
+      ],
+      "properties": {
+        "show": {
+          "occurrences": 18,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "false"
+          ]
+        },
+        "showStackedLabelsAsPercentage": {
+          "occurrences": 2,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "true"
+          ]
+        }
+      }
+    },
+    "interactionSettings": {
+      "entry_count": 8,
+      "template_count": 6,
+      "templates": [
+        "brand-product-portfolio-analysis-automotive-power-bi-template",
+        "consolidated-financials-power-bi-template",
+        "cost-management-power-bi-template",
+        "dynamic-comments-power-bi-template",
+        "income-statement-dashboard-in-power-bi",
+        "inventory-power-bi-template"
+      ],
+      "properties": {
+        "lockedChartTypes": {
+          "occurrences": 7,
+          "distinct_value_count": 3,
+          "sample_values": [
+            [
+              "2-Waterfall"
+            ],
+            [
+              "2-Variance"
+            ],
+            []
+          ]
+        },
+        "focusModeFontZoomPercentage": {
+          "occurrences": 1,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "115L"
+          ]
+        }
+      }
+    },
+    "legendHeaderSettings": {
+      "entry_count": 25,
+      "template_count": 9,
+      "templates": [
+        "brand-product-portfolio-analysis-fmcg-power-bi-template",
+        "cost-benefit-analysis-power-bi-template",
+        "cost-management-power-bi-template",
+        "daily-sales-flash-power-bi-dashboard",
+        "income-statement-dashboard-in-power-bi",
+        "inventory-power-bi-template",
+        "saas-sales-power-bi-dashboard-template",
+        "sales-dashboard-power-bi-template",
+        "working-capital-in-power-bi-template"
+      ],
+      "properties": {
+        "show": {
+          "occurrences": 14,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "false",
+            "true"
+          ]
+        },
+        "actual-previousYear": {
+          "occurrences": 2,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "MA Share ΔPY",
+            "ΔPM"
+          ]
+        },
+        "actual": {
+          "occurrences": 2,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "Benefits",
+            "Gross margin"
+          ]
+        },
+        "plan": {
+          "occurrences": 6,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "Costs",
+            "Operating margin",
+            "PM"
+          ]
+        },
+        "actual-plan": {
+          "occurrences": 4,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "Net Cost/Benefit",
+            "ΔPM"
+          ]
+        },
+        "actual-plan-percent": {
+          "occurrences": 4,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "Net Cost/Benefit%",
+            "ΔPM%"
+          ]
+        },
+        "previousYear": {
+          "occurrences": 1,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "PM"
+          ]
+        },
+        "actual-previousYear-percent": {
+          "occurrences": 1,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "ΔPM%"
+          ]
+        },
+        "useAliasesInTooltips": {
+          "occurrences": 2,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "true",
+            "false"
+          ]
+        },
+        "switchReferenceScenarios": {
+          "occurrences": 3,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "true",
+            "false"
+          ]
+        }
+      }
+    },
+    "dotChartDataLabelSettings": {
+      "entry_count": 8,
+      "template_count": 5,
+      "templates": [
+        "brand-product-portfolio-analysis-fmcg-power-bi-template",
+        "cost-management-power-bi-template",
+        "hr-analytics-power-bi-template",
+        "inventory-power-bi-template",
+        "saas-sales-power-bi-dashboard-template"
+      ],
+      "properties": {
+        "labelDensity": {
+          "occurrences": 8,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "0D",
+            "7D",
+            "8D"
+          ]
+        },
+        "maxHeightPercent": {
+          "occurrences": 7,
+          "distinct_value_count": 4,
+          "sample_values": [
+            "60L",
+            "70L",
+            "61L",
+            "53L"
+          ]
+        },
+        "dotChartDroplineWidth": {
+          "occurrences": 5,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "1L",
+            "0L"
+          ]
+        },
+        "dotChartLineWidth": {
+          "occurrences": 5,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "2L",
+            "0L",
+            "1L"
+          ]
+        },
+        "dotChartMarkerSizing": {
+          "occurrences": 2,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "1D"
+          ]
+        },
+        "dotChartMarkerFixedSize": {
+          "occurrences": 2,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "8L"
+          ]
+        },
+        "dotChartLineStyle": {
+          "occurrences": 3,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "1D"
+          ]
+        },
+        "units": {
+          "occurrences": 4,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "P",
+            "None"
+          ]
+        },
+        "dotChartMarkerDensity": {
+          "occurrences": 2,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "0D"
+          ]
+        },
+        "decimalPlaces": {
+          "occurrences": 4,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "0L"
+          ]
+        },
+        "show": {
+          "occurrences": 1,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "true"
+          ]
+        }
+      }
+    }
+  },
+  "ZebraBICards": {
+    "license": {
+      "entry_count": 48,
+      "template_count": 12,
+      "templates": [
+        "annual-comparative-statement-power-bi-template",
+        "athletic-footwear-benchmarking-financial-analysis-template",
+        "consolidated-financials-power-bi-template",
+        "cost-management-power-bi-template",
+        "daily-sales-flash-power-bi-dashboard",
+        "food-beverage-financial-analysis-benchmarking-powerbi-template",
+        "hr-analytics-power-bi-template",
+        "inventory-power-bi-template",
+        "saas-sales-power-bi-dashboard-template",
+        "sales-dashboard-power-bi-template",
+        "sales-funnel-power-bi-template",
+        "social-media-power-bi-template"
+      ],
+      "properties": {
+        "licenseKey": {
+          "occurrences": 48,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "\"0qZf1bd6fV30Am7ZKojGNFfnexsrLwEVNMHvnbXtaokD4zop4JU9sDYAMuMsM9OmpuawJ7iBQMdsjL+i7F9SDXsiY29tcGFueSI6IlplYnJhIEJJIiwiZXhwaXJ5RGF0ZSI6IjIwMjYtMDgtMDEiLCJuT2ZVc2VycyI6IjEiLCJsaWNlbnNlVHlwZSI6IlBhaWQiLCJ..."
+          ]
+        },
+        "licensedTo": {
+          "occurrences": 48,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "Zebra BI"
+          ]
+        },
+        "validUntil": {
+          "occurrences": 48,
+          "distinct_value_count": 8,
+          "sample_values": [
+            "2027-04-06T00:00:00.000Z",
+            "Wed Dec 31 2025",
+            "Thu Mar 31 2022",
+            "Tue Apr 06 2027",
+            "Fri Oct 06 2023",
+            "Sun Dec 31 2023",
+            "Sat Jun 22 2024",
+            "Wed Aug 10 2022"
+          ]
+        },
+        "product": {
+          "occurrences": 26,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "All"
+          ]
+        }
+      }
+    },
+    "customData": {
+      "entry_count": 74,
+      "template_count": 15,
+      "templates": [
+        "annual-comparative-statement-power-bi-template",
+        "athletic-footwear-benchmarking-financial-analysis-template",
+        "brand-product-portfolio-analysis-automotive-power-bi-template",
+        "consolidated-financials-power-bi-template",
+        "cost-management-power-bi-template",
+        "daily-sales-flash-power-bi-dashboard",
+        "food-beverage-financial-analysis-benchmarking-powerbi-template",
+        "hr-analytics-power-bi-template",
+        "inventory-power-bi-template",
+        "manufacturing-oee-power-bi-template",
+        "saas-sales-power-bi-dashboard-template",
+        "sales-dashboard-power-bi-template",
+        "sales-funnel-power-bi-template",
+        "social-media-power-bi-template",
+        "working-capital-in-power-bi-template"
+      ],
+      "properties": {
+        "version": {
+          "occurrences": 74,
+          "distinct_value_count": 5,
+          "sample_values": [
+            "7.3.0.13238154566",
+            "7.4.2.17640363321",
+            "7.4.1.16496101623",
+            "7.2.0.0",
+            "1.7.0.1"
+          ]
+        },
+        "migrations": {
+          "occurrences": 74,
+          "distinct_value_count": 5,
+          "sample_values": [
+            {
+              "dataMigrationVersion": "7.3.0.13238154566"
+            },
+            {
+              "dataMigrationVersion": "7.4.2.17640363321"
+            },
+            {
+              "dataMigrationVersion": "7.4.1.16496101623"
+            },
+            {
+              "dataMigrationVersion": "7.2.0.0"
+            },
+            {
+              "dataMigrationVersion": "1.7.0.1"
+            }
+          ]
+        },
+        "gridData": {
+          "occurrences": 74,
+          "distinct_value_count": 8,
+          "sample_values": [
+            "{\"cards\": {\"card-028511d3-6364-5410-ae9e-ec84f42c4dc9\": {\"basisPointDecimals\": 0, \"cardTitle\": \"\", \"cardType\": 1, \"cardValue\": 1347.7026582610981, \"chartMax\": 0, \"chartMin\": 0, \"coordinates\": {\"h\": 2,...",
+            "{\"cards\": {\"card-028511d3-6364-5410-ae9e-ec84f42c4dc9\": {\"basisPointDecimals\": 0, \"cardTitle\": \"\", \"cardType\": 1, \"cardValue\": 1347.7026582610981, \"chartMax\": 0, \"chartMin\": 0, \"coordinates\": {\"h\": 2,...",
+            "{\"cards\": {\"card-208ad1bb-ce9f-5268-b262-66ab094cb777\": {\"basisPointDecimals\": 0, \"cardTitle\": \"AC_KPI\", \"cardType\": 1, \"cardValue\": 71802000000, \"chartMax\": 0, \"chartMin\": 0, \"chartType\": 3, \"coordin...",
+            "{\"cards\": {\"card-7fb079ac-65f3-5efe-804b-320cc9606272\": {\"basisPointDecimals\": 0, \"cardColorHighlight\": \"rgba(255,255,255,0)\", \"cardTitle\": \"# of Companies\", \"cardType\": 1, \"cardValue\": 15, \"chartMax\"...",
+            "{\"cards\": {\"card-ffa00984-3f29-5da2-ba19-811c8f02270e\": {\"basisPointDecimals\": 0, \"cardColorHighlight\": \"rgba(255,255,255,0)\", \"cardTitle\": \"# of Models\", \"cardType\": 1, \"cardValue\": 71, \"chartMax\": 0...",
+            "{\"cards\": {\"CAPEX\": {\"axisBreakMax\": 11372441.576622648, \"axisBreakMin\": 25009477.73031355, \"cardMeasureMode\": 1, \"cardTitle\": \"Total\", \"cardTotalMode\": null, \"cardType\": 1, \"cardValue\": 11372441.5766...",
+            "{\"cards\": {\"card-268aab57-5cff-5ef2-a64b-540aac46f23b\": {\"axisBreakMax\": 0, \"axisBreakMin\": 95631773.16668773, \"cardMeasureMode\": 2, \"cardTitle\": \"AC periods\", \"cardTotalMode\": 1, \"cardType\": 1, \"card...",
+            "{\"cards\": {\"EBIT\": {\"axisBreakMax\": 34603697.643977426, \"axisBreakMin\": 39705746.37316393, \"cardMeasureMode\": 1, \"cardTitle\": \"Total\", \"cardTotalMode\": null, \"cardType\": 1, \"cardValue\": 34603697.64397..."
+          ]
+        },
+        "dataVersion": {
+          "occurrences": 74,
+          "distinct_value_count": 8,
+          "sample_values": [
+            "103L",
+            "205L",
+            "852L",
+            "815L",
+            "649L",
+            "4L",
+            "6L",
+            "1L"
+          ]
+        },
+        "uniformData": {
+          "occurrences": 26,
+          "distinct_value_count": 8,
+          "sample_values": [
+            "{\"cards\": {\"card-028511d3-6364-5410-ae9e-ec84f42c4dc9\": {\"basisPointDecimals\": 0, \"cardTitle\": \"AC\", \"cardType\": 1, \"cardValue\": 1347.7026582610981, \"chartMax\": 0, \"chartMin\": 0, \"coordinates\": {\"h\": ...",
+            "{\"cards\": {\"card-028511d3-6364-5410-ae9e-ec84f42c4dc9\": {\"basisPointDecimals\": 0, \"cardColorHighlight\": \"rgba(255,255,255,0)\", \"cardMeasureMode\": 3, \"cardTitle\": \"AC\", \"cardType\": 1, \"cardValue\": 1347...",
+            "{\"cards\": {\"card-13b5b077-64e9-52b8-82f7-7b91b10e7fd7\": {\"basisPointDecimals\": 0, \"cardTitle\": \"AC (KPI %)\", \"cardType\": 1, \"cardValue\": 0.366351418616227, \"chartMax\": 0, \"chartMin\": 0, \"coordinates\":...",
+            "{\"cards\": {\"card-1b48d3f0-1424-5f7c-949c-e9b77cd815ab\": {\"axisBreakMax\": 118414483.78458372, \"axisBreakMin\": 120720121.70124581, \"basisPointDecimals\": 0, \"cardColorHighlight\": \"rgba(255,255,255,0)\", \"...",
+            "{\"cards\": {\"card-011fa1a2-1ef1-58d1-8c3a-e28111f7a3ba\": {\"basisPointDecimals\": 0, \"cardMeasureMode\": 2, \"cardTitle\": \"AC PnL\", \"cardType\": 1, \"cardValue\": 4998465811.432545, \"chartMax\": 0, \"chartMin\":...",
+            "{\"cards\": {\"card-1d35114b-8f34-5f62-a4a4-6dac8d98b4ed\": {\"axisBreakMax\": 7033523.860145824, \"axisBreakMin\": 8965618.525231047, \"basisPointDecimals\": 0, \"cardColorHighlight\": \"rgba(255,255,255,0)\", \"ca...",
+            "{\"cards\": {\"card-18fdc5ee-8b1f-5fba-8dab-aa933373c048\": {\"basisPointDecimals\": 0, \"cardTitle\": \"AC\", \"cardType\": 1, \"cardValue\": 109513193, \"chartMax\": 0, \"chartMin\": 0, \"coordinates\": {\"h\": 112, \"w\":...",
+            "{\"cards\": {\"card-44f6af69-4554-5c0b-ab01-6a9160df6abb\": {\"cardTitle\": \"AC\", \"cardType\": 1, \"cardValue\": 233, \"chartMax\": 0, \"chartMin\": 0, \"coordinates\": {\"h\": 110, \"w\": 109, \"x\": 1, \"y\": null}, \"curr..."
+          ]
+        },
+        "rowsData": {
+          "occurrences": 20,
+          "distinct_value_count": 8,
+          "sample_values": [
+            "{\"cards\": {\"card-03fb88fb-6213-58c4-ac77-2ecede8838e5\": {\"basisPointDecimals\": 0, \"cardTitle\": \"AC (KPI)\", \"cardType\": 1, \"cardValue\": 6260000000, \"chartMax\": 0, \"chartMin\": 0, \"coordinates\": {\"h\": 1,...",
+            "{\"cards\": {\"card-03fb88fb-6213-58c4-ac77-2ecede8838e5\": {\"basisPointDecimals\": 0, \"cardTitle\": \"AC (KPI %)\", \"cardType\": 1, \"cardValue\": 0.2490752157829839, \"chartMax\": 0, \"chartMin\": 0, \"coordinates\"...",
+            "{\"cards\": {\"card-03fb88fb-6213-58c4-ac77-2ecede8838e5\": {\"basisPointDecimals\": 0, \"cardTitle\": \"AC (KPI)\", \"cardType\": 1, \"cardValue\": 3830000000, \"chartMax\": 0, \"chartMin\": 0, \"coordinates\": {\"h\": 1,...",
+            "{\"cards\": {\"card-1b48d3f0-1424-5f7c-949c-e9b77cd815ab\": {\"basisPointDecimals\": 0, \"cardTitle\": \"AC\", \"cardType\": 1, \"cardValue\": 118414483.78458372, \"chartMax\": 0, \"chartMin\": 0, \"coordinates\": {\"h\": ...",
+            "{\"cards\": {\"card-011fa1a2-1ef1-58d1-8c3a-e28111f7a3ba\": {\"basisPointDecimals\": 0, \"cardTitle\": \"AC PnL\", \"cardType\": 1, \"cardValue\": 4998465811.432545, \"chartMax\": 0, \"chartMin\": 0, \"coordinates\": {\"h...",
+            "{\"cards\": {\"card-011fa1a2-1ef1-58d1-8c3a-e28111f7a3ba\": {\"basisPointDecimals\": 0, \"cardColorHighlight\": \"rgba(255,255,255,0)\", \"cardTitle\": \"AC PnL\", \"cardType\": 1, \"cardValue\": 167265952.1843776, \"ch...",
+            "{\"cards\": {\"card-1b48d3f0-1424-5f7c-949c-e9b77cd815ab\": {\"basisPointDecimals\": 0, \"cardTitle\": \"AC\", \"cardType\": 1, \"cardValue\": 118414483.78458372, \"chartMax\": 0, \"chartMin\": 0, \"coordinates\": {\"h\": ...",
+            "{\"cards\": {\"card-18fdc5ee-8b1f-5fba-8dab-aa933373c048\": {\"basisPointDecimals\": 0, \"cardMeasureMode\": 2, \"cardTitle\": \"AC\", \"cardType\": 1, \"cardValue\": 109513193, \"chartMax\": 0, \"chartMin\": 0, \"coordin..."
+          ]
+        }
+      }
+    },
+    "grid": {
+      "entry_count": 57,
+      "template_count": 14,
+      "templates": [
+        "annual-comparative-statement-power-bi-template",
+        "athletic-footwear-benchmarking-financial-analysis-template",
+        "consolidated-financials-power-bi-template",
+        "cost-management-power-bi-template",
+        "daily-sales-flash-power-bi-dashboard",
+        "food-beverage-financial-analysis-benchmarking-powerbi-template",
+        "hr-analytics-power-bi-template",
+        "inventory-power-bi-template",
+        "manufacturing-oee-power-bi-template",
+        "saas-sales-power-bi-dashboard-template",
+        "sales-dashboard-power-bi-template",
+        "sales-funnel-power-bi-template",
+        "social-media-power-bi-template",
+        "working-capital-in-power-bi-template"
+      ],
+      "properties": {
+        "cardsInRow": {
+          "occurrences": 26,
+          "distinct_value_count": 6,
+          "sample_values": [
+            "1D",
+            "3D",
+            "5D",
+            "6D",
+            "4D",
+            "2D"
+          ]
+        },
+        "layoutPreset": {
+          "occurrences": 40,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "uniform-layout",
+            "rows-layout",
+            "default"
+          ]
+        },
+        "cardSort": {
+          "occurrences": 34,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "custom-sort"
+          ]
+        },
+        "ascendingSort": {
+          "occurrences": 6,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "true"
+          ]
+        },
+        "rowsTitleWidthType": {
+          "occurrences": 7,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "auto"
+          ]
+        },
+        "dataVersion": {
+          "occurrences": 11,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "0L"
+          ]
+        },
+        "gutterSize": {
+          "occurrences": 18,
+          "distinct_value_count": 5,
+          "sample_values": [
+            "8D",
+            "30D",
+            "20D",
+            "16D",
+            "18D"
+          ]
+        },
+        "compactCards": {
+          "occurrences": 11,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "false",
+            "true"
+          ]
+        },
+        "suppressNullCards": {
+          "occurrences": 6,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "true",
+            "false"
+          ]
+        }
+      }
+    },
+    "card": {
+      "entry_count": 69,
+      "template_count": 15,
+      "templates": [
+        "annual-comparative-statement-power-bi-template",
+        "athletic-footwear-benchmarking-financial-analysis-template",
+        "brand-product-portfolio-analysis-automotive-power-bi-template",
+        "consolidated-financials-power-bi-template",
+        "cost-management-power-bi-template",
+        "daily-sales-flash-power-bi-dashboard",
+        "food-beverage-financial-analysis-benchmarking-powerbi-template",
+        "hr-analytics-power-bi-template",
+        "inventory-power-bi-template",
+        "manufacturing-oee-power-bi-template",
+        "saas-sales-power-bi-dashboard-template",
+        "sales-dashboard-power-bi-template",
+        "sales-funnel-power-bi-template",
+        "social-media-power-bi-template",
+        "working-capital-in-power-bi-template"
+      ],
+      "properties": {
+        "suppressChart": {
+          "occurrences": 51,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "true",
+            "false"
+          ]
+        },
+        "cardDefaultAxisBreak": {
+          "occurrences": 15,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "false",
+            "true"
+          ]
+        },
+        "cardTitleFontSize": {
+          "occurrences": 12,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "11D",
+            "12D"
+          ]
+        },
+        "cardTitleFontFamily": {
+          "occurrences": 11,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "''Segoe UI'', wf_segoe-ui_normal, helvetica, arial, sans-serif",
+            "''Segoe UI Light'', wf_segoe-ui_light, helvetica, arial, sans-serif",
+            "Segoe UI"
+          ]
+        },
+        "cardTitleFontColor": {
+          "occurrences": 10,
+          "distinct_value_count": 1,
+          "sample_values": [
+            {
+              "solid": {
+                "color": "#000000"
+              }
+            }
+          ]
+        },
+        "cardValueFontFamily": {
+          "occurrences": 10,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "''Segoe UI'', wf_segoe-ui_normal, helvetica, arial, sans-serif"
+          ]
+        },
+        "cardVarianceFontFamily": {
+          "occurrences": 10,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "''Segoe UI'', wf_segoe-ui_normal, helvetica, arial, sans-serif"
+          ]
+        },
+        "cardChartLabelFontFamily": {
+          "occurrences": 11,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "Segoe UI",
+            "''Segoe UI'', wf_segoe-ui_normal, helvetica, arial, sans-serif"
+          ]
+        },
+        "cardChartLabelFontSize": {
+          "occurrences": 10,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "10D"
+          ]
+        },
+        "cardChartLabelFontColor": {
+          "occurrences": 10,
+          "distinct_value_count": 1,
+          "sample_values": [
+            {
+              "solid": {
+                "color": "#000000"
+              }
+            }
+          ]
+        },
+        "cardValueFontSize": {
+          "occurrences": 9,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "20D",
+            "16D",
+            "18D"
+          ]
+        },
+        "cardPadding": {
+          "occurrences": 11,
+          "distinct_value_count": 6,
+          "sample_values": [
+            "8D",
+            "12D",
+            "15D",
+            "7D",
+            "4D",
+            "6D"
+          ]
+        },
+        "cardShadow": {
+          "occurrences": 3,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "regular-shadow"
+          ]
+        },
+        "cardVarianceCap": {
+          "occurrences": 8,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "40D",
+            "60D"
+          ]
+        },
+        "cardDefaultChartType": {
+          "occurrences": 15,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "3D",
+            "0D",
+            "4D"
+          ]
+        },
+        "varianceType": {
+          "occurrences": 10,
+          "distinct_value_count": 4,
+          "sample_values": [
+            "1D",
+            "0D",
+            "4D",
+            "2D"
+          ]
+        },
+        "cardDefaultInvert": {
+          "occurrences": 4,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "true"
+          ]
+        },
+        "wrapTitle": {
+          "occurrences": 7,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "false",
+            "true"
+          ]
+        },
+        "cardTotalMode": {
+          "occurrences": 1,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "0D"
+          ]
+        },
+        "cardIcon": {
+          "occurrences": 2,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "triangle"
+          ]
+        }
+      }
+    },
+    "dataLabels": {
+      "entry_count": 14,
+      "template_count": 4,
+      "templates": [
+        "athletic-footwear-benchmarking-financial-analysis-template",
+        "brand-product-portfolio-analysis-automotive-power-bi-template",
+        "food-beverage-financial-analysis-benchmarking-powerbi-template",
+        "manufacturing-oee-power-bi-template"
+      ],
+      "properties": {
+        "numberFormat": {
+          "occurrences": 14,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "P",
+            "Auto",
+            "M"
+          ]
+        }
+      }
+    },
+    "legend": {
+      "entry_count": 41,
+      "template_count": 11,
+      "templates": [
+        "consolidated-financials-power-bi-template",
+        "cost-management-power-bi-template",
+        "daily-sales-flash-power-bi-dashboard",
+        "hr-analytics-power-bi-template",
+        "inventory-power-bi-template",
+        "manufacturing-oee-power-bi-template",
+        "saas-sales-power-bi-dashboard-template",
+        "sales-dashboard-power-bi-template",
+        "sales-funnel-power-bi-template",
+        "social-media-power-bi-template",
+        "working-capital-in-power-bi-template"
+      ],
+      "properties": {
+        "actualPlan": {
+          "occurrences": 7,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "ΔPL periods",
+            "ΔPM",
+            "ΔGross (h)"
+          ]
+        },
+        "forecastPlan": {
+          "occurrences": 1,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "ΔPL periods"
+          ]
+        },
+        "previousYearPlan": {
+          "occurrences": 1,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "ΔPL periods"
+          ]
+        },
+        "actualPlanPercent": {
+          "occurrences": 6,
+          "distinct_value_count": 3,
+          "sample_values": [
+            "ΔPL periods%",
+            "ΔPM%",
+            "ΔGross (h)%"
+          ]
+        },
+        "forecastPlanPercent": {
+          "occurrences": 1,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "ΔPL periods%"
+          ]
+        },
+        "previousYearPlanPercent": {
+          "occurrences": 1,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "ΔPL periods%"
+          ]
+        },
+        "actualForecast": {
+          "occurrences": 1,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "ΔFC periods"
+          ]
+        },
+        "actualForecastPercent": {
+          "occurrences": 1,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "ΔFC periods%"
+          ]
+        },
+        "plan": {
+          "occurrences": 5,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "PM",
+            "Gross (h)"
+          ]
+        },
+        "actualPreviousYear": {
+          "occurrences": 8,
+          "distinct_value_count": 5,
+          "sample_values": [
+            "ΔPW",
+            "ΔNet (h)",
+            "ΔPY",
+            "ΔBefore due % PY",
+            "ΔOverdue % PY"
+          ]
+        },
+        "actualPreviousYearPercent": {
+          "occurrences": 7,
+          "distinct_value_count": 4,
+          "sample_values": [
+            "ΔPW%",
+            "ΔNet (h)%",
+            "ΔBefore due % PY%",
+            "ΔOverdue % PY%"
+          ]
+        },
+        "previousYear": {
+          "occurrences": 5,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "PW",
+            "Net (h)"
+          ]
+        },
+        "actual": {
+          "occurrences": 1,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "Runtime (h)"
+          ]
+        },
+        "forecastPreviousYear": {
+          "occurrences": 2,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "ΔBefore due % PY",
+            "ΔOverdue % PY"
+          ]
+        },
+        "forecastPreviousYearPercent": {
+          "occurrences": 2,
+          "distinct_value_count": 2,
+          "sample_values": [
+            "ΔBefore due % PY%",
+            "ΔOverdue % PY%"
+          ]
+        }
+      }
+    },
+    "interactions": {
+      "entry_count": 4,
+      "template_count": 1,
+      "templates": [
+        "working-capital-in-power-bi-template"
+      ],
+      "properties": {
+        "show": {
+          "occurrences": 4,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "true"
+          ]
+        },
+        "viewModeResize": {
+          "occurrences": 4,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "false"
+          ]
+        },
+        "viewModeMoveCards": {
+          "occurrences": 4,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "false"
+          ]
+        },
+        "viewModeChartSlider": {
+          "occurrences": 4,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "false"
+          ]
+        },
+        "viewModeVarianceCalculation": {
+          "occurrences": 3,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "false"
+          ]
+        },
+        "viewModeValueToggle": {
+          "occurrences": 3,
+          "distinct_value_count": 1,
+          "sample_values": [
+            "false"
+          ]
+        }
+      }
+    }
+  }
+}

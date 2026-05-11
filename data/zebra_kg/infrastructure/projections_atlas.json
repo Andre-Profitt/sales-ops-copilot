@@ -1,0 +1,100 @@
+{
+  "role_frequency_by_family": {
+    "ZebraBITables": {
+      "Category": 146,
+      "Values": 146,
+      "PreviousYear": 77,
+      "Plan": 76,
+      "Group": 63,
+      "Filters": 35,
+      "Forecast": 18,
+      "Comments": 13,
+      "CategoryClass": 4,
+      "Tooltips": 1
+    },
+    "ZebraWaterfall": {
+      "Category": 139,
+      "Values": 138,
+      "Group": 91,
+      "PreviousYear": 68,
+      "Plan": 60,
+      "Forecast": 40,
+      "Filters": 35,
+      "Comments": 21,
+      "Tooltips": 2
+    },
+    "ZebraBICards": {
+      "Values": 74,
+      "Group": 56,
+      "PreviousYear": 48,
+      "Plan": 48,
+      "Category": 28,
+      "Forecast": 17,
+      "KPI Descriptions": 3
+    }
+  },
+  "role_combinations_by_family": {
+    "ZebraBITables": {
+      "Category + PreviousYear + Values": 26,
+      "Category + Plan + Values": 20,
+      "Category + Group + Plan + Values": 12,
+      "Category + Group + Plan + PreviousYear + Values": 9,
+      "Category + Forecast + Group + Plan + Values": 8,
+      "Category + Plan + PreviousYear + Values": 8,
+      "Category + Values": 8,
+      "Category + Filters + Group + PreviousYear + Values": 7,
+      "Category + Filters + PreviousYear + Values": 6,
+      "Category + Comments + Filters + Group + PreviousYear + Values": 6,
+      "Category + Group + Values": 6,
+      "Category + Group + PreviousYear + Values": 4,
+      "Category + Forecast + Values": 4,
+      "Category + Filters + Group + Plan + PreviousYear + Values": 3,
+      "Category + Comments + Filters + PreviousYear + Values": 2,
+      "Category + Filters + Plan + PreviousYear + Values": 2,
+      "Category + Filters + Plan + Values": 2,
+      "Category + Filters + Forecast + Plan + Values": 2,
+      "Category + CategoryClass + Group + Plan + PreviousYear + Values": 2,
+      "Category + Comments + Filters + Plan + PreviousYear + Values": 1
+    },
+    "ZebraWaterfall": {
+      "Category + Group + PreviousYear + Values": 24,
+      "Category + Group + Values": 12,
+      "Category + Values": 10,
+      "Category + Forecast + Group + Plan + Values": 9,
+      "Category + Filters + PreviousYear + Values": 6,
+      "Category + Comments + Filters + Group + PreviousYear + Values": 6,
+      "Category + Forecast + Plan + Values": 6,
+      "Category + Group + Plan + PreviousYear + Values": 6,
+      "Category + Group + Plan + Values": 5,
+      "Category + Plan + Values": 5,
+      "Category + Filters + Values": 4,
+      "Category + Filters + Forecast + Group + Plan + PreviousYear + Values": 4,
+      "Category + Filters + Group + PreviousYear + Values": 3,
+      "Category + Comments + Group + PreviousYear + Values": 3,
+      "Category + Comments + Forecast + Group + Plan + Values": 3,
+      "Category + PreviousYear + Values": 3,
+      "Category + Forecast + Values": 3,
+      "Category + Comments + Forecast + Plan + Values": 2,
+      "Category + Comments + Group + Plan + Values": 2,
+      "Category + Filters + Plan + Values": 2
+    },
+    "ZebraBICards": {
+      "Group + PreviousYear + Values": 10,
+      "Group + Plan + PreviousYear + Values": 10,
+      "Category + Forecast + Group + Plan + Values": 10,
+      "Category + Group + PreviousYear + Values": 8,
+      "Group + Plan + Values": 6,
+      "Plan + Values": 5,
+      "Values": 4,
+      "Plan + PreviousYear + Values": 4,
+      "PreviousYear + Values": 4,
+      "Category + Group + Plan + PreviousYear + Values": 3,
+      "Category + Forecast + Group + Plan + PreviousYear + Values": 3,
+      "Category + Group + KPI Descriptions + Plan + PreviousYear + Values": 2,
+      "Forecast + Group + Plan + PreviousYear + Values": 2,
+      "Category + Plan + PreviousYear + Values": 1,
+      "Category + Forecast + Group + KPI Descriptions + Plan + PreviousYear + Values": 1,
+      "Forecast + Group + Plan + Values": 1
+    }
+  }
+}

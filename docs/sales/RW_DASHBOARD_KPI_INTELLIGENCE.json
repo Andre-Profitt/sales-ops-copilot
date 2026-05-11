@@ -1,0 +1,1263 @@
+{
+  "rollup": {
+    "total_kpis": 31,
+    "surfaced": 26,
+    "surfaced_partial": 4,
+    "model_available_not_surfaced": 0,
+    "partial_data_or_measure_gap": 1,
+    "source_data_gap": 0
+  },
+  "page_target_map": {
+    "VP Ops Scorecard": {
+      "executive_question": "Where is RW off plan right now, and which lane needs executive action first?",
+      "job": "Executive control room: outcome, conversion, exceptions, stage health, 7-day movement.",
+      "primary_kpis": [
+        "forecast_closed_won",
+        "opp_win_rate",
+        "stage_conversion",
+        "renewal_retention_rate"
+      ],
+      "secondary_diagnostics": [
+        "time_in_stage",
+        "new_opps_by_region"
+      ],
+      "required_motion_guardrail": "cross_motion_labeled",
+      "caveat": "Renewal retention is displayed beside ARR KPIs but not blended into ARR.",
+      "placements": [
+        {
+          "kpi_id": "forecast_closed_won",
+          "measure": "Total Closed Won ARR",
+          "visual_role": "hero KPI",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "clean",
+          "label": "Closed won ARR (Land + Expand)",
+          "secondary": false,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "opp_win_rate",
+          "measure": "Win Rate ARR",
+          "visual_role": "hero KPI",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "clean",
+          "label": "Win rate (ARR-wtd)",
+          "secondary": false,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "stage_conversion",
+          "measure": "Stage Forward Pct (LE)",
+          "visual_role": "variance table",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "partial",
+          "label": "Stage hygiene (count rates, Land + Expand)",
+          "secondary": false,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "renewal_retention_rate",
+          "measure": "Renewal Retention Pct (Period)",
+          "visual_role": "hero KPI",
+          "motion_guardrail": "renewal_acv",
+          "data_status": "partial",
+          "label": "Retention % (ACV-wtd)",
+          "secondary": false,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "time_in_stage",
+          "measure": "Avg Days In Prior Stage (LE)",
+          "visual_role": "variance table",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "partial",
+          "label": "Stage hygiene (count rates, Land + Expand)",
+          "secondary": true,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "new_opps_by_region",
+          "measure": "New Opps Count 7d",
+          "visual_role": "RAG card",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "clean",
+          "label": "New opp count 7d",
+          "secondary": true,
+          "missing_measure": ""
+        }
+      ]
+    },
+    "What Changed": {
+      "executive_question": "What materially changed in the last operating window, and which open opportunities need inspection?",
+      "job": "Daily/weekly movement review: new, won/lost, stage moves, and exception deltas.",
+      "primary_kpis": [
+        "new_opps_by_region",
+        "stage_conversion",
+        "opp_age",
+        "forecast_closed_won"
+      ],
+      "secondary_diagnostics": [],
+      "required_motion_guardrail": "land_expand_arr",
+      "caveat": "",
+      "placements": [
+        {
+          "kpi_id": "opp_age",
+          "measure": "At Risk Opps ARR",
+          "visual_role": "exception ledger",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "clean",
+          "label": "At-risk ARR (Land + Expand)",
+          "secondary": false,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "opp_age",
+          "measure": "Watch Opps ARR",
+          "visual_role": "exception ledger",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "clean",
+          "label": "Watch ARR (Land + Expand)",
+          "secondary": false,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "stage_conversion",
+          "measure": "Stage Moves ARR 7d",
+          "visual_role": "movement ledger",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "clean",
+          "label": "Stage ARR (Land + Expand)",
+          "secondary": false,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "new_opps_by_region",
+          "measure": "New Opps Count 7d",
+          "visual_role": "movement ledger",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "clean",
+          "label": "New opp count",
+          "secondary": false,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "forecast_closed_won",
+          "measure": "Closed Won Count 7d",
+          "visual_role": "movement ledger",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "clean",
+          "label": "Won count",
+          "secondary": false,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "opp_age",
+          "measure": "Total Open Pipeline ARR",
+          "visual_role": "detail table",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "clean",
+          "label": "Top Open ARR (Land + Expand) Movement Queue",
+          "secondary": false,
+          "missing_measure": ""
+        }
+      ]
+    },
+    "Forecast": {
+      "executive_question": "Can the quarter still land, and is forecast movement disciplined enough to trust?",
+      "job": "Quarter answer: remaining days, open ARR, open renewal ACV, won ARR, forecast movement discipline.",
+      "primary_kpis": [
+        "forecast_closed_won",
+        "pipeline_coverage_3x",
+        "forecast_accuracy"
+      ],
+      "secondary_diagnostics": [
+        "stage3_acv_value",
+        "renewals_mom_trend"
+      ],
+      "required_motion_guardrail": "process",
+      "caveat": "ARR (Land + Expand) and Renewal ACV are shown side by side only as separate columns/cards; no top-level blended open value.",
+      "placements": [
+        {
+          "kpi_id": "pipeline_coverage_3x",
+          "measure": "Total Open Pipeline ARR",
+          "visual_role": "hero KPI",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "partial",
+          "label": "Open ARR (Land + Expand)",
+          "secondary": false,
+          "missing_measure": "Pipeline Coverage Ratio"
+        },
+        {
+          "kpi_id": "renewals_mom_trend",
+          "measure": "Total Open Renewal ACV",
+          "visual_role": "hero KPI",
+          "motion_guardrail": "renewal_acv",
+          "data_status": "clean",
+          "label": "Open renewal ACV",
+          "secondary": true,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "forecast_closed_won",
+          "measure": "Total Closed Won ARR",
+          "visual_role": "hero KPI",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "clean",
+          "label": "Closed won ARR (Land + Expand)",
+          "secondary": false,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "pipeline_coverage_3x",
+          "measure": "Total Open Pipeline ARR",
+          "visual_role": "variance table",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "partial",
+          "label": "Stage x Motion Open ARR (Land + Expand)",
+          "secondary": true,
+          "missing_measure": "Pipeline Coverage Ratio"
+        },
+        {
+          "kpi_id": "renewals_mom_trend",
+          "measure": "Total Open Renewal ACV",
+          "visual_role": "variance table",
+          "motion_guardrail": "renewal_acv",
+          "data_status": "clean",
+          "label": "Stage x Motion Open renewal ACV",
+          "secondary": true,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "forecast_accuracy",
+          "measure": "Forecast Slip Pct",
+          "visual_role": "RAG card",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "proxy",
+          "label": "Slip % (count proxy)",
+          "secondary": false,
+          "missing_measure": "Forecast Accuracy"
+        },
+        {
+          "kpi_id": "forecast_accuracy",
+          "measure": "Forecast Slips",
+          "visual_role": "RAG card",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "proxy",
+          "label": "Slip count proxy",
+          "secondary": true,
+          "missing_measure": "Forecast Accuracy"
+        },
+        {
+          "kpi_id": "stage3_acv_value",
+          "measure": "Total Open Pipeline ARR",
+          "visual_role": "detail table",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "partial",
+          "label": "Late-stage open ARR (Land + Expand)",
+          "secondary": true,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "renewals_mom_trend",
+          "measure": "Total Open Renewal ACV",
+          "visual_role": "detail table",
+          "motion_guardrail": "renewal_acv",
+          "data_status": "clean",
+          "label": "Late-stage open renewal ACV",
+          "secondary": true,
+          "missing_measure": ""
+        }
+      ]
+    },
+    "Stage Hygiene": {
+      "executive_question": "Which stage is slowing or reversing Land + Expand opportunities, and is the Stage 3/4 control point healthy?",
+      "job": "Funnel diagnosis: stage conversion, backward movement, and time-in-stage bottlenecks.",
+      "primary_kpis": [
+        "stage_conversion",
+        "time_in_stage",
+        "sales_cycle_length"
+      ],
+      "secondary_diagnostics": [
+        "stage3_approvals_compliance",
+        "commercial_approval_to_close_time"
+      ],
+      "required_motion_guardrail": "process",
+      "caveat": "Stage 3 and Stage 4 are the control points for approval friction and late-funnel slippage.",
+      "placements": [
+        {
+          "kpi_id": "stage_conversion",
+          "measure": "Stage Forward Pct (LE)",
+          "visual_role": "hero KPI",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "partial",
+          "label": "Forward % (count, Land + Expand)",
+          "secondary": false,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "stage_conversion",
+          "measure": "Stage Backward Pct (LE)",
+          "visual_role": "hero KPI",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "partial",
+          "label": "Backward % (count, Land + Expand)",
+          "secondary": false,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "time_in_stage",
+          "measure": "Avg Days In Prior Stage (LE)",
+          "visual_role": "hero KPI",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "partial",
+          "label": "Stage days (Land + Expand)",
+          "secondary": false,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "sales_cycle_length",
+          "measure": "Land Avg Sales Cycle Days",
+          "visual_role": "hero KPI",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "clean",
+          "label": "Land cycle days",
+          "secondary": false,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "sales_cycle_length",
+          "measure": "Avg Sales Cycle Days",
+          "visual_role": "hero KPI",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "clean",
+          "label": "Land + Expand cycle days",
+          "secondary": false,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "stage_conversion",
+          "measure": "Stage Forward Pct (LE)",
+          "visual_role": "variance table",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "partial",
+          "label": "Stage Conversion Matrix (count, Land + Expand)",
+          "secondary": false,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "stage3_approvals_compliance",
+          "measure": "Commercial Approval Compliance Pct",
+          "visual_role": "RAG card",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "clean",
+          "label": "Approval % (count)",
+          "secondary": true,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "commercial_approval_to_close_time",
+          "measure": "Commercial Approval To Close Days",
+          "visual_role": "RAG card",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "clean",
+          "label": "Approval-close days",
+          "secondary": true,
+          "missing_measure": ""
+        }
+      ]
+    },
+    "Renewals": {
+      "executive_question": "How much Renewal ACV is exposed, retained, or lost, and where is the pressure?",
+      "job": "Renewal ACV cockpit: open exposure, retained ACV, lost ACV, and regional pressure.",
+      "primary_kpis": [
+        "renewal_retention_rate",
+        "renewals_mom_trend",
+        "lost_arr_quarterly"
+      ],
+      "secondary_diagnostics": [
+        "business_at_risk",
+        "existing_arr_run_rate",
+        "indexation_arr_growth"
+      ],
+      "required_motion_guardrail": "renewal_acv",
+      "caveat": "Renewal opportunity ACV and active-base ARR are separated. Land and Expand new-business ARR are excluded from this page.",
+      "placements": [
+        {
+          "kpi_id": "renewals_mom_trend",
+          "measure": "Total Open Renewal ACV",
+          "visual_role": "hero KPI",
+          "motion_guardrail": "renewal_acv",
+          "data_status": "clean",
+          "label": "Open renewal ACV",
+          "secondary": false,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "renewal_retention_rate",
+          "measure": "Renewal Retention Pct (Period)",
+          "visual_role": "hero KPI",
+          "motion_guardrail": "renewal_acv",
+          "data_status": "partial",
+          "label": "Retention % (ACV-wtd)",
+          "secondary": false,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "renewals_mom_trend",
+          "measure": "Total Renewal ACV Won",
+          "visual_role": "hero KPI",
+          "motion_guardrail": "renewal_acv",
+          "data_status": "clean",
+          "label": "Won renewal ACV",
+          "secondary": false,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "lost_arr_quarterly",
+          "measure": "Total Renewal ACV Lost",
+          "visual_role": "hero KPI",
+          "motion_guardrail": "renewal_acv",
+          "data_status": "partial",
+          "label": "Lost renewal ACV",
+          "secondary": false,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "existing_arr_run_rate",
+          "measure": "Existing ARR Run Rate",
+          "visual_role": "hero KPI",
+          "motion_guardrail": "renewal_base_arr",
+          "data_status": "clean",
+          "label": "Active-base ARR",
+          "secondary": true,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "business_at_risk",
+          "measure": "Business At Risk ARR",
+          "visual_role": "hero KPI",
+          "motion_guardrail": "renewal_base_arr",
+          "data_status": "clean",
+          "label": "At-risk base ARR",
+          "secondary": true,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "business_at_risk",
+          "measure": "Business At Risk ARR",
+          "visual_role": "variance table",
+          "motion_guardrail": "renewal_base_arr",
+          "data_status": "clean",
+          "label": "Region x Risk Active-base Heatmap",
+          "secondary": true,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "existing_arr_run_rate",
+          "measure": "Existing ARR Expiring In Period",
+          "visual_role": "detail table",
+          "motion_guardrail": "renewal_base_arr",
+          "data_status": "clean",
+          "label": "Active-base ARR Detail",
+          "secondary": true,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "indexation_arr_growth",
+          "measure": "Indexation ARR Growth",
+          "visual_role": "detail table",
+          "motion_guardrail": "renewal_acv",
+          "data_status": "missing source data",
+          "label": "Indexation ARR Growth",
+          "secondary": true,
+          "missing_measure": "Indexation ARR Growth"
+        }
+      ]
+    },
+    "Product Retention": {
+      "executive_question": "Which product, segment, and region combinations carry active-base ARR retention or churn risk?",
+      "job": "Product active-base view: product heatmaps and account-product retention scaffold.",
+      "primary_kpis": [
+        "existing_arr_run_rate",
+        "business_at_risk"
+      ],
+      "secondary_diagnostics": [
+        "indexation_arr_growth"
+      ],
+      "required_motion_guardrail": "renewal_base_arr",
+      "caveat": "Product heatmaps use active-base ARR from asset line items. True churn requires prior/current active-base snapshots or effective-dated asset rows. This is not Renewal ACV and not Land + Expand ARR.",
+      "placements": [
+        {
+          "kpi_id": "existing_arr_run_rate",
+          "measure": "Existing ARR Run Rate",
+          "visual_role": "hero KPI",
+          "motion_guardrail": "renewal_base_arr",
+          "data_status": "clean",
+          "label": "Active-base ARR",
+          "secondary": false,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "existing_arr_run_rate",
+          "measure": "Existing ARR Expiring In Period",
+          "visual_role": "variance table",
+          "motion_guardrail": "renewal_base_arr",
+          "data_status": "clean",
+          "label": "Active-base ARR by Product x Region",
+          "secondary": false,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "business_at_risk",
+          "measure": "Business At Risk ARR",
+          "visual_role": "hero KPI",
+          "motion_guardrail": "renewal_base_arr",
+          "data_status": "clean",
+          "label": "At-risk active-base ARR",
+          "secondary": false,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "business_at_risk",
+          "measure": "Business At Risk Pct",
+          "visual_role": "variance table",
+          "motion_guardrail": "renewal_base_arr",
+          "data_status": "clean",
+          "label": "Risk % of active base",
+          "secondary": false,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "existing_arr_run_rate",
+          "measure": "Existing ARR Expiring In Period",
+          "visual_role": "detail table",
+          "motion_guardrail": "renewal_base_arr",
+          "data_status": "clean",
+          "label": "Account-product Retention Ledger",
+          "secondary": true,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "indexation_arr_growth",
+          "measure": "Indexation ARR Growth",
+          "visual_role": "detail table",
+          "motion_guardrail": "renewal_base_arr",
+          "data_status": "missing source data",
+          "label": "Indexation ARR Growth",
+          "secondary": true,
+          "missing_measure": "Indexation ARR Growth"
+        }
+      ]
+    },
+    "Growth Mix": {
+      "executive_question": "Is growth coming from the right Land, Expand, partner, source, and new-customer mix?",
+      "job": "Growth mix cockpit: open Land, open Expand, partner contribution, and new-customer signal.",
+      "primary_kpis": [
+        "ilf_arr_pipeline",
+        "alf_arr_pipeline",
+        "new_customer_reporting",
+        "closed_won_avg_deal_size",
+        "partner_opps_pct"
+      ],
+      "secondary_diagnostics": [
+        "opp_source_effectiveness",
+        "closed_won_value_tier",
+        "cross_sell_to_acquired",
+        "one_off_revenues",
+        "ps_arr_attach",
+        "saas_arr_yoy_growth",
+        "synergy_deals_won"
+      ],
+      "required_motion_guardrail": "land_expand_arr",
+      "caveat": "Land and Expand ARR stay separate from Renewal ACV. One-off revenue is non-recurring and is not blended into ARR or ACV. Synergy remains proxy-only until the source flag exists.",
+      "placements": [
+        {
+          "kpi_id": "alf_arr_pipeline",
+          "measure": "Open Land ARR",
+          "visual_role": "hero KPI",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "partial",
+          "label": "Open Land ARR",
+          "secondary": false,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "ilf_arr_pipeline",
+          "measure": "Open Expand ARR",
+          "visual_role": "hero KPI",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "partial",
+          "label": "Open Expand ARR",
+          "secondary": false,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "closed_won_avg_deal_size",
+          "measure": "Avg Deal Size Won",
+          "visual_role": "hero KPI",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "partial",
+          "label": "Avg won ARR (Land + Expand)",
+          "secondary": false,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "partner_opps_pct",
+          "measure": "Partner ARR",
+          "visual_role": "hero KPI",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "clean",
+          "label": "Partner ARR (Land + Expand)",
+          "secondary": false,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "partner_opps_pct",
+          "measure": "Partner Pct",
+          "visual_role": "hero KPI",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "clean",
+          "label": "Partner % ARR share",
+          "secondary": false,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "alf_arr_pipeline",
+          "measure": "Total Open Pipeline ARR",
+          "visual_role": "bridge/waterfall",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "partial",
+          "label": "Open Land + Expand ARR by Region",
+          "secondary": false,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "new_customer_reporting",
+          "measure": "Total Land Won Count",
+          "visual_role": "detail table",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "clean",
+          "label": "Land won count",
+          "secondary": false,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "opp_source_effectiveness",
+          "measure": "Source ARR Won",
+          "visual_role": "variance table",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "clean",
+          "label": "Source ARR won (Land + Expand)",
+          "secondary": true,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "opp_source_effectiveness",
+          "measure": "Source Win Rate",
+          "visual_role": "variance table",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "clean",
+          "label": "Source win rate (count)",
+          "secondary": true,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "partner_opps_pct",
+          "measure": "Partner ARR",
+          "visual_role": "variance table",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "clean",
+          "label": "Partner ARR (Land + Expand)",
+          "secondary": true,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "closed_won_value_tier",
+          "measure": "Closed Won Deals Count",
+          "visual_role": "detail table",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "clean",
+          "label": "Won value tier",
+          "secondary": true,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "cross_sell_to_acquired",
+          "measure": "Cross Sell To Acquired ARR",
+          "visual_role": "detail table",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "clean",
+          "label": "Axioma ARR (Land + Expand)",
+          "secondary": true,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "one_off_revenues",
+          "measure": "One Off Revenues",
+          "visual_role": "detail table",
+          "motion_guardrail": "process",
+          "data_status": "clean",
+          "label": "One-off revenue (non-recurring, EUR M)",
+          "secondary": true,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "ps_arr_attach",
+          "measure": "PS ARR Attach Pct",
+          "visual_role": "detail table",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "clean",
+          "label": "PS attach % (ACV/ARR)",
+          "secondary": true,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "saas_arr_yoy_growth",
+          "measure": "SaaS YoY Growth Pct",
+          "visual_role": "detail table",
+          "motion_guardrail": "process",
+          "data_status": "clean",
+          "label": "SaaS ARR YoY %",
+          "secondary": true,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "synergy_deals_won",
+          "measure": "Total Land Won Count",
+          "visual_role": "detail table",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "proxy",
+          "label": "Land count proxy",
+          "secondary": true,
+          "missing_measure": "Synergy Deals Won"
+        }
+      ]
+    }
+  },
+  "rows": [
+    {
+      "kpi_id": "forecast_closed_won",
+      "name": "Forecast & Closed Won",
+      "impact": "HIGH",
+      "motion_filter": "land_expand",
+      "source_coverage": "exists",
+      "dashboard_status": "surfaced",
+      "pages": [
+        "VP Ops Scorecard",
+        "What Changed",
+        "Forecast"
+      ],
+      "model_measures": [
+        "Total Closed Won ARR",
+        "Closed Won ARR YoY Pct"
+      ],
+      "missing_measures": [],
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
+    },
+    {
+      "kpi_id": "pipeline_coverage_3x",
+      "name": "Pipeline Value / Pipeline Coverage",
+      "impact": "HIGH",
+      "motion_filter": "land_expand",
+      "source_coverage": "partial",
+      "dashboard_status": "surfaced_partial",
+      "pages": [
+        "Forecast"
+      ],
+      "model_measures": [
+        "Total Open Pipeline ARR"
+      ],
+      "missing_measures": [
+        "Pipeline Coverage Ratio"
+      ],
+      "next_action": "Add quota denominator and true 3x coverage ratio; current Forecast page shows the open-pipeline numerator."
+    },
+    {
+      "kpi_id": "opp_win_rate",
+      "name": "Opportunity Win Rate (Close Rate)",
+      "impact": "HIGH",
+      "motion_filter": "land_expand",
+      "source_coverage": "exists",
+      "dashboard_status": "surfaced",
+      "pages": [
+        "VP Ops Scorecard"
+      ],
+      "model_measures": [
+        "Win Rate ARR",
+        "Win Rate Count"
+      ],
+      "missing_measures": [],
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
+    },
+    {
+      "kpi_id": "stage_conversion",
+      "name": "Opportunity Stage Conversion Rate",
+      "impact": "HIGH",
+      "motion_filter": "land_expand",
+      "source_coverage": "partial",
+      "dashboard_status": "surfaced",
+      "pages": [
+        "VP Ops Scorecard",
+        "What Changed",
+        "Stage Hygiene"
+      ],
+      "model_measures": [
+        "Stage Forward Pct (LE)",
+        "Stage Backward Pct (LE)"
+      ],
+      "missing_measures": [],
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
+    },
+    {
+      "kpi_id": "opp_age",
+      "name": "Opportunity Age / Stale Opportunities",
+      "impact": "MEDIUM",
+      "motion_filter": "land_expand",
+      "source_coverage": "exists",
+      "dashboard_status": "surfaced",
+      "pages": [
+        "What Changed"
+      ],
+      "model_measures": [
+        "Avg Open Opp Age Days"
+      ],
+      "missing_measures": [],
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
+    },
+    {
+      "kpi_id": "opp_source_effectiveness",
+      "name": "Opportunity Source Effectiveness",
+      "impact": "MEDIUM",
+      "motion_filter": "land_expand",
+      "source_coverage": "exists",
+      "dashboard_status": "surfaced",
+      "pages": [
+        "Growth Mix"
+      ],
+      "model_measures": [
+        "Source ARR Won",
+        "Source Win Rate"
+      ],
+      "missing_measures": [],
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
+    },
+    {
+      "kpi_id": "sales_cycle_length",
+      "name": "Sales Cycle Length (Avg Time to Close)",
+      "impact": "HIGH",
+      "motion_filter": "land_expand",
+      "source_coverage": "exists",
+      "dashboard_status": "surfaced",
+      "pages": [
+        "Stage Hygiene"
+      ],
+      "model_measures": [
+        "Avg Sales Cycle Days",
+        "Land Avg Sales Cycle Days"
+      ],
+      "missing_measures": [],
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
+    },
+    {
+      "kpi_id": "time_in_stage",
+      "name": "Time deals spent in each stage",
+      "impact": "MEDIUM",
+      "motion_filter": "land_expand",
+      "source_coverage": "missing",
+      "dashboard_status": "surfaced",
+      "pages": [
+        "VP Ops Scorecard",
+        "Stage Hygiene"
+      ],
+      "model_measures": [
+        "Avg Days In Prior Stage (LE)"
+      ],
+      "missing_measures": [],
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
+    },
+    {
+      "kpi_id": "closed_won_avg_deal_size",
+      "name": "Closed Won Average Deal Size by month",
+      "impact": "HIGH",
+      "motion_filter": "land_expand",
+      "source_coverage": "exists",
+      "dashboard_status": "surfaced",
+      "pages": [
+        "Growth Mix"
+      ],
+      "model_measures": [
+        "Avg Deal Size Won"
+      ],
+      "missing_measures": [],
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
+    },
+    {
+      "kpi_id": "closed_won_value_tier",
+      "name": "Number of close won deals by value tier",
+      "impact": "MEDIUM",
+      "motion_filter": "land_expand",
+      "source_coverage": "exists",
+      "dashboard_status": "surfaced",
+      "pages": [
+        "Growth Mix"
+      ],
+      "model_measures": [
+        "Closed Won Deals Count"
+      ],
+      "missing_measures": [],
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
+    },
+    {
+      "kpi_id": "new_opps_by_region",
+      "name": "Number of New opportunities created by region",
+      "impact": "MEDIUM",
+      "motion_filter": "land_expand",
+      "source_coverage": "missing",
+      "dashboard_status": "surfaced",
+      "pages": [
+        "VP Ops Scorecard",
+        "What Changed"
+      ],
+      "model_measures": [
+        "New Opps Created",
+        "New Opps Count 7d"
+      ],
+      "missing_measures": [],
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
+    },
+    {
+      "kpi_id": "stage3_approvals_compliance",
+      "name": "Stage 3 approvals by month",
+      "impact": "MEDIUM",
+      "motion_filter": "land_expand",
+      "source_coverage": "exists",
+      "dashboard_status": "surfaced",
+      "pages": [
+        "Stage Hygiene"
+      ],
+      "model_measures": [
+        "Commercial Approval Compliance Pct",
+        "Stage 3 Forward Pct",
+        "Avg Days In Stage 3"
+      ],
+      "missing_measures": [],
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
+    },
+    {
+      "kpi_id": "stage3_acv_value",
+      "name": "ACV of Stage 3 approvals",
+      "impact": "MEDIUM",
+      "motion_filter": "land_expand",
+      "source_coverage": "exists",
+      "dashboard_status": "surfaced",
+      "pages": [
+        "Forecast"
+      ],
+      "model_measures": [
+        "Stage 3 Plus ARR",
+        "S3 Plus Open ACV"
+      ],
+      "missing_measures": [],
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
+    },
+    {
+      "kpi_id": "commercial_approval_to_close_time",
+      "name": "Commercial approval to close time",
+      "impact": "HIGH",
+      "motion_filter": "land_expand",
+      "source_coverage": "exists",
+      "dashboard_status": "surfaced",
+      "pages": [
+        "Stage Hygiene"
+      ],
+      "model_measures": [
+        "Commercial Approval To Close Days"
+      ],
+      "missing_measures": [],
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
+    },
+    {
+      "kpi_id": "forecast_accuracy",
+      "name": "Forecast Accuracy",
+      "impact": "HIGH",
+      "motion_filter": "land_expand",
+      "source_coverage": "exists",
+      "dashboard_status": "surfaced_partial",
+      "pages": [
+        "Forecast"
+      ],
+      "model_measures": [
+        "Forecast Slip Pct",
+        "Forecast Slips",
+        "Forecast Upgrades"
+      ],
+      "missing_measures": [
+        "Forecast Accuracy"
+      ],
+      "next_action": "Add real ForecastingItem/snapshot accuracy; current Forecast page only shows slips/upgrades movement proxies."
+    },
+    {
+      "kpi_id": "partner_opps_pct",
+      "name": "Partner Opportunities",
+      "impact": "MEDIUM",
+      "motion_filter": "land_expand",
+      "source_coverage": "exists",
+      "dashboard_status": "surfaced",
+      "pages": [
+        "Growth Mix"
+      ],
+      "model_measures": [
+        "Partner ARR",
+        "Partner Pct"
+      ],
+      "missing_measures": [],
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
+    },
+    {
+      "kpi_id": "renewal_retention_rate",
+      "name": "Renewals per quarter detailing term length",
+      "impact": "HIGH",
+      "motion_filter": "renewal",
+      "source_coverage": "partial",
+      "dashboard_status": "surfaced",
+      "pages": [
+        "VP Ops Scorecard",
+        "Renewals"
+      ],
+      "model_measures": [
+        "Renewal Retention Pct (Period)"
+      ],
+      "missing_measures": [],
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
+    },
+    {
+      "kpi_id": "renewals_mom_trend",
+      "name": "Renewals by month over year",
+      "impact": "HIGH",
+      "motion_filter": "renewal",
+      "source_coverage": "exists",
+      "dashboard_status": "surfaced",
+      "pages": [
+        "Forecast",
+        "Renewals"
+      ],
+      "model_measures": [
+        "Total Open Renewal ACV",
+        "Total Renewal ACV Won"
+      ],
+      "missing_measures": [],
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
+    },
+    {
+      "kpi_id": "existing_arr_run_rate",
+      "name": "Existing ARR (Run Rate) Indexed",
+      "impact": "HIGH",
+      "motion_filter": "renewal",
+      "source_coverage": "exists",
+      "dashboard_status": "surfaced",
+      "pages": [
+        "Renewals",
+        "Product Retention"
+      ],
+      "model_measures": [
+        "Existing ARR Run Rate"
+      ],
+      "missing_measures": [],
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
+    },
+    {
+      "kpi_id": "indexation_arr_growth",
+      "name": "ARR growth attributed to indexation by Quarter",
+      "impact": "MEDIUM",
+      "motion_filter": "renewal",
+      "source_coverage": "missing",
+      "dashboard_status": "surfaced_partial",
+      "pages": [
+        "Renewals",
+        "Product Retention"
+      ],
+      "model_measures": [],
+      "missing_measures": [
+        "Indexation ARR Growth"
+      ],
+      "next_action": "Needs indexation/contract uplift field; keep as Renewals caveat until staged."
+    },
+    {
+      "kpi_id": "ilf_arr_pipeline",
+      "name": "ILF ARR Pipes By Quarter",
+      "impact": "HIGH",
+      "motion_filter": "land_expand",
+      "source_coverage": "partial",
+      "dashboard_status": "surfaced",
+      "pages": [
+        "Growth Mix"
+      ],
+      "model_measures": [
+        "Open Expand ARR"
+      ],
+      "missing_measures": [],
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
+    },
+    {
+      "kpi_id": "alf_arr_pipeline",
+      "name": "ALF ARR By Quarter",
+      "impact": "HIGH",
+      "motion_filter": "land_expand",
+      "source_coverage": "partial",
+      "dashboard_status": "surfaced",
+      "pages": [
+        "Growth Mix"
+      ],
+      "model_measures": [
+        "Open Land ARR"
+      ],
+      "missing_measures": [],
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
+    },
+    {
+      "kpi_id": "new_customer_reporting",
+      "name": "New Customer reporting amount by month and value and region",
+      "impact": "HIGH",
+      "motion_filter": "land_expand",
+      "source_coverage": "exists",
+      "dashboard_status": "surfaced",
+      "pages": [
+        "Growth Mix"
+      ],
+      "model_measures": [
+        "Total Land Won Count",
+        "Total Land Won ARR"
+      ],
+      "missing_measures": [],
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
+    },
+    {
+      "kpi_id": "cross_sell_to_acquired",
+      "name": "ARR from Cross Selling to Acquired Business",
+      "impact": "HIGH",
+      "motion_filter": "land_expand",
+      "source_coverage": "exists",
+      "dashboard_status": "surfaced",
+      "pages": [
+        "Growth Mix"
+      ],
+      "model_measures": [
+        "Cross Sell To Acquired ARR"
+      ],
+      "missing_measures": [],
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
+    },
+    {
+      "kpi_id": "synergy_deals_won",
+      "name": "Synergy deals close won",
+      "impact": "HIGH",
+      "motion_filter": "land_expand",
+      "source_coverage": "partial",
+      "dashboard_status": "surfaced_partial",
+      "pages": [
+        "Growth Mix"
+      ],
+      "model_measures": [
+        "Total Land Won Count"
+      ],
+      "missing_measures": [
+        "Synergy Deals Won"
+      ],
+      "next_action": "Needs synergy flag; current Growth Mix page uses Land won count as a proxy."
+    },
+    {
+      "kpi_id": "synergy_deals_pipe",
+      "name": "Synergy deals in pipe",
+      "impact": "MEDIUM",
+      "motion_filter": "land_expand",
+      "source_coverage": "partial",
+      "dashboard_status": "partial_data_or_measure_gap",
+      "pages": [],
+      "model_measures": [],
+      "missing_measures": [
+        "Synergy Deals Pipeline"
+      ],
+      "next_action": "Needs synergy flag; then add open/won synergy strip to Growth Mix."
+    },
+    {
+      "kpi_id": "lost_arr_quarterly",
+      "name": "Lost ARR By Quarter (with reason)",
+      "impact": "HIGH",
+      "motion_filter": "renewal",
+      "source_coverage": "exists",
+      "dashboard_status": "surfaced",
+      "pages": [
+        "Renewals"
+      ],
+      "model_measures": [
+        "Total Renewal ACV Lost"
+      ],
+      "missing_measures": [],
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
+    },
+    {
+      "kpi_id": "business_at_risk",
+      "name": "Business At Risk By Quarter",
+      "impact": "HIGH",
+      "motion_filter": "renewal",
+      "source_coverage": "exists",
+      "dashboard_status": "surfaced",
+      "pages": [
+        "Renewals",
+        "Product Retention"
+      ],
+      "model_measures": [
+        "Business At Risk ARR"
+      ],
+      "missing_measures": [],
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
+    },
+    {
+      "kpi_id": "one_off_revenues",
+      "name": "One Off Revenues by Quarter",
+      "impact": "MEDIUM",
+      "motion_filter": "all",
+      "source_coverage": "exists",
+      "dashboard_status": "surfaced",
+      "pages": [
+        "Growth Mix"
+      ],
+      "model_measures": [
+        "One Off Revenues"
+      ],
+      "missing_measures": [],
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
+    },
+    {
+      "kpi_id": "ps_arr_attach",
+      "name": "PS ARR by Quarter",
+      "impact": "MEDIUM",
+      "motion_filter": "land_expand",
+      "source_coverage": "exists",
+      "dashboard_status": "surfaced",
+      "pages": [
+        "Growth Mix"
+      ],
+      "model_measures": [
+        "PS ARR Attach Pct"
+      ],
+      "missing_measures": [],
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
+    },
+    {
+      "kpi_id": "saas_arr_yoy_growth",
+      "name": "SaaS ARR by Quarter",
+      "impact": "HIGH",
+      "motion_filter": "all",
+      "source_coverage": "exists",
+      "dashboard_status": "surfaced",
+      "pages": [
+        "Growth Mix"
+      ],
+      "model_measures": [
+        "SaaS YoY Growth Pct"
+      ],
+      "missing_measures": [],
+      "next_action": "Keep in page QA; tighten visual treatment if Desktop review flags it."
+    }
+  ]
+}

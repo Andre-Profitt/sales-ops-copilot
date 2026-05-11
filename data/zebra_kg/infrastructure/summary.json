@@ -1,0 +1,174 @@
+{
+  "total_zebra_visuals": 360,
+  "by_family": {
+    "ZebraBITables": 146,
+    "ZebraWaterfall": 140,
+    "ZebraBICards": 74
+  },
+  "objects_groups_per_family": {
+    "ZebraBITables": [
+      "version",
+      "migrationLog",
+      "proFeaturesSettings",
+      "chartSettings",
+      "sortSettings",
+      "categoriesMetadata",
+      "coreSettings",
+      "annotationLayerSettings",
+      "commentBoxSettings",
+      "titleSettings",
+      "previewSettings",
+      "drillSettings",
+      "dataLabelSettings",
+      "categorySettings",
+      "groupsMetadata",
+      "legendHeaderSettings",
+      "groupTitleSettings",
+      "designSettings",
+      "averageLineSettings",
+      "interactionSettings"
+    ],
+    "ZebraWaterfall": [
+      "visualCreatedVersion",
+      "proFeaturesSettings",
+      "chartType",
+      "axisBreakSettings",
+      "groupsMetadata",
+      "titleSettings",
+      "chartSettings",
+      "multipleLayout",
+      "categorySettings",
+      "dataLabelSettings",
+      "coreSettings",
+      "annotationLayerSettings",
+      "commentBoxSettings",
+      "differenceHighlightSettings",
+      "categoriesMetadata",
+      "groupTitleSettings",
+      "designSettings",
+      "stackedChartSettings",
+      "interactionSettings",
+      "legendHeaderSettings",
+      "dotChartDataLabelSettings"
+    ],
+    "ZebraBICards": [
+      "license",
+      "customData",
+      "grid",
+      "card",
+      "dataLabels",
+      "legend",
+      "interactions"
+    ]
+  },
+  "comparison_keys_distinct": 113,
+  "comparison_keys_top10": {
+    "actual": 141,
+    "previousYear": 88,
+    "actual-previousYear": 88,
+    "actual-previousYear-percent": 88,
+    "plan": 76,
+    "actual-plan": 76,
+    "actual-plan-percent": 76,
+    "forecast": 20,
+    "AC": 17,
+    "forecast-plan": 12
+  },
+  "format_codes_seen": {
+    "0": 429,
+    "1": 234,
+    "2": 200,
+    "3": 25,
+    "5": 3
+  },
+  "marker_styles_seen": {
+    "5": 1732,
+    "1": 19,
+    "0": 15,
+    "2": 6,
+    "4": 6,
+    "3": 4
+  },
+  "show_as_table_seen": {
+    "0": 1300,
+    "2": 300,
+    "1": 182
+  },
+  "scale_groups_seen": {
+    "1": 729,
+    "-1": 137,
+    "2": 15,
+    "3": 9,
+    "4": 1
+  },
+  "zebra_packages_distinct": 6,
+  "package_data_roles": {
+    "ZebraBITables98F88148E5424E949E69864664EE1860": [
+      "Category",
+      "Group",
+      "Values",
+      "PreviousYear",
+      "Plan",
+      "Forecast",
+      "Tooltips",
+      "Comments",
+      "Filters",
+      "CategoryClass"
+    ],
+    "waterfall0221D8FBE40445C1A4E598AA8EF8B506": [
+      "Category",
+      "Group",
+      "Values",
+      "PreviousYear",
+      "Plan",
+      "Forecast",
+      "Tooltips",
+      "Comments",
+      "Filters"
+    ],
+    "zebraBiCards8085D508EB994C8081CA47C85ABD7C26": [
+      "Category",
+      "Group",
+      "Values",
+      "PreviousYear",
+      "Plan",
+      "Forecast",
+      "Tooltips",
+      "Comments",
+      "KPI Descriptions"
+    ],
+    "ZebraBITablesBAE31B370F254F808553548EFB35BFA5": [
+      "Category",
+      "Group",
+      "Values",
+      "PreviousYear",
+      "Plan",
+      "Forecast",
+      "Tooltips",
+      "Comments",
+      "Filters"
+    ],
+    "waterfall6C9ED82ABD1F44C4A0D590CE01EB5EE7": [
+      "Category",
+      "Group",
+      "Values",
+      "PreviousYear",
+      "Plan",
+      "Forecast",
+      "Tooltips",
+      "Comments",
+      "Filters"
+    ],
+    "zebraBiCards2C860CFAA9944091B75F0DBD117F20FA": [
+      "Category",
+      "Group",
+      "Values",
+      "PreviousYear",
+      "Plan",
+      "Forecast",
+      "Tooltips",
+      "Comments",
+      "KPI Descriptions"
+    ]
+  }
+}

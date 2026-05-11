@@ -1,0 +1,142 @@
+{
+  "cost-management-power-bi-template": {
+    "semantic_model_id": "4ed7eb97-4d08-4488-aeec-042f1df21c50",
+    "report_id": "47057b85-1c43-4b35-bb19-08fe1c460854",
+    "url": "https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/47057b85-1c43-4b35-bb19-08fe1c460854",
+    "vc_count": 31,
+    "measure_count": 26
+  },
+  "saas-sales-power-bi-dashboard-template": {
+    "semantic_model_id": "cdb4a18a-eb16-41cd-baf6-fb8daaadbcc4",
+    "report_id": "8de90cd5-c0f5-4a9b-87c7-e6bb63fa208c",
+    "url": "https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/8de90cd5-c0f5-4a9b-87c7-e6bb63fa208c",
+    "vc_count": 28,
+    "measure_count": 38
+  },
+  "social-media-power-bi-template": {
+    "semantic_model_id": "ccd0ef8b-249d-4d97-93d0-9c42c915704c",
+    "report_id": "fe1d7084-7ef6-48cf-a9b3-871f664872de",
+    "url": "https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/fe1d7084-7ef6-48cf-a9b3-871f664872de",
+    "vc_count": 27,
+    "measure_count": 12
+  },
+  "dynamic-comments-power-bi-template": {
+    "semantic_model_id": "5043fabd-0417-4869-b464-20af468555ad",
+    "report_id": "ffc6fe6b-2e5f-4400-807c-7986dce69f81",
+    "url": "https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/ffc6fe6b-2e5f-4400-807c-7986dce69f81",
+    "vc_count": 23,
+    "measure_count": 15
+  },
+  "hr-analytics-power-bi-template": {
+    "semantic_model_id": "0a4d44f2-56f1-4b5e-96e8-60291ed5685d",
+    "report_id": "4dac7b79-8f8a-4e3a-a1f7-d49b2ae087c6",
+    "url": "https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/4dac7b79-8f8a-4e3a-a1f7-d49b2ae087c6",
+    "vc_count": 23,
+    "measure_count": 21
+  },
+  "consolidated-financials-power-bi-template": {
+    "semantic_model_id": "59102ae6-0882-4c19-a8ff-139a90bc86b9",
+    "report_id": "44cf5988-ff0b-488e-9fc1-3c04d35a9bc9",
+    "url": "https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/44cf5988-ff0b-488e-9fc1-3c04d35a9bc9",
+    "vc_count": 22,
+    "measure_count": 21
+  },
+  "manufacturing-oee-power-bi-template": {
+    "semantic_model_id": "71c2365c-c1fb-4517-80c3-d103f40e7809",
+    "report_id": "d17d6405-dabe-4b6b-b849-9eba9f1cc34d",
+    "url": "https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/d17d6405-dabe-4b6b-b849-9eba9f1cc34d",
+    "vc_count": 22,
+    "measure_count": 58
+  },
+  "sales-dashboard-power-bi-template": {
+    "semantic_model_id": "e91043e9-5507-46a3-b2b7-868455bdf413",
+    "report_id": "ec90c80f-7b47-485f-8da2-963b9a89f32f",
+    "url": "https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/ec90c80f-7b47-485f-8da2-963b9a89f32f",
+    "vc_count": 22,
+    "measure_count": 21
+  },
+  "brand-product-portfolio-analysis-fmcg-power-bi-template": {
+    "semantic_model_id": "1331db63-92cc-4aa1-8848-8e9dc1bc5db1",
+    "report_id": "58922d53-848b-4c03-857b-3e4c37af4eb5",
+    "url": "https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/58922d53-848b-4c03-857b-3e4c37af4eb5",
+    "vc_count": 21,
+    "measure_count": 22
+  },
+  "sales-funnel-power-bi-template": {
+    "semantic_model_id": "592ba2fd-e0e1-418a-b1a4-cc30ac2fa2cd",
+    "report_id": "7432ae37-4137-4125-a050-d880531f829d",
+    "url": "https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/7432ae37-4137-4125-a050-d880531f829d",
+    "vc_count": 20,
+    "measure_count": 15
+  },
+  "brand-product-portfolio-analysis-automotive-power-bi-template": {
+    "semantic_model_id": "aef578c7-a955-46c2-9c99-715acf2c62fb",
+    "report_id": "a55305fe-d344-4a1d-bda2-1c38100a890f",
+    "url": "https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/a55305fe-d344-4a1d-bda2-1c38100a890f",
+    "vc_count": 17,
+    "measure_count": 31
+  },
+  "athletic-footwear-benchmarking-financial-analysis-template": {
+    "semantic_model_id": "7e2b497b-4c6f-4168-a0e2-59137fcd42ee",
+    "report_id": "7f1e7a75-774c-4672-9e09-572e53ce14b0",
+    "url": "https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/7f1e7a75-774c-4672-9e09-572e53ce14b0",
+    "vc_count": 16,
+    "measure_count": 17
+  },
+  "food-beverage-financial-analysis-benchmarking-powerbi-template": {
+    "semantic_model_id": "5f688f4f-665b-4cd7-bd29-655de4d38389",
+    "report_id": "48fc8b33-51c0-4beb-9202-60df6a85830c",
+    "url": "https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/48fc8b33-51c0-4beb-9202-60df6a85830c",
+    "vc_count": 16,
+    "measure_count": 17
+  },
+  "annual-comparative-statement-power-bi-template": {
+    "semantic_model_id": "d007d682-13ab-4dad-bed6-155254ab8e96",
+    "report_id": "95b98e8f-bf22-475c-8239-5d36f03efa12",
+    "url": "https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/95b98e8f-bf22-475c-8239-5d36f03efa12",
+    "vc_count": 13,
+    "measure_count": 5
+  },
+  "inventory-power-bi-template": {
+    "semantic_model_id": "a5c1e002-6005-4a0b-b393-02ac81192042",
+    "report_id": "531a414a-8ba0-4e0e-84fd-230601798fee",
+    "url": "https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/531a414a-8ba0-4e0e-84fd-230601798fee",
+    "vc_count": 13,
+    "measure_count": 24
+  },
+  "working-capital-in-power-bi-template": {
+    "semantic_model_id": "963b598a-64af-4f21-a6b5-505349705b1b",
+    "report_id": "6b3d11c7-7b37-430c-8fdf-25cc3b3b0b83",
+    "url": "https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/6b3d11c7-7b37-430c-8fdf-25cc3b3b0b83",
+    "vc_count": 12,
+    "measure_count": 13
+  },
+  "income-statement-dashboard-in-power-bi": {
+    "semantic_model_id": "bbc3f1e4-7bee-49e2-a8dd-002780c579b1",
+    "report_id": "888d5115-c182-41a7-9dcd-9897b3d84435",
+    "url": "https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/888d5115-c182-41a7-9dcd-9897b3d84435",
+    "vc_count": 10,
+    "measure_count": 15
+  },
+  "price-volume-mix-analysis-power-bi-template": {
+    "semantic_model_id": "b59200c2-59e0-4fc5-b4cb-675249840440",
+    "report_id": "c523d6bf-0577-4407-91bc-28a821f85f0a",
+    "url": "https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/c523d6bf-0577-4407-91bc-28a821f85f0a",
+    "vc_count": 9,
+    "measure_count": 17
+  },
+  "daily-sales-flash-power-bi-dashboard": {
+    "semantic_model_id": "cac9e713-d50d-4a7f-b99c-a8e9b1ad452f",
+    "report_id": "c7b7485e-4719-4375-b996-4af57525181e",
+    "url": "https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/c7b7485e-4719-4375-b996-4af57525181e",
+    "vc_count": 8,
+    "measure_count": 40
+  },
+  "cost-benefit-analysis-power-bi-template": {
+    "semantic_model_id": "81af8c31-1f56-47a0-b592-f8bdd30038c7",
+    "report_id": "4febaca4-a07c-42dd-895e-3ebe04734c07",
+    "url": "https://app.fabric.microsoft.com/groups/b66233d5-9d4a-44ba-89a8-b70206d98ae7/reports/4febaca4-a07c-42dd-895e-3ebe04734c07",
+    "vc_count": 7,
+    "measure_count": 11
+  }
+}

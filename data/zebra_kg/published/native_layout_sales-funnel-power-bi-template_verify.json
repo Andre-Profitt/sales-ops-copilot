@@ -1,0 +1,14 @@
+{
+  "slug": "sales-funnel-power-bi-template",
+  "report_id": "7483393a-17ff-42e8-9e46-97a425cd6b94",
+  "format": "PBIR-Legacy",
+  "source_pages": 6,
+  "live_pages": 6,
+  "source_visuals": 104,
+  "live_visuals": 104,
+  "source_static_resource_parts": 13,
+  "live_static_resource_parts": 13,
+  "live_custom_resource_parts": 0,
+  "live_custom_visual_leftovers": 0,
+  "semantic_model_id_present": true
+}

@@ -1,0 +1,272 @@
+import json
+from pathlib import Path
+
+from scripts.sales._pbir_helpers import (
+    build_card_visual,
+    build_card_visual_with_objects,
+    build_rag_card_visual,
+    build_shape_visual,
+    build_table_visual,
+    build_textbox_visual,
+    build_waterfall_chart_visual,
+)
+from scripts.sales.rw_dashboard_visual_qa import audit_report, render_markdown, write_outputs
+
+
+def _report(page: str, visuals: list[dict]) -> dict:
+    return {"sections": [{"displayName": page, "width": 1280, "height": 720, "visualContainers": visuals}]}
+
+
+def _codes(findings):
+    return {f["code"] for f in findings}
+
+
+def test_visual_qa_flags_clipped_text_plain_card_and_weak_headers():
+    report = _report(
+        "VP Ops Scorecard",
+        [
+            build_textbox_visual(
+                "This header is far too long for the available box",
+                x=20,
+                y=12,
+                w=120,
+                h=14,
+                font_size_pt=18,
+            ),
+            build_card_visual("f_opportunity", "Total Closed Won ARR", "Closed won ARR", x=20, y=44, w=120, h=48),
+        ],
+    )
+
+    result = audit_report(report)
+
+    codes = _codes(result["findings"])
+    assert "likely_text_clipping" in codes
+    assert "card_too_small" in codes
+    assert "unstyled_card" in codes
+    assert "weak_section_hierarchy" in codes
+    assert result["summary"]["severity_counts"]["high"] >= 1
+
+
+def test_visual_qa_flags_card_strip_dimension_drift_and_wall_of_cards():
+    visuals = [build_textbox_visual("Forecast", x=20, y=12, w=400, h=28, font_size_pt=18)]
+    for i in range(9):
+        visuals.append(
+            build_rag_card_visual(
+                "f_opportunity",
+                "Total Open Pipeline Value",
+                f"KPI {i}",
+                x=20 + (i % 5) * 150,
+                y=60 + (i // 5) * 72,
+                w=120 if i == 3 else 140,
+                h=58 if i == 6 else 64,
+                tint="#F4F7FB",
+                accent="#2B5C8A",
+            )
+        )
+    result = audit_report(_report("Forecast", visuals))
+
+    codes = _codes(result["findings"])
+    assert "card_strip_dimension_drift" in codes
+    assert "wall_of_cards" in codes
+
+
+def test_visual_qa_blocks_blended_pipeline_value_but_allows_split_forecast_basis():
+    split_visual = build_table_visual(
+        name="forecast_split_basis",
+        columns=[
+            {"table": "f_opportunity", "field": "stage_name", "kind": "column", "title": "Stage"},
+            {
+                "table": "f_opportunity",
+                "field": "Total Open Pipeline ARR",
+                "kind": "measure",
+                "title": "Open ARR (Land + Expand)",
+            },
+            {
+                "table": "f_opportunity",
+                "field": "Total Open Renewal ACV",
+                "kind": "measure",
+                "title": "Open renewal ACV",
+            },
+        ],
+        x=20,
+        y=90,
+    )
+    blended_visual = build_card_visual(
+        "f_opportunity",
+        "Total Open Pipeline Value",
+        "Open Value",
+        x=20,
+        y=90,
+    )
+
+    assert "arr_acv_guardrail" not in _codes(
+        audit_report(_report("Forecast", [split_visual]))["findings"]
+    )
+    assert "arr_acv_guardrail" in _codes(
+        audit_report(_report("Forecast", [blended_visual]))["findings"]
+    )
+
+
+def test_visual_qa_flags_pastel_rag_card_and_panel_surfaces():
+    visuals = [
+        build_textbox_visual("What Changed", x=20, y=12, w=400, h=28, font_size_pt=18),
+        build_shape_visual(x=20, y=60, w=320, h=120, fill="#ffeeee", line="#cc3333"),
+        build_card_visual_with_objects(
+            "f_opportunity",
+            "At Risk Opps Count",
+            "At Risk",
+            x=360,
+            y=60,
+            w=260,
+            h=90,
+            objects={
+                "background": [
+                    {
+                        "properties": {
+                            "color": {
+                                "solid": {
+                                    "color": {"expr": {"Literal": {"Value": "'#ffeeee'"}}}
+                                }
+                            }
+                        }
+                    }
+                ],
+                "border": [
+                    {
+                        "properties": {
+                            "color": {
+                                "solid": {
+                                    "color": {"expr": {"Literal": {"Value": "'#cc3333'"}}}
+                                }
+                            }
+                        }
+                    }
+                ],
+                "labels": [{"properties": {"fontSize": {"expr": {"Literal": {"Value": "'28'"}}}}}],
+                "categoryLabels": [
+                    {
+                        "properties": {
+                            "color": {
+                                "solid": {
+                                    "color": {"expr": {"Literal": {"Value": "'#cc3333'"}}}
+                                }
+                            }
+                        }
+                    }
+                ],
+            },
+        ),
+    ]
+
+    result = audit_report(_report("What Changed", visuals))
+
+    codes = _codes(result["findings"])
+    assert "pastel_status_panel_surface" in codes
+    assert "pastel_status_card_surface" in codes
+
+
+def test_visual_qa_enforces_arr_acv_guardrails():
+    renewal_page = _report(
+        "Renewals",
+        [
+            build_textbox_visual("Renewals", x=24, y=12, w=400, h=28, font_size_pt=18),
+            build_rag_card_visual(
+                "f_opportunity",
+                "Total Open Pipeline ARR",
+                "Open ARR",
+                x=24,
+                y=60,
+                w=260,
+                h=96,
+                tint="#F4F7FB",
+                accent="#2B5C8A",
+            ),
+            build_rag_card_visual(
+                "f_asset_line_item",
+                "Existing ARR Run Rate",
+                "Active ARR",
+                x=304,
+                y=60,
+                w=260,
+                h=96,
+                tint="#F4F7FB",
+                accent="#083EA7",
+            ),
+        ],
+    )
+    growth_page = _report(
+        "Growth Mix",
+        [
+            build_textbox_visual("Growth Mix", x=24, y=12, w=400, h=28, font_size_pt=18),
+            build_rag_card_visual(
+                "f_opportunity",
+                "Total Open Renewal ACV",
+                "Renewal ACV",
+                x=24,
+                y=60,
+                w=260,
+                h=96,
+                tint="#F4F7FB",
+                accent="#2B5C8A",
+            ),
+        ],
+    )
+    result = audit_report({"sections": renewal_page["sections"] + growth_page["sections"]})
+
+    findings = result["findings"]
+    assert sum(1 for f in findings if f["code"] == "arr_acv_guardrail") == 2
+    assert all(f["severity"] == "critical" for f in findings if f["code"] == "arr_acv_guardrail")
+    assert not any(
+        f["code"] == "arr_acv_guardrail" and f["evidence"]["measures"] == ["Existing ARR Run Rate"]
+        for f in findings
+    )
+
+
+def test_visual_qa_writes_json_and_markdown(tmp_path: Path):
+    report = _report(
+        "Forecast",
+        [
+            build_textbox_visual("Forecast", x=24, y=12, w=400, h=28, font_size_pt=18),
+            build_table_visual(
+                name="plain_table",
+                columns=[{"table": "f_opportunity", "field": "opp_name", "kind": "column", "title": "Opportunity"}],
+                x=24,
+                y=60,
+                w=600,
+                h=120,
+            ),
+        ],
+    )
+    result = audit_report(report)
+    json_path, md_path = write_outputs(result, out_dir=tmp_path, markdown_path=tmp_path / "qa.md")
+
+    assert json.loads(json_path.read_text())["summary"]["total_findings"] >= 1
+    markdown = md_path.read_text()
+    assert "# RW Dashboard Visual QA" in markdown
+    assert "plain_table" in markdown or "unstyled_table" in markdown
+    assert render_markdown(result).startswith("# RW Dashboard Visual QA")
+
+
+def test_visual_qa_allows_native_waterfall_bridge():
+    report = _report(
+        "Growth Mix",
+        [
+            build_textbox_visual("Growth Mix", x=24, y=12, w=400, h=28, font_size_pt=18),
+            build_waterfall_chart_visual(
+                category_table="d_region",
+                category_column="region",
+                category_title="Region",
+                measure_table="f_opportunity",
+                measure_name="Total Open Pipeline ARR",
+                measure_title="Open ARR (Land + Expand)",
+                x=24,
+                y=60,
+                w=540,
+                h=320,
+            ),
+        ],
+    )
+
+    result = audit_report(report)
+
+    assert "unknown_visual_type" not in _codes(result["findings"])

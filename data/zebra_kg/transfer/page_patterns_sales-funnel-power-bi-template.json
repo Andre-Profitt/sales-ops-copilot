@@ -1,0 +1,119 @@
+{
+  "template_slug": "sales-funnel-power-bi-template",
+  "page_count": 5,
+  "pages": [
+    {
+      "page_name": "ReportSection2c9e1dd2ca45d0717bd2",
+      "page_display_name": "DT - GEO",
+      "visual_family_counts": {
+        "Tables": 1
+      },
+      "intent_counts": {
+        "variance table": 1
+      },
+      "scenario_pairings": [
+        [
+          "AC",
+          "PL"
+        ]
+      ],
+      "static_furniture_count": 1
+    },
+    {
+      "page_name": "ReportSectiond2dad9dc87940357e627",
+      "page_display_name": "DT - GEO %",
+      "visual_family_counts": {
+        "Tables": 1
+      },
+      "intent_counts": {
+        "variance table": 1
+      },
+      "scenario_pairings": [
+        [
+          "AC",
+          "PL"
+        ]
+      ],
+      "static_furniture_count": 1
+    },
+    {
+      "page_name": "ReportSectionff0b7be2964dcb4aac0c",
+      "page_display_name": "Home",
+      "visual_family_counts": {
+        "Cards": 3,
+        "Waterfall": 2,
+        "Tables": 1
+      },
+      "intent_counts": {
+        "KPI strip": 3,
+        "waterfall": 2,
+        "variance table": 1
+      },
+      "scenario_pairings": [
+        [
+          "AC",
+          "FC"
+        ],
+        [
+          "AC",
+          "PL"
+        ]
+      ],
+      "static_furniture_count": 5
+    },
+    {
+      "page_name": "ReportSectiond54d7ea5228bdb405a0c",
+      "page_display_name": "Home 2",
+      "visual_family_counts": {
+        "Waterfall": 2,
+        "Tables": 1,
+        "Cards": 3
+      },
+      "intent_counts": {
+        "waterfall": 2,
+        "variance table": 1,
+        "KPI strip": 3
+      },
+      "scenario_pairings": [
+        [
+          "AC",
+          "FC"
+        ],
+        [
+          "AC",
+          "PL"
+        ],
+        [
+          "AC",
+          "PY"
+        ]
+      ],
+      "static_furniture_count": 4
+    },
+    {
+      "page_name": "ReportSection6bc55bd70e9898a166b2",
+      "page_display_name": "Home 3",
+      "visual_family_counts": {
+        "Tables": 2,
+        "Cards": 3,
+        "Waterfall": 1
+      },
+      "intent_counts": {
+        "variance table": 2,
+        "KPI strip": 3,
+        "waterfall": 1
+      },
+      "scenario_pairings": [
+        [
+          "AC",
+          "FC"
+        ],
+        [
+          "AC",
+          "PL"
+        ]
+      ],
+      "static_furniture_count": 5
+    }
+  ]
+}

@@ -17,3 +17,8 @@ sales-ops-preflight = "scripts.preflight:main"
 [tool.ruff]
 line-length = 100
 target-version = "py312"
+
+[tool.pytest.ini_options]
+markers = [
+    "fabric: tests that publish to a Fabric workspace (require az login)",
+]

@@ -1,0 +1,127 @@
+{
+  "template_slug": "annual-comparative-statement-power-bi-template",
+  "page_name": "934619f7c08505330c88",
+  "page_display_name": "Overview",
+  "visual_family": "ZebraWaterfall",
+  "visual_type_full": "waterfall0221D8FBE40445C1A4E598AA8EF8B506",
+  "position": {
+    "x": 770.6175499320112,
+    "y": 67.5409257068183,
+    "w": 509.4050541261236,
+    "h": 652.6243664682926
+  },
+  "projections": {
+    "Category": [
+      "Data.Year"
+    ],
+    "Values": [
+      "\u2211 Key Measures.AC"
+    ],
+    "PreviousYear": [
+      "\u2211 Key Measures.PY"
+    ],
+    "Group": [
+      "AccountHierarchy.Account"
+    ]
+  },
+  "objects": {
+    "visualCreatedVersion": [
+      {
+        "properties": {
+          "version": "7.5.0.0"
+        }
+      }
+    ],
+    "licenseSettings": [
+      {
+        "properties": {
+          "licenseKey": "0qZf1bd6fV30Am7ZKojGNFfnexsrLwEVNMHvnbXtaokD4zop4JU9sDYAMuMsM9OmpuawJ7iBQMdsjL+i7F9SDXsiY29tcGFueSI6IlplYnJhIEJJIiwiZXhwaXJ5RGF0ZSI6IjIwMjYtMDgtMDEiLCJuT2ZVc2VycyI6IjEiLCJsaWNlbnNlVHlwZSI6IlBhaWQiLCJ2aXN1YWxUeXBlIjoiQWxsIn0=",
+          "lastLicenseCheck": ""
+        }
+      }
+    ],
+    "proFeaturesSettings": [
+      {
+        "properties": {
+          "show": "true"
+        }
+      }
+    ],
+    "chartType": [
+      {
+        "properties": {
+          "chartType": "3D"
+        }
+      }
+    ],
+    "axisBreakSettings": [
+      {
+        "properties": {
+          "show": "true",
+          "axisBreakPercent": "90D"
+        }
+      }
+    ],
+    "groupsMetadata": [
+      {
+        "properties": {
+          "inverted": [
+            "Cost of Goods Sold (COGS)",
+            "Total Operating Expenses"
+          ]
+        }
+      }
+    ],
+    "titleSettings": [
+      {
+        "properties": {
+          "fontFamily": "''Segoe UI'', wf_segoe-ui_normal, helvetica, arial, sans-serif",
+          "fontSize": "12D",
+          "text": "Trends, in USD",
+          "fontColor": {
+            "solid": {
+              "color": "#000"
+            }
+          },
+          "fontWeight": "normal",
+          "fontStyle": "normal",
+          "alignment": "left",
+          "wrapLongTitle": "true"
+        }
+      }
+    ],
+    "chartSettings": [
+      {
+        "properties": {
+          "chartLayout": "Absolute / Relative"
+        }
+      }
+    ],
+    "multipleLayout": [
+      {
+        "properties": {
+          "showMultiplesGrid": "true",
+          "showOuterBorders": "false",
+          "sort": "0D",
+          "layoutType": "Rows",
+          "multiplesAxisLabelsOptions": "3D"
+        }
+      }
+    ],
+    "categorySettings": [
+      {
+        "properties": {
+          "categoryWidth": "1D",
+          "minWidth": "40D"
+        }
+      }
+    ],
+    "dataLabelSettings": [
+      {
+        "properties": {
+          "fontSize": "12D"
+        }
+      }
+    ]
+  }
+}
