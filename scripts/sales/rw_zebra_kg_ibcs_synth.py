@@ -204,6 +204,7 @@ def build_cell_background_cf_object(
 from scripts.sales._pbir_helpers import (  # noqa: E402
     build_card_visual_with_objects,
     build_rag_card_objects,
+    build_shape_visual,
     build_table_style_objects,
     build_textbox_visual,
 )
@@ -315,10 +316,130 @@ def zebra_native_card_objects(
     )
 
 
+def zebra_kpi_strip_card_objects(
+    *,
+    pattern: str = "executive-kpi-strip-card",
+    visual_intent: str = "executive KPI strip",
+    value_font_size: int = 20,
+    label_font_size: int = 8,
+    display_units: int | None = None,
+) -> dict:
+    """Frameless KPI typography for cards placed inside a shared scorecard band.
+
+    This is the native Power BI equivalent of a Zebra/IBCS scorecard strip: one
+    shared panel provides the surface, while individual card visuals carry only
+    value/label typography. It avoids the floating tile/card-wall look.
+    """
+    objects = build_rag_card_objects(
+        tint="#FFFFFF",
+        accent="#D8DEE8",
+        value_color="#1A1D31",
+        label_color="#3A4653",
+        value_font_size=value_font_size,
+        label_font_size=label_font_size,
+        display_units=display_units,
+    )
+    objects["background"] = [{"properties": {"show": _card_literal(False)}}]
+    objects["border"] = [{"properties": {"show": _card_literal(False)}}]
+    return _with_zebra_transfer_metadata(
+        objects,
+        pattern=pattern,
+        visual_intent=visual_intent,
+        grammar_schema="rw-zebra-native-transfer.visualObjectGrammar.v1",
+    )
+
+
+def zebra_kpi_value_card_objects(
+    *,
+    pattern: str = "executive-kpi-strip-value",
+    visual_intent: str = "executive KPI strip value",
+    value_font_size: int = 22,
+    display_units: int | None = None,
+) -> dict:
+    """Value-only card grammar for strip metrics with labels rendered separately."""
+    objects = build_rag_card_objects(
+        tint="#FFFFFF",
+        accent="#FFFFFF",
+        value_color="#1A1D31",
+        label_color="#3A4653",
+        value_font_size=value_font_size,
+        label_font_size=7,
+        display_units=display_units,
+        show_category_label=False,
+    )
+    objects["background"] = [{"properties": {"show": _card_literal(False)}}]
+    objects["border"] = [{"properties": {"show": _card_literal(False)}}]
+    return _with_zebra_transfer_metadata(
+        objects,
+        pattern=pattern,
+        visual_intent=visual_intent,
+        grammar_schema="rw-zebra-native-transfer.visualObjectGrammar.v1",
+    )
+
+
+def zebra_kpi_strip_metric(
+    *,
+    measure_table: str,
+    measure_name: str,
+    title: str,
+    x: float,
+    y: float,
+    w: float,
+    h: float,
+    pattern: str,
+    visual_intent: str,
+    display_units: int | None = None,
+    value_font_size: int = 22,
+    divider: bool = False,
+) -> list[dict]:
+    """Consulting-style strip metric: static label + value-only native card."""
+    visuals: list[dict] = [
+        build_textbox_visual(
+            title,
+            x=x + 8,
+            y=y + 8,
+            w=w - 16,
+            h=22,
+            font_size_pt=8,
+            color="#5C6670",
+            bold=False,
+        ),
+        build_card_visual_with_objects(
+            measure_table=measure_table,
+            measure_name=measure_name,
+            display_title=title,
+            x=x + 4,
+            y=y + 28,
+            w=w - 8,
+            h=max(62, h - 32),
+            objects=zebra_kpi_value_card_objects(
+                pattern=pattern,
+                visual_intent=visual_intent,
+                value_font_size=value_font_size,
+                display_units=display_units,
+            ),
+        ),
+    ]
+    if divider:
+        visuals.append(
+            build_shape_visual(
+                x=x - 8,
+                y=y + 12,
+                w=1,
+                h=h - 24,
+                fill="#E3E7EE",
+                line="#E3E7EE",
+                z=60,
+                radius=0,
+            )
+        )
+    return visuals
+
+
 def zebra_compact_movement_ledger_objects(*, max_field: str, databar_column: str, accent: str = "#083EA7") -> dict:
     """Compact tableEx style for movement-ledger scans derived from Zebra tables."""
     objects = build_table_style_objects(
-        header_fill="#EAF0F7",
+        header_fill="#FFFFFF",
         header_text="#1A1D31",
         row_text="#202124",
         grid="#D8DEE8",
@@ -343,7 +464,7 @@ def zebra_exception_ledger_objects() -> dict:
     """
     return _with_zebra_transfer_metadata(
         build_table_style_objects(
-            header_fill="#F3F6FA",
+            header_fill="#FFFFFF",
             header_text="#1A1D31",
             row_text="#202124",
             grid="#D8DEE8",
@@ -359,7 +480,7 @@ def zebra_detail_table_objects() -> dict:
     """Dense opportunity-queue table style derived from the Zebra detail-ledger grammar."""
     return _with_zebra_transfer_metadata(
         build_table_style_objects(
-            header_fill="#F3F6FA",
+            header_fill="#FFFFFF",
             header_text="#1A1D31",
             row_text="#202124",
             grid="#E3E7EE",
@@ -386,7 +507,7 @@ def zebra_heatmap_matrix_objects(
     """
     objects = _with_zebra_transfer_metadata(
         build_table_style_objects(
-            header_fill="#EAF0F7",
+            header_fill="#FFFFFF",
             header_text="#1A1D31",
             row_text="#202124",
             grid="#D8DEE8",
@@ -431,7 +552,7 @@ def zebra_stage_hygiene_table_objects(*, max_field: str, databar_column: str, ac
     ARR movement measure.
     """
     objects = build_table_style_objects(
-        header_fill="#EAF0F7",
+        header_fill="#FFFFFF",
         header_text="#1A1D31",
         row_text="#202124",
         grid="#D8DEE8",
@@ -447,7 +568,7 @@ def zebra_stage_hygiene_table_objects(*, max_field: str, databar_column: str, ac
     return objects
 
 
-def zebra_card_style_objects(*, value_font_size: int = 18, label_font_size: int = 8, accent: str = "#083EA7") -> dict:
+def zebra_card_style_objects(*, value_font_size: int = 18, label_font_size: int = 8, accent: str = "#5C6670") -> dict:
     return {
         "background": [{"properties": {"show": _card_literal(True), "color": _card_color("#FFFFFF"), "transparency": _card_literal(0)}}],
         "border": [{"properties": {"show": _card_literal(True), "color": _card_color("#D8DEE8"), "radius": _card_literal(4)}}],
@@ -509,7 +630,7 @@ def build_composite_kpi_tile(
                 y=y + (h - variance_h),
                 w=variance_w,
                 h=variance_h,
-                objects=zebra_card_style_objects(value_font_size=6, label_font_size=4, accent="#3B8A3E"),
+                objects=zebra_card_style_objects(value_font_size=6, label_font_size=4, accent="#5C6670"),
             )
         )
     return out

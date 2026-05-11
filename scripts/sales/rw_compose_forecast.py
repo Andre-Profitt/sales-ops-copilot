@@ -21,6 +21,7 @@ from __future__ import annotations
 
 from scripts.sales._pbir_helpers import (
     build_card_visual_with_objects,
+    build_shape_visual,
     build_table_visual,
     build_textbox_visual,
 )
@@ -34,7 +35,8 @@ from scripts.sales.rw_add_visual import (
 from scripts.sales.rw_validate import fetch_measures_by_table, validate_visual_dict
 from scripts.sales.rw_zebra_kg_ibcs_synth import (
     zebra_detail_table_objects,
-    zebra_native_card_objects,
+    zebra_kpi_strip_card_objects,
+    zebra_kpi_strip_metric,
     zebra_stage_hygiene_table_objects,
 )
 
@@ -63,18 +65,18 @@ def _kpi_card(
         y=y,
         w=w,
         h=h,
-        objects=zebra_native_card_objects(
+        objects=zebra_kpi_strip_card_objects(
             pattern="forecast-kpi-card",
             visual_intent="forecast operating KPI",
-            tint=tint,
-            accent=accent,
-            value_color=value_color,
-            label_color=accent,
-            value_font_size=24 if h >= 90 else 20,
+            value_font_size=20 if h >= 78 else 18,
             label_font_size=9,
             display_units=display_units,
         ),
     )
+
+
+def _panel(x: float, y: float, w: float, h: float) -> dict:
+    return build_shape_visual(x=x, y=y, w=w, h=h, fill="#FFFFFF", line="#D8DEE8", z=40, radius=2)
 
 
 def _find_page(rj: dict) -> dict:
@@ -109,6 +111,7 @@ def _compose(section: dict) -> None:
     # Spec calls for Quota attainment + Pipeline coverage 3x. Quota dependency
     # is still unmet, so keep the basis split explicit: open ARR and open
     # renewal ACV are separate hero cards, never one blended open-value card.
+    section["visualContainers"].append(_panel(20, 84, 1200, 104))
     hero = [
         ("f_opportunity", "Days Remaining In FQ", "Days Remaining (FQ)", 20, None),
         (
@@ -128,8 +131,21 @@ def _compose(section: dict) -> None:
         ("f_opportunity", "Total Closed Won ARR", "Closed won ARR (Land + Expand)", 935, 1000000),
     ]
     for tbl, msr, title, x, display_units in hero:
-        section["visualContainers"].append(
-            _kpi_card(tbl, msr, title, x=x, y=92, w=285, h=78, display_units=display_units)
+        section["visualContainers"].extend(
+            zebra_kpi_strip_metric(
+                measure_table=tbl,
+                measure_name=msr,
+                title=title,
+                x=x,
+                y=92,
+                w=285,
+                h=88,
+                pattern="forecast-top-strip-metric",
+                visual_intent="forecast operating KPI top strip",
+                display_units=display_units,
+                value_font_size=22 if tbl == "f_opportunity" else 20,
+                divider=x > 20,
+            )
         )
 
     # ── Stage × motion matrix ──────────────────────────────────

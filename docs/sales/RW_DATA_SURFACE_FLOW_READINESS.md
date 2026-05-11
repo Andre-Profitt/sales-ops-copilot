@@ -11,7 +11,7 @@ No, the dashboard is not fully done yet. It is guarded and inspectable, but the 
 - Surfaced partial/proxy KPIs: `4`.
 - Model/measure gaps: `1`.
 - Source-data gaps: `0`.
-- Semantic model: `9` tables, `127` measures, `11` relationships.
+- Semantic model: `9` tables, `144` measures, `11` relationships.
 - Page contract: `7` executive pages covering `30` KPI IDs.
 - Unit policy: `EUR M`; visual display-unit scaling is forbidden.
 - Guardrails: ARR/Renewal ACV separation, page-specific slicer policy, unit policy, visual QA, semantic-filter audit, Zebra visual/schema benchmarks.

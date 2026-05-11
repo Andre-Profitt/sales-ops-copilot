@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from scripts.sales._pbir_helpers import (
-    build_card_visual_with_objects,
     build_shape_visual,
     build_table_visual,
     build_textbox_visual,
@@ -12,7 +11,7 @@ from scripts.sales.rw_page_kpi_contract import contract_for
 from scripts.sales.rw_zebra_kg_ibcs_synth import (
     zebra_detail_table_objects,
     zebra_heatmap_matrix_objects,
-    zebra_native_card_objects,
+    zebra_kpi_strip_metric,
 )
 
 PAGE = "Product Retention"
@@ -23,25 +22,19 @@ def _panel(x: float, y: float, w: float, h: float) -> dict:
     return build_shape_visual(x=x, y=y, w=w, h=h, fill="#FFFFFF", line="#D8DEE8", z=40, radius=2)
 
 
-def _card(measure: str, title: str, *, x: float, accent: str, value_color: str = "#1A1D31") -> dict:
-    return build_card_visual_with_objects(
+def _card(measure: str, title: str, *, x: float) -> list[dict]:
+    return zebra_kpi_strip_metric(
         measure_table=ASSET,
         measure_name=measure,
-        display_title=title,
         x=x,
-        y=104,
+        y=94,
         w=216,
-        h=76,
-        objects=zebra_native_card_objects(
-            pattern="product-retention-kpi-card",
-            visual_intent="active-base product retention KPI",
-            tint="#FFFFFF",
-            accent=accent,
-            value_color=value_color,
-            label_color=accent,
-            value_font_size=20,
-            label_font_size=9,
-        ),
+        h=94,
+        title=title,
+        pattern="product-retention-top-strip-metric",
+        visual_intent="active-base product retention KPI top strip",
+        value_font_size=20,
+        divider=x > 40,
     )
 
 
@@ -61,11 +54,11 @@ def _compose(section: dict) -> None:
             bold=False,
         ),
         _panel(24, 84, 1232, 116),
-        _card("Existing ARR Run Rate", "Active-base ARR", x=40, accent="#083EA7"),
-        _card("Existing ARR Expiring In Period", "Expiring active-base ARR", x=280, accent="#2B5C8A"),
-        _card("Business At Risk ARR", "At-risk active-base ARR", x=520, accent="#C33A32", value_color="#8B2C25"),
-        _card("Business At Risk Pct", "Risk % of active base", x=760, accent="#D98A00"),
-        _card("Active Asset Line Count", "Active asset line count", x=1000, accent="#2B5C8A"),
+        *_card("Existing ARR Run Rate", "Active-base ARR", x=40),
+        *_card("Existing ARR Expiring In Period", "Expiring active-base ARR", x=280),
+        *_card("Business At Risk ARR", "At-risk active-base ARR", x=520),
+        *_card("Business At Risk Pct", "Risk % of active base", x=760),
+        *_card("Active Asset Line Count", "Active asset line count", x=1000),
         _panel(24, 224, 596, 210),
         build_textbox_visual(
             "Product Family x Region Heatmap",

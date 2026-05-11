@@ -62,6 +62,11 @@ def _stub_fetch_measures_by_table(monkeypatch):
                 "Stage Forward Pct (LE)",
                 "Stage Backward Pct (LE)",
                 "Avg Days In Prior Stage (LE)",
+                "Core Stage Forward Pct (LE)",
+                "Core Stage Backward Pct (LE)",
+                "Core Avg Days In Prior Stage (LE)",
+                "Core Stage Transitions (LE)",
+                "Core Stage Moves ARR 7d",
                 "Stage Moves ARR 7d",
                 "Backward Moves Count 7d",
             ],
@@ -75,7 +80,7 @@ def _stub_fetch_measures_by_table(monkeypatch):
 def test_compose_emits_native_zebra_layout_visualcontainers():
     section = {"visualContainers": []}
     _compose(section)
-    assert len(section["visualContainers"]) == 25
+    assert len(section["visualContainers"]) == 29
 
 
 def test_compose_visuals_within_canvas():
@@ -92,11 +97,13 @@ def test_layout_zones_stay_in_defined_bands():
     visuals = section["visualContainers"]
     assert any(_visual_type(v) == "textbox" and v["x"] == 28 and v["y"] == 12 for v in visuals)
     assert any(_visual_type(v) == "textbox" and v["x"] == 28 and v["y"] == 42 for v in visuals)
-    kpi_cards = [v for v in visuals if _visual_type(v) == "card" and v["y"] == 88]
+    kpi_cards = [v for v in visuals if _visual_type(v) == "card" and v["y"] == 122]
     assert len(kpi_cards) == 4
-    assert all(c["height"] == 116 for c in kpi_cards)
-    kpi_shapes = [v for v in visuals if _visual_type(v) == "basicShape" and v["y"] == 88]
-    assert len(kpi_shapes) == 4
+    assert all(c["height"] == 64 for c in kpi_cards)
+    kpi_labels = [v for v in visuals if _visual_type(v) == "textbox" and v["y"] == 102]
+    assert len(kpi_labels) == 4
+    kpi_shapes = [v for v in visuals if _visual_type(v) == "basicShape" and v["y"] == 84]
+    assert len(kpi_shapes) == 1
     assert any(v["x"] == 24 and v["y"] == 226 and v["height"] == 260 for v in visuals)
     assert any(v["x"] == 24 and v["y"] == 508 and v["height"] == 188 for v in visuals)
 
@@ -156,17 +163,22 @@ def test_kpi_strip_yields_four_cards():
     visuals = _build_kpi_strip()
     cards = [v for v in visuals if _visual_type(v) == "card"]
     shapes = [v for v in visuals if _visual_type(v) == "basicShape"]
-    assert len(visuals) == 8
+    labels = [v for v in visuals if _visual_type(v) == "textbox"]
+    assert len(visuals) == 12
     assert len(cards) == 4
+    assert len(labels) == 4
     assert len(shapes) == 4
-    assert all(_objects(card)["stylePreset"]["pattern"] == "vp-ops-scorecard-hero-card" for card in cards)
+    assert all(
+        _objects(card)["stylePreset"]["pattern"] == "vp-ops-scorecard-top-strip-metric"
+        for card in cards
+    )
 
 
 def test_kpi_strip_x_positions_are_evenly_spaced():
     cards = [v for v in _build_kpi_strip() if _visual_type(v) == "card"]
     xs = sorted(c["x"] for c in cards)
-    assert xs == [24, 335.0, 646.0, 957.0]
-    assert all(c["width"] == 299 for c in cards)
+    assert xs == [28, 339.0, 650.0, 961.0]
+    assert all(c["width"] == 291 for c in cards)
 
 
 def test_kpi_strip_uses_expected_measures():
@@ -194,14 +206,17 @@ def test_stage_hygiene_panel_uses_native_matrix():
     config = json.loads(matrix["config"])
     sv = config["singleVisual"]
     assert sv["visualType"] == "pivotTable"
-    assert sv["projections"]["Rows"][0]["queryRef"] == "f_stage_transition.from_stage_name"
+    assert sv["projections"]["Rows"][0]["queryRef"] == "d_stage.stage_name"
     field_names = [p["queryRef"].split(".")[-1] for p in sv["projections"]["Values"]]
     assert field_names == [
-        "Stage Forward Pct (LE)",
-        "Stage Backward Pct (LE)",
-        "Avg Days In Prior Stage (LE)",
-        "Stage Moves ARR 7d",
+        "Core Stage Forward Pct (LE)",
+        "Core Stage Backward Pct (LE)",
+        "Core Avg Days In Prior Stage (LE)",
+        "Core Stage Moves ARR 7d",
     ]
+    stage_filter = json.loads(matrix["filters"])
+    assert stage_filter[0]["expression"]["Column"]["Expression"]["SourceRef"]["Entity"] == "d_stage"
+    assert stage_filter[0]["expression"]["Column"]["Property"] == "stage_order"
     assert sv["objects"]["stylePreset"]["source"] == "zebra-visual-dna"
     assert sv["objects"]["zebraGrammar"]["schema"] == "rw-zebra-native-transfer.columnGrammar.v1"
 

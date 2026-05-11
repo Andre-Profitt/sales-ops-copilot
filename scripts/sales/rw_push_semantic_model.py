@@ -41,6 +41,7 @@ PBI_RES = "https://analysis.windows.net/powerbi/api/.default"
 # itself in card/table cells.
 CURRENCY_M_FORMAT = '"EUR" #,0,,.0"M";("EUR" #,0,,.0"M");"-"'
 NON_OMITTED_FORECAST_FILTER = 'NOT ( f_opportunity[forecast_category] = "Omitted" )'
+CORE_STAGE_TRANSITION_FILTER = "f_stage_transition[from_stage_num] IN { 1, 2, 3, 4, 5, 6 }"
 
 
 def _b64(data: str | bytes) -> str:
@@ -110,6 +111,7 @@ def build_model_bim() -> dict:
         "FQTD": "DATE(YEAR(TODAY()), CEILING(MONTH(TODAY())/3, 1)*3 - 2, 1)",
     }
     non_omitted = NON_OMITTED_FORECAST_FILTER
+    core_stage = CORE_STAGE_TRANSITION_FILTER
 
     def _window_measures():
         out = []
@@ -148,6 +150,7 @@ def build_model_bim() -> dict:
                     "name": f"Stage Moves Count {label}",
                     "expression": (
                         "CALCULATE ( COUNTROWS ( f_stage_transition ), "
+                        f"{core_stage}, "
                         f"f_stage_transition[transition_at] >= {since}, "
                         "TREATAS ( "
                         f"CALCULATETABLE ( VALUES ( f_opportunity[opp_id] ), {non_omitted} ), "
@@ -162,6 +165,7 @@ def build_model_bim() -> dict:
                     "name": f"Backward Moves Count {label}",
                     "expression": (
                         "CALCULATE ( COUNTROWS ( f_stage_transition ), "
+                        f"{core_stage}, "
                         'f_stage_transition[direction] = "backward", '
                         f"f_stage_transition[transition_at] >= {since}, "
                         "TREATAS ( "
@@ -179,7 +183,7 @@ def build_model_bim() -> dict:
                         "CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), "
                         f"{non_omitted}, "
                         "TREATAS ( "
-                        f"CALCULATETABLE ( VALUES ( f_stage_transition[opp_id] ), f_stage_transition[transition_at] >= {since} ), "
+                        f"CALCULATETABLE ( VALUES ( f_stage_transition[opp_id] ), {core_stage}, f_stage_transition[transition_at] >= {since} ), "
                         "f_opportunity[opp_id] ) )"
                     ),
                     "formatString": CURRENCY_M_FORMAT,
@@ -272,12 +276,30 @@ def build_model_bim() -> dict:
             "expression": 'CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), f_opportunity[is_closed] = TRUE(), f_opportunity[is_won] = FALSE(), f_opportunity[motion_type] IN { "Land", "Expand" } )',
             "formatString": CURRENCY_M_FORMAT,
         },
+        {
+            "name": "Total Closed Won ARR FYTD",
+            "expression": "CALCULATE ( [Total Closed Won ARR], REMOVEFILTERS ( d_calendar ), DATESBETWEEN ( d_calendar[date], DATE ( YEAR ( TODAY () ), 1, 1 ), TODAY () ) )",
+            "formatString": CURRENCY_M_FORMAT,
+            "description": "Current fiscal-year-to-date Closed Won ARR, Land + Expand only. FY = calendar year per d_calendar.",
+        },
+        {
+            "name": "Total Closed Lost ARR FYTD",
+            "expression": "CALCULATE ( [Total Closed Lost ARR], REMOVEFILTERS ( d_calendar ), DATESBETWEEN ( d_calendar[date], DATE ( YEAR ( TODAY () ), 1, 1 ), TODAY () ) )",
+            "formatString": CURRENCY_M_FORMAT,
+            "description": "Current fiscal-year-to-date Closed Lost ARR, Land + Expand only. FY = calendar year per d_calendar.",
+        },
         # Win rate
         {
             "name": "Win Rate ARR",
             "expression": "DIVIDE ( [Total Closed Won ARR], [Total Closed Won ARR] + [Total Closed Lost ARR] )",
             "formatString": "0.0%",
             "description": "RW KPI: opp_win_rate (ARR-weighted). Target >25%.",
+        },
+        {
+            "name": "Win Rate ARR FYTD",
+            "expression": "DIVIDE ( [Total Closed Won ARR FYTD], [Total Closed Won ARR FYTD] + [Total Closed Lost ARR FYTD] )",
+            "formatString": "0.0%",
+            "description": "Current fiscal-year-to-date ARR-weighted win rate, Land + Expand only.",
         },
         {
             "name": "Win Rate Count",
@@ -903,6 +925,7 @@ def build_model_bim() -> dict:
             "name": "Healthy Moves Count",
             "expression": (
                 "CALCULATE ( COUNTROWS ( f_stage_transition ), "
+                f"{core_stage}, "
                 'f_stage_transition[direction] = "forward", '
                 "f_stage_transition[transition_at] >= TODAY() - 7, "
                 "TREATAS ( "
@@ -921,7 +944,7 @@ def build_model_bim() -> dict:
                 f"{non_omitted}, "
                 'f_opportunity[motion_type] IN { "Land", "Expand" }, '
                 "TREATAS ( "
-                'CALCULATETABLE ( VALUES ( f_stage_transition[opp_id] ), f_stage_transition[direction] = "forward", '
+                f'CALCULATETABLE ( VALUES ( f_stage_transition[opp_id] ), {core_stage}, f_stage_transition[direction] = "forward", '
                 "f_stage_transition[transition_at] >= TODAY() - 7 ), "
                 "f_opportunity[opp_id] ) )"
             ),
@@ -939,6 +962,96 @@ def build_model_bim() -> dict:
             "name": "Total Stage Transitions",
             "expression": "COUNTROWS ( f_stage_transition )",
             "formatString": "#,0",
+        },
+        {
+            "name": "Core Stage Transitions (LE)",
+            "expression": (
+                "VAR _stage = SELECTEDVALUE ( d_stage[stage_order] ) "
+                "VAR _oppids = CALCULATETABLE ( VALUES ( f_opportunity[opp_id] ), "
+                "REMOVEFILTERS ( d_stage ), "
+                f"{non_omitted}, "
+                'f_opportunity[motion_type] IN { "Land", "Expand" } ) '
+                "RETURN IF ( "
+                "NOT ( ISBLANK ( _stage ) ), "
+                "IF ( _stage >= 1 && _stage <= 6, CALCULATE ( COUNTROWS ( f_stage_transition ), f_stage_transition[from_stage_num] = _stage, TREATAS ( _oppids, f_stage_transition[opp_id] ) ) ), "
+                "CALCULATE ( COUNTROWS ( f_stage_transition ), "
+                f"{core_stage}, "
+                "TREATAS ( _oppids, f_stage_transition[opp_id] ) ) )"
+            ),
+            "formatString": "#,0",
+            "description": "Land + Expand transitions restricted to the real stage ladder: 1 Prospecting through 6 Contracting.",
+        },
+        {
+            "name": "Core Stage Forward Pct (LE)",
+            "expression": (
+                "VAR _stage = SELECTEDVALUE ( d_stage[stage_order] ) "
+                "VAR _oppids = CALCULATETABLE ( VALUES ( f_opportunity[opp_id] ), "
+                "REMOVEFILTERS ( d_stage ), "
+                f"{non_omitted}, "
+                'f_opportunity[motion_type] IN { "Land", "Expand" } ) '
+                "RETURN IF ( "
+                "NOT ( ISBLANK ( _stage ) ), "
+                "IF ( _stage >= 1 && _stage <= 6, "
+                "DIVIDE ( "
+                'CALCULATE ( COUNTROWS ( f_stage_transition ), f_stage_transition[from_stage_num] = _stage, f_stage_transition[direction] = "forward", TREATAS ( _oppids, f_stage_transition[opp_id] ) ), '
+                "CALCULATE ( COUNTROWS ( f_stage_transition ), f_stage_transition[from_stage_num] = _stage, TREATAS ( _oppids, f_stage_transition[opp_id] ) ) ) ), "
+                "CALCULATE ( [Stage Forward Pct (LE)], REMOVEFILTERS ( d_stage ) ) )"
+            ),
+            "formatString": "0.0%",
+            "description": "Stage Forward Pct (LE) projected onto canonical d_stage rows 1-6 only.",
+        },
+        {
+            "name": "Core Stage Backward Pct (LE)",
+            "expression": (
+                "VAR _stage = SELECTEDVALUE ( d_stage[stage_order] ) "
+                "VAR _oppids = CALCULATETABLE ( VALUES ( f_opportunity[opp_id] ), "
+                "REMOVEFILTERS ( d_stage ), "
+                f"{non_omitted}, "
+                'f_opportunity[motion_type] IN { "Land", "Expand" } ) '
+                "RETURN IF ( "
+                "NOT ( ISBLANK ( _stage ) ), "
+                "IF ( _stage >= 1 && _stage <= 6, "
+                "DIVIDE ( "
+                'CALCULATE ( COUNTROWS ( f_stage_transition ), f_stage_transition[from_stage_num] = _stage, f_stage_transition[direction] = "backward", TREATAS ( _oppids, f_stage_transition[opp_id] ) ), '
+                "CALCULATE ( COUNTROWS ( f_stage_transition ), f_stage_transition[from_stage_num] = _stage, TREATAS ( _oppids, f_stage_transition[opp_id] ) ) ) ), "
+                "CALCULATE ( [Stage Backward Pct (LE)], REMOVEFILTERS ( d_stage ) ) )"
+            ),
+            "formatString": "0.0%",
+            "description": "Stage Backward Pct (LE) projected onto canonical d_stage rows 1-6 only.",
+        },
+        {
+            "name": "Core Avg Days In Prior Stage (LE)",
+            "expression": (
+                "VAR _stage = SELECTEDVALUE ( d_stage[stage_order] ) "
+                "VAR _oppids = CALCULATETABLE ( VALUES ( f_opportunity[opp_id] ), "
+                "REMOVEFILTERS ( d_stage ), "
+                f"{non_omitted}, "
+                'f_opportunity[motion_type] IN { "Land", "Expand" } ) '
+                "RETURN IF ( "
+                "NOT ( ISBLANK ( _stage ) ), "
+                "IF ( _stage >= 1 && _stage <= 6, "
+                "CALCULATE ( AVERAGE ( f_stage_transition[days_in_prior_stage] ), f_stage_transition[from_stage_num] = _stage, TREATAS ( _oppids, f_stage_transition[opp_id] ) ) ), "
+                "CALCULATE ( [Avg Days In Prior Stage (LE)], REMOVEFILTERS ( d_stage ) ) )"
+            ),
+            "formatString": "0.0",
+            "description": "Avg days in prior stage projected onto canonical d_stage rows 1-6 only.",
+        },
+        {
+            "name": "Core Stage Moves ARR 7d",
+            "expression": (
+                "VAR _stage = SELECTEDVALUE ( d_stage[stage_order] ) "
+                "VAR _transition_oppids = CALCULATETABLE ( VALUES ( f_stage_transition[opp_id] ), f_stage_transition[from_stage_num] = _stage, f_stage_transition[transition_at] >= TODAY() - 7 ) "
+                "RETURN IF ( "
+                "NOT ( ISBLANK ( _stage ) ), "
+                "IF ( _stage >= 1 && _stage <= 6, "
+                "CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), REMOVEFILTERS ( d_stage ), "
+                f"{non_omitted}, "
+                'f_opportunity[motion_type] IN { "Land", "Expand" }, '
+                "TREATAS ( _transition_oppids, f_opportunity[opp_id] ) ) ), "
+                "CALCULATE ( [Stage Moves ARR 7d], REMOVEFILTERS ( d_stage ) ) )"
+            ),
+            "formatString": CURRENCY_M_FORMAT,
+            "description": "7-day Land + Expand ARR moved, projected onto canonical d_stage rows 1-6 only.",
         },
         {
             "name": "Avg Days In Prior Stage",
@@ -974,6 +1087,7 @@ def build_model_bim() -> dict:
             "name": "Stage Forward Pct (LE)",
             "expression": (
                 "CALCULATE ( [Stage Forward Pct], "
+                f"{core_stage}, "
                 "TREATAS ( "
                 "CALCULATETABLE ( VALUES ( f_opportunity[opp_id] ), "
                 f"{non_omitted}, "
@@ -1028,6 +1142,7 @@ def build_model_bim() -> dict:
             "name": "Stage Backward Pct (LE)",
             "expression": (
                 "CALCULATE ( [Stage Backward Pct], "
+                f"{core_stage}, "
                 "TREATAS ( "
                 "CALCULATETABLE ( VALUES ( f_opportunity[opp_id] ), "
                 f"{non_omitted}, "
@@ -1078,6 +1193,7 @@ def build_model_bim() -> dict:
             "name": "Avg Days In Prior Stage (LE)",
             "expression": (
                 "CALCULATE ( [Avg Days In Prior Stage], "
+                f"{core_stage}, "
                 "TREATAS ( "
                 "CALCULATETABLE ( VALUES ( f_opportunity[opp_id] ), "
                 f"{non_omitted}, "
@@ -1377,9 +1493,11 @@ def build_model_bim() -> dict:
                         col("from_stage_num", "int64"),
                         col("from_stage_name", "string", sort_by="from_stage_order"),
                         col("from_stage_order", "int64"),
+                        col("from_stage_display", "string", sort_by="from_stage_order"),
                         col("to_stage_num", "int64"),
                         col("to_stage_name", "string", sort_by="to_stage_order"),
                         col("to_stage_order", "int64"),
+                        col("to_stage_display", "string", sort_by="to_stage_order"),
                         col("direction", "string"),
                     ],
                     "partitions": [dl_partition("f_stage_transition")],

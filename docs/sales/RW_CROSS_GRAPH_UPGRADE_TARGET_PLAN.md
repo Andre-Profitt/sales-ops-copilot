@@ -1,6 +1,6 @@
 # RW Cross-Graph Upgrade Target Plan
 
-Generated: `2026-05-11T01:03:06Z`
+Generated: `2026-05-11T02:12:31Z`
 
 This compares three graphs: Zebra template/visual grammar, the live RW Power BI artifact graph, and the RW KPI coverage graph. The target is not more cosmetic styling; it is a better executive operating system with Zebra-grade scenario, variance, and bridge semantics.
 
@@ -121,12 +121,14 @@ This compares three graphs: Zebra template/visual grammar, the live RW Power BI 
 
 **Graph evidence**
 - Current semantic model has product grain on `f_asset_line_item`: product family, area, type, account, region, industry, ARR, and asset end date.
+- Churn/NRR experiment is explicitly tracked here: Salesforce asset probe found 97,586 current active/non-expired rows and 125,419 historical/effective-dated rows since 2025-01-01, including 17,466 inactive rows.
 - PBI graph: Renewals already exposes product family in the active-base detail ledger, but not as a product x segment x region heatmap or retention bridge.
 - Salesforce gap probe identified OpportunityLineItem as the likely source for new-business product/revenue-stream mix.
 - Zebra graph: scenario variance columns map naturally to prior active base versus current active base by product.
 
 **Data/model work**
 - Create an effective-dated or snapshot fact for active-base ARR by account-product-period.
+- Build the experimental Churn/NRR tab from prior/current active-base ARR snapshots before promoting any churn metric to production.
 - Use asset start/end dates to reconstruct prior/current base only if historical rows are not overwritten; otherwise persist monthly snapshots.
 - Define segment explicitly: industry, account type, named segment, or another governed account attribute.
 - Stage OpportunityLineItem later for Land + Expand product mix; do not use renewal asset base as new-business product pipeline.
@@ -135,11 +137,13 @@ This compares three graphs: Zebra template/visual grammar, the live RW Power BI 
 - Product heatmap: Product Family/Product Area x Region with active-base ARR, expiring ARR, at-risk ARR, and risk percentage.
 - Product heatmap: Product Family/Product Area x Segment once segment is governed.
 - Churn view: prior versus current active-base ARR by account-product-period, with retained/churn/downsell/expansion/cross-sell classification.
+- Experimental NRR strip: starting active-base ARR, retained active-base ARR, churn/downsell ARR, expansion/cross-sell ARR, GRR %, and NRR %.
 - Add account-product churn ledger: prior product ARR, current product ARR, delta, churn classification, renewal date.
 - Keep this as active-base ARR retention, not Renewal ACV and not Land + Expand ARR.
 
 **Acceptance**
 - Product heatmap and churn view both exist; neither is substituted for the other.
+- The churn/NRR experiment is labeled experimental until snapshot/effective-date reconstruction is tie-out tested.
 - Gross retention and net retention by account-product are computed from prior/current active-base ARR.
 - Product churn/downsell/expansion/cross-sell classifications are deterministic and tested.
 - All visuals label basis as active-base ARR; Renewal ACV remains separate.

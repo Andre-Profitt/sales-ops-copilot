@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from scripts.sales._pbir_helpers import (
+    build_categorical_in_filter,
     build_matrix_visual,
     build_shape_visual,
     build_table_visual,
@@ -11,6 +12,12 @@ from scripts.sales._pbir_helpers import (
 from scripts.sales.rw_zebra_kg_ibcs_synth import zebra_detail_table_objects
 
 PAGE = "RW KPI Explorer"
+CORE_STAGE_FILTER = build_categorical_in_filter(
+    table="d_stage",
+    field="stage_order",
+    values=[1, 2, 3, 4, 5, 6],
+    name="CoreStageLadder",
+)
 
 
 def _panel(x: float, y: float, w: float, h: float) -> dict:
@@ -46,8 +53,8 @@ def _compose(section: dict) -> None:
             columns=[{"table": "f_opportunity", "field": "motion_type", "title": "Motion"}],
             values=[
                 {"table": "f_opportunity", "field": "Total Open Pipeline ARR", "title": "Open ARR (Land + Expand)"},
-                {"table": "f_opportunity", "field": "Total Closed Won ARR", "title": "Won ARR (Land + Expand)"},
-                {"table": "f_opportunity", "field": "Win Rate ARR", "title": "Win rate (ARR-wtd)"},
+                {"table": "f_opportunity", "field": "Total Closed Won ARR FYTD", "title": "Won ARR FYTD (Land + Expand)"},
+                {"table": "f_opportunity", "field": "Win Rate ARR FYTD", "title": "Win rate FYTD (ARR-wtd)"},
             ],
             x=40,
             y=130,
@@ -114,32 +121,38 @@ def _compose(section: dict) -> None:
             name="kpi_explorer_stage_diagnostics",
             columns=[
                 {
-                    "table": "f_stage_transition",
-                    "field": "from_stage_name",
+                    "table": "d_stage",
+                    "field": "stage_name",
                     "kind": "column",
                     "title": "Stage",
                 },
                 {
                     "table": "f_stage_transition",
-                    "field": "Stage Forward Pct (LE)",
+                    "field": "Core Stage Forward Pct (LE)",
                     "kind": "measure",
                     "title": "Forward % (count, Land + Expand)",
                 },
                 {
                     "table": "f_stage_transition",
-                    "field": "Stage Backward Pct (LE)",
+                    "field": "Core Stage Backward Pct (LE)",
                     "kind": "measure",
                     "title": "Backward % (count, Land + Expand)",
                 },
                 {
                     "table": "f_stage_transition",
-                    "field": "Avg Days In Prior Stage (LE)",
+                    "field": "Core Avg Days In Prior Stage (LE)",
                     "kind": "measure",
                     "title": "Avg days",
                 },
                 {
                     "table": "f_stage_transition",
-                    "field": "Stage Moves ARR 7d",
+                    "field": "Core Stage Transitions (LE)",
+                    "kind": "measure",
+                    "title": "Moves",
+                },
+                {
+                    "table": "f_stage_transition",
+                    "field": "Core Stage Moves ARR 7d",
                     "kind": "measure",
                     "title": "7d ARR moved (Land + Expand)",
                 },
@@ -149,6 +162,7 @@ def _compose(section: dict) -> None:
             w=560,
             h=226,
             objects=zebra_detail_table_objects(),
+            filters=CORE_STAGE_FILTER,
         ),
         _panel(660, 390, 596, 292),
         build_textbox_visual(

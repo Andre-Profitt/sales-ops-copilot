@@ -194,7 +194,7 @@ def _table_columns_from_dna(dna: dict[str, Any], catalog: MeasureCatalog) -> lis
 
 
 def _table_objects_from_dna(dna: dict[str, Any], columns: list[dict[str, Any]]) -> dict[str, Any]:
-    objects = build_table_style_objects(header_fill="#EEF2F6", header_text="#1A1D31", row_text="#252423", grid="#D8DEE8", font_size=9)
+    objects = build_table_style_objects(header_fill="#FFFFFF", header_text="#1A1D31", row_text="#252423", grid="#D8DEE8", font_size=9)
     objects["stylePreset"] = {"source": "zebra-transfer", "intent": dna.get("visual_intent")}
     databar_values: list[dict[str, Any]] = []
     first_measure = next((c for c in columns if c.get("kind") == "measure"), None)

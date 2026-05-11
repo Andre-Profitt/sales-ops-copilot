@@ -76,10 +76,10 @@ def page_chrome_visuals(page: str) -> list[dict]:
     page_number = PAGE_ORDER.index(page) + 1 if page in PAGE_ORDER else 0
     title_text = f"{page_number:02d} / {len(PAGE_ORDER):02d}  {title}" if page_number else title
     return [
-        build_shape_visual(x=0, y=0, w=1280, h=84, fill="#F7F9FC", line="#E3E7EE", z=4),
-        build_shape_visual(x=0, y=0, w=6, h=84, fill="#083EA7", line="#083EA7", z=5),
+        build_shape_visual(x=0, y=0, w=1280, h=84, fill="#FFFFFF", line="#FFFFFF", z=4),
+        build_shape_visual(x=0, y=0, w=1, h=84, fill="#D8DEE8", line="#D8DEE8", z=5),
         build_textbox_visual(title_text, x=24, y=10, w=520, h=26, font_size_pt=17, color="#1A1D31"),
-        build_textbox_visual(action, x=560, y=12, w=260, h=18, font_size_pt=8, color="#083EA7"),
+        build_textbox_visual(action, x=560, y=12, w=260, h=18, font_size_pt=8, color="#5C6670"),
         build_textbox_visual(subtitle, x=24, y=38, w=650, h=18, font_size_pt=8, color="#5C6670", bold=False),
         build_textbox_visual(NAV_TRAIL, x=24, y=62, w=760, h=16, font_size_pt=7, color="#5C6670", bold=False),
         build_shape_visual(x=24, y=82, w=1232, h=1, fill="#D8DEE8", line="#D8DEE8", z=6),

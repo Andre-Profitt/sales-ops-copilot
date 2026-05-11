@@ -16,6 +16,7 @@ STAGE_ORDER: tuple[tuple[int, str, str], ...] = (
     (8, "7 - Won", "Won"),
     (99, "Unknown", "Unknown"),
 )
+_STAGE_DISPLAY_BY_ORDER = {order: name for order, name, _short_name in STAGE_ORDER}
 
 _STAGE_RE = re.compile(r"^\s*(\d+)\s*[-–—.]\s*(.+?)\s*$")
 
@@ -31,6 +32,20 @@ def stage_dimension_rows() -> list[dict[str, Any]]:
         }
         for order, name, short_name in STAGE_ORDER
     ]
+
+
+def stage_display_for_order(order: object) -> str:
+    """Return the canonical report label for a parsed stage order."""
+    try:
+        key = int(order)
+    except (TypeError, ValueError):
+        return "Unknown"
+    return _STAGE_DISPLAY_BY_ORDER.get(key, "Unknown")
+
+
+def stage_display_for_label(value: object) -> str:
+    """Normalize raw Salesforce stage text into canonical handbook labels."""
+    return stage_display_for_order(stage_order_for_label(value))
 
 
 def parse_stage_label(value: object) -> tuple[int | None, str | None]:

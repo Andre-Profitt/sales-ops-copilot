@@ -123,6 +123,7 @@ def test_target_pages_follow_page_specific_slice_controls():
 
 def test_target_pages_have_shared_header_navigation_chrome():
     report = compose_report({"sections": []})
+    encoded_report = json.dumps(report)
 
     for ordinal, page in enumerate(PAGE_ORDER, start=1):
         section = _page(report, page)
@@ -142,6 +143,8 @@ def test_target_pages_have_shared_header_navigation_chrome():
         assert ACTION_TRAILS[page] in top_text, page
         assert NAV_TRAIL in top_text, page
         assert len(top_shapes) >= 1, page
+    for forbidden_header_color in ("#F7F9FC", "#EAF0F7", "#F3F6FA"):
+        assert forbidden_header_color not in encoded_report
 
 
 def test_legacy_top_headers_are_replaced_by_shared_chrome():
@@ -395,24 +398,42 @@ def test_stage_hygiene_stage_and_detail_tables_use_zebra_ibcs_table_grammar():
     stage_tables = [
         _single_visual(vc)
         for vc in stage_hygiene["visualContainers"]
-        if _visual_type(vc) == "tableEx" and "Stage Forward Pct (LE)" in vc["config"]
+        if _visual_type(vc) == "tableEx" and "Core Stage Backward Pct (LE)" in vc["config"]
     ]
     detail_tables = [
         _single_visual(vc)
         for vc in stage_hygiene["visualContainers"]
-        if _visual_type(vc) == "tableEx" and "Stage 4 Forward Pct" in vc["config"]
+        if _visual_type(vc) == "tableEx"
+        and "Core Stage Forward Pct (LE)" in vc["config"]
+        and "Core Stage Backward Pct (LE)" not in vc["config"]
     ]
 
     assert len(stage_tables) == 1
     assert len(detail_tables) == 1
     stage_table = stage_tables[0]
     assert list(stage_table["columnProperties"]) == [
-        "f_stage_transition.from_stage_name",
-        "f_stage_transition.Stage Forward Pct (LE)",
-        "f_stage_transition.Stage Backward Pct (LE)",
-        "f_stage_transition.Avg Days In Prior Stage (LE)",
-        "f_stage_transition.Total Stage Transitions",
-        "f_stage_transition.Stage Moves ARR 7d",
+        "d_stage.stage_name",
+        "f_stage_transition.Core Stage Forward Pct (LE)",
+        "f_stage_transition.Core Stage Backward Pct (LE)",
+        "f_stage_transition.Core Avg Days In Prior Stage (LE)",
+        "f_stage_transition.Core Stage Transitions (LE)",
+        "f_stage_transition.Core Stage Moves ARR 7d",
+    ]
+    stage_vc = next(
+        vc
+        for vc in stage_hygiene["visualContainers"]
+        if _visual_type(vc) == "tableEx" and "Core Stage Backward Pct (LE)" in vc["config"]
+    )
+    stage_filter = json.loads(stage_vc["filters"])
+    assert stage_filter[0]["expression"]["Column"]["Expression"]["SourceRef"]["Entity"] == "d_stage"
+    assert stage_filter[0]["expression"]["Column"]["Property"] == "stage_order"
+    assert stage_filter[0]["filter"]["Where"][0]["Condition"]["In"]["Values"] == [
+        [{"Literal": {"Value": "1L"}}],
+        [{"Literal": {"Value": "2L"}}],
+        [{"Literal": {"Value": "3L"}}],
+        [{"Literal": {"Value": "4L"}}],
+        [{"Literal": {"Value": "5L"}}],
+        [{"Literal": {"Value": "6L"}}],
     ]
     stage_objects = stage_table.get("objects") or {}
     assert stage_objects["stylePreset"] == {
@@ -423,6 +444,14 @@ def test_stage_hygiene_stage_and_detail_tables_use_zebra_ibcs_table_grammar():
     assert stage_objects["zebraGrammar"]["schema"] == "rw-zebra-native-transfer.columnGrammar.v1"
     assert "dataBars" in stage_objects
 
+    assert list(detail_tables[0]["columnProperties"]) == [
+        "d_stage.stage_name",
+        "f_stage_transition.Core Stage Forward Pct (LE)",
+        "f_stage_transition.Core Avg Days In Prior Stage (LE)",
+        "f_stage_transition.Core Stage Moves ARR 7d",
+    ]
+    assert "Stage 4 Forward Pct" not in json.dumps(detail_tables[0])
+    assert "Avg Days In Stage 4" not in json.dumps(detail_tables[0])
     detail_objects = detail_tables[0].get("objects") or {}
     assert detail_objects["stylePreset"] == {
         "source": "zebra-visual-dna",

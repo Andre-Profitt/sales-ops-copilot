@@ -1,6 +1,6 @@
 # RW Native Visual Upgrade Audit
 
-Generated: `2026-05-11T01:03:06Z`
+Generated: `2026-05-11T02:19:09Z`
 
 This audit ranks where the dashboard is still underusing native Power BI/Zebra-derived visual grammar. It is not a basic correctness gate.
 

@@ -10,7 +10,7 @@ The report is now guarded against the major executive-flow failure: page-level M
 | --- | --- | --- | --- |
 | VP Ops Scorecard | `cross_motion_labeled` | `Close FQ`, `Region` | Region and close-quarter context only; ARR and Renewal ACV measures stay separated. |
 | What Changed | `land_expand_arr` | `Close FQ`, `Region` | Region and close-quarter context keep the 7-day movement window readable without a conflicting Motion slicer. |
-| Forecast | `cross_motion_labeled` | `Close FQ`, `Region` | Region and close-quarter context; motion comparison is handled by the labeled Stage x Motion matrix. |
+| Forecast | `process` | `Close FQ`, `Region` | Region and close-quarter context; motion comparison is handled by the labeled Stage x Motion matrix. |
 | Stage Hygiene | `process` | `Close FQ`, `Region` | Region and close-quarter context define the selected opportunity cohort; transition-window measures remain explicit. |
 | Renewals | `renewal_acv` | `Close FQ`, `Region` | Region and close-quarter context only; Renewal ACV measures enforce Renewal motion. |
 | Product Retention | `renewal_base_arr` | `Close FQ`, `Region` | Region and asset end-quarter context for active-base ARR; churn snapshots remain explicit when added. |
@@ -65,6 +65,6 @@ These checks are informed by the Zebra schema corpus, not just local RW preferen
 
 - Has `d_stage`: `True`
 - `f_opportunity` stage columns: `stage_name`, `stage_order`
-- `f_stage_transition` stage columns: `days_in_prior_stage`, `from_stage_name`, `from_stage_num`, `from_stage_order`, `from_stage_raw`, `to_stage_name`, `to_stage_num`, `to_stage_order`, `to_stage_raw`
+- `f_stage_transition` stage columns: `days_in_prior_stage`, `from_stage_display`, `from_stage_name`, `from_stage_num`, `from_stage_order`, `from_stage_raw`, `to_stage_display`, `to_stage_name`, `to_stage_num`, `to_stage_order`, `to_stage_raw`
 
 Canonical `d_stage` and stage sort keys are present. Opportunity-stage and transition-stage visuals should sort by business order rather than labels.

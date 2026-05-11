@@ -62,11 +62,13 @@ def _stage_order_expr(aliases: dict[str, str], table: str, field: str) -> dict |
     stage fields so visuals never fall back to alphabetical or raw numeric sort.
     """
     alias = aliases[table]
-    if table == "f_stage_transition" and field == "from_stage_name":
+    if table == "f_stage_transition" and field in {"from_stage_name", "from_stage_display"}:
         return _column_expr(alias, "from_stage_order")
-    if table == "f_stage_transition" and field == "to_stage_name":
+    if table == "f_stage_transition" and field in {"to_stage_name", "to_stage_display"}:
         return _column_expr(alias, "to_stage_order")
     if table == "f_opportunity" and field == "stage_name":
+        return _column_expr(alias, "stage_order")
+    if table == "d_stage" and field == "stage_name":
         return _column_expr(alias, "stage_order")
     return None
 
@@ -79,6 +81,56 @@ def _first_stage_order_by(columns: list[dict], aliases: dict[str, str]) -> list[
         if expr is not None:
             return [{"Direction": 1, "Expression": expr}]
     return []
+
+
+def build_categorical_in_filter(
+    *,
+    table: str,
+    field: str,
+    values: list[str | int | float | bool],
+    alias: str = "f",
+    name: str = "Filter",
+) -> str:
+    """Build a visual-level categorical include filter."""
+    def _filter_literal(value: str | int | float | bool) -> dict:
+        return _literal(value)["expr"]
+
+    return json.dumps(
+        [
+            {
+                "name": name,
+                "expression": {
+                    "Column": {
+                        "Expression": {"SourceRef": {"Entity": table}},
+                        "Property": field,
+                    }
+                },
+                "filter": {
+                    "Version": 2,
+                    "From": [{"Name": alias, "Entity": table, "Type": 0}],
+                    "Where": [
+                        {
+                            "Condition": {
+                                "In": {
+                                    "Expressions": [
+                                        {
+                                            "Column": {
+                                                "Expression": {"SourceRef": {"Source": alias}},
+                                                "Property": field,
+                                            }
+                                        }
+                                    ],
+                                    "Values": [[_filter_literal(value)] for value in values],
+                                }
+                            }
+                        }
+                    ],
+                },
+                "type": "Categorical",
+                "howCreated": 1,
+            }
+        ]
+    )
 
 
 def build_card_visual(
@@ -204,7 +256,7 @@ def build_slicer_visual(
                         "properties": {
                             "textSize": _literal(font_size),
                             "fontColor": _solid_color("#1A1D31"),
-                            "background": _solid_color("#EAF0F7"),
+                            "background": _solid_color("#FFFFFF"),
                         }
                     }
                 ],
@@ -272,6 +324,7 @@ def build_table_visual(
     h: float = 240,
     objects: dict | None = None,
     vc_objects: dict | None = None,
+    filters: str | None = None,
 ) -> dict:
     """Construct a tableEx visualContainer.
 
@@ -333,7 +386,7 @@ def build_table_visual(
         config["singleVisual"]["vcObjects"] = vc_objects
     return {
         "config": json.dumps(config),
-        "filters": "[]",
+        "filters": filters or "[]",
         "height": h,
         "width": w,
         "x": x,
@@ -352,6 +405,7 @@ def build_matrix_visual(
     h: float = 260,
     objects: dict | None = None,
     vc_objects: dict | None = None,
+    filters: str | None = None,
 ) -> dict:
     """Construct a pivotTable (matrix) visualContainer.
 
@@ -426,7 +480,7 @@ def build_matrix_visual(
         config["singleVisual"]["vcObjects"] = vc_objects
     return {
         "config": json.dumps(config),
-        "filters": "[]",
+        "filters": filters or "[]",
         "height": h,
         "width": w,
         "x": x,
@@ -1116,7 +1170,7 @@ def build_card_visual_with_objects(
 
 def build_table_style_objects(
     *,
-    header_fill: str = "#f0f0f0",
+    header_fill: str = "#FFFFFF",
     header_text: str = "#1A1D31",
     row_text: str = "#252423",
     grid: str = "#eeeeee",
@@ -1170,7 +1224,7 @@ def build_table_style_objects(
 
 def build_matrix_style_objects(
     *,
-    header_fill: str = "#f0f0f0",
+    header_fill: str = "#FFFFFF",
     header_text: str = "#1A1D31",
     row_text: str = "#252423",
     grid: str = "#eeeeee",

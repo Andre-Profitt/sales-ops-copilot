@@ -26,7 +26,11 @@ import pandas as pd
 from azure.identity import AzureCliCredential
 from deltalake import write_deltalake
 
-from scripts.sales.rw_stage_order import parse_stage_label, stage_order_for_label
+from scripts.sales.rw_stage_order import (
+    parse_stage_label,
+    stage_display_for_label,
+    stage_order_for_label,
+)
 
 WORKSPACE_ID = "b66233d5-9d4a-44ba-89a8-b70206d98ae7"
 LAKEHOUSE_ID = "50f1721e-6b2e-44db-a1a7-7b8209c7a77b"  # lkh_sales_kpis_rw
@@ -94,6 +98,8 @@ def transform(stage: pathlib.Path) -> pd.DataFrame:
     df["to_stage_name"] = [p[1] for p in parsed_to]
     df["from_stage_order"] = df["from_stage_raw"].apply(stage_order_for_label).astype("int64")
     df["to_stage_order"] = df["to_stage_raw"].apply(stage_order_for_label).astype("int64")
+    df["from_stage_display"] = df["from_stage_raw"].apply(stage_display_for_label)
+    df["to_stage_display"] = df["to_stage_raw"].apply(stage_display_for_label)
 
     # Direction: forward if to>from, backward if to<from, lateral otherwise (e.g. closing)
     def _direction(row):

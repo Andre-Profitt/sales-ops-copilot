@@ -140,7 +140,7 @@ PAGE_KPI_CONTRACTS: dict[str, PageKPIContract] = {
         primary_kpis=("stage_conversion", "time_in_stage", "sales_cycle_length"),
         secondary_diagnostics=("stage3_approvals_compliance", "commercial_approval_to_close_time"),
         kpi_ids=("stage_conversion", "time_in_stage", "sales_cycle_length", "stage3_approvals_compliance", "commercial_approval_to_close_time"),
-        measures=("Stage Forward Pct (LE)", "Stage Backward Pct (LE)", "Avg Days In Prior Stage (LE)", "Avg Sales Cycle Days", "Land Avg Sales Cycle Days", "Total Stage Transitions", "Stage Moves ARR 7d", "Stage 4 Forward Pct", "Avg Days In Stage 4", "Commercial Approval Compliance Pct", "Commercial Approval To Close Days"),
+        measures=("Stage Forward Pct (LE)", "Stage Backward Pct (LE)", "Avg Days In Prior Stage (LE)", "Avg Sales Cycle Days", "Land Avg Sales Cycle Days", "Core Stage Forward Pct (LE)", "Core Stage Backward Pct (LE)", "Core Avg Days In Prior Stage (LE)", "Core Stage Transitions (LE)", "Core Stage Moves ARR 7d", "Commercial Approval Compliance Pct", "Commercial Approval To Close Days"),
         motion="process",
         placements=(
             p("stage_conversion", "Stage Forward Pct (LE)", "hero KPI", "land_expand_arr", "partial", "Forward % (count, Land + Expand)"),
@@ -148,7 +148,7 @@ PAGE_KPI_CONTRACTS: dict[str, PageKPIContract] = {
             p("time_in_stage", "Avg Days In Prior Stage (LE)", "hero KPI", "land_expand_arr", "partial", "Stage days (Land + Expand)"),
             p("sales_cycle_length", "Land Avg Sales Cycle Days", "hero KPI", "land_expand_arr", "clean", "Land cycle days"),
             p("sales_cycle_length", "Avg Sales Cycle Days", "hero KPI", "land_expand_arr", "clean", "Land + Expand cycle days"),
-            p("stage_conversion", "Stage Forward Pct (LE)", "variance table", "land_expand_arr", "partial", "Stage Conversion Matrix (count, Land + Expand)"),
+            p("stage_conversion", "Core Stage Forward Pct (LE)", "variance table", "land_expand_arr", "partial", "Stage Conversion Matrix (count, Land + Expand)"),
             p("stage3_approvals_compliance", "Commercial Approval Compliance Pct", "RAG card", "land_expand_arr", "clean", "Approval % (count)", secondary=True),
             p("commercial_approval_to_close_time", "Commercial Approval To Close Days", "RAG card", "land_expand_arr", "clean", "Approval-close days", secondary=True),
         ),

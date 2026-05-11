@@ -1572,6 +1572,64 @@ Andre asked for a direct checklist of RW-expected KPIs versus what the current B
 
 ARR remains Land + Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
 
+## 2026-05-11 — Churn / NRR experiment pinned to long-running task list
+
+Andre's churn/NRR idea is now tracked as explicit long-running work, not a vague Product Retention footnote.
+
+**Tracked artifact:**
+
+- `docs/sales/RW_CHURN_NRR_EXPERIMENT_PLAN.md`
+- `docs/sales/RW_CROSS_GRAPH_UPGRADE_TARGET_PLAN.md` target `product_segment_retention_churn`
+
+**Evidence already found:**
+
+- `f_asset_line_item` stages 97,586 current active/non-expired asset rows.
+- Salesforce asset probe found 125,419 historical/effective-dated asset rows since 2025-01-01.
+- The same probe found 17,466 inactive rows since 2025-01-01, enough to test churn/downsell reconstruction.
+
+**Target:**
+
+- Add an experimental Churn / NRR tab after Product Retention.
+- Use active-base ARR from asset line item history/snapshots only.
+- Compute starting active-base ARR, ending active-base ARR, retained ARR, churn/downsell ARR, expansion/cross-sell ARR, GRR %, and NRR %.
+- Add product x region and product x segment churn heatmaps plus account-product churn ledger.
+
+**Guardrail:**
+
+This is not Renewal ACV, not Land + Expand opportunity ARR, and not production until snapshot/effective-date reconstruction is tie-out tested.
+
+## 2026-05-10 — Top-strip rebuild, FYTD won ARR, and core stage ladder
+
+The Forecast/RW KPI Explorer screenshots exposed three issues that were not acceptable for executive review: top-strip cards clipped their labels, KPI Explorer showed all-time won ARR where a FYTD read was expected, and stage diagnostics used noisy raw stage-transition labels.
+
+**Shipped:**
+
+- Rebuilt the KPI top-strip pattern across the RW pages as one neutral band with separate label textboxes plus value-only native cards. This removes the native-card category-label clipping and the colored-card/AI-template look.
+- Added visual-level categorical filters for native table/matrix visuals.
+- Added canonical stage display labels to `f_stage_transition`:
+  - `from_stage_display`
+  - `to_stage_display`
+- Restricted stage diagnostics to the real operating ladder: stages 1 through 6.
+- Added `Core Stage Transitions (LE)` for count-based Land + Expand stage movement on the real stage ladder.
+- Added current-year measures for KPI Explorer:
+  - `Total Closed Won ARR FYTD`
+  - `Total Closed Lost ARR FYTD`
+  - `Win Rate ARR FYTD`
+- Switched RW KPI Explorer’s Land + Expand ARR Mix to FYTD won ARR / FYTD ARR-weighted win rate.
+
+**Deployed/verified:**
+
+- Re-ran `sf_to_fabric_rw_phase2.py`; `f_stage_transition` now has 8,167 rows and canonical display labels.
+- Re-pushed `sm_sales_kpis_rw`; deployed inventory is now 140 measures.
+- Rebuilt and pushed all RW KPI-targeted report pages.
+- Regenerated the local native PBIP lab.
+- `rw_validate` passed against the deployed model: 8 sections, 245 visuals, all measure refs resolve.
+- Live dashboard audit returned no findings.
+- Live visual QA passed with 0 findings at `--fail-on medium`.
+- `python3 -m pytest tests/sales -q` passed: 291 passed, 1 skipped.
+
+ARR remains Land + Expand only, Renewal ACV remains Renewal only, and Omitted pipeline remains excluded from open/current pipeline measures.
+
 ## 2026-05-11 — Current Omitted pipeline excluded from Opportunity KPIs
 
 The 331M open Land + Expand ARR readout was caused by current `ForecastCategoryName = Omitted` opportunities still being present in `f_opportunity` measures.  Forecast-transition measures already excluded Omitted; this pass made the current Opportunity fact and semantic measures obey the same rule.

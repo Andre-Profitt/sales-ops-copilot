@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from scripts.sales._pbir_helpers import (
-    build_card_visual_with_objects,
     build_shape_visual,
     build_table_visual,
     build_textbox_visual,
@@ -16,7 +15,7 @@ from scripts.sales.rw_zebra_kg_ibcs_synth import (
     tag_visual_with_zebra_transfer_metadata,
     zebra_detail_table_objects,
     zebra_heatmap_matrix_objects,
-    zebra_native_card_objects,
+    zebra_kpi_strip_metric,
 )
 
 PAGE = "Growth Mix"
@@ -38,28 +37,19 @@ def _card(
     title: str,
     *,
     x: float,
-    tint: str,
-    accent: str,
-    value_color: str = "#1A1D31",
-) -> dict:
-    return build_card_visual_with_objects(
+) -> list[dict]:
+    return zebra_kpi_strip_metric(
         measure_table="f_opportunity",
         measure_name=measure,
-        display_title=title,
         x=x,
-        y=104,
+        y=94,
         w=216,
-        h=76,
-        objects=zebra_native_card_objects(
-            pattern="growth-mix-kpi-card",
-            visual_intent="growth mix KPI strip",
-            tint=tint,
-            accent=accent,
-            value_color=value_color,
-            label_color=accent,
-            value_font_size=22,
-            label_font_size=9,
-        ),
+        h=94,
+        title=title,
+        pattern="growth-mix-top-strip-metric",
+        visual_intent="growth mix KPI top strip",
+        value_font_size=20,
+        divider=x > 40,
     )
 
 
@@ -78,11 +68,11 @@ def _compose(section: dict) -> None:
         build_textbox_visual(PAGE, x=24, y=12, w=420, h=28, font_size_pt=18, color="#1A1D31"),
         build_textbox_visual("Land + Expand ARR basis, ARR share percentages, and count-based new-customer signals.", x=24, y=42, w=980, h=22, font_size_pt=9, color="#5C6670", bold=False),
         _panel(24, 84, 1232, 116),
-        _card("Open Land ARR", "Open Land ARR", x=40, tint="#F4F7FB", accent="#2B5C8A"),
-        _card("Open Expand ARR", "Open Expand ARR", x=280, tint="#F4F7FB", accent="#2B5C8A"),
-        _card("Avg Deal Size Won", "Avg won ARR (Land + Expand)", x=520, tint="#EEF9EE", accent="#3B8A3E", value_color="#1F6F3B"),
-        _card("Partner ARR", "Partner ARR (Land + Expand)", x=760, tint="#FFF8E6", accent="#D98A00"),
-        _card("Partner Pct", "Partner % ARR share", x=1000, tint="#FFF8E6", accent="#D98A00"),
+        *_card("Open Land ARR", "Open Land ARR", x=40),
+        *_card("Open Expand ARR", "Open Expand ARR", x=280),
+        *_card("Avg Deal Size Won", "Avg won ARR (Land + Expand)", x=520),
+        *_card("Partner ARR", "Partner ARR (Land + Expand)", x=760),
+        *_card("Partner Pct", "Partner % ARR share", x=1000),
         _panel(24, 224, 588, 236),
         build_textbox_visual("Open Land + Expand ARR Contribution Bridge", x=40, y=236, w=500, h=24, font_size_pt=11, color="#1A1D31"),
         _zebra_bridge(build_waterfall_chart_visual(

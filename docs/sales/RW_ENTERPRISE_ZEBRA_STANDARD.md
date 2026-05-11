@@ -36,7 +36,7 @@ This is the governing standard for getting the RW Power BI dashboard to Zebra-na
 | --- | ---: | ---: | ---: |
 | VP Ops Scorecard | 11 | 10 | 91% |
 | What Changed | 3 | 3 | 100% |
-| Forecast | 9 | 9 | 100% |
+| Forecast | 10 | 10 | 100% |
 | Stage Hygiene | 9 | 9 | 100% |
 | Renewals | 9 | 9 | 100% |
 | Product Retention | 8 | 8 | 100% |

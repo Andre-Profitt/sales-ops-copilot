@@ -126,14 +126,54 @@ def test_currency_measure_formats_are_locked_to_eur_m():
 
     for name in [
         "Total Closed Won ARR",
+        "Total Closed Won ARR FYTD",
+        "Total Closed Lost ARR FYTD",
         "Total Open Pipeline ARR",
         "Total Open Pipeline Value",
         "Total Open Renewal ACV",
         "Total Renewal ACV Won",
         "Stage Moves ARR 7d",
+        "Core Stage Moves ARR 7d",
         "One Off Revenues",
     ]:
         assert measures[name]["formatString"] == CURRENCY_M_FORMAT
+
+
+def test_closed_won_fytd_measures_are_explicit_current_year():
+    measures = _measure_map()
+
+    won = measures["Total Closed Won ARR FYTD"]["expression"]
+    lost = measures["Total Closed Lost ARR FYTD"]["expression"]
+    win_rate = measures["Win Rate ARR FYTD"]["expression"]
+
+    for expression in (won, lost):
+        assert "REMOVEFILTERS ( d_calendar )" in expression
+        assert "DATESBETWEEN ( d_calendar[date], DATE ( YEAR ( TODAY () ), 1, 1 ), TODAY () )" in expression
+    assert win_rate == (
+        "DIVIDE ( [Total Closed Won ARR FYTD], "
+        "[Total Closed Won ARR FYTD] + [Total Closed Lost ARR FYTD] )"
+    )
+
+
+def test_core_stage_measures_project_d_stage_without_current_stage_leakage():
+    measures = _measure_map()
+
+    for name in [
+        "Core Stage Forward Pct (LE)",
+        "Core Stage Backward Pct (LE)",
+        "Core Avg Days In Prior Stage (LE)",
+        "Core Stage Moves ARR 7d",
+    ]:
+        expression = measures[name]["expression"]
+        assert "SELECTEDVALUE ( d_stage[stage_order] )" in expression
+        assert "REMOVEFILTERS ( d_stage )" in expression
+        assert "f_stage_transition[from_stage_num] = _stage" in expression
+        assert "CALCULATE ( [" in expression
+
+    transitions = measures["Core Stage Transitions (LE)"]["expression"]
+    assert "SELECTEDVALUE ( d_stage[stage_order] )" in transitions
+    assert "REMOVEFILTERS ( d_stage )" in transitions
+    assert "f_stage_transition[from_stage_num] = _stage" in transitions
 
 
 def test_forecast_transition_measures_exclude_omitted_category():
@@ -190,6 +230,8 @@ def test_stage_order_semantics_are_in_model():
     assert "stage_order" in opp_cols
     assert transition_cols["from_stage_name"]["sortByColumn"] == "from_stage_order"
     assert transition_cols["to_stage_name"]["sortByColumn"] == "to_stage_order"
+    assert transition_cols["from_stage_display"]["sortByColumn"] == "from_stage_order"
+    assert transition_cols["to_stage_display"]["sortByColumn"] == "to_stage_order"
     assert stage_cols["stage_name"]["sortByColumn"] == "stage_order"
     assert relationships["rel_opp_stage"] == {
         "name": "rel_opp_stage",

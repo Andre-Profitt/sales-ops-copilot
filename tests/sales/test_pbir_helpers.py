@@ -4,6 +4,7 @@ from scripts.sales._pbir_helpers import (
     add_page,
     build_card_visual,
     build_card_visual_with_objects,
+    build_categorical_in_filter,
     build_clustered_bar_chart_visual,
     build_matrix_visual,
     build_matrix_style_objects,
@@ -144,7 +145,7 @@ def test_build_slicer_visual_has_compact_native_chrome():
     assert {"title", "visualHeader", "border", "background"} <= set(sv["vcObjects"])
     assert sv["vcObjects"]["title"][0]["properties"]["show"]["expr"]["Literal"]["Value"] == "true"
     assert sv["vcObjects"]["border"][0]["properties"]["color"]["solid"]["color"]["expr"]["Literal"]["Value"] == "'#AAB4C4'"
-    assert sv["objects"]["header"][0]["properties"]["background"]["solid"]["color"]["expr"]["Literal"]["Value"] == "'#EAF0F7'"
+    assert sv["objects"]["header"][0]["properties"]["background"]["solid"]["color"]["expr"]["Literal"]["Value"] == "'#FFFFFF'"
 
 
 def test_build_matrix_visual_axes():
@@ -165,6 +166,28 @@ def test_build_matrix_visual_axes():
     proj = config["singleVisual"]["projections"]
     assert "Rows" in proj and "Columns" in proj and "Values" in proj
     assert len(proj["Values"]) == 2
+
+
+def test_build_categorical_in_filter_uses_power_bi_literal_shape():
+    raw_filter = build_categorical_in_filter(
+        table="f_stage_transition",
+        field="from_stage_num",
+        values=[1, 2, 3, 4, 5, 6],
+        name="CoreStageLadder",
+    )
+    filters = json.loads(raw_filter)
+
+    assert filters[0]["name"] == "CoreStageLadder"
+    assert filters[0]["type"] == "Categorical"
+    assert filters[0]["expression"]["Column"]["Property"] == "from_stage_num"
+    assert filters[0]["filter"]["Where"][0]["Condition"]["In"]["Values"] == [
+        [{"Literal": {"Value": "1L"}}],
+        [{"Literal": {"Value": "2L"}}],
+        [{"Literal": {"Value": "3L"}}],
+        [{"Literal": {"Value": "4L"}}],
+        [{"Literal": {"Value": "5L"}}],
+        [{"Literal": {"Value": "6L"}}],
+    ]
 
 
 def test_build_clustered_bar_chart_visual_has_category_and_measure():
@@ -206,6 +229,37 @@ def test_build_clustered_bar_chart_visual_has_category_and_measure():
     assert sv["objects"]["labels"][0]["properties"]["labelDisplayUnits"]["expr"]["Literal"][
         "Value"
     ] == "1D"
+
+
+def test_d_stage_stage_name_sorts_by_stage_order():
+    vc = build_table_visual(
+        name="stage_order_probe",
+        columns=[
+            {"table": "d_stage", "field": "stage_name", "kind": "column", "title": "Stage"},
+            {
+                "table": "f_stage_transition",
+                "field": "Core Stage Transitions (LE)",
+                "kind": "measure",
+                "title": "Moves",
+            },
+        ],
+        x=0,
+        y=0,
+    )
+
+    sv = json.loads(vc["config"])["singleVisual"]
+
+    assert sv["prototypeQuery"]["OrderBy"] == [
+        {
+            "Direction": 1,
+            "Expression": {
+                "Column": {
+                    "Expression": {"SourceRef": {"Source": "a"}},
+                    "Property": "stage_order",
+                }
+            },
+        }
+    ]
 
 
 def test_build_waterfall_chart_visual_uses_native_bridge_and_no_auto_units():
@@ -432,4 +486,4 @@ def test_build_matrix_style_objects_has_table_chrome():
     assert {"grid", "columnHeaders", "rowHeaders", "values"} <= set(objects)
     assert objects["columnHeaders"][0]["properties"]["backColor"]["solid"]["color"]["expr"][
         "Literal"
-    ]["Value"] == "'#f0f0f0'"
+    ]["Value"] == "'#FFFFFF'"

@@ -14,6 +14,7 @@ import json
 
 from scripts.sales._pbir_helpers import (
     build_card_visual_with_objects,
+    build_categorical_in_filter,
     build_clustered_bar_chart_visual,
     build_matrix_visual,
     build_shape_visual,
@@ -30,7 +31,8 @@ from scripts.sales.rw_add_visual import (
 from scripts.sales.rw_validate import fetch_measures_by_table, validate_visual_dict
 from scripts.sales.rw_zebra_kg_ibcs_synth import (
     zebra_exception_ledger_objects,
-    zebra_native_card_objects,
+    zebra_kpi_strip_card_objects,
+    zebra_kpi_strip_metric,
     zebra_stage_hygiene_table_objects,
 )
 
@@ -53,6 +55,12 @@ MOVEMENT_PULSE_MEASURES = [
     "Stage Moves ARR 7d",
     "Backward Moves Count 7d",
 ]
+CORE_STAGE_FILTER = build_categorical_in_filter(
+    table="d_stage",
+    field="stage_order",
+    values=[1, 2, 3, 4, 5, 6],
+    name="CoreStageLadder",
+)
 
 
 def _panel(x: float, y: float, w: float, h: float, *, fill: str = "#FFFFFF") -> dict:
@@ -121,14 +129,10 @@ def _zebra_card_visual(
         y=y,
         w=w,
         h=h,
-        objects=zebra_native_card_objects(
+        objects=zebra_kpi_strip_card_objects(
             pattern=pattern,
             visual_intent=visual_intent,
-            tint=tint,
-            accent=accent,
-            value_color=value_color,
-            label_color=accent,
-            value_font_size=value_font_size,
+            value_font_size=min(value_font_size, 20),
             label_font_size=label_font_size,
         ),
     )
@@ -203,66 +207,51 @@ def _build_exception_spine() -> dict:
 
 
 def _build_kpi_strip() -> list[dict]:
-    """Four executive KPI tiles, native-card version of Zebra BI Cards."""
+    """Four executive metrics in one consistent top strip."""
     card_w = (CANVAS_W - 2 * MARGIN - 3 * GAP) / 4
     cards = [
         (
             "f_opportunity",
             "Total Closed Won ARR",
             "Closed won ARR (Land + Expand)",
-            "#F4F7FB",
-            "#2B5C8A",
-            "#1A1D31",
             1000000,
         ),
         (
             "f_opportunity",
             "Win Rate ARR",
             "Win rate (ARR-wtd)",
-            "#EEF9EE",
-            "#3B8A3E",
-            "#1F6F3B",
             None,
         ),
         (
             "f_opportunity",
             "Exception ARR",
             "Exception ARR (Land + Expand)",
-            "#FFEEEE",
-            "#C33A32",
-            "#B3261E",
             1000000,
         ),
         (
             "f_opportunity",
             "Renewal Retention Pct (Period)",
             "Retention % (ACV-wtd)",
-            "#EEF9EE",
-            "#3B8A3E",
-            "#1F6F3B",
             None,
         ),
     ]
-    out: list[dict] = []
-    for i, (table, measure, title, tint, accent, value_color, _display_units) in enumerate(cards):
+    out: list[dict] = [_panel(MARGIN, 84, CANVAS_W - 2 * MARGIN, 124)]
+    for i, (table, measure, title, display_units) in enumerate(cards):
         x = MARGIN + i * (card_w + GAP)
-        out.append(build_shape_visual(x=x, y=88, w=card_w, h=116, fill="#FFFFFF", line="#D8DEE8", z=30, radius=2))
-        out.append(
-            _zebra_card_visual(
-                table=table,
-                measure=measure,
+        out.extend(
+            zebra_kpi_strip_metric(
+                measure_table=table,
+                measure_name=measure,
                 title=title,
                 x=x,
-                y=88,
+                y=94,
                 w=card_w,
-                h=116,
-                tint=tint,
-                accent=accent,
-                value_color=value_color,
-                value_font_size=24,
-                label_font_size=9,
-                pattern="vp-ops-scorecard-hero-card",
-                visual_intent="executive KPI strip",
+                h=96,
+                pattern="vp-ops-scorecard-top-strip-metric",
+                visual_intent="executive KPI top strip",
+                display_units=display_units,
+                value_font_size=22,
+                divider=i > 0,
             )
         )
     return out
@@ -299,8 +288,8 @@ def _build_stage_hygiene_panel() -> list[dict]:
     matrix = build_matrix_visual(
         rows=[
             {
-                "table": "f_stage_transition",
-                "field": "from_stage_name",
+                "table": "d_stage",
+                "field": "stage_name",
                 "title": "Stage",
             }
         ],
@@ -308,22 +297,22 @@ def _build_stage_hygiene_panel() -> list[dict]:
         values=[
             {
                 "table": "f_stage_transition",
-                "field": "Stage Forward Pct (LE)",
+                "field": "Core Stage Forward Pct (LE)",
                 "title": "Forward % (count, Land + Expand)",
             },
             {
                 "table": "f_stage_transition",
-                "field": "Stage Backward Pct (LE)",
+                "field": "Core Stage Backward Pct (LE)",
                 "title": "Backward % (count, Land + Expand)",
             },
             {
                 "table": "f_stage_transition",
-                "field": "Avg Days In Prior Stage (LE)",
+                "field": "Core Avg Days In Prior Stage (LE)",
                 "title": "Avg days",
             },
             {
                 "table": "f_stage_transition",
-                "field": "Stage Moves ARR 7d",
+                "field": "Core Stage Moves ARR 7d",
                 "title": "7d ARR moved (Land + Expand)",
             },
         ],
@@ -332,9 +321,10 @@ def _build_stage_hygiene_panel() -> list[dict]:
         w=736,
         h=140,
         objects=zebra_stage_hygiene_table_objects(
-            max_field="f_stage_transition.Stage Moves ARR 7d",
-            databar_column="f_stage_transition.Stage Moves ARR 7d",
+            max_field="f_stage_transition.Core Stage Moves ARR 7d",
+            databar_column="f_stage_transition.Core Stage Moves ARR 7d",
         ),
+        filters=CORE_STAGE_FILTER,
     )
     return [
         _panel(24, 508, 768, 188),

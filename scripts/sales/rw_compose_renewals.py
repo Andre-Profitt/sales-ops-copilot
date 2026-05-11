@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from scripts.sales._pbir_helpers import (
-    build_card_visual_with_objects,
     build_shape_visual,
     build_table_visual,
     build_textbox_visual,
@@ -14,7 +13,7 @@ from scripts.sales.rw_validate import fetch_measures_by_table, validate_visual_d
 from scripts.sales.rw_zebra_kg_ibcs_synth import (
     zebra_detail_table_objects,
     zebra_heatmap_matrix_objects,
-    zebra_native_card_objects,
+    zebra_kpi_strip_metric,
 )
 
 PAGE = "Renewals"
@@ -37,27 +36,19 @@ def _card(
     *,
     measure_table: str = "f_opportunity",
     x: float,
-    accent: str,
-    value_color: str = "#1A1D31",
-) -> dict:
-    return build_card_visual_with_objects(
+) -> list[dict]:
+    return zebra_kpi_strip_metric(
         measure_table=measure_table,
         measure_name=measure,
-        display_title=title,
         x=x,
-        y=104,
+        y=94,
         w=156,
-        h=76,
-        objects=zebra_native_card_objects(
-            pattern="renewal-acv-kpi-card",
-            visual_intent="renewal ACV KPI strip",
-            tint="#FFFFFF",
-            accent=accent,
-            value_color=value_color,
-            label_color=accent,
-            value_font_size=18,
-            label_font_size=9,
-        ),
+        h=94,
+        title=title,
+        pattern="renewal-top-strip-metric",
+        visual_intent="renewal ACV KPI top strip",
+        value_font_size=17,
+        divider=x > 40,
     )
 
 
@@ -68,13 +59,13 @@ def _compose(section: dict) -> None:
         build_textbox_visual(PAGE, x=24, y=12, w=420, h=28, font_size_pt=18, color="#1A1D31"),
         build_textbox_visual("Renewal ACV pipeline and active-base ARR risk, kept as separate measure families.", x=24, y=42, w=980, h=22, font_size_pt=9, color="#5C6670", bold=False),
         _panel(24, 84, 1232, 116),
-        _card("Total Open Renewal ACV", "Open renewal ACV", x=40, accent="#D98A00"),
-        _card("Total Renewal ACV Due", "Due renewal ACV", x=214, accent="#D98A00"),
-        _card("Renewal Retention Pct (Period)", "Retention % (ACV-wtd)", x=388, accent="#3B8A3E", value_color="#1F6F3B"),
-        _card("Total Renewal ACV Won", "Won renewal ACV", x=562, accent="#2B5C8A"),
-        _card("Total Renewal ACV Lost", "Lost renewal ACV", x=736, accent="#C33A32", value_color="#8B2C25"),
-        _card("Existing ARR Run Rate", "Active-base ARR", measure_table="f_asset_line_item", x=910, accent="#083EA7"),
-        _card("Business At Risk ARR", "At-risk base ARR", measure_table="f_asset_line_item", x=1084, accent="#C33A32", value_color="#8B2C25"),
+        *_card("Total Open Renewal ACV", "Open renewal ACV", x=40),
+        *_card("Total Renewal ACV Due", "Due renewal ACV", x=214),
+        *_card("Renewal Retention Pct (Period)", "Retention % (ACV-wtd)", x=388),
+        *_card("Total Renewal ACV Won", "Won renewal ACV", x=562),
+        *_card("Total Renewal ACV Lost", "Lost renewal ACV", x=736),
+        *_card("Existing ARR Run Rate", "Active-base ARR", measure_table="f_asset_line_item", x=910),
+        *_card("Business At Risk ARR", "At-risk base ARR", measure_table="f_asset_line_item", x=1084),
         _panel(24, 224, 588, 456),
         build_textbox_visual("Region x Risk Active-base Heatmap", x=40, y=236, w=420, h=24, font_size_pt=11, color="#1A1D31"),
         build_table_visual(
