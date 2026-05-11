@@ -187,4 +187,4 @@ def test_render_markdown_includes_tab_map_and_guardrails():
     assert "## Tab Map" in markdown
     assert "VP Ops Scorecard" in markdown
     assert "ARR means Land + Expand only" in markdown
-    assert "`Total Open Pipeline Value` is the only cross-motion value measure" in markdown
+    assert "do not use a top-level blended ARR+ACV value" in markdown

@@ -11,7 +11,7 @@ Generated from `scripts/sales/rw_kpi_graph.py`, `rw_page_kpi_contract.py`, and t
 - Partial data or measure gap: 1
 - Source-data gap: 0
 
-Cardinal rule: ARR is Land + Expand only; Renewal ACV is Renewal only. The only cross-motion value measure remains `Total Open Pipeline Value`.
+Cardinal rule: ARR is Land + Expand only; Renewal ACV is Renewal only. Production pages show them side by side only as separate measures; no top-level blended ARR+ACV total.
 
 `KG Source Status` comes from the canonical RW KPI graph. `Dashboard Status` reflects the deployed model measures and current page contract.
 
@@ -81,18 +81,21 @@ The page contract is executable via `scripts/sales/rw_page_kpi_contract.py`; tes
 
 - Executive question: Can the quarter still land, and is forecast movement disciplined enough to trust?
 - Primary KPIs: `forecast_closed_won`, `pipeline_coverage_3x`, `forecast_accuracy`
-- Secondary diagnostics: `stage3_acv_value`
-- Required motion guardrail: `cross_motion_labeled`
-- Caveat: Total Open Pipeline Value is the only explicit cross-motion value measure.
+- Secondary diagnostics: `stage3_acv_value`, `renewals_mom_trend`
+- Required motion guardrail: `process`
+- Caveat: ARR (Land + Expand) and Renewal ACV are shown side by side only as separate columns/cards; no top-level blended open value.
 
 | KPI | Measure | Role | Motion | Data status | Label |
 | --- | --- | --- | --- | --- | --- |
-| `pipeline_coverage_3x` | `Total Open Pipeline Value` | hero KPI | `cross_motion_labeled` | partial | Open Value (ARR+ACV, cross-motion) |
+| `pipeline_coverage_3x` | `Total Open Pipeline ARR` | hero KPI | `land_expand_arr` | partial | Open ARR (Land + Expand) |
+| `renewals_mom_trend` | `Total Open Renewal ACV` | hero KPI | `renewal_acv` | clean | Open renewal ACV |
 | `forecast_closed_won` | `Total Closed Won ARR` | hero KPI | `land_expand_arr` | clean | Closed won ARR (Land + Expand) |
-| `pipeline_coverage_3x` | `Total Open Pipeline Value` | variance table | `cross_motion_labeled` | partial | Stage x Motion Open Value (ARR+ACV) |
+| `pipeline_coverage_3x` | `Total Open Pipeline ARR` | variance table | `land_expand_arr` | partial | Stage x Motion Open ARR (Land + Expand) |
+| `renewals_mom_trend` | `Total Open Renewal ACV` | variance table | `renewal_acv` | clean | Stage x Motion Open renewal ACV |
 | `forecast_accuracy` | `Forecast Slip Pct` | RAG card | `land_expand_arr` | proxy | Slip % (count proxy) |
 | `forecast_accuracy` | `Forecast Slips` | RAG card | `land_expand_arr` | proxy | Slip count proxy |
-| `stage3_acv_value` | `Total Open Pipeline Value` | detail table | `cross_motion_labeled` | partial | Late-Stage Commit Risk |
+| `stage3_acv_value` | `Total Open Pipeline ARR` | detail table | `land_expand_arr` | partial | Late-stage open ARR (Land + Expand) |
+| `renewals_mom_trend` | `Total Open Renewal ACV` | detail table | `renewal_acv` | clean | Late-stage open renewal ACV |
 
 ### Stage Hygiene
 
@@ -129,7 +132,7 @@ The page contract is executable via `scripts/sales/rw_page_kpi_contract.py`; tes
 | `lost_arr_quarterly` | `Total Renewal ACV Lost` | hero KPI | `renewal_acv` | partial | Lost renewal ACV |
 | `existing_arr_run_rate` | `Existing ARR Run Rate` | hero KPI | `renewal_base_arr` | clean | Active-base ARR |
 | `business_at_risk` | `Business At Risk ARR` | hero KPI | `renewal_base_arr` | clean | At-risk base ARR |
-| `business_at_risk` | `Business At Risk ARR` | bridge/waterfall | `renewal_base_arr` | clean | At-risk active-base ARR by Region |
+| `business_at_risk` | `Business At Risk ARR` | variance table | `renewal_base_arr` | clean | Region x Risk Active-base Heatmap |
 | `existing_arr_run_rate` | `Existing ARR Expiring In Period` | detail table | `renewal_base_arr` | clean | Active-base ARR Detail |
 | `indexation_arr_growth` | `Indexation ARR Growth` | detail table | `renewal_acv` | missing source data | Indexation ARR Growth |
 
@@ -167,7 +170,9 @@ The page contract is executable via `scripts/sales/rw_page_kpi_contract.py`; tes
 | `partner_opps_pct` | `Partner Pct` | hero KPI | `land_expand_arr` | clean | Partner % ARR share |
 | `alf_arr_pipeline` | `Total Open Pipeline ARR` | bridge/waterfall | `land_expand_arr` | partial | Open Land + Expand ARR by Region |
 | `new_customer_reporting` | `Total Land Won Count` | detail table | `land_expand_arr` | clean | Land won count |
-| `opp_source_effectiveness` | `Partner ARR` | detail table | `land_expand_arr` | clean | Strategic Mix Detail |
+| `opp_source_effectiveness` | `Source ARR Won` | variance table | `land_expand_arr` | clean | Source ARR won (Land + Expand) |
+| `opp_source_effectiveness` | `Source Win Rate` | variance table | `land_expand_arr` | clean | Source win rate (count) |
+| `partner_opps_pct` | `Partner ARR` | variance table | `land_expand_arr` | clean | Partner ARR (Land + Expand) |
 | `closed_won_value_tier` | `Closed Won Deals Count` | detail table | `land_expand_arr` | clean | Won value tier |
 | `cross_sell_to_acquired` | `Cross Sell To Acquired ARR` | detail table | `land_expand_arr` | clean | Axioma ARR (Land + Expand) |
 | `one_off_revenues` | `One Off Revenues` | detail table | `process` | clean | One-off revenue (non-recurring, EUR M) |
@@ -196,7 +201,7 @@ The page contract is executable via `scripts/sales/rw_page_kpi_contract.py`; tes
 | `forecast_accuracy` | HIGH | land_expand | exists | surfaced_partial | Forecast | Forecast Slip Pct, Forecast Slips, Forecast Upgrades (missing: Forecast Accuracy) | Add real ForecastingItem/snapshot accuracy; current Forecast page only shows slips/upgrades movement proxies. |
 | `partner_opps_pct` | MEDIUM | land_expand | exists | surfaced | Growth Mix | Partner ARR, Partner Pct | Keep in page QA; tighten visual treatment if Desktop review flags it. |
 | `renewal_retention_rate` | HIGH | renewal | partial | surfaced | VP Ops Scorecard, Renewals | Renewal Retention Pct (Period) | Keep in page QA; tighten visual treatment if Desktop review flags it. |
-| `renewals_mom_trend` | HIGH | renewal | exists | surfaced | Renewals | Total Open Renewal ACV, Total Renewal ACV Won | Keep in page QA; tighten visual treatment if Desktop review flags it. |
+| `renewals_mom_trend` | HIGH | renewal | exists | surfaced | Forecast, Renewals | Total Open Renewal ACV, Total Renewal ACV Won | Keep in page QA; tighten visual treatment if Desktop review flags it. |
 | `existing_arr_run_rate` | HIGH | renewal | exists | surfaced | Renewals, Product Retention | Existing ARR Run Rate | Keep in page QA; tighten visual treatment if Desktop review flags it. |
 | `indexation_arr_growth` | MEDIUM | renewal | missing | surfaced_partial | Renewals, Product Retention | - (missing: Indexation ARR Growth) | Needs indexation/contract uplift field; keep as Renewals caveat until staged. |
 | `ilf_arr_pipeline` | HIGH | land_expand | partial | surfaced | Growth Mix | Open Expand ARR | Keep in page QA; tighten visual treatment if Desktop review flags it. |

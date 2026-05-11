@@ -90,6 +90,45 @@ def test_currency_measure_formats_are_locked_to_eur_m():
         assert measures[name]["formatString"] == CURRENCY_M_FORMAT
 
 
+def test_forecast_transition_measures_exclude_omitted_category():
+    measures = _measure_map()
+
+    for name in [
+        "Total Forecast Transitions",
+        "Forecast Upgrades",
+        "Forecast Slips",
+        "Avg Days In Forecast Category",
+    ]:
+        expression = measures[name]["expression"]
+        assert 'f_forecast_transition[from_category] <> "Omitted"' in expression
+        assert 'f_forecast_transition[to_category] <> "Omitted"' in expression
+
+    assert measures["Forecast Slip Pct"]["expression"] == (
+        "DIVIDE ( [Forecast Slips], [Total Forecast Transitions] )"
+    )
+
+
+def test_heatmap_color_measures_exist_for_real_cell_background_encoding():
+    measures = _measure_map()
+
+    for name, base_measure in {
+        "Total Open Pipeline ARR Heat Color": "Total Open Pipeline ARR",
+        "Partner ARR Heat Color": "Partner ARR",
+        "Source ARR Won Heat Color": "Source ARR Won",
+        "Source Win Rate Heat Color": "Source Win Rate",
+        "Total Land Won Count Heat Color": "Total Land Won Count",
+        "Existing ARR Run Rate Heat Color": "Existing ARR Run Rate",
+        "Existing ARR Expiring In Period Heat Color": "Existing ARR Expiring In Period",
+        "Business At Risk ARR Heat Color": "Business At Risk ARR",
+        "Business At Risk Pct Heat Color": "Business At Risk Pct",
+    }.items():
+        expression = measures[name]["expression"]
+        assert f"[{base_measure}]" in expression
+        assert "ALLSELECTED" in expression
+        assert "__rw_heat_value" in expression
+        assert '"#FFFFFF"' in expression
+
+
 def test_stage_order_semantics_are_in_model():
     tables = _table_map()
     opp_cols = {column["name"]: column for column in tables["f_opportunity"]["columns"]}

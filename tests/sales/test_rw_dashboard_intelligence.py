@@ -76,10 +76,7 @@ def test_markdown_preserves_cardinal_rule_and_upgrade_lanes():
     assert (
         "ARR is Land + Expand only; Renewal ACV is Renewal only" in markdown
     )
-    assert (
-        "The only cross-motion value measure remains `Total Open Pipeline Value`"
-        in markdown
-    )
+    assert "no top-level blended ARR+ACV total" in markdown
     assert "## Immediate Upgrade Lanes" in markdown
     assert "| KG Source Status | Dashboard Status |" in markdown
     assert "Fast page-only upgrades; the model already has the measure" in markdown

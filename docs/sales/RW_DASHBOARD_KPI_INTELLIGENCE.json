@@ -163,27 +163,38 @@
     },
     "Forecast": {
       "executive_question": "Can the quarter still land, and is forecast movement disciplined enough to trust?",
-      "job": "Quarter answer: remaining days, open value, won ARR, forecast movement discipline.",
+      "job": "Quarter answer: remaining days, open ARR, open renewal ACV, won ARR, forecast movement discipline.",
       "primary_kpis": [
         "forecast_closed_won",
         "pipeline_coverage_3x",
         "forecast_accuracy"
       ],
       "secondary_diagnostics": [
-        "stage3_acv_value"
+        "stage3_acv_value",
+        "renewals_mom_trend"
       ],
-      "required_motion_guardrail": "cross_motion_labeled",
-      "caveat": "Total Open Pipeline Value is the only explicit cross-motion value measure.",
+      "required_motion_guardrail": "process",
+      "caveat": "ARR (Land + Expand) and Renewal ACV are shown side by side only as separate columns/cards; no top-level blended open value.",
       "placements": [
         {
           "kpi_id": "pipeline_coverage_3x",
-          "measure": "Total Open Pipeline Value",
+          "measure": "Total Open Pipeline ARR",
           "visual_role": "hero KPI",
-          "motion_guardrail": "cross_motion_labeled",
+          "motion_guardrail": "land_expand_arr",
           "data_status": "partial",
-          "label": "Open Value (ARR+ACV, cross-motion)",
+          "label": "Open ARR (Land + Expand)",
           "secondary": false,
           "missing_measure": "Pipeline Coverage Ratio"
+        },
+        {
+          "kpi_id": "renewals_mom_trend",
+          "measure": "Total Open Renewal ACV",
+          "visual_role": "hero KPI",
+          "motion_guardrail": "renewal_acv",
+          "data_status": "clean",
+          "label": "Open renewal ACV",
+          "secondary": true,
+          "missing_measure": ""
         },
         {
           "kpi_id": "forecast_closed_won",
@@ -197,13 +208,23 @@
         },
         {
           "kpi_id": "pipeline_coverage_3x",
-          "measure": "Total Open Pipeline Value",
+          "measure": "Total Open Pipeline ARR",
           "visual_role": "variance table",
-          "motion_guardrail": "cross_motion_labeled",
+          "motion_guardrail": "land_expand_arr",
           "data_status": "partial",
-          "label": "Stage x Motion Open Value (ARR+ACV)",
+          "label": "Stage x Motion Open ARR (Land + Expand)",
           "secondary": true,
           "missing_measure": "Pipeline Coverage Ratio"
+        },
+        {
+          "kpi_id": "renewals_mom_trend",
+          "measure": "Total Open Renewal ACV",
+          "visual_role": "variance table",
+          "motion_guardrail": "renewal_acv",
+          "data_status": "clean",
+          "label": "Stage x Motion Open renewal ACV",
+          "secondary": true,
+          "missing_measure": ""
         },
         {
           "kpi_id": "forecast_accuracy",
@@ -227,11 +248,21 @@
         },
         {
           "kpi_id": "stage3_acv_value",
-          "measure": "Total Open Pipeline Value",
+          "measure": "Total Open Pipeline ARR",
           "visual_role": "detail table",
-          "motion_guardrail": "cross_motion_labeled",
+          "motion_guardrail": "land_expand_arr",
           "data_status": "partial",
-          "label": "Late-Stage Commit Risk",
+          "label": "Late-stage open ARR (Land + Expand)",
+          "secondary": true,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "renewals_mom_trend",
+          "measure": "Total Open Renewal ACV",
+          "visual_role": "detail table",
+          "motion_guardrail": "renewal_acv",
+          "data_status": "clean",
+          "label": "Late-stage open renewal ACV",
           "secondary": true,
           "missing_measure": ""
         }
@@ -413,10 +444,10 @@
         {
           "kpi_id": "business_at_risk",
           "measure": "Business At Risk ARR",
-          "visual_role": "bridge/waterfall",
+          "visual_role": "variance table",
           "motion_guardrail": "renewal_base_arr",
           "data_status": "clean",
-          "label": "At-risk active-base ARR by Region",
+          "label": "Region x Risk Active-base Heatmap",
           "secondary": true,
           "missing_measure": ""
         },
@@ -611,11 +642,31 @@
         },
         {
           "kpi_id": "opp_source_effectiveness",
-          "measure": "Partner ARR",
-          "visual_role": "detail table",
+          "measure": "Source ARR Won",
+          "visual_role": "variance table",
           "motion_guardrail": "land_expand_arr",
           "data_status": "clean",
-          "label": "Strategic Mix Detail",
+          "label": "Source ARR won (Land + Expand)",
+          "secondary": true,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "opp_source_effectiveness",
+          "measure": "Source Win Rate",
+          "visual_role": "variance table",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "clean",
+          "label": "Source win rate (count)",
+          "secondary": true,
+          "missing_measure": ""
+        },
+        {
+          "kpi_id": "partner_opps_pct",
+          "measure": "Partner ARR",
+          "visual_role": "variance table",
+          "motion_guardrail": "land_expand_arr",
+          "data_status": "clean",
+          "label": "Partner ARR (Land + Expand)",
           "secondary": true,
           "missing_measure": ""
         },
@@ -986,6 +1037,7 @@
       "source_coverage": "exists",
       "dashboard_status": "surfaced",
       "pages": [
+        "Forecast",
         "Renewals"
       ],
       "model_measures": [

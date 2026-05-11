@@ -201,8 +201,8 @@ def build_upgrade_plan(
             ],
             bi_surface_work=[
                 "Replace proxy-first slip cards with an AC/PL/FC variance table.",
-                "Add a Forecast gap bridge: plan/quota -> closed won ARR -> open value -> remaining gap.",
-                "Keep `Total Open Pipeline Value` visibly labeled ARR+ACV when used cross-motion.",
+                "Add a Forecast gap bridge: plan/quota -> closed won ARR -> open ARR gap, with Renewal ACV shown separately.",
+                "Do not use a top-level ARR+ACV blended value; keep Land/Expand ARR and Renewal ACV as separate columns/cards.",
             ],
             acceptance=[
                 "Forecast page has zero high data-surface findings.",
@@ -551,7 +551,7 @@ def render_markdown(plan: dict[str, Any]) -> str:
         "- Do not spend the next pass on color/card styling alone; visual QA is already clean.",
         "- Do not force Zebra custom visuals through SimCorp restrictions; native transfer remains the path.",
         "- Do not count proxy KPIs as finished executive metrics.",
-        "- Do not blend ARR and Renewal ACV. ARR is Land + Expand only; Renewal ACV is Renewal only. `Total Open Pipeline Value` remains the only labeled cross-motion value.",
+        "- Do not blend ARR and Renewal ACV. ARR is Land + Expand only; Renewal ACV is Renewal only. Production pages should show those bases separately, not as one top-level ARR+ACV total.",
     ]
     return "\n".join(lines) + "\n"
 

@@ -21,7 +21,6 @@ from __future__ import annotations
 
 from scripts.sales._pbir_helpers import (
     build_card_visual_with_objects,
-    build_matrix_visual,
     build_table_visual,
     build_textbox_visual,
 )
@@ -93,9 +92,9 @@ def _compose(section: dict) -> None:
 
     Layout grid:
         y=12    Hero header
-        y=92    Hero - 3 cards x 380x78 (Days Remaining, Open, Closed Won)
+        y=92    Hero - 4 cards x 285x78
         y=184   Stage x motion header
-        y=212   Stage x motion matrix - 1200x172
+        y=212   Stage x motion split-basis table - 1200x172
         y=398   Forecast discipline header
         y=426   Forecast discipline - 4 cards x 280x72
         y=512   Commit-risk header
@@ -107,51 +106,74 @@ def _compose(section: dict) -> None:
             "Quarter Outlook", x=20, y=12, w=1200, h=28, font_size_pt=18, color="#1A1D31"
         )
     )
-    # Spec calls for Quota attainment + Pipeline coverage 3x +
-    # Days remaining. Quota dependency unmet — substitute with
-    # Open Pipeline Value (cross-motion) + Closed Won ARR.
+    # Spec calls for Quota attainment + Pipeline coverage 3x. Quota dependency
+    # is still unmet, so keep the basis split explicit: open ARR and open
+    # renewal ACV are separate hero cards, never one blended open-value card.
     hero = [
         ("f_opportunity", "Days Remaining In FQ", "Days Remaining (FQ)", 20, None),
         (
             "f_opportunity",
-            "Total Open Pipeline Value",
-            "Open Value (ARR+ACV)",
-            420,
+            "Total Open Pipeline ARR",
+            "Open ARR (Land + Expand)",
+            325,
             1000000,
         ),
-        ("f_opportunity", "Total Closed Won ARR", "Closed won ARR (Land + Expand)", 820, 1000000),
+        (
+            "f_opportunity",
+            "Total Open Renewal ACV",
+            "Open renewal ACV",
+            630,
+            1000000,
+        ),
+        ("f_opportunity", "Total Closed Won ARR", "Closed won ARR (Land + Expand)", 935, 1000000),
     ]
     for tbl, msr, title, x, display_units in hero:
         section["visualContainers"].append(
-            _kpi_card(tbl, msr, title, x=x, y=92, w=380, h=78, display_units=display_units)
+            _kpi_card(tbl, msr, title, x=x, y=92, w=285, h=78, display_units=display_units)
         )
 
     # ── Stage × motion matrix ──────────────────────────────────
     section["visualContainers"].append(
-        build_textbox_visual("Stage x Motion Open Value (ARR+ACV)", x=20, y=184, w=1200, h=24, font_size_pt=12, color="#1A1D31")
+        build_textbox_visual("Stage x Motion Open Pipeline by Basis", x=20, y=184, w=1200, h=24, font_size_pt=12, color="#1A1D31")
     )
-    # Rows = stage_name, columns = motion_type, value = Total Open Pipeline Value
-    # (which renders ARR for Land + Expand and ACV for Renewal — see measure
-    # description). Filtering to S3+ stages happens via the visual's filter
-    # pane manually for now.
+    # The table shows ARR and Renewal ACV as separate columns. Do not use
+    # Total Open Pipeline Value here; matrix totals would blend ARR and ACV.
     section["visualContainers"].append(
-        build_matrix_visual(
-            rows=[{"table": "f_opportunity", "field": "stage_name", "title": "Stage"}],
-            columns=[{"table": "f_opportunity", "field": "motion_type", "title": "Motion"}],
-            values=[
+        build_table_visual(
+            name="forecast_stage_motion_split_basis",
+            columns=[
                 {
                     "table": "f_opportunity",
-                    "field": "Total Open Pipeline Value",
-                    "title": "Open value (ARR+ACV)",
-                }
+                    "field": "stage_name",
+                    "kind": "column",
+                    "title": "Stage",
+                },
+                {
+                    "table": "f_opportunity",
+                    "field": "motion_type",
+                    "kind": "column",
+                    "title": "Motion",
+                },
+                {
+                    "table": "f_opportunity",
+                    "field": "Total Open Pipeline ARR",
+                    "kind": "measure",
+                    "title": "Open ARR (Land + Expand)",
+                },
+                {
+                    "table": "f_opportunity",
+                    "field": "Total Open Renewal ACV",
+                    "kind": "measure",
+                    "title": "Open renewal ACV",
+                },
             ],
             x=20,
             y=212,
             w=1200,
             h=172,
             objects=zebra_stage_hygiene_table_objects(
-                max_field="f_opportunity.Total Open Pipeline Value",
-                databar_column="f_opportunity.Total Open Pipeline Value",
+                max_field="f_opportunity.Total Open Pipeline ARR",
+                databar_column="f_opportunity.Total Open Pipeline ARR",
                 accent="#2B5C8A",
             ),
         )
@@ -246,9 +268,21 @@ def _compose(section: dict) -> None:
                 },
                 {
                     "table": "f_opportunity",
-                    "field": "Total Open Pipeline Value",
+                    "field": "motion_type",
+                    "kind": "column",
+                    "title": "Motion",
+                },
+                {
+                    "table": "f_opportunity",
+                    "field": "Total Open Pipeline ARR",
                     "kind": "measure",
-                    "title": "Value (ARR+ACV)",
+                    "title": "Open ARR (Land + Expand)",
+                },
+                {
+                    "table": "f_opportunity",
+                    "field": "Total Open Renewal ACV",
+                    "kind": "measure",
+                    "title": "Open renewal ACV",
                 },
                 {
                     "table": "f_opportunity",

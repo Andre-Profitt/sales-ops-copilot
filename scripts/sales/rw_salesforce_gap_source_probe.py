@@ -345,7 +345,7 @@ def build_probe() -> dict[str, Any]:
         "api_version": API_VERSION,
         "guardrail": (
             "ARR is Land + Expand only; Renewal ACV is Renewal only. "
-            "Total Open Pipeline Value is the only explicitly labeled cross-motion value."
+            "Production pages must not show a top-level blended ARR+ACV value."
         ),
         "queries": queries,
         "reports": _report_payloads(),

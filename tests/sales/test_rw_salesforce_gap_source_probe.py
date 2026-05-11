@@ -11,7 +11,7 @@ def _probe_fixture() -> dict:
         "generated_at": "2026-05-10T12:00:00+00:00",
         "guardrail": (
             "ARR is Land + Expand only; Renewal ACV is Renewal only. "
-            "Total Open Pipeline Value is the only explicitly labeled cross-motion value."
+            "Production pages must not show a top-level blended ARR+ACV value."
         ),
         "queries": {
             "opportunity_one_off_revenue": {

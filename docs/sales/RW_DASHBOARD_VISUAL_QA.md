@@ -1,11 +1,11 @@
 # RW Dashboard Visual QA
 
-Generated: 2026-05-11T00:37:59Z
+Generated: 2026-05-11T01:11:34Z
 
 ## Summary
 
 - Pages audited: 8
-- Visuals audited: 192
+- Visuals audited: 193
 - Findings: 0
 - Severity counts: info=0, low=0, medium=0, high=0, critical=0
 
@@ -20,5 +20,5 @@ No visual QA findings above the current heuristic thresholds.
 
 - ARR = Land + Expand only.
 - Renewal ACV = Renewal only.
-- Do not blend ARR and Renewal ACV except the explicitly labeled `Total Open Pipeline Value`.
-- Native cards should carry RAG/accent formatting; tables/matrices should use shared RW/Zebra/IBCS object styles.
+- Production visuals do not use a top-level blended ARR+ACV total; ARR and Renewal ACV stay separate.
+- Native cards should use neutral Zebra KPI-strip typography; tables/matrices should use shared RW/Zebra/IBCS object styles.

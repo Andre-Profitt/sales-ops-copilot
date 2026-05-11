@@ -11,7 +11,7 @@ Generated from `scripts/sales/rw_kpi_graph.py`, `rw_dashboard_intelligence.py`, 
 - Model/measure gaps: 1
 - Source-data gaps: 0
 
-Cardinal guardrail: ARR is Land + Expand only; Renewal ACV is Renewal only. Total Open Pipeline Value is the only explicitly labeled cross-motion value.
+Cardinal guardrail: ARR is Land + Expand only; Renewal ACV is Renewal only. Production pages must not show a top-level blended ARR+ACV value.
 
 Checklist legend: `[x]` covered, `[~]` partial/proxy on BI, `[ ]` not dependable yet.
 
@@ -36,7 +36,7 @@ Checklist legend: `[x]` covered, `[~]` partial/proxy on BI, `[ ]` not dependable
 | [~] | `forecast_accuracy` | Forecast Accuracy; target ±5% | HIGH | land_expand | Partial/proxy on BI | Forecast | Forecast Slip Pct, Forecast Slips, Forecast Upgrades; missing: Forecast Accuracy | Add real ForecastingItem/snapshot accuracy; current Forecast page only shows slips/upgrades movement proxies. |
 | [x] | `partner_opps_pct` | Partner Opportunities; target 20% of pipeline | MEDIUM | land_expand | Covered | Growth Mix | Partner ARR, Partner Pct | Keep in page QA; tighten visual treatment if Desktop review flags it. |
 | [x] | `renewal_retention_rate` | Renewals per quarter detailing term length; target 95% retention | HIGH | renewal | Covered | VP Ops Scorecard, Renewals | Renewal Retention Pct (Period) | Keep in page QA; tighten visual treatment if Desktop review flags it. |
-| [x] | `renewals_mom_trend` | Renewals by month over year; target Track & Trend | HIGH | renewal | Covered | Renewals | Total Open Renewal ACV, Total Renewal ACV Won | Keep in page QA; tighten visual treatment if Desktop review flags it. |
+| [x] | `renewals_mom_trend` | Renewals by month over year; target Track & Trend | HIGH | renewal | Covered | Forecast, Renewals | Total Open Renewal ACV, Total Renewal ACV Won | Keep in page QA; tighten visual treatment if Desktop review flags it. |
 | [x] | `existing_arr_run_rate` | Existing ARR (Run Rate) Indexed; target Track & Monitor | HIGH | renewal | Covered | Renewals, Product Retention | Existing ARR Run Rate | Keep in page QA; tighten visual treatment if Desktop review flags it. |
 | [~] | `indexation_arr_growth` | ARR growth attributed to indexation by Quarter; target 2-3% annually | MEDIUM | renewal | Partial/proxy on BI | Renewals, Product Retention | missing: Indexation ARR Growth | Needs indexation/contract uplift field; keep as Renewals caveat until staged. |
 | [x] | `ilf_arr_pipeline` | ILF ARR Pipes By Quarter; target $X Million | HIGH | land_expand | Covered | Growth Mix | Open Expand ARR | Keep in page QA; tighten visual treatment if Desktop review flags it. |

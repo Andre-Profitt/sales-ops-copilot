@@ -1572,6 +1572,61 @@ Andre asked for a direct checklist of RW-expected KPIs versus what the current B
 
 ARR remains Land + Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
 
+## 2026-05-11 — Omitted exclusion, real heatmap encoding, and no blended top-level value
+
+Desktop review and follow-up business-rule review found three defects in the current RW dashboard surface:
+
+- Forecast-category `Omitted` transitions could still leak into slip/upgrade and days-in-category logic.
+- Heatmap-labeled tables were only data-bar tables, not true cell-background heatmaps.
+- Forecast still used a top-level `Open Value (ARR+ACV)` card/table path via `Total Open Pipeline Value`.
+
+**Changes:**
+
+- `sf_to_fabric_rw_phase3.py` now excludes `Omitted` before ranking and lag calculation, so omitted rows do not count and do not poison days-in-category windows.
+- Forecast transition DAX measures now explicitly filter out `from_category = "Omitted"` and `to_category = "Omitted"`.
+- Added heat-color DAX measures and field-value cell-background bindings for Growth Mix, Renewals, and Product Retention heatmap surfaces.
+- Updated the native visual audit: data bars alone no longer qualify as a heatmap.
+- Rebuilt Forecast so ARR and Renewal ACV appear only as separate cards/columns:
+  - `Total Open Pipeline ARR` = Land + Expand ARR.
+  - `Total Open Renewal ACV` = Renewal ACV.
+  - `Total Open Pipeline Value` remains in the semantic model but is no longer used by production target pages.
+
+**Local verification before Fabric publish:**
+
+- `python3 -m scripts.sales.rw_apply_zebra_lab_proof` regenerated the local PBIP.
+- Visual QA on the local lab report passed with 0 findings.
+- Unit policy passed with 0 findings.
+- Metric-basis audit passed with 0 findings.
+- PBI knowledge graph now has critical=0; remaining high findings are source/model work, not visual guardrail breaks.
+- Targeted tests passed: 72 passed.
+
+**Current guardrail:**
+
+ARR remains Land + Expand only. Renewal ACV remains Renewal only. Production report pages must not show a top-level blended ARR+ACV total.
+
+## 2026-05-11 — Neutral Zebra KPI strip typography
+
+Desktop review showed the top KPI strips still looked too generated because the shared native card helper used semantic red/green/amber/blue label/value colors across the strip.  That is not how Zebra/IBCS executive pages usually read: color should carry variance, heatmap, or exception meaning, not decorate every headline card.
+
+**Changes:**
+
+- Updated `zebra_native_card_objects()` so KPI cards default to:
+  - neutral white surfaces
+  - quiet gray border
+  - dark value text
+  - neutral label typography
+- Preserved Zebra lineage metadata on the cards so audits can still distinguish intentional native-Zebra styling from plain Power BI cards.
+- Updated visual QA so neutral Zebra KPI-strip typography passes; semantic color is now expected in tables, variance bars, heatmaps, and exception encodings rather than every card label.
+- Added regression coverage that target-page Zebra cards do not use semantic red/green/amber value/label colors by default.
+
+**Local verification:**
+
+- `python3 -m scripts.sales.rw_apply_zebra_lab_proof`
+- `python3 -m scripts.sales.rw_dashboard_harness visual-qa --source path --path ~/Downloads/rw-pbi-format-lab/rpt_vp_ops_scorecard_zebra_lab_20260509_pbip/rpt_vp_ops_scorecard.Report/report.json --label neutral_zebra_kpi_strips --fail-on medium --markdown docs/sales/RW_DASHBOARD_VISUAL_QA.md`
+- `python3 -m pytest tests/sales/test_rw_page_kpi_contract.py tests/sales/test_rw_dashboard_visual_qa.py -q`
+
+Result: visual QA returned 0 findings; targeted tests passed.
+
 ## 2026-05-11 - Currency format literal repair
 
 Desktop review exposed monetary visuals rendering the custom numeric format string itself (`EUR #,0,,...`) instead of the value. Root cause: the semantic model used an unquoted `EUR` literal in Power BI custom numeric formats, so Desktop parsed the letters as format tokens.

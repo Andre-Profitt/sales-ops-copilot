@@ -815,7 +815,7 @@ def render_markdown(graph: dict[str, Any], json_path: Path | None = None) -> str
         "",
         "- ARR means Land + Expand only.",
         "- Renewal ACV means Renewal only.",
-        "- `Total Open Pipeline Value` is the only cross-motion value measure and must stay visibly labeled ARR+ACV.",
+        "- Production report pages do not use a top-level blended ARR+ACV value; Land/Expand ARR and Renewal ACV stay as separate measures.",
         "- Monetary visuals stay on `EUR M`; K/MM/BMM/$ visual labels or display-unit overrides are blocked.",
         "- Proxy KPIs are tracked as debt, not counted as clean executive metrics.",
     ]

@@ -70,6 +70,43 @@ def test_visual_qa_flags_card_strip_dimension_drift_and_wall_of_cards():
     assert "wall_of_cards" in codes
 
 
+def test_visual_qa_blocks_blended_pipeline_value_but_allows_split_forecast_basis():
+    split_visual = build_table_visual(
+        name="forecast_split_basis",
+        columns=[
+            {"table": "f_opportunity", "field": "stage_name", "kind": "column", "title": "Stage"},
+            {
+                "table": "f_opportunity",
+                "field": "Total Open Pipeline ARR",
+                "kind": "measure",
+                "title": "Open ARR (Land + Expand)",
+            },
+            {
+                "table": "f_opportunity",
+                "field": "Total Open Renewal ACV",
+                "kind": "measure",
+                "title": "Open renewal ACV",
+            },
+        ],
+        x=20,
+        y=90,
+    )
+    blended_visual = build_card_visual(
+        "f_opportunity",
+        "Total Open Pipeline Value",
+        "Open Value",
+        x=20,
+        y=90,
+    )
+
+    assert "arr_acv_guardrail" not in _codes(
+        audit_report(_report("Forecast", [split_visual]))["findings"]
+    )
+    assert "arr_acv_guardrail" in _codes(
+        audit_report(_report("Forecast", [blended_visual]))["findings"]
+    )
+
+
 def test_visual_qa_flags_pastel_rag_card_and_panel_surfaces():
     visuals = [
         build_textbox_visual("What Changed", x=20, y=12, w=400, h=28, font_size_pt=18),

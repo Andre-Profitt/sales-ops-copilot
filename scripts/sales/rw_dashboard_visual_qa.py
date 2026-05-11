@@ -331,16 +331,21 @@ def audit_styling(page: str, vc: dict) -> list[dict]:
                 )
             )
         colors = _find_colors(objects)
-        if not colors.intersection(ACCENT_COLORS):
+        zebra_neutral_card = (
+            (objects.get("stylePreset") or {}).get("source") == "zebra-visual-dna"
+            and "#3A4653" in colors
+            and "#1A1D31" in colors
+        )
+        if not colors.intersection(ACCENT_COLORS) and not zebra_neutral_card:
             issues.append(
                 finding(
                     code="missing_rag_accent",
                     severity="medium",
                     page=page,
                     visual=vc,
-                    message="KPI card lacks a recognized RAG/accent color treatment.",
+                    message="KPI card lacks either neutral Zebra-card typography or a recognized accent treatment.",
                     evidence={"colors": sorted(colors)},
-                    recommendation="Apply blue/green/amber/red accent and matching tint by KPI polarity.",
+                    recommendation="Use neutral Zebra KPI-strip typography; reserve semantic color for variance cells, data bars, and heatmaps.",
                 )
             )
         pastel_backgrounds = _find_colors(objects.get("background", [])).intersection(PASTEL_STATUS_FILLS)
@@ -541,6 +546,18 @@ def audit_arr_acv_guardrails(page: str, vc: dict) -> list[dict]:
     has_arr = bool(re.search(r"\bARR\b", joined, re.IGNORECASE))
     has_renewal_acv = bool(re.search(r"Renewal\s+ACV", joined, re.IGNORECASE))
     issues: list[dict] = []
+    if "Total Open Pipeline Value" in measures:
+        issues.append(
+            finding(
+                code="arr_acv_guardrail",
+                severity="critical",
+                page=page,
+                visual=vc,
+                message="Production visual references blended open pipeline value.",
+                evidence={"measures": measures},
+                recommendation="Use separate `Total Open Pipeline ARR` and `Total Open Renewal ACV` measures; do not show a top-level ARR+ACV total.",
+            )
+        )
     if page == "Renewals" and has_arr:
         illegal_arr = [
             measure
@@ -571,27 +588,9 @@ def audit_arr_acv_guardrails(page: str, vc: dict) -> list[dict]:
                 visual=vc,
                 message="Land + Expand KPI page references Renewal ACV value.",
                 evidence={"measures": measures},
-                recommendation="Keep Renewal ACV on Renewals, or use only explicitly labeled cross-motion Total Open Pipeline Value.",
+                recommendation="Keep Renewal ACV on Renewals or in explicitly separated Renewal ACV columns/cards.",
             )
         )
-    if page == "Forecast":
-        illegal_cross_motion = [
-            m
-            for m in measures
-            if "Renewal ACV" in m or ("ARR" in m and m != "Total Closed Won ARR")
-        ]
-        if illegal_cross_motion and "Total Open Pipeline Value" not in measures:
-            issues.append(
-                finding(
-                    code="arr_acv_guardrail",
-                    severity="critical",
-                    page=page,
-                    visual=vc,
-                    message="Forecast page has a cross-motion value that is not the explicitly labeled Total Open Pipeline Value.",
-                    evidence={"measures": measures, "illegal": illegal_cross_motion},
-                    recommendation="Use Total Open Pipeline Value for cross-motion open value; keep ARR/ACV otherwise separated.",
-                )
-            )
     return issues
 
 
@@ -695,8 +694,8 @@ def render_markdown(result: dict) -> str:
             "",
             "- ARR = Land + Expand only.",
             "- Renewal ACV = Renewal only.",
-            "- Do not blend ARR and Renewal ACV except the explicitly labeled `Total Open Pipeline Value`.",
-            "- Native cards should carry RAG/accent formatting; tables/matrices should use shared RW/Zebra/IBCS object styles.",
+            "- Production visuals do not use a top-level blended ARR+ACV total; ARR and Renewal ACV stay separate.",
+            "- Native cards should use neutral Zebra KPI-strip typography; tables/matrices should use shared RW/Zebra/IBCS object styles.",
             "",
         ]
     )

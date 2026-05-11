@@ -130,6 +130,22 @@ def _style_pattern(vc: dict) -> str:
     return str((_objects(vc).get("stylePreset") or {}).get("pattern") or "")
 
 
+def _has_heatmap_encoding(vc: dict) -> bool:
+    objects = _objects(vc)
+    heatmap = objects.get("heatmapEncoding") or {}
+    if heatmap.get("type") == "field-value-cell-background" and heatmap.get("columns"):
+        return True
+    return any(
+        isinstance(item, dict)
+        and item.get("selector", {}).get("metadata")
+        and {
+            "backColor",
+            "backColorPrimary",
+        }.intersection((item.get("properties") or {}).keys())
+        for item in objects.get("values", [])
+    )
+
+
 def _finding(
     *,
     finding_id: str,
@@ -183,7 +199,7 @@ def _growth_mix_findings(report: dict) -> list[dict[str, Any]]:
         if _visual_type(visual) in HEATMAP_VISUALS
         and {"lead_source", "region"}.issubset(_column_names(visual))
         and {"Source ARR Won", "Source Win Rate"}.issubset(_measure_names(visual))
-        and "dataBars" in _objects(visual)
+        and _has_heatmap_encoding(visual)
     ]
     if not source_heatmaps:
         findings.append(
@@ -193,9 +209,9 @@ def _growth_mix_findings(report: dict) -> list[dict[str, Any]]:
                 page="Growth Mix",
                 visual=None,
                 message="Growth Mix does not expose source effectiveness as a source x region heatmap.",
-                recommended_visual="tableEx or pivotTable heatmap with dataBars",
+                recommended_visual="tableEx or pivotTable heatmap with field-value cell backgrounds",
                 next_action=(
-                    "Add Source ARR Won, Source Win Rate, and Land won count by lead source x region."
+                    "Add Source ARR Won, Source Win Rate, and Land won count by lead source x region with heat-color measures."
                 ),
                 evidence={
                     "required_columns": ["lead_source", "region"],
@@ -210,7 +226,7 @@ def _growth_mix_findings(report: dict) -> list[dict[str, Any]]:
         if _visual_type(visual) in HEATMAP_VISUALS
         and {"region", "motion_type"}.issubset(_column_names(visual))
         and "Total Open Pipeline ARR" in _measure_names(visual)
-        and "dataBars" in _objects(visual)
+        and _has_heatmap_encoding(visual)
     ]
     if not motion_heatmaps:
         findings.append(
@@ -220,8 +236,8 @@ def _growth_mix_findings(report: dict) -> list[dict[str, Any]]:
                 page="Growth Mix",
                 visual=None,
                 message="Growth Mix does not show Land and Expand mix as a region x motion heatmap.",
-                recommended_visual="tableEx or pivotTable heatmap with dataBars",
-                next_action="Add Region x Motion with Open ARR (Land + Expand) and Partner ARR.",
+                recommended_visual="tableEx or pivotTable heatmap with field-value cell backgrounds",
+                next_action="Add Region x Motion with Open ARR (Land + Expand), Partner ARR, and heat-color measures.",
                 evidence={
                     "required_columns": ["region", "motion_type"],
                     "required_measure": "Total Open Pipeline ARR",
@@ -238,7 +254,6 @@ def _visual_findings(report: dict) -> list[dict[str, Any]]:
         for visual in section.get("visualContainers", []):
             vt = _visual_type(visual)
             measures = _measure_names(visual)
-            objects = _objects(visual)
             if vt == "clusteredBarChart" and measures.intersection(BRIDGE_CANDIDATE_MEASURES):
                 findings.append(
                     _finding(
@@ -255,7 +270,7 @@ def _visual_findings(report: dict) -> list[dict[str, Any]]:
             if (
                 vt in HEATMAP_VISUALS
                 and measures.intersection(HEATMAP_CANDIDATE_MEASURES)
-                and "dataBars" not in objects
+                and not _has_heatmap_encoding(visual)
                 and _style_pattern(visual) != "detail-ledger"
             ):
                 findings.append(
@@ -264,9 +279,9 @@ def _visual_findings(report: dict) -> list[dict[str, Any]]:
                         severity="medium",
                         page=page,
                         visual=visual,
-                        message="A slice/dice matrix has metric candidates but no heatmap/data-bar encoding.",
-                        recommended_visual="tableEx or pivotTable heatmap with dataBars",
-                        next_action="Add Zebra-native matrix objects with dataBars for the key metric columns.",
+                        message="A slice/dice matrix has metric candidates but no heatmap cell-background encoding.",
+                        recommended_visual="tableEx or pivotTable heatmap with field-value cell backgrounds",
+                        next_action="Add Zebra-native matrix objects with heat-color measures for the key metric columns.",
                         evidence={"measures": sorted(measures.intersection(HEATMAP_CANDIDATE_MEASURES))},
                     )
                 )
@@ -318,8 +333,12 @@ def audit_native_visual_upgrades(report: dict | None = None) -> dict[str, Any]:
                 "use_for": "contribution bridges, gap explanations, renewal-base movement",
             },
             {
+                "visual": "tableEx/pivotTable + field-value cell backgrounds",
+                "use_for": "product/segment/region/source heatmaps",
+            },
+            {
                 "visual": "tableEx/pivotTable + dataBars",
-                "use_for": "product/segment/region/source heatmaps and variance matrices",
+                "use_for": "variance matrices and Zebra bullet-bar equivalents",
             },
             {
                 "visual": "tableEx + Zebra detail grammar",

@@ -148,7 +148,7 @@ def build_checklist() -> dict[str, Any]:
         "schema": "rw-kpi-coverage-checklist.v1",
         "guardrail": (
             "ARR is Land + Expand only; Renewal ACV is Renewal only. "
-            "Total Open Pipeline Value is the only explicitly labeled cross-motion value."
+            "Production pages must not show a top-level blended ARR+ACV value."
         ),
         "summary": coverage_summary(rows),
         "rows": [asdict(row) for row in rows],

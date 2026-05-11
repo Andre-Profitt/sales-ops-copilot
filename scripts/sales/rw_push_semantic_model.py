@@ -172,6 +172,56 @@ def build_model_bim() -> dict:
             )
         return out
 
+    def _heatmap_color_expression(
+        value_measure: str,
+        *,
+        table: str,
+        group_columns: tuple[str, ...],
+        palette: tuple[str, str, str, str],
+    ) -> str:
+        groups = ", ".join(f"{table}[{column}]" for column in group_columns)
+        low, mid, high, max_color = palette
+        return (
+            f"VAR _value = [{value_measure}] "
+            "VAR _max_value = "
+            f"MAXX ( SUMMARIZE ( ALLSELECTED ( {table} ), {groups}, "
+            f'"__rw_heat_value", [{value_measure}] ), [__rw_heat_value] ) '
+            "VAR _pct = DIVIDE ( _value, _max_value ) "
+            "RETURN "
+            "SWITCH ( "
+            "TRUE(), "
+            'ISBLANK ( _value ) || _value = 0, "#FFFFFF", '
+            f'_pct >= 0.75, "{max_color}", '
+            f'_pct >= 0.50, "{high}", '
+            f'_pct >= 0.25, "{mid}", '
+            f'"{low}" )'
+        )
+
+    def _heatmap_color_measure(
+        name: str,
+        value_measure: str,
+        *,
+        table: str,
+        group_columns: tuple[str, ...],
+        palette: tuple[str, str, str, str],
+        description: str,
+    ) -> dict:
+        return {
+            "name": name,
+            "expression": _heatmap_color_expression(
+                value_measure,
+                table=table,
+                group_columns=group_columns,
+                palette=palette,
+            ),
+            "description": description,
+        }
+
+    blue_heat = ("#EEF4FA", "#C9DBEF", "#6F9FD2", "#083EA7")
+    green_heat = ("#EEF8F0", "#CBE8D0", "#79B982", "#1F6F3B")
+    amber_heat = ("#FFF7E6", "#F3D28A", "#E6A329", "#A65E00")
+    red_heat = ("#FFF0EE", "#F4B8B3", "#DF6B61", "#8B2C25")
+
     # Phase 1 measures — computable from f_opportunity alone. Names use
     # "Total"/"Avg"/"Pct"/"Count" prefixes so they don't collide with raw
     # column names (lesson from sm_workforce_rw).
@@ -189,6 +239,14 @@ def build_model_bim() -> dict:
             "formatString": CURRENCY_M_FORMAT,
             "description": "RW KPI: pipeline_coverage_3x (numerator). Open Land + Expand ARR.",
         },
+        _heatmap_color_measure(
+            "Total Open Pipeline ARR Heat Color",
+            "Total Open Pipeline ARR",
+            table="f_opportunity",
+            group_columns=("region", "motion_type"),
+            palette=blue_heat,
+            description="Field-value background color for Region x Motion Open ARR heatmaps.",
+        ),
         {
             "name": "Total Closed Lost ARR",
             "expression": 'CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), f_opportunity[is_closed] = TRUE(), f_opportunity[is_won] = FALSE(), f_opportunity[motion_type] IN { "Land", "Expand" } )',
@@ -281,6 +339,14 @@ def build_model_bim() -> dict:
             "formatString": CURRENCY_M_FORMAT,
             "description": "RW KPI: partner_opps_pct numerator. Open Land + Expand ARR where lead source contains partner.",
         },
+        _heatmap_color_measure(
+            "Partner ARR Heat Color",
+            "Partner ARR",
+            table="f_opportunity",
+            group_columns=("region", "motion_type"),
+            palette=amber_heat,
+            description="Field-value background color for Region x Motion Partner ARR heatmaps.",
+        ),
         {
             "name": "Partner Pct",
             "expression": "DIVIDE ( [Partner ARR], [Total Open Pipeline ARR] )",
@@ -458,12 +524,28 @@ def build_model_bim() -> dict:
             "formatString": CURRENCY_M_FORMAT,
             "description": "RW KPI: opp_source_effectiveness — slice by [lead_source] for per-source ARR.",
         },
+        _heatmap_color_measure(
+            "Source ARR Won Heat Color",
+            "Source ARR Won",
+            table="f_opportunity",
+            group_columns=("lead_source", "region"),
+            palette=blue_heat,
+            description="Field-value background color for Source x Region ARR heatmaps.",
+        ),
         {
             "name": "Source Win Rate",
             "expression": 'DIVIDE ( CALCULATE ( COUNTROWS ( f_opportunity ), f_opportunity[is_won] = TRUE(), f_opportunity[motion_type] IN { "Land", "Expand" } ), CALCULATE ( COUNTROWS ( f_opportunity ), f_opportunity[is_closed] = TRUE(), f_opportunity[motion_type] IN { "Land", "Expand" } ) )',
             "formatString": "0.0%",
             "description": "RW KPI: opp_source_effectiveness — slice by [lead_source] for per-source win rate.",
         },
+        _heatmap_color_measure(
+            "Source Win Rate Heat Color",
+            "Source Win Rate",
+            table="f_opportunity",
+            group_columns=("lead_source", "region"),
+            palette=green_heat,
+            description="Field-value background color for Source x Region win-rate heatmaps.",
+        ),
         {
             "name": "Total Land Won ARR",
             "expression": 'CALCULATE ( SUM ( f_opportunity[arr_org_ccy] ), f_opportunity[is_won] = TRUE(), f_opportunity[motion_type] = "Land" )',
@@ -476,6 +558,14 @@ def build_model_bim() -> dict:
             "formatString": "#,0",
             "description": "RW KPI: new_customer_reporting (Land-only count). Slice by region × month.",
         },
+        _heatmap_color_measure(
+            "Total Land Won Count Heat Color",
+            "Total Land Won Count",
+            table="f_opportunity",
+            group_columns=("lead_source", "region"),
+            palette=blue_heat,
+            description="Field-value background color for Source x Region Land won count heatmaps.",
+        ),
         # ── YoY comparison measures (default page filter should be year=2026) ──
         {
             "name": "Closed Won ARR LY",
@@ -955,20 +1045,21 @@ def build_model_bim() -> dict:
     forecast_measures = [
         {
             "name": "Total Forecast Transitions",
-            "expression": "COUNTROWS ( f_forecast_transition )",
+            "expression": 'CALCULATE ( COUNTROWS ( f_forecast_transition ), f_forecast_transition[from_category] <> "Omitted", f_forecast_transition[to_category] <> "Omitted" )',
             "formatString": "#,0",
+            "description": "Forecast-category transitions excluding Omitted; Omitted is pipeline hygiene, not executive forecast movement.",
         },
         {
             "name": "Forecast Upgrades",
-            "expression": 'CALCULATE ( COUNTROWS ( f_forecast_transition ), f_forecast_transition[direction] = "upgrade" )',
+            "expression": 'CALCULATE ( COUNTROWS ( f_forecast_transition ), f_forecast_transition[direction] = "upgrade", f_forecast_transition[from_category] <> "Omitted", f_forecast_transition[to_category] <> "Omitted" )',
             "formatString": "#,0",
-            "description": "Pipeline → Best Case → Commit → Closed direction.",
+            "description": "Pipeline → Best Case → Commit → Closed direction. Excludes Omitted transitions.",
         },
         {
             "name": "Forecast Slips",
-            "expression": 'CALCULATE ( COUNTROWS ( f_forecast_transition ), f_forecast_transition[direction] = "slip" )',
+            "expression": 'CALCULATE ( COUNTROWS ( f_forecast_transition ), f_forecast_transition[direction] = "slip", f_forecast_transition[from_category] <> "Omitted", f_forecast_transition[to_category] <> "Omitted" )',
             "formatString": "#,0",
-            "description": "Commit → Pipeline / Best Case → Pipeline (downgrade). RW pain — undermines forecast trust.",
+            "description": "Commit → Pipeline / Best Case → Pipeline (downgrade), excluding Omitted. RW pain — undermines forecast trust.",
         },
         {
             "name": "Forecast Slip Pct",
@@ -978,9 +1069,9 @@ def build_model_bim() -> dict:
         },
         {
             "name": "Avg Days In Forecast Category",
-            "expression": "AVERAGE ( f_forecast_transition[days_in_prior_category] )",
+            "expression": 'CALCULATE ( AVERAGE ( f_forecast_transition[days_in_prior_category] ), f_forecast_transition[from_category] <> "Omitted", f_forecast_transition[to_category] <> "Omitted" )',
             "formatString": "0.0",
-            "description": "How long opps sit in each forecast category before moving. Slice by from_category.",
+            "description": "How long opps sit in each non-Omitted forecast category before moving. Slice by from_category.",
         },
     ]
 
@@ -998,6 +1089,14 @@ def build_model_bim() -> dict:
             "formatString": CURRENCY_M_FORMAT,
             "description": "RW KPI: existing_arr_run_rate. Current active/non-expired installed ARR base from Apttus Asset Line Item; not Renewal ACV.",
         },
+        _heatmap_color_measure(
+            "Existing ARR Run Rate Heat Color",
+            "Existing ARR Run Rate",
+            table="f_asset_line_item",
+            group_columns=("region", "termination_risk", "product_family", "industry"),
+            palette=blue_heat,
+            description="Field-value background color for active-base ARR heatmaps.",
+        ),
         {
             "name": "Existing ARR Expiring In Period",
             "expression": (
@@ -1008,6 +1107,14 @@ def build_model_bim() -> dict:
             "formatString": CURRENCY_M_FORMAT,
             "description": "Active installed ARR filtered by asset end date / selected renewal period.",
         },
+        _heatmap_color_measure(
+            "Existing ARR Expiring In Period Heat Color",
+            "Existing ARR Expiring In Period",
+            table="f_asset_line_item",
+            group_columns=("region", "termination_risk", "product_family", "industry"),
+            palette=blue_heat,
+            description="Field-value background color for expiring active-base ARR heatmaps.",
+        ),
         {
             "name": "Business At Risk ARR",
             "expression": (
@@ -1019,12 +1126,28 @@ def build_model_bim() -> dict:
             "formatString": CURRENCY_M_FORMAT,
             "description": "RW KPI: business_at_risk. Active installed ARR where Account termination risk is High or Medium; replaces Renewal-opportunity ACV proxy.",
         },
+        _heatmap_color_measure(
+            "Business At Risk ARR Heat Color",
+            "Business At Risk ARR",
+            table="f_asset_line_item",
+            group_columns=("region", "termination_risk", "product_family", "industry"),
+            palette=red_heat,
+            description="Field-value background color for at-risk active-base ARR heatmaps.",
+        ),
         {
             "name": "Business At Risk Pct",
             "expression": "DIVIDE ( [Business At Risk ARR], [Existing ARR Run Rate] )",
             "formatString": "0.0%",
             "description": "At-risk active ARR as a share of current installed ARR run-rate.",
         },
+        _heatmap_color_measure(
+            "Business At Risk Pct Heat Color",
+            "Business At Risk Pct",
+            table="f_asset_line_item",
+            group_columns=("region", "termination_risk", "product_family", "industry"),
+            palette=amber_heat,
+            description="Field-value background color for active-base risk percent heatmaps.",
+        ),
         {
             "name": "Active Asset Line Count",
             "expression": (

@@ -243,7 +243,7 @@ def to_markdown(rows: tuple[KPIIntelligenceRow, ...]) -> str:
         f"- Partial data or measure gap: {counts['partial_data_or_measure_gap']}",
         f"- Source-data gap: {counts['source_data_gap']}",
         "",
-        "Cardinal rule: ARR is Land + Expand only; Renewal ACV is Renewal only. The only cross-motion value measure remains `Total Open Pipeline Value`.",
+        "Cardinal rule: ARR is Land + Expand only; Renewal ACV is Renewal only. Production pages show them side by side only as separate measures; no top-level blended ARR+ACV total.",
         "",
         "`KG Source Status` comes from the canonical RW KPI graph. `Dashboard Status` reflects the deployed model measures and current page contract.",
         "",

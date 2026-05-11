@@ -55,6 +55,8 @@ def test_arr_run_rate_is_currency_but_win_rate_arr_is_percent():
     assert not is_currency_measure("Win Rate ARR")
     assert not is_currency_measure("Land Win Rate ARR")
     assert not is_currency_measure("Business At Risk Pct")
+    assert not is_currency_measure("Business At Risk ARR Heat Color")
+    assert not is_currency_measure("Total Open Pipeline ARR Heat Color")
 
 
 def test_report_unit_audit_rejects_theme_or_visual_display_unit_scaling():

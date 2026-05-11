@@ -17,7 +17,9 @@ from scripts.sales.rw_page_kpi_contract import (
 from scripts.sales.rw_filter_bar import FILTER_REFS_BY_PAGE, FORBIDDEN_MOTION_SLICER_REF
 from scripts.sales.rw_metric_basis_audit import audit_metric_basis
 from scripts.sales.rw_page_chrome import ACTION_TRAILS, CHROME_VISUAL_COUNT, NAV_TRAIL, PAGE_ORDER, PAGE_SUBTITLES
+from scripts.sales.rw_push_semantic_model import build_model_bim
 from scripts.sales.rw_semantic_filter_audit import audit_semantic_filter_flow
+from scripts.sales.rw_validate import validate_report
 
 
 def _single_visual(vc: dict) -> dict:
@@ -26,6 +28,21 @@ def _single_visual(vc: dict) -> dict:
 
 def _visual_type(vc: dict) -> str:
     return _single_visual(vc)["visualType"]
+
+
+def _has_cell_background_heatmap(single_visual: dict) -> bool:
+    objects = single_visual.get("objects") or {}
+    heatmap = objects.get("heatmapEncoding") or {}
+    if heatmap.get("type") == "field-value-cell-background" and heatmap.get("columns"):
+        return True
+    return any(
+        item.get("selector", {}).get("metadata")
+        and {"backColor", "backColorPrimary"}.intersection(
+            (item.get("properties") or {}).keys()
+        )
+        for item in objects.get("values", [])
+        if isinstance(item, dict)
+    )
 
 
 def _textbox_text(vc: dict) -> str:
@@ -41,6 +58,13 @@ def _single_contract(page: str, **overrides):
     return {page: replace(PAGE_KPI_CONTRACTS[page], **overrides)}
 
 
+def _model_measures_by_table() -> dict[str, list[str]]:
+    return {
+        table["name"]: [measure["name"] for measure in table.get("measures", [])]
+        for table in build_model_bim()["model"]["tables"]
+    }
+
+
 def test_decision_contracts_are_self_consistent():
     assert validate_decision_contracts() == []
 
@@ -52,6 +76,12 @@ def test_all_target_pages_compose_against_declared_kpi_contracts():
     assert validate_contract_pages(report) == []
     for page in PAGE_KPI_CONTRACTS:
         assert _page(report, page)["visualContainers"], page
+
+
+def test_target_pages_resolve_visual_and_formatting_measure_refs_against_model():
+    report = compose_report({"sections": []})
+
+    assert validate_report(report, _model_measures_by_table()) == []
 
 
 def test_target_pages_use_only_native_power_bi_visual_types():
@@ -182,7 +212,7 @@ def test_target_pages_have_no_plain_card_or_plain_table_visual_debt():
     assert findings == []
 
 
-def test_total_open_pipeline_value_is_the_only_cross_motion_measure():
+def test_no_target_page_uses_blended_arr_acv_pipeline_value():
     report = compose_report({"sections": []})
     encoded_by_page = {
         section["displayName"]: "\n".join(v["config"] for v in section["visualContainers"])
@@ -193,10 +223,12 @@ def test_total_open_pipeline_value_is_the_only_cross_motion_measure():
         page for page, encoded in encoded_by_page.items() if "Total Open Pipeline Value" in encoded
     ]
 
-    assert required_measures() >= {"Total Open Pipeline Value", "Total Open Pipeline ARR"}
-    assert pages_with_cross_motion_value == ["Forecast"]
+    assert "Total Open Pipeline Value" in _model_measures_by_table()["f_opportunity"]
+    assert "Total Open Pipeline Value" not in required_measures()
+    assert "Total Open Pipeline ARR" in required_measures()
+    assert pages_with_cross_motion_value == []
     assert PAGE_KPI_CONTRACTS["Forecast"].caveat.startswith(
-        "Total Open Pipeline Value is the only explicit cross-motion value measure"
+        "ARR (Land + Expand) and Renewal ACV are shown side by side only as separate columns/cards"
     )
 
 
@@ -294,6 +326,29 @@ def test_rw_zebra_native_cards_avoid_pastel_rag_tile_surfaces():
 
     for pastel in ("#ffeeee", "#fff8e6", "#eef9ee", "#FFEEEE", "#FFF8E6", "#EEF9EE"):
         assert pastel not in encoded
+
+
+def test_rw_zebra_native_kpi_strips_use_neutral_label_typography():
+    report = compose_report({"sections": []})
+    semantic_card_colors = {"#C33A32", "#3B8A3E", "#D98A00", "#8B2C25", "#1F6F3B"}
+
+    for page in PAGE_KPI_CONTRACTS:
+        for card in [
+            _single_visual(vc)
+            for vc in _page(report, page)["visualContainers"]
+            if _visual_type(vc) == "card"
+        ]:
+            objects = card.get("objects") or {}
+            if (objects.get("stylePreset") or {}).get("source") != "zebra-visual-dna":
+                continue
+            encoded = json.dumps(
+                {
+                    "labels": objects.get("labels"),
+                    "categoryLabels": objects.get("categoryLabels"),
+                }
+            )
+            assert not semantic_card_colors.intersection(encoded.split('"')), page
+            assert "#3A4653" in encoded, page
 
 
 def test_stage_hygiene_visual_qa_has_no_medium_plus_findings():
@@ -431,6 +486,7 @@ def test_product_retention_uses_zebra_heatmap_and_detail_table_grammar():
         assert objects["zebraGrammar"]["schema"] == "rw-zebra-native-transfer.columnGrammar.v1"
         assert "dataBars" in objects
         assert objects["dataBars"]["values"]
+        assert _has_cell_background_heatmap(heatmap)
 
     ledger_objects = ledger[0].get("objects") or {}
     assert ledger_objects["stylePreset"] == {
@@ -474,6 +530,7 @@ def test_renewals_uses_active_base_risk_heatmap_not_basic_bar():
     assert objects["zebraGrammar"]["schema"] == "rw-zebra-native-transfer.columnGrammar.v1"
     assert "dataBars" in objects
     assert objects["dataBars"]["values"]
+    assert _has_cell_background_heatmap(heatmaps[0])
 
 
 def test_arr_and_renewal_acv_contracts_stay_separate_by_page():
@@ -561,6 +618,7 @@ def test_growth_mix_uses_native_heatmaps_for_motion_and_source_mix():
     assert "f_opportunity.Source ARR Won" in encoded
     assert "f_opportunity.Source Win Rate" in encoded
     assert all(heatmap["objects"]["dataBars"]["values"] for heatmap in heatmaps)
+    assert all(_has_cell_background_heatmap(heatmap) for heatmap in heatmaps)
     patterns = {heatmap["objects"]["stylePreset"]["pattern"] for heatmap in heatmaps}
     assert "growth-region-motion-heatmap" in patterns
     assert "growth-source-region-heatmap" in patterns

@@ -4,7 +4,7 @@ Read-only probe against Salesforce via `sf` CLI and Report REST. It does not pub
 
 Generated: `2026-05-10T22:36:02+00:00`
 
-Cardinal guardrail: ARR is Land + Expand only; Renewal ACV is Renewal only. Total Open Pipeline Value is the only explicitly labeled cross-motion value.
+Cardinal guardrail: ARR is Land + Expand only; Renewal ACV is Renewal only. Production pages must not show a top-level blended ARR+ACV value.
 
 ## Answer
 

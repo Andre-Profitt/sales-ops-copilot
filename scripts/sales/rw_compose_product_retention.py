@@ -107,6 +107,16 @@ def _compose(section: dict) -> None:
                         "#C33A32",
                     ),
                 ),
+                background_specs=(
+                    (
+                        "f_asset_line_item.Existing ARR Run Rate",
+                        "f_asset_line_item.Existing ARR Run Rate Heat Color",
+                    ),
+                    (
+                        "f_asset_line_item.Business At Risk ARR",
+                        "f_asset_line_item.Business At Risk ARR Heat Color",
+                    ),
+                ),
             ),
         ),
         _panel(660, 224, 596, 210),
@@ -148,6 +158,16 @@ def _compose(section: dict) -> None:
                         "f_asset_line_item.Existing ARR Expiring In Period",
                         "f_asset_line_item.Existing ARR Expiring In Period",
                         "#2B5C8A",
+                    ),
+                ),
+                background_specs=(
+                    (
+                        "f_asset_line_item.Business At Risk Pct",
+                        "f_asset_line_item.Business At Risk Pct Heat Color",
+                    ),
+                    (
+                        "f_asset_line_item.Existing ARR Expiring In Period",
+                        "f_asset_line_item.Existing ARR Expiring In Period Heat Color",
                     ),
                 ),
             ),

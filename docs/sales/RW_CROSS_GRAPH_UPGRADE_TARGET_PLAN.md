@@ -1,14 +1,14 @@
 # RW Cross-Graph Upgrade Target Plan
 
-Generated: `2026-05-11T00:07:03Z`
+Generated: `2026-05-11T01:03:06Z`
 
 This compares three graphs: Zebra template/visual grammar, the live RW Power BI artifact graph, and the RW KPI coverage graph. The target is not more cosmetic styling; it is a better executive operating system with Zebra-grade scenario, variance, and bridge semantics.
 
 ## Readout
 
 - Live PBI graph verdict: `needs_source_or_model_work`
-- Live PBI footprint: `8` pages, `192` visuals
-- PBI cleanup counts: `{'info': 0, 'low': 0, 'medium': 4, 'high': 4, 'critical': 0}`
+- Live PBI footprint: `7` pages, `126` visuals
+- PBI cleanup counts: `{'info': 0, 'low': 0, 'medium': 5, 'high': 4, 'critical': 0}`
 - Zebra mined visual corpus: `360` visuals
 - RW KPI surface: `26` clean out of `31` KPIs
 - Target plan: `2` P0, `4` P1, `2` P2
@@ -17,9 +17,9 @@ This compares three graphs: Zebra template/visual grammar, the live RW Power BI 
 
 | Signal | Evidence | Meaning |
 | --- | --- | --- |
-| `bridge_gap` | Live PBI has 1 native waterfall/bridge visuals; Zebra corpus has 140/360 waterfall visuals. | RW pages are not yet using Zebra's bridge/decomposition grammar for executive variance stories. |
-| `card_weight` | Live PBI card share is 39/192; Zebra card share is 74/360. | Cards are acceptable for a KPI spine, but the target state should move more meaning into variance tables and bridges. |
-| `ibcs_table_base` | Live PBI already has 21 native table/matrix visuals and Zebra has 146 table visuals. | The native tableEx path is the right base; the next lift is scenario columns, variance deltas, and action-ledger ordering. |
+| `bridge_gap` | Live PBI has 0 native waterfall/bridge visuals; Zebra corpus has 140/360 waterfall visuals. | RW pages are not yet using Zebra's bridge/decomposition grammar for executive variance stories. |
+| `card_weight` | Live PBI card share is 34/126; Zebra card share is 74/360. | Cards are acceptable for a KPI spine, but the target state should move more meaning into variance tables and bridges. |
+| `ibcs_table_base` | Live PBI already has 16 native table/matrix visuals and Zebra has 146 table visuals. | The native tableEx path is the right base; the next lift is scenario columns, variance deltas, and action-ledger ordering. |
 
 ## Zebra Patterns To Transfer
 
@@ -52,8 +52,8 @@ This compares three graphs: Zebra template/visual grammar, the live RW Power BI 
 
 **BI surface work**
 - Replace proxy-first slip cards with an AC/PL/FC variance table.
-- Add a Forecast gap bridge: plan/quota -> closed won ARR -> open value -> remaining gap.
-- Keep `Total Open Pipeline Value` visibly labeled ARR+ACV when used cross-motion.
+- Add a Forecast gap bridge: plan/quota -> closed won ARR -> open ARR gap, with Renewal ACV shown separately.
+- Do not use a top-level ARR+ACV blended value; keep Land/Expand ARR and Renewal ACV as separate columns/cards.
 
 **Acceptance**
 - Forecast page has zero high data-surface findings.
@@ -252,4 +252,4 @@ This compares three graphs: Zebra template/visual grammar, the live RW Power BI 
 - Do not spend the next pass on color/card styling alone; visual QA is already clean.
 - Do not force Zebra custom visuals through SimCorp restrictions; native transfer remains the path.
 - Do not count proxy KPIs as finished executive metrics.
-- Do not blend ARR and Renewal ACV. ARR is Land + Expand only; Renewal ACV is Renewal only. `Total Open Pipeline Value` remains the only labeled cross-motion value.
+- Do not blend ARR and Renewal ACV. ARR is Land + Expand only; Renewal ACV is Renewal only. Production pages should show those bases separately, not as one top-level ARR+ACV total.

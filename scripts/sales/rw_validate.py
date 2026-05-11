@@ -80,21 +80,37 @@ def fetch_live_report() -> dict:
 
 
 def measure_refs_in_visual(vc: dict) -> list[tuple[str, str]]:
-    """Extract (table, measure) refs from one visualContainer config."""
+    """Extract (table, measure) refs from one visualContainer config.
+
+    This includes prototypeQuery refs and measure refs embedded in formatting
+    objects, such as field-value heatmap background colors and data-bar maxima.
+    """
     cfg = json.loads(vc["config"]) if isinstance(vc.get("config"), str) else vc.get("config", {})
-    select = cfg.get("singleVisual", {}).get("prototypeQuery", {}).get("Select", [])
+    single_visual = cfg.get("singleVisual", {})
     aliases = {
         e["Name"]: e["Entity"]
-        for e in cfg.get("singleVisual", {}).get("prototypeQuery", {}).get("From", [])
+        for e in single_visual.get("prototypeQuery", {}).get("From", [])
     }
-    out = []
-    for s in select:
-        if "Measure" in s:
-            alias = s["Measure"].get("Expression", {}).get("SourceRef", {}).get("Source")
-            prop = s["Measure"].get("Property")
-            if alias and prop:
-                out.append((aliases.get(alias, "?"), prop))
-    return out
+    out: set[tuple[str, str]] = set()
+
+    def walk(node) -> None:
+        if isinstance(node, dict):
+            measure = node.get("Measure")
+            if isinstance(measure, dict):
+                source_ref = measure.get("Expression", {}).get("SourceRef", {})
+                table = source_ref.get("Entity")
+                alias = source_ref.get("Source")
+                prop = measure.get("Property")
+                if prop and (table or alias):
+                    out.add((table or aliases.get(alias, alias or "?"), prop))
+            for value in node.values():
+                walk(value)
+        elif isinstance(node, list):
+            for item in node:
+                walk(item)
+
+    walk(single_visual)
+    return sorted(out)
 
 
 def validate_report(rj: dict, by_table: dict[str, list[str]]) -> list[str]:

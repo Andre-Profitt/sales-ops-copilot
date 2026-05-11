@@ -167,6 +167,40 @@ def build_databar_cf_objects(
     }
 
 
+def build_cell_background_cf_object(
+    column_name: str,
+    color_field: str,
+    *,
+    font_color: str = "#111111",
+) -> dict:
+    """Field-value cell background conditional formatting for one tableEx column.
+
+    `color_field` is a DAX measure that returns a hex color string. This is the
+    native Power BI heatmap path: the measure owns the scale logic, while the
+    report JSON binds that scale to the cell background for the selected column.
+    """
+    if "." not in color_field:
+        raise ValueError(f"color_field must be 'Table.Measure', got: {color_field!r}")
+    color_table, color_measure = color_field.split(".", 1)
+    color_expr = {
+        "expr": {
+            "Measure": {
+                "Expression": {"SourceRef": {"Entity": color_table}},
+                "Property": color_measure,
+            }
+        }
+    }
+    return {
+        "selector": {"metadata": column_name},
+        "properties": {
+            "backColor": {"solid": {"color": color_expr}},
+            "backColorPrimary": {"solid": {"color": color_expr}},
+            "fontColor": _card_color(font_color),
+            "fontColorPrimary": _card_color(font_color),
+        },
+    }
+
+
 from scripts.sales._pbir_helpers import (  # noqa: E402
     build_card_visual_with_objects,
     build_rag_card_objects,
@@ -251,21 +285,26 @@ def zebra_native_card_objects(
     value_font_size: int = 28,
     label_font_size: int = 10,
     display_units: int | None = None,
+    use_semantic_color: bool = False,
 ) -> dict:
     """Zebra-card-inspired native card object grammar for RW pages.
 
     Zebra/IBCS transfers should read like finance-operating dashboards:
-    neutral card surfaces, quiet borders, and semantic color only as an accent.
+    neutral card surfaces, quiet borders, and neutral label typography. Semantic
+    color belongs in variance cells, bars, and heatmap encodings, not in every
+    top-strip KPI tile.
     The source tint argument remains for API compatibility with older composers,
     but the native card background deliberately stays neutral to avoid pastel
     RAG tiles.
     """
+    effective_value_color = value_color if use_semantic_color else "#1A1D31"
+    effective_label_color = label_color if use_semantic_color else "#3A4653"
     return _with_zebra_transfer_metadata(
         build_rag_card_objects(
             tint=surface,
             accent=border,
-            value_color=value_color,
-            label_color=label_color or accent,
+            value_color=effective_value_color,
+            label_color=effective_label_color or "#3A4653",
             value_font_size=value_font_size,
             label_font_size=label_font_size,
             display_units=display_units,
@@ -337,13 +376,13 @@ def zebra_heatmap_matrix_objects(
     pattern: str = "product-retention-heatmap",
     visual_intent: str = "product x segment heatmap matrix",
     databar_specs: tuple[tuple[str, str, str], ...] = (),
+    background_specs: tuple[tuple[str, str], ...] = (),
 ) -> dict:
     """Matrix/table style for Zebra-inspired heatmap reads.
 
-    Native Power BI matrix JSON cannot fully recreate Zebra's per-cell heatmap
-    grammar from code alone, but this gives the visual the dense IBCS table
-    treatment and stable lineage so Desktop/Fabric formatting passes can target
-    it deterministically.
+    Data bars carry Zebra bullet-bar intent; field-value cell backgrounds carry
+    the actual heatmap encoding. A visual named heatmap should have
+    background_specs, otherwise it is only a variance/data-bar table.
     """
     objects = _with_zebra_transfer_metadata(
         build_table_style_objects(
@@ -366,6 +405,18 @@ def zebra_heatmap_matrix_objects(
                     "values"
                 ]
             ]
+        }
+    if background_specs:
+        objects.setdefault("values", []).extend(
+            build_cell_background_cf_object(column_name, color_field)
+            for column_name, color_field in background_specs
+        )
+        objects["heatmapEncoding"] = {
+            "type": "field-value-cell-background",
+            "columns": [
+                {"column": column_name, "colorMeasure": color_field}
+                for column_name, color_field in background_specs
+            ],
         }
     return objects
 

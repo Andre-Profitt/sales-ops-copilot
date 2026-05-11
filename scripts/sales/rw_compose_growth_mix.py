@@ -136,6 +136,16 @@ def _compose(section: dict) -> None:
                         "#D98A00",
                     ),
                 ),
+                background_specs=(
+                    (
+                        "f_opportunity.Total Open Pipeline ARR",
+                        "f_opportunity.Total Open Pipeline ARR Heat Color",
+                    ),
+                    (
+                        "f_opportunity.Partner ARR",
+                        "f_opportunity.Partner ARR Heat Color",
+                    ),
+                ),
             ),
         ),
         _panel(24, 480, 588, 200),
@@ -185,6 +195,20 @@ def _compose(section: dict) -> None:
                         "f_opportunity.Total Land Won Count",
                         "f_opportunity.Total Land Won Count",
                         "#2B5C8A",
+                    ),
+                ),
+                background_specs=(
+                    (
+                        "f_opportunity.Source ARR Won",
+                        "f_opportunity.Source ARR Won Heat Color",
+                    ),
+                    (
+                        "f_opportunity.Source Win Rate",
+                        "f_opportunity.Source Win Rate Heat Color",
+                    ),
+                    (
+                        "f_opportunity.Total Land Won Count",
+                        "f_opportunity.Total Land Won Count Heat Color",
                     ),
                 ),
             ),
