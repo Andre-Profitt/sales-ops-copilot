@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from scripts.sales._pbir_helpers import (
     build_card_visual_with_objects,
-    build_matrix_visual,
     build_shape_visual,
     build_table_visual,
     build_textbox_visual,
@@ -77,12 +76,18 @@ def _compose(section: dict) -> None:
             font_size_pt=11,
             color="#1A1D31",
         ),
-        build_matrix_visual(
-            rows=[{"table": ASSET, "field": "product_family", "title": "Product family"}],
-            columns=[{"table": "d_region", "field": "region", "title": "Region"}],
-            values=[
-                {"table": ASSET, "field": "Existing ARR Run Rate", "title": "Active-base ARR"},
-                {"table": ASSET, "field": "Business At Risk ARR", "title": "At-risk active-base ARR"},
+        build_table_visual(
+            name="product_family_region_heatmap",
+            columns=[
+                {"table": ASSET, "field": "product_family", "kind": "column", "title": "Product family"},
+                {"table": "d_region", "field": "region", "kind": "column", "title": "Region"},
+                {"table": ASSET, "field": "Existing ARR Run Rate", "kind": "measure", "title": "Active-base ARR"},
+                {
+                    "table": ASSET,
+                    "field": "Business At Risk ARR",
+                    "kind": "measure",
+                    "title": "At-risk active-base ARR",
+                },
             ],
             x=40,
             y=268,
@@ -114,12 +119,18 @@ def _compose(section: dict) -> None:
             font_size_pt=11,
             color="#1A1D31",
         ),
-        build_matrix_visual(
-            rows=[{"table": ASSET, "field": "product_family", "title": "Product family"}],
-            columns=[{"table": ASSET, "field": "industry", "title": "Segment"}],
-            values=[
-                {"table": ASSET, "field": "Business At Risk Pct", "title": "Risk % of base"},
-                {"table": ASSET, "field": "Existing ARR Expiring In Period", "title": "Expiring active-base ARR"},
+        build_table_visual(
+            name="product_family_segment_risk_heatmap",
+            columns=[
+                {"table": ASSET, "field": "product_family", "kind": "column", "title": "Product family"},
+                {"table": ASSET, "field": "industry", "kind": "column", "title": "Segment"},
+                {"table": ASSET, "field": "Business At Risk Pct", "kind": "measure", "title": "Risk % of base"},
+                {
+                    "table": ASSET,
+                    "field": "Existing ARR Expiring In Period",
+                    "kind": "measure",
+                    "title": "Expiring active-base ARR",
+                },
             ],
             x=676,
             y=268,

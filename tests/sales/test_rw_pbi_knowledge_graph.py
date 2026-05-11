@@ -5,6 +5,7 @@ import json
 
 from scripts.sales import rw_pbi_knowledge_graph as kg
 from scripts.sales._pbir_helpers import build_card_visual
+from scripts.sales.rw_unit_policy import CURRENCY_M_FORMAT
 
 
 def _model_bim() -> dict:
@@ -21,13 +22,13 @@ def _model_bim() -> dict:
                         {
                             "name": "Total Closed Won ARR",
                             "expression": "SUM ( f_opportunity[arr_org_ccy] )",
-                            "formatString": 'EUR #,0,,.0"M"',
+                            "formatString": CURRENCY_M_FORMAT,
                             "description": "ARR field, Land + Expand only.",
                         },
                         {
                             "name": "Total Open Pipeline ARR",
                             "expression": "[Total Closed Won ARR]",
-                            "formatString": 'EUR #,0,,.0"M"',
+                            "formatString": CURRENCY_M_FORMAT,
                         },
                     ],
                 },

@@ -22,6 +22,7 @@ SEVERITY_RANK = {"info": 0, "low": 1, "medium": 2, "high": 3, "critical": 4}
 Severity = Literal["info", "low", "medium", "high", "critical"]
 
 VALUE_VISUALS = {"card", "tableEx", "pivotTable", "clusteredBarChart", "waterfallChart"}
+HEATMAP_VISUALS = {"tableEx", "pivotTable"}
 BRIDGE_CANDIDATE_MEASURES = {
     "Total Open Pipeline ARR",
     "Total Open Pipeline Value",
@@ -125,6 +126,10 @@ def _has_zebra_metadata(vc: dict) -> bool:
     )
 
 
+def _style_pattern(vc: dict) -> str:
+    return str((_objects(vc).get("stylePreset") or {}).get("pattern") or "")
+
+
 def _finding(
     *,
     finding_id: str,
@@ -175,7 +180,7 @@ def _growth_mix_findings(report: dict) -> list[dict[str, Any]]:
     source_heatmaps = [
         visual
         for visual in visuals
-        if _visual_type(visual) == "pivotTable"
+        if _visual_type(visual) in HEATMAP_VISUALS
         and {"lead_source", "region"}.issubset(_column_names(visual))
         and {"Source ARR Won", "Source Win Rate"}.issubset(_measure_names(visual))
         and "dataBars" in _objects(visual)
@@ -188,7 +193,7 @@ def _growth_mix_findings(report: dict) -> list[dict[str, Any]]:
                 page="Growth Mix",
                 visual=None,
                 message="Growth Mix does not expose source effectiveness as a source x region heatmap.",
-                recommended_visual="pivotTable heatmap with dataBars",
+                recommended_visual="tableEx or pivotTable heatmap with dataBars",
                 next_action=(
                     "Add Source ARR Won, Source Win Rate, and Land won count by lead source x region."
                 ),
@@ -202,7 +207,7 @@ def _growth_mix_findings(report: dict) -> list[dict[str, Any]]:
     motion_heatmaps = [
         visual
         for visual in visuals
-        if _visual_type(visual) == "pivotTable"
+        if _visual_type(visual) in HEATMAP_VISUALS
         and {"region", "motion_type"}.issubset(_column_names(visual))
         and "Total Open Pipeline ARR" in _measure_names(visual)
         and "dataBars" in _objects(visual)
@@ -215,7 +220,7 @@ def _growth_mix_findings(report: dict) -> list[dict[str, Any]]:
                 page="Growth Mix",
                 visual=None,
                 message="Growth Mix does not show Land and Expand mix as a region x motion heatmap.",
-                recommended_visual="pivotTable heatmap with dataBars",
+                recommended_visual="tableEx or pivotTable heatmap with dataBars",
                 next_action="Add Region x Motion with Open ARR (Land + Expand) and Partner ARR.",
                 evidence={
                     "required_columns": ["region", "motion_type"],
@@ -247,7 +252,12 @@ def _visual_findings(report: dict) -> list[dict[str, Any]]:
                         evidence={"measures": sorted(measures)},
                     )
                 )
-            if vt == "pivotTable" and measures.intersection(HEATMAP_CANDIDATE_MEASURES) and "dataBars" not in objects:
+            if (
+                vt in HEATMAP_VISUALS
+                and measures.intersection(HEATMAP_CANDIDATE_MEASURES)
+                and "dataBars" not in objects
+                and _style_pattern(visual) != "detail-ledger"
+            ):
                 findings.append(
                     _finding(
                         finding_id="matrix_missing_heatmap_encoding",
@@ -255,7 +265,7 @@ def _visual_findings(report: dict) -> list[dict[str, Any]]:
                         page=page,
                         visual=visual,
                         message="A slice/dice matrix has metric candidates but no heatmap/data-bar encoding.",
-                        recommended_visual="pivotTable heatmap with dataBars",
+                        recommended_visual="tableEx or pivotTable heatmap with dataBars",
                         next_action="Add Zebra-native matrix objects with dataBars for the key metric columns.",
                         evidence={"measures": sorted(measures.intersection(HEATMAP_CANDIDATE_MEASURES))},
                     )
@@ -308,7 +318,7 @@ def audit_native_visual_upgrades(report: dict | None = None) -> dict[str, Any]:
                 "use_for": "contribution bridges, gap explanations, renewal-base movement",
             },
             {
-                "visual": "pivotTable + dataBars",
+                "visual": "tableEx/pivotTable + dataBars",
                 "use_for": "product/segment/region/source heatmaps and variance matrices",
             },
             {

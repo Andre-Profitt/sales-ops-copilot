@@ -383,9 +383,8 @@ def test_product_retention_composes_native_heatmaps_and_ledger():
     visual_types = [_visual_type(vc) for vc in product_retention["visualContainers"]]
     encoded = "\n".join(vc["config"] for vc in product_retention["visualContainers"])
 
-    assert set(visual_types) <= {"basicShape", "card", "pivotTable", "tableEx", "textbox", "slicer"}
-    assert visual_types.count("pivotTable") == 2
-    assert visual_types.count("tableEx") == 1
+    assert set(visual_types) <= {"basicShape", "card", "tableEx", "textbox", "slicer"}
+    assert visual_types.count("tableEx") == 3
     assert "f_asset_line_item.product_family" in encoded
     assert "d_region.region" in encoded
     assert "f_asset_line_item.industry" in encoded
@@ -412,17 +411,22 @@ def test_product_retention_has_consultant_grade_native_visual_qa_and_basis_label
 def test_product_retention_uses_zebra_heatmap_and_detail_table_grammar():
     report = compose_report({"sections": []})
     product_retention = _page(report, "Product Retention")
-    matrices = [_single_visual(vc) for vc in product_retention["visualContainers"] if _visual_type(vc) == "pivotTable"]
+    heatmaps = [
+        _single_visual(vc)
+        for vc in product_retention["visualContainers"]
+        if _visual_type(vc) == "tableEx"
+        and "heatmap" in (_single_visual(vc).get("objects", {}).get("stylePreset", {}).get("pattern", ""))
+    ]
     ledger = [
         _single_visual(vc)
         for vc in product_retention["visualContainers"]
         if _visual_type(vc) == "tableEx" and "f_asset_line_item.product_area" in vc["config"]
     ]
 
-    assert len(matrices) == 2
+    assert len(heatmaps) == 2
     assert len(ledger) == 1
-    for matrix in matrices:
-        objects = matrix.get("objects") or {}
+    for heatmap in heatmaps:
+        objects = heatmap.get("objects") or {}
         assert objects["stylePreset"]["source"] == "zebra-visual-dna"
         assert objects["zebraGrammar"]["schema"] == "rw-zebra-native-transfer.columnGrammar.v1"
         assert "dataBars" in objects
@@ -441,15 +445,16 @@ def test_renewals_uses_active_base_risk_heatmap_not_basic_bar():
     report = compose_report({"sections": []})
     renewals = _page(report, "Renewals")
     visual_types = [_visual_type(vc) for vc in renewals["visualContainers"]]
-    matrices = [
+    heatmaps = [
         _single_visual(vc)
         for vc in renewals["visualContainers"]
-        if _visual_type(vc) == "pivotTable"
+        if _visual_type(vc) == "tableEx"
+        and (_single_visual(vc).get("objects", {}).get("stylePreset", {}).get("pattern") == "renewal-region-risk-heatmap")
     ]
     encoded = "\n".join(vc["config"] for vc in renewals["visualContainers"])
 
     assert "clusteredBarChart" not in visual_types
-    assert len(matrices) == 1
+    assert len(heatmaps) == 1
     assert "d_region.region" in encoded
     assert "f_asset_line_item.termination_risk" in encoded
     assert "f_asset_line_item.Existing ARR Run Rate" in encoded
@@ -460,7 +465,7 @@ def test_renewals_uses_active_base_risk_heatmap_not_basic_bar():
     assert "Open Expand ARR" not in encoded
     assert "Total Open Pipeline ARR" not in encoded
 
-    objects = matrices[0].get("objects") or {}
+    objects = heatmaps[0].get("objects") or {}
     assert objects["stylePreset"] == {
         "source": "zebra-visual-dna",
         "pattern": "renewal-region-risk-heatmap",
@@ -542,20 +547,21 @@ def test_growth_mix_uses_native_waterfall_bridge_not_basic_bar_only():
 def test_growth_mix_uses_native_heatmaps_for_motion_and_source_mix():
     report = compose_report({"sections": []})
     growth_mix = _page(report, "Growth Mix")
-    matrices = [
+    heatmaps = [
         _single_visual(vc)
         for vc in growth_mix["visualContainers"]
-        if _visual_type(vc) == "pivotTable"
+        if _visual_type(vc) in {"tableEx", "pivotTable"}
+        and "heatmap" in (_single_visual(vc).get("objects", {}).get("stylePreset", {}).get("pattern", ""))
     ]
 
-    assert len(matrices) >= 2
-    encoded = json.dumps(matrices)
+    assert len(heatmaps) >= 2
+    encoded = json.dumps(heatmaps)
     assert "f_opportunity.motion_type" in encoded
     assert "f_opportunity.lead_source" in encoded
     assert "f_opportunity.Source ARR Won" in encoded
     assert "f_opportunity.Source Win Rate" in encoded
-    assert all(matrix["objects"]["dataBars"]["values"] for matrix in matrices)
-    patterns = {matrix["objects"]["stylePreset"]["pattern"] for matrix in matrices}
+    assert all(heatmap["objects"]["dataBars"]["values"] for heatmap in heatmaps)
+    patterns = {heatmap["objects"]["stylePreset"]["pattern"] for heatmap in heatmaps}
     assert "growth-region-motion-heatmap" in patterns
     assert "growth-source-region-heatmap" in patterns
 

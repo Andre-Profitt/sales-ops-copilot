@@ -177,7 +177,7 @@ PAGE_KPI_CONTRACTS: dict[str, PageKPIContract] = {
             p("lost_arr_quarterly", "Total Renewal ACV Lost", "hero KPI", "renewal_acv", "partial", "Lost renewal ACV"),
             p("existing_arr_run_rate", "Existing ARR Run Rate", "hero KPI", "renewal_base_arr", "clean", "Active-base ARR", secondary=True),
             p("business_at_risk", "Business At Risk ARR", "hero KPI", "renewal_base_arr", "clean", "At-risk base ARR", secondary=True),
-            p("business_at_risk", "Business At Risk ARR", "bridge/waterfall", "renewal_base_arr", "clean", "At-risk active-base ARR by Region", secondary=True),
+            p("business_at_risk", "Business At Risk ARR", "variance table", "renewal_base_arr", "clean", "Region x Risk Active-base Heatmap", secondary=True),
             p("existing_arr_run_rate", "Existing ARR Expiring In Period", "detail table", "renewal_base_arr", "clean", "Active-base ARR Detail", secondary=True),
             p("indexation_arr_growth", "Indexation ARR Growth", "detail table", "renewal_acv", "missing source data", "Indexation ARR Growth", secondary=True, missing_measure="Indexation ARR Growth"),
         ),

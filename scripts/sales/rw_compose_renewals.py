@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from scripts.sales._pbir_helpers import (
     build_card_visual_with_objects,
-    build_matrix_visual,
     build_shape_visual,
     build_table_visual,
     build_textbox_visual,
@@ -78,28 +77,38 @@ def _compose(section: dict) -> None:
         _card("Business At Risk ARR", "At-risk base ARR", measure_table="f_asset_line_item", x=1084, accent="#C33A32", value_color="#8B2C25"),
         _panel(24, 224, 588, 456),
         build_textbox_visual("Region x Risk Active-base Heatmap", x=40, y=236, w=420, h=24, font_size_pt=11, color="#1A1D31"),
-        build_matrix_visual(
-            rows=[{"table": "d_region", "field": "region", "title": "Region"}],
-            columns=[{"table": "f_asset_line_item", "field": "termination_risk", "title": "Risk"}],
-            values=[
+        build_table_visual(
+            name="renewal_region_risk_active_base_heatmap",
+            columns=[
+                {"table": "d_region", "field": "region", "kind": "column", "title": "Region"},
+                {
+                    "table": "f_asset_line_item",
+                    "field": "termination_risk",
+                    "kind": "column",
+                    "title": "Risk",
+                },
                 {
                     "table": "f_asset_line_item",
                     "field": "Existing ARR Run Rate",
+                    "kind": "measure",
                     "title": "Active-base ARR",
                 },
                 {
                     "table": "f_asset_line_item",
                     "field": "Business At Risk ARR",
+                    "kind": "measure",
                     "title": "At-risk active-base ARR",
                 },
                 {
                     "table": "f_asset_line_item",
                     "field": "Business At Risk Pct",
+                    "kind": "measure",
                     "title": "Risk % of active base",
                 },
                 {
                     "table": "f_asset_line_item",
                     "field": "Existing ARR Expiring In Period",
+                    "kind": "measure",
                     "title": "Expiring active-base ARR",
                 },
             ],

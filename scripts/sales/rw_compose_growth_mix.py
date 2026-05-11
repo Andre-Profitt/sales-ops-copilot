@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from scripts.sales._pbir_helpers import (
     build_card_visual_with_objects,
-    build_matrix_visual,
     build_shape_visual,
     build_table_visual,
     build_textbox_visual,
@@ -101,12 +100,23 @@ def _compose(section: dict) -> None:
         )),
         _panel(636, 224, 620, 236),
         build_textbox_visual("Region x Motion Open ARR Heatmap", x=652, y=236, w=460, h=24, font_size_pt=11, color="#1A1D31"),
-        build_matrix_visual(
-            rows=[{"table": "d_region", "field": "region", "title": "Region"}],
-            columns=[{"table": "f_opportunity", "field": "motion_type", "title": "Motion"}],
-            values=[
-                {"table": "f_opportunity", "field": "Total Open Pipeline ARR", "title": "Open ARR (Land + Expand)"},
-                {"table": "f_opportunity", "field": "Partner ARR", "title": "Partner ARR (Land + Expand)"},
+        build_table_visual(
+            name="growth_region_motion_heatmap",
+            columns=[
+                {"table": "d_region", "field": "region", "kind": "column", "title": "Region"},
+                {"table": "f_opportunity", "field": "motion_type", "kind": "column", "title": "Motion"},
+                {
+                    "table": "f_opportunity",
+                    "field": "Total Open Pipeline ARR",
+                    "kind": "measure",
+                    "title": "Open ARR (Land + Expand)",
+                },
+                {
+                    "table": "f_opportunity",
+                    "field": "Partner ARR",
+                    "kind": "measure",
+                    "title": "Partner ARR (Land + Expand)",
+                },
             ],
             x=652,
             y=270,
@@ -130,13 +140,29 @@ def _compose(section: dict) -> None:
         ),
         _panel(24, 480, 588, 200),
         build_textbox_visual("Source x Region Growth Heatmap", x=40, y=492, w=420, h=22, font_size_pt=11, color="#1A1D31"),
-        build_matrix_visual(
-            rows=[{"table": "f_opportunity", "field": "lead_source", "title": "Source"}],
-            columns=[{"table": "d_region", "field": "region", "title": "Region"}],
-            values=[
-                {"table": "f_opportunity", "field": "Source ARR Won", "title": "Source ARR won (Land + Expand)"},
-                {"table": "f_opportunity", "field": "Source Win Rate", "title": "Source win rate (count)"},
-                {"table": "f_opportunity", "field": "Total Land Won Count", "title": "Land won count"},
+        build_table_visual(
+            name="growth_source_region_heatmap",
+            columns=[
+                {"table": "f_opportunity", "field": "lead_source", "kind": "column", "title": "Source"},
+                {"table": "d_region", "field": "region", "kind": "column", "title": "Region"},
+                {
+                    "table": "f_opportunity",
+                    "field": "Source ARR Won",
+                    "kind": "measure",
+                    "title": "Source ARR won (Land + Expand)",
+                },
+                {
+                    "table": "f_opportunity",
+                    "field": "Source Win Rate",
+                    "kind": "measure",
+                    "title": "Source win rate (count)",
+                },
+                {
+                    "table": "f_opportunity",
+                    "field": "Total Land Won Count",
+                    "kind": "measure",
+                    "title": "Land won count",
+                },
             ],
             x=40,
             y=524,

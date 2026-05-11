@@ -15,12 +15,11 @@ import re
 from pathlib import Path
 from typing import Any, Literal
 
-from scripts.sales.rw_push_semantic_model import build_model_bim
+from scripts.sales.rw_push_semantic_model import CURRENCY_M_FORMAT, build_model_bim
 
 Severity = Literal["info", "low", "medium", "high", "critical"]
 
 CURRENCY_UNIT_LABEL = "EUR M"
-CURRENCY_M_FORMAT = 'EUR #,0,,.0"M";(EUR #,0,,.0"M");"-"'
 COUNT_FORMATS = {"#,0", "0"}
 PERCENT_FORMATS = {"0.0%"}
 DURATION_FORMATS = {"0", "0.0"}
@@ -44,6 +43,7 @@ VISIBLE_UNIT_PATH_TOKENS = (
     "unit",
 )
 VISIBLE_BAD_UNIT_RE = re.compile(r"(?<![A-Z0-9])(BMM|MM|KM)(?![A-Z0-9])")
+UNQUOTED_EUR_FORMAT_RE = re.compile(r'(^|[;(])EUR\s+#|(^|[;(])\(EUR\s+#')
 
 DEFAULT_JSON = Path("output/rw_dashboard_harness/unit_policy_audit.json")
 DEFAULT_MARKDOWN = Path("docs/sales/RW_UNIT_POLICY.md")
@@ -98,6 +98,16 @@ def audit_model_units(model_bim: dict | None = None) -> list[dict[str, Any]]:
             name = str(measure.get("name") or "")
             fmt = str(measure.get("formatString") or "")
             if is_currency_measure(name):
+                if UNQUOTED_EUR_FORMAT_RE.search(fmt):
+                    findings.append(
+                        _finding(
+                            finding_id="unquoted_currency_literal",
+                            severity="high",
+                            measure=name,
+                            message=f"{name} has unquoted EUR literal in format string: {fmt!r}.",
+                            next_action='Quote EUR as a literal: `"EUR" #,0,,.0"M"`.',
+                        )
+                    )
                 if fmt != CURRENCY_M_FORMAT:
                     findings.append(
                         _finding(

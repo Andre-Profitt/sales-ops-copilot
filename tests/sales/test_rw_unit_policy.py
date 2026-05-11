@@ -22,6 +22,7 @@ def test_currency_measures_use_one_eur_m_format():
     findings = audit_model_units(model)
 
     assert findings == []
+    assert CURRENCY_M_FORMAT == '"EUR" #,0,,.0"M";("EUR" #,0,,.0"M");"-"'
     measures = {
         measure["name"]: measure
         for table in model["model"]["tables"]
@@ -35,6 +36,18 @@ def test_currency_measures_use_one_eur_m_format():
         "Stage Moves ARR 7d",
     ]:
         assert measures[name]["formatString"] == CURRENCY_M_FORMAT
+
+
+def test_unit_policy_rejects_unquoted_eur_custom_format_literal():
+    model = build_model_bim()
+    for table in model["model"]["tables"]:
+        for measure in table.get("measures", []):
+            if measure["name"] == "Total Open Pipeline ARR":
+                measure["formatString"] = 'EUR #,0,,.0"M";(EUR #,0,,.0"M");"-"'
+
+    findings = audit_model_units(model)
+
+    assert any(finding["id"] == "unquoted_currency_literal" for finding in findings)
 
 
 def test_arr_run_rate_is_currency_but_win_rate_arr_is_percent():

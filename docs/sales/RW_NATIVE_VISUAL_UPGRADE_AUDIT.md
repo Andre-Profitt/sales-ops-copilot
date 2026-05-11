@@ -1,6 +1,6 @@
 # RW Native Visual Upgrade Audit
 
-Generated: `2026-05-11T00:14:47Z`
+Generated: `2026-05-11T00:37:29Z`
 
 This audit ranks where the dashboard is still underusing native Power BI/Zebra-derived visual grammar. It is not a basic correctness gate.
 
@@ -14,7 +14,7 @@ This audit ranks where the dashboard is still underusing native Power BI/Zebra-d
 | Visual | Use for |
 | --- | --- |
 | `waterfallChart` | contribution bridges, gap explanations, renewal-base movement |
-| `pivotTable + dataBars` | product/segment/region/source heatmaps and variance matrices |
+| `tableEx/pivotTable + dataBars` | product/segment/region/source heatmaps and variance matrices |
 | `tableEx + Zebra detail grammar` | action ledgers and accountable drill rows |
 | `card + neutral Zebra-native grammar` | compact KPI spine only; not for explanatory card walls |
 

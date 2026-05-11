@@ -1514,7 +1514,7 @@ Reviewing the schema-to-surface flow showed a separate executive-quality problem
 **Shipped:**
 
 - Locked RW monetary output to one unit: `EUR M`.
-- Changed every semantic-model currency/ARR/ACV/value measure format to `EUR #,0,,.0"M";(EUR #,0,,.0"M");"-"`.
+- Changed every semantic-model currency/ARR/ACV/value measure format to `"EUR" #,0,,.0"M";("EUR" #,0,,.0"M");"-"`.
 - Removed display-unit scaling from `themes/rw_simcorp_consulting.json`.
 - Added `scripts/sales/rw_unit_policy.py` and `rw_dashboard_harness unit-policy`.
 - Added a composer enforcement step that strips stale embedded Power BI `labelDisplayUnits`, `displayUnits`, `DisplayUnits`, and `labelPrecision` keys from the actual report payload.  This matters because existing PBIP/report JSON can carry an old `customTheme` even after the source theme file is fixed.
@@ -1572,14 +1572,59 @@ Andre asked for a direct checklist of RW-expected KPIs versus what the current B
 
 ARR remains Land + Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
 
+## 2026-05-11 - Currency format literal repair
+
+Desktop review exposed monetary visuals rendering the custom numeric format string itself (`EUR #,0,,...`) instead of the value. Root cause: the semantic model used an unquoted `EUR` literal in Power BI custom numeric formats, so Desktop parsed the letters as format tokens.
+
+**Shipped:**
+
+- Changed the canonical semantic currency format to `"EUR" #,0,,.0"M";("EUR" #,0,,.0"M");"-"`.
+- Centralized that format in `scripts/sales/rw_push_semantic_model.py` as `CURRENCY_M_FORMAT`.
+- Updated `rw_unit_policy` to reject unquoted `EUR` custom-format literals.
+- Re-pushed `sm_sales_kpis_rw` and refreshed it successfully.
+
+**Verification:**
+
+- Live deployed TMDL now has 43 monetary formats and 0 unquoted `EUR` literals.
+- Latest model refresh completed at `2026-05-11T00:27:02Z`.
+- `rw_validate` passed against the Desktop PBIP report JSON: 8 sections, 192 visualContainers, all 127 deployed measure refs resolve.
+- Unit policy passed with 0 findings.
+- Targeted unit tests passed: 16 passed.
+
+## 2026-05-11 - Heatmap render repair
+
+Desktop review also showed that the report's "heatmap" surfaces were rendering too much like plain Power BI matrices. Root cause: the data-bar object grammar was designed for `tableEx`, but several pages were emitting `pivotTable` matrices.
+
+**Shipped:**
+
+- Converted Growth Mix heatmaps to native `tableEx` data-bar tables:
+  - `growth-region-motion-heatmap`
+  - `growth-source-region-heatmap`
+- Converted Renewals to `renewal-region-risk-heatmap` as native `tableEx` with data bars.
+- Converted Product Retention heatmaps to native `tableEx` data-bar tables:
+  - `product-family-region-heatmap`
+  - `product-family-segment-risk-heatmap`
+- Updated the native visual-upgrade audit to accept `tableEx/pivotTable + dataBars` as the heatmap vocabulary and to avoid misclassifying detail ledgers as missing heatmaps.
+- Re-published the report and synced the Desktop PBIP from the live snapshot.
+
+**Verification:**
+
+- Live snapshot `live_currency_heatmap_fix` has 5 heatmap surfaces, all `tableEx` with `dataBars=True`.
+- `rw_validate` passed against the live snapshot: 8 sections, 192 visualContainers, all 127 deployed measure refs resolve.
+- Visual QA passed with 0 findings.
+- Unit policy passed with 0 findings.
+- Metric-basis audit passed with 0 findings.
+- Native visual-upgrade audit has no high/critical findings; remaining debt is the known VP Ops Scorecard stage bar.
+- Full `tests/sales` passed: 281 passed, 1 skipped.
+
 ## 2026-05-11 - Renewals v2 native active-base heatmap
 
-The native visual-upgrade audit identified `Renewals` as still carrying one underpowered visual: a basic regional bar for at-risk active-base ARR.  This pass replaced that bar with a native Zebra-style matrix heatmap so active-base exposure can be read by both region and risk category.
+The native visual-upgrade audit identified `Renewals` as still carrying one underpowered visual: a basic regional bar for at-risk active-base ARR.  This pass replaced that bar with a native Zebra-style active-base heatmap so exposure can be read by both region and risk category.
 
 **Shipped:**
 
 - Replaced `Region | At-risk base ARR` clustered bar on `Renewals` with `Region x Risk Active-base Heatmap`.
-- The heatmap uses native `pivotTable` plus Zebra-derived `dataBars` for:
+- The heatmap now uses native `tableEx` plus Zebra-derived `dataBars` for:
   - Active-base ARR.
   - At-risk active-base ARR.
   - Risk % of active base.
@@ -1611,7 +1656,7 @@ Desktop review called out that the dashboard still felt underpowered versus nati
 - Added `scripts/sales/rw_native_visual_upgrade_audit.py` plus `rw_dashboard_harness visual-upgrade`.
 - The audit ranks where the report is still underusing native visual grammar:
   - `waterfallChart` for bridges/decomposition.
-  - `pivotTable + dataBars` for heatmaps and variance matrices.
+  - `tableEx/pivotTable + dataBars` for heatmaps and variance matrices.
   - `tableEx + Zebra detail grammar` for action ledgers.
   - neutral Zebra-native cards only for the KPI spine.
 - Reworked `Growth Mix` from one bridge plus flat tables into:
