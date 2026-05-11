@@ -1,6 +1,6 @@
 # RW Metric Basis Labels
 
-Generated: 2026-05-10T23:47:23Z
+Generated: 2026-05-11T00:10:49Z
 
 ## Basis Standard
 
@@ -13,7 +13,7 @@ Generated: 2026-05-10T23:47:23Z
 
 ## Summary
 
-- Measure labels inspected: 110
+- Measure labels inspected: 113
 - Findings: 0
 - Severity counts: info=0, low=0, medium=0, high=0, critical=0
 

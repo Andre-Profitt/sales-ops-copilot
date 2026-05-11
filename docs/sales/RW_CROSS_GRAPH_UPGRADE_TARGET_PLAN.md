@@ -1,6 +1,6 @@
 # RW Cross-Graph Upgrade Target Plan
 
-Generated: `2026-05-10T23:48:02Z`
+Generated: `2026-05-11T00:07:03Z`
 
 This compares three graphs: Zebra template/visual grammar, the live RW Power BI artifact graph, and the RW KPI coverage graph. The target is not more cosmetic styling; it is a better executive operating system with Zebra-grade scenario, variance, and bridge semantics.
 
@@ -19,7 +19,7 @@ This compares three graphs: Zebra template/visual grammar, the live RW Power BI 
 | --- | --- | --- |
 | `bridge_gap` | Live PBI has 1 native waterfall/bridge visuals; Zebra corpus has 140/360 waterfall visuals. | RW pages are not yet using Zebra's bridge/decomposition grammar for executive variance stories. |
 | `card_weight` | Live PBI card share is 39/192; Zebra card share is 74/360. | Cards are acceptable for a KPI spine, but the target state should move more meaning into variance tables and bridges. |
-| `ibcs_table_base` | Live PBI already has 20 native table/matrix visuals and Zebra has 146 table visuals. | The native tableEx path is the right base; the next lift is scenario columns, variance deltas, and action-ledger ordering. |
+| `ibcs_table_base` | Live PBI already has 21 native table/matrix visuals and Zebra has 146 table visuals. | The native tableEx path is the right base; the next lift is scenario columns, variance deltas, and action-ledger ordering. |
 
 ## Zebra Patterns To Transfer
 

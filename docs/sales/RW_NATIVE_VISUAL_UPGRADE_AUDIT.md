@@ -1,13 +1,13 @@
 # RW Native Visual Upgrade Audit
 
-Generated: `2026-05-10T23:46:46Z`
+Generated: `2026-05-11T00:14:47Z`
 
 This audit ranks where the dashboard is still underusing native Power BI/Zebra-derived visual grammar. It is not a basic correctness gate.
 
 ## Summary
 
-- Findings: `3`
-- Severity: info=0, low=1, medium=2, high=0, critical=0
+- Findings: `2`
+- Severity: info=0, low=1, medium=1, high=0, critical=0
 
 ## Target Visual Vocabulary
 
@@ -22,6 +22,5 @@ This audit ranks where the dashboard is still underusing native Power BI/Zebra-d
 
 | Severity | Page | Current visual | Recommended visual | Finding | Next action |
 | --- | --- | --- | --- | --- | --- |
-| `medium` | Renewals | `clusteredBarChart` - Region \| At-risk base ARR | `waterfallChart or pivotTable heatmap` | A bar chart is carrying an executive value decomposition candidate. | Use a native bridge when explaining contribution; use heatmap when comparing slices. |
 | `medium` | VP Ops Scorecard | `clusteredBarChart` - Stage \| Open ARR (Land + Expand) | `waterfallChart or pivotTable heatmap` | A bar chart is carrying an executive value decomposition candidate. | Use a native bridge when explaining contribution; use heatmap when comparing slices. |
 | `low` | VP Ops Scorecard | `clusteredBarChart` - Stage \| Open ARR (Land + Expand) | `same native visual with Zebra-native helper objects` | Decision visual is native but does not carry Zebra-derived grammar metadata. | Apply a shared Zebra-native helper if this visual remains in the executive path. |

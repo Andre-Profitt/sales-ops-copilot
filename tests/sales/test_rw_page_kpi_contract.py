@@ -437,6 +437,40 @@ def test_product_retention_uses_zebra_heatmap_and_detail_table_grammar():
     assert ledger_objects["zebraGrammar"]["schema"] == "rw-zebra-native-transfer.columnGrammar.v1"
 
 
+def test_renewals_uses_active_base_risk_heatmap_not_basic_bar():
+    report = compose_report({"sections": []})
+    renewals = _page(report, "Renewals")
+    visual_types = [_visual_type(vc) for vc in renewals["visualContainers"]]
+    matrices = [
+        _single_visual(vc)
+        for vc in renewals["visualContainers"]
+        if _visual_type(vc) == "pivotTable"
+    ]
+    encoded = "\n".join(vc["config"] for vc in renewals["visualContainers"])
+
+    assert "clusteredBarChart" not in visual_types
+    assert len(matrices) == 1
+    assert "d_region.region" in encoded
+    assert "f_asset_line_item.termination_risk" in encoded
+    assert "f_asset_line_item.Existing ARR Run Rate" in encoded
+    assert "f_asset_line_item.Business At Risk ARR" in encoded
+    assert "f_asset_line_item.Business At Risk Pct" in encoded
+    assert "f_asset_line_item.Existing ARR Expiring In Period" in encoded
+    assert "Open Land ARR" not in encoded
+    assert "Open Expand ARR" not in encoded
+    assert "Total Open Pipeline ARR" not in encoded
+
+    objects = matrices[0].get("objects") or {}
+    assert objects["stylePreset"] == {
+        "source": "zebra-visual-dna",
+        "pattern": "renewal-region-risk-heatmap",
+        "visual_intent": "renewal active-base risk heatmap",
+    }
+    assert objects["zebraGrammar"]["schema"] == "rw-zebra-native-transfer.columnGrammar.v1"
+    assert "dataBars" in objects
+    assert objects["dataBars"]["values"]
+
+
 def test_arr_and_renewal_acv_contracts_stay_separate_by_page():
     renewal_measures = {
         "Total Open Renewal ACV",

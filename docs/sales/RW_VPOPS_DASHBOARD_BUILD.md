@@ -1572,6 +1572,36 @@ Andre asked for a direct checklist of RW-expected KPIs versus what the current B
 
 ARR remains Land + Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
 
+## 2026-05-11 - Renewals v2 native active-base heatmap
+
+The native visual-upgrade audit identified `Renewals` as still carrying one underpowered visual: a basic regional bar for at-risk active-base ARR.  This pass replaced that bar with a native Zebra-style matrix heatmap so active-base exposure can be read by both region and risk category.
+
+**Shipped:**
+
+- Replaced `Region | At-risk base ARR` clustered bar on `Renewals` with `Region x Risk Active-base Heatmap`.
+- The heatmap uses native `pivotTable` plus Zebra-derived `dataBars` for:
+  - Active-base ARR.
+  - At-risk active-base ARR.
+  - Risk % of active base.
+  - Expiring active-base ARR.
+- Kept the Renewal ACV KPI strip and active-base ARR measures separated.
+- Added regression coverage proving `Renewals` no longer uses the basic bar and does not leak Land/Expand ARR measures.
+- Updated the native visual-upgrade audit output; the remaining visual-upgrade debt is now only the VP Ops Scorecard stage ARR bar.
+
+**Verification:**
+
+- Targeted tests passed: 39 passed.
+- Regenerated local PBIP with `python3 -m scripts.sales.rw_apply_zebra_lab_proof`.
+- `rw_validate` passed: 8 sections, 192 visualContainers, all measure refs resolve.
+- Harness audit returned no findings.
+- Visual QA returned 0 findings at `--fail-on medium`.
+- Unit policy returned 0 findings.
+- Metric-basis audit returned 0 findings.
+- Semantic-filter audit passed at high threshold with only known medium transition-date-role model debt.
+- Enterprise-standard gate still reports the real source/model blockers, not a Renewals visual blocker.
+
+ARR remains Land + Expand only, Renewal ACV remains Renewal only, active-base ARR remains explicitly labeled, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
+
 ## 2026-05-10 - Native visual vocabulary audit and Growth Mix v2
 
 Desktop review called out that the dashboard still felt underpowered versus native Power BI/Zebra BI patterns.  This pass added an executable native-visual upgrade audit and applied the first page-level upgrade to `Growth Mix`.

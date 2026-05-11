@@ -335,6 +335,7 @@ def zebra_detail_table_objects() -> dict:
 def zebra_heatmap_matrix_objects(
     *,
     pattern: str = "product-retention-heatmap",
+    visual_intent: str = "product x segment heatmap matrix",
     databar_specs: tuple[tuple[str, str, str], ...] = (),
 ) -> dict:
     """Matrix/table style for Zebra-inspired heatmap reads.
@@ -353,7 +354,7 @@ def zebra_heatmap_matrix_objects(
             font_size=8,
         ),
         pattern=pattern,
-        visual_intent="product x segment heatmap matrix",
+        visual_intent=visual_intent,
         grammar_schema="rw-zebra-native-transfer.columnGrammar.v1",
     )
     if databar_specs:

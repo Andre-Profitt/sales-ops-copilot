@@ -24,6 +24,7 @@ def test_native_visual_upgrade_audit_accepts_growth_mix_v2_heatmaps():
         finding["id"] == "growth_mix_missing_motion_heatmap"
         for finding in result["findings"]
     )
+    assert not any(finding["page"] == "Renewals" for finding in result["findings"])
 
 
 def test_native_visual_upgrade_audit_flags_missing_growth_source_heatmap():
