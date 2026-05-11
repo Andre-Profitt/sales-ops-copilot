@@ -97,11 +97,12 @@ def test_layout_zones_stay_in_defined_bands():
     visuals = section["visualContainers"]
     assert any(_visual_type(v) == "textbox" and v["x"] == 28 and v["y"] == 12 for v in visuals)
     assert any(_visual_type(v) == "textbox" and v["x"] == 28 and v["y"] == 42 for v in visuals)
-    kpi_cards = [v for v in visuals if _visual_type(v) == "card" and v["y"] == 122]
+    kpi_cards = [v for v in visuals if _visual_type(v) == "card" and v["y"] == 124]
     assert len(kpi_cards) == 4
-    assert all(c["height"] == 64 for c in kpi_cards)
-    kpi_labels = [v for v in visuals if _visual_type(v) == "textbox" and v["y"] == 102]
+    assert all(c["height"] == 66 for c in kpi_cards)
+    kpi_labels = [v for v in visuals if _visual_type(v) == "textbox" and v["y"] == 98]
     assert len(kpi_labels) == 4
+    assert all(label["height"] == 26 for label in kpi_labels)
     kpi_shapes = [v for v in visuals if _visual_type(v) == "basicShape" and v["y"] == 84]
     assert len(kpi_shapes) == 1
     assert any(v["x"] == 24 and v["y"] == 226 and v["height"] == 260 for v in visuals)

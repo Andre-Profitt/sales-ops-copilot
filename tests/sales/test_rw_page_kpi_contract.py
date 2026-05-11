@@ -16,7 +16,7 @@ from scripts.sales.rw_page_kpi_contract import (
 )
 from scripts.sales.rw_filter_bar import FILTER_REFS_BY_PAGE, FORBIDDEN_MOTION_SLICER_REF
 from scripts.sales.rw_metric_basis_audit import audit_metric_basis
-from scripts.sales.rw_page_chrome import ACTION_TRAILS, CHROME_VISUAL_COUNT, NAV_TRAIL, PAGE_ORDER, PAGE_SUBTITLES
+from scripts.sales.rw_page_chrome import ACTION_TRAILS, CHROME_HEIGHT, CHROME_VISUAL_COUNT, NAV_TRAIL, PAGE_ORDER, PAGE_SUBTITLES
 from scripts.sales.rw_push_semantic_model import build_model_bim
 from scripts.sales.rw_semantic_filter_audit import audit_semantic_filter_flow
 from scripts.sales.rw_validate import validate_report
@@ -130,12 +130,12 @@ def test_target_pages_have_shared_header_navigation_chrome():
         top_text = [
             _textbox_text(vc)
             for vc in section["visualContainers"]
-            if _visual_type(vc) == "textbox" and vc["y"] <= 82
+            if _visual_type(vc) == "textbox" and vc["y"] < CHROME_HEIGHT
         ]
         top_shapes = [
             vc
             for vc in section["visualContainers"]
-            if _visual_type(vc) == "basicShape" and vc["y"] == 0 and vc["height"] == 84
+            if _visual_type(vc) == "basicShape" and vc["y"] == 0 and vc["height"] == CHROME_HEIGHT
         ]
 
         assert any(text.startswith(f"{ordinal:02d} / {len(PAGE_ORDER):02d}") for text in top_text), page
@@ -143,6 +143,13 @@ def test_target_pages_have_shared_header_navigation_chrome():
         assert ACTION_TRAILS[page] in top_text, page
         assert NAV_TRAIL in top_text, page
         assert len(top_shapes) >= 1, page
+        chrome_textboxes = [
+            vc
+            for vc in section["visualContainers"][:CHROME_VISUAL_COUNT]
+            if _visual_type(vc) == "textbox"
+        ]
+        assert min(vc["height"] for vc in chrome_textboxes) >= 22, page
+        assert {vc["height"] for vc in chrome_textboxes} >= {34, 28, 26, 22}, page
     for forbidden_header_color in ("#F7F9FC", "#EAF0F7", "#F3F6FA"):
         assert forbidden_header_color not in encoded_report
 
@@ -152,12 +159,12 @@ def test_legacy_top_headers_are_replaced_by_shared_chrome():
     forecast_top_text = [
         _textbox_text(vc)
         for vc in _page(report, "Forecast")["visualContainers"]
-        if _visual_type(vc) == "textbox" and vc["y"] <= 82
+        if _visual_type(vc) == "textbox" and vc["y"] < CHROME_HEIGHT
     ]
     what_changed_top_text = [
         _textbox_text(vc)
         for vc in _page(report, "What Changed")["visualContainers"]
-        if _visual_type(vc) == "textbox" and vc["y"] <= 82
+        if _visual_type(vc) == "textbox" and vc["y"] < CHROME_HEIGHT
     ]
 
     assert "Quarter Outlook" not in forecast_top_text
@@ -173,7 +180,7 @@ def test_page_content_does_not_overlap_shared_header_band():
         overlaps = [
             (_visual_type(vc), vc["x"], vc["y"], vc["width"], vc["height"])
             for vc in non_chrome
-            if _visual_type(vc) != "slicer" and vc["y"] < 84
+            if _visual_type(vc) != "slicer" and vc["y"] < CHROME_HEIGHT
         ]
         assert overlaps == [], page
 

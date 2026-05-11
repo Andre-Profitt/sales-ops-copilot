@@ -397,9 +397,9 @@ def zebra_kpi_strip_metric(
         build_textbox_visual(
             title,
             x=x + 8,
-            y=y + 8,
+            y=y + 4,
             w=w - 16,
-            h=22,
+            h=26,
             font_size_pt=8,
             color="#5C6670",
             bold=False,
@@ -409,9 +409,9 @@ def zebra_kpi_strip_metric(
             measure_name=measure_name,
             display_title=title,
             x=x + 4,
-            y=y + 28,
+            y=y + 30,
             w=w - 8,
-            h=max(62, h - 32),
+            h=max(62, h - 30),
             objects=zebra_kpi_value_card_objects(
                 pattern=pattern,
                 visual_intent=visual_intent,

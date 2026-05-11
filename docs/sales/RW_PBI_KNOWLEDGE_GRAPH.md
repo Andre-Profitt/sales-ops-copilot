@@ -1,6 +1,6 @@
 # RW Power BI Knowledge Graph
 
-Generated: `2026-05-11T02:18:18Z`
+Generated: `2026-05-11T02:33:27Z`
 Source: `live`
 Verdict: `needs_source_or_model_work`
 
@@ -15,7 +15,7 @@ This graph connects the actual Power BI report artifact to the RW KPI contract, 
 - RW KPI contract: `30` KPIs placed from `31` canonical RW KPIs
 - Cleanup findings: `8` (info=0, low=0, medium=4, high=4, critical=0)
 - Graph size: `567` nodes, `1378` edges
-- Machine graph: `output/rw_dashboard_harness/pbi_knowledge_graph/neutral_headers_core_stage_live.pbi_knowledge_graph.json`
+- Machine graph: `output/rw_dashboard_harness/pbi_knowledge_graph/exec_readiness_queue.pbi_knowledge_graph.json`
 
 ## Enterprise Standard Snapshot
 
@@ -58,14 +58,14 @@ This graph connects the actual Power BI report artifact to the RW KPI contract, 
 
 | Visual | Type | Fields |
 | --- | --- | --- |
+| Stage | Motion | Open ARR (Land + Expand) | Open renewal ACV | `tableEx` | `C:f_opportunity.stage_name`, `C:f_opportunity.motion_type`, `M:f_opportunity.Total Open Pipeline ARR`, `M:f_opportunity.Total Open Renewal ACV` |
+| Avg days/category | `card` | `M:f_forecast_transition.Avg Days In Forecast Category` |
 | Open renewal ACV | `card` | `M:f_opportunity.Total Open Renewal ACV` |
 | Opp | Account | Stage | Motion | Open ARR (Land + Expand) | Open renewal ACV | Close Date | Last Stage Move | `tableEx` | `C:f_opportunity.opp_name`, `C:f_opportunity.account_name`, `C:f_opportunity.stage_name`, `C:f_opportunity.motion_type`, `M:f_opportunity.Total Open Pipeline ARR`, `M:f_opportunity.Total Open Renewal ACV`, `C:f_opportunity.close_date`, `C:f_opportunity.last_stage_change_date` |
-| Stage | Motion | Open ARR (Land + Expand) | Open renewal ACV | `tableEx` | `C:f_opportunity.stage_name`, `C:f_opportunity.motion_type`, `M:f_opportunity.Total Open Pipeline ARR`, `M:f_opportunity.Total Open Renewal ACV` |
-| Closed won ARR (Land + Expand) | `card` | `M:f_opportunity.Total Closed Won ARR` |
-| Days Remaining (FQ) | `card` | `M:f_opportunity.Days Remaining In FQ` |
-| Avg days/category | `card` | `M:f_forecast_transition.Avg Days In Forecast Category` |
-| Slip % (count proxy) | `card` | `M:f_forecast_transition.Forecast Slip Pct` |
 | Upgrade count (qtr) | `card` | `M:f_forecast_transition.Forecast Upgrades` |
+| Slip count (proxy) | `card` | `M:f_forecast_transition.Forecast Slips` |
+| Days Remaining (FQ) | `card` | `M:f_opportunity.Days Remaining In FQ` |
+| Closed won ARR (Land + Expand) | `card` | `M:f_opportunity.Total Closed Won ARR` |
 
 | Severity | Source | Finding | Next action |
 | --- | --- | --- | --- |
@@ -83,13 +83,13 @@ This graph connects the actual Power BI report artifact to the RW KPI contract, 
 | Visual | Type | Fields |
 | --- | --- | --- |
 | Region | Motion | Open ARR (Land + Expand) | Partner ARR (Land + Expand) | `tableEx` | `C:d_region.region`, `C:f_opportunity.motion_type`, `M:f_opportunity.Total Open Pipeline ARR`, `M:f_opportunity.Partner ARR` |
+| Region | Open ARR (Land + Expand) | `waterfallChart` | `C:d_region.region`, `M:f_opportunity.Total Open Pipeline ARR` |
 | Partner % ARR share | `card` | `M:f_opportunity.Partner Pct` |
+| Partner ARR (Land + Expand) | `card` | `M:f_opportunity.Partner ARR` |
+| Open Land ARR | `card` | `M:f_opportunity.Open Land ARR` |
 | Source | Region | Source ARR won (Land + Expand) | Source win rate (count) | Land won count | `tableEx` | `C:f_opportunity.lead_source`, `C:d_region.region`, `M:f_opportunity.Source ARR Won`, `M:f_opportunity.Source Win Rate`, `M:f_opportunity.Total Land Won Count` |
 | Avg won ARR (Land + Expand) | `card` | `M:f_opportunity.Avg Deal Size Won` |
 | Won tier | Won deal count | Axioma ARR (Land + Expand) | One-off revenue (non-recurring, EUR M) | One-off opp count | SaaS ARR YoY % | PS attach % (ACV/ARR) | `tableEx` | `C:f_opportunity.won_value_tier`, `M:f_opportunity.Closed Won Deals Count`, `M:f_opportunity.Cross Sell To Acquired ARR`, `M:f_opportunity.One Off Revenues`, `M:f_opportunity.One-Off Revenue Opp Count`, `M:f_opportunity.SaaS YoY Growth Pct`, `M:f_opportunity.PS ARR Attach Pct` |
-| Region | Open ARR (Land + Expand) | `waterfallChart` | `C:d_region.region`, `M:f_opportunity.Total Open Pipeline ARR` |
-| Open Land ARR | `card` | `M:f_opportunity.Open Land ARR` |
-| Partner ARR (Land + Expand) | `card` | `M:f_opportunity.Partner ARR` |
 
 | Severity | Source | Finding | Next action |
 | --- | --- | --- | --- |
@@ -105,14 +105,14 @@ This graph connects the actual Power BI report artifact to the RW KPI contract, 
 
 | Visual | Type | Fields |
 | --- | --- | --- |
-| At-risk base ARR | `card` | `M:f_asset_line_item.Business At Risk ARR` |
-| Lost renewal ACV | `card` | `M:f_opportunity.Total Renewal ACV Lost` |
-| Region | Risk | Active-base ARR | At-risk active-base ARR | Risk % of active base | Expiring active-base ARR | `tableEx` | `C:d_region.region`, `C:f_asset_line_item.termination_risk`, `M:f_asset_line_item.Existing ARR Run Rate`, `M:f_asset_line_item.Business At Risk ARR`, `M:f_asset_line_item.Business At Risk Pct`, `M:f_asset_line_item.Existing ARR Expiring In Period` |
 | Due renewal ACV | `card` | `M:f_opportunity.Total Renewal ACV Due` |
-| Open renewal ACV | `card` | `M:f_opportunity.Total Open Renewal ACV` |
-| Retention % (ACV-wtd) | `card` | `M:f_opportunity.Renewal Retention Pct (Period)` |
+| Won renewal ACV | `card` | `M:f_opportunity.Total Renewal ACV Won` |
+| At-risk base ARR | `card` | `M:f_asset_line_item.Business At Risk ARR` |
 | Active-base ARR | `card` | `M:f_asset_line_item.Existing ARR Run Rate` |
 | Account | Region | Risk | End date | Product family | Active-base ARR | At-risk base ARR | Risk % of base | `tableEx` | `C:f_asset_line_item.account_name`, `C:f_asset_line_item.region`, `C:f_asset_line_item.termination_risk`, `C:f_asset_line_item.asset_end_date`, `C:f_asset_line_item.product_family`, `M:f_asset_line_item.Existing ARR Expiring In Period`, `M:f_asset_line_item.Business At Risk ARR`, `M:f_asset_line_item.Business At Risk Pct` |
+| Lost renewal ACV | `card` | `M:f_opportunity.Total Renewal ACV Lost` |
+| Retention % (ACV-wtd) | `card` | `M:f_opportunity.Renewal Retention Pct (Period)` |
+| Open renewal ACV | `card` | `M:f_opportunity.Total Open Renewal ACV` |
 - Cleanup: clear at current graph gates.
 
 ### Stage Hygiene
@@ -125,14 +125,14 @@ This graph connects the actual Power BI report artifact to the RW KPI contract, 
 
 | Visual | Type | Fields |
 | --- | --- | --- |
+| Stage days (Land + Expand) | `card` | `M:f_stage_transition.Avg Days In Prior Stage (LE)` |
 | Approval-close days | `card` | `M:f_opportunity.Commercial Approval To Close Days` |
 | Land cycle days | `card` | `M:f_opportunity.Land Avg Sales Cycle Days` |
-| Stage days (Land + Expand) | `card` | `M:f_stage_transition.Avg Days In Prior Stage (LE)` |
-| Approval % (count) | `card` | `M:f_opportunity.Commercial Approval Compliance Pct` |
-| Stage | S4 Forward % (count, Land + Expand) | S4 Avg Days | 7d ARR moved (Land + Expand) | `tableEx` | `C:d_stage.stage_name`, `M:f_stage_transition.Core Stage Forward Pct (LE)`, `M:f_stage_transition.Core Avg Days In Prior Stage (LE)`, `M:f_stage_transition.Core Stage Moves ARR 7d` |
-| Stage | Forward % (count, Land + Expand) | Backward % (count, Land + Expand) | Avg days | Moves | 7d ARR moved (Land + Expand) | `tableEx` | `C:d_stage.stage_name`, `M:f_stage_transition.Core Stage Forward Pct (LE)`, `M:f_stage_transition.Core Stage Backward Pct (LE)`, `M:f_stage_transition.Core Avg Days In Prior Stage (LE)`, `M:f_stage_transition.Core Stage Transitions (LE)`, `M:f_stage_transition.Core Stage Moves ARR 7d` |
+| Forward % (count, Land + Expand) | `card` | `M:f_stage_transition.Stage Forward Pct (LE)` |
 | Land + Expand cycle days | `card` | `M:f_opportunity.Avg Sales Cycle Days` |
-| Backward % (count, Land + Expand) | `card` | `M:f_stage_transition.Stage Backward Pct (LE)` |
+| Stage | S4 Forward % (count, Land + Expand) | S4 Avg Days | 7d ARR moved (Land + Expand) | `tableEx` | `C:d_stage.stage_name`, `M:f_stage_transition.Core Stage Forward Pct (LE)`, `M:f_stage_transition.Core Avg Days In Prior Stage (LE)`, `M:f_stage_transition.Core Stage Moves ARR 7d` |
+| Approval % (count) | `card` | `M:f_opportunity.Commercial Approval Compliance Pct` |
+| Stage | Forward % (count, Land + Expand) | Backward % (count, Land + Expand) | Avg days | Moves | 7d ARR moved (Land + Expand) | `tableEx` | `C:d_stage.stage_name`, `M:f_stage_transition.Core Stage Forward Pct (LE)`, `M:f_stage_transition.Core Stage Backward Pct (LE)`, `M:f_stage_transition.Core Avg Days In Prior Stage (LE)`, `M:f_stage_transition.Core Stage Transitions (LE)`, `M:f_stage_transition.Core Stage Moves ARR 7d` |
 - Cleanup: clear at current graph gates.
 
 ### What Changed
@@ -146,8 +146,8 @@ This graph connects the actual Power BI report artifact to the RW KPI contract, 
 | Visual | Type | Fields |
 | --- | --- | --- |
 | Opp | Account | Region | Stage | Open ARR (Land + Expand) | Last Stage Move | `tableEx` | `C:f_opportunity.opp_name`, `C:f_opportunity.account_name`, `C:f_opportunity.region`, `C:f_opportunity.stage_name`, `M:f_opportunity.Total Open Pipeline ARR`, `C:f_opportunity.last_stage_change_date` |
-| At-risk opp count | At-risk ARR (Land + Expand) | Watch opp count | Watch ARR (Land + Expand) | Healthy move count | Healthy ARR (Land + Expand) | `tableEx` | `M:f_opportunity.At Risk Opps Count`, `M:f_opportunity.At Risk Opps ARR`, `M:f_opportunity.Watch Opps Count`, `M:f_opportunity.Watch Opps ARR`, `M:f_opportunity.Healthy Moves Count`, `M:f_opportunity.Healthy Moves ARR` |
 | Stage move count | Stage ARR (Land + Expand) | New opp count | Won count | Lost count | `tableEx` | `M:f_stage_transition.Stage Moves Count 7d`, `M:f_stage_transition.Stage Moves ARR 7d`, `M:f_opportunity.New Opps Count 7d`, `M:f_opportunity.Closed Won Count 7d`, `M:f_opportunity.Closed Lost Count 7d` |
+| At-risk opp count | At-risk ARR (Land + Expand) | Watch opp count | Watch ARR (Land + Expand) | Healthy move count | Healthy ARR (Land + Expand) | `tableEx` | `M:f_opportunity.At Risk Opps Count`, `M:f_opportunity.At Risk Opps ARR`, `M:f_opportunity.Watch Opps Count`, `M:f_opportunity.Watch Opps ARR`, `M:f_opportunity.Healthy Moves Count`, `M:f_opportunity.Healthy Moves ARR` |
 - Cleanup: clear at current graph gates.
 
 ### Product Retention
@@ -162,12 +162,12 @@ This graph connects the actual Power BI report artifact to the RW KPI contract, 
 | --- | --- | --- |
 | Expiring active-base ARR | `card` | `M:f_asset_line_item.Existing ARR Expiring In Period` |
 | At-risk active-base ARR | `card` | `M:f_asset_line_item.Business At Risk ARR` |
-| Active-base ARR | `card` | `M:f_asset_line_item.Existing ARR Run Rate` |
-| Risk % of active base | `card` | `M:f_asset_line_item.Business At Risk Pct` |
-| Account | Region | Segment | Product family | Product area | Start date | End date | Active-base ARR | At-risk active-base ARR | Risk % of base | `tableEx` | `C:f_asset_line_item.account_name`, `C:f_asset_line_item.region`, `C:f_asset_line_item.industry`, `C:f_asset_line_item.product_family`, `C:f_asset_line_item.product_area`, `C:f_asset_line_item.asset_start_date`, `C:f_asset_line_item.asset_end_date`, `M:f_asset_line_item.Existing ARR Expiring In Period` |
-| Product family | Segment | Risk % of base | Expiring active-base ARR | `tableEx` | `C:f_asset_line_item.product_family`, `C:f_asset_line_item.industry`, `M:f_asset_line_item.Business At Risk Pct`, `M:f_asset_line_item.Existing ARR Expiring In Period` |
-| Active asset line count | `card` | `M:f_asset_line_item.Active Asset Line Count` |
 | Product family | Region | Active-base ARR | At-risk active-base ARR | `tableEx` | `C:f_asset_line_item.product_family`, `C:d_region.region`, `M:f_asset_line_item.Existing ARR Run Rate`, `M:f_asset_line_item.Business At Risk ARR` |
+| Active-base ARR | `card` | `M:f_asset_line_item.Existing ARR Run Rate` |
+| Active asset line count | `card` | `M:f_asset_line_item.Active Asset Line Count` |
+| Product family | Segment | Risk % of base | Expiring active-base ARR | `tableEx` | `C:f_asset_line_item.product_family`, `C:f_asset_line_item.industry`, `M:f_asset_line_item.Business At Risk Pct`, `M:f_asset_line_item.Existing ARR Expiring In Period` |
+| Account | Region | Segment | Product family | Product area | Start date | End date | Active-base ARR | At-risk active-base ARR | Risk % of base | `tableEx` | `C:f_asset_line_item.account_name`, `C:f_asset_line_item.region`, `C:f_asset_line_item.industry`, `C:f_asset_line_item.product_family`, `C:f_asset_line_item.product_area`, `C:f_asset_line_item.asset_start_date`, `C:f_asset_line_item.asset_end_date`, `M:f_asset_line_item.Existing ARR Expiring In Period` |
+| Risk % of active base | `card` | `M:f_asset_line_item.Business At Risk Pct` |
 - Cleanup: clear at current graph gates.
 
 ### RW KPI Explorer
@@ -181,9 +181,9 @@ This graph connects the actual Power BI report artifact to the RW KPI contract, 
 
 | Visual | Type | Fields |
 | --- | --- | --- |
-| Region | Open Land ARR | Open Expand ARR | Avg won ARR (Land + Expand) | Partner ARR (Land + Expand) | Partner % ARR | Land won count | `tableEx` | `C:d_region.region`, `M:f_opportunity.Open Land ARR`, `M:f_opportunity.Open Expand ARR`, `M:f_opportunity.Avg Deal Size Won`, `M:f_opportunity.Partner ARR`, `M:f_opportunity.Partner Pct`, `M:f_opportunity.Total Land Won Count` |
-| Region | Open renewal ACV | Retention % (ACV-wtd) | Won renewal ACV | Lost renewal ACV | `tableEx` | `C:d_region.region`, `M:f_opportunity.Total Open Renewal ACV`, `M:f_opportunity.Renewal Retention Pct (Period)`, `M:f_opportunity.Total Renewal ACV Won`, `M:f_opportunity.Total Renewal ACV Lost` |
 | Region | Motion | Open ARR (Land + Expand) | Won ARR FYTD (Land + Expand) | Win rate FYTD (ARR-wtd) | `pivotTable` | `C:d_region.region`, `C:f_opportunity.motion_type`, `M:f_opportunity.Total Open Pipeline ARR`, `M:f_opportunity.Total Closed Won ARR FYTD`, `M:f_opportunity.Win Rate ARR FYTD` |
+| Region | Open renewal ACV | Retention % (ACV-wtd) | Won renewal ACV | Lost renewal ACV | `tableEx` | `C:d_region.region`, `M:f_opportunity.Total Open Renewal ACV`, `M:f_opportunity.Renewal Retention Pct (Period)`, `M:f_opportunity.Total Renewal ACV Won`, `M:f_opportunity.Total Renewal ACV Lost` |
+| Region | Open Land ARR | Open Expand ARR | Avg won ARR (Land + Expand) | Partner ARR (Land + Expand) | Partner % ARR | Land won count | `tableEx` | `C:d_region.region`, `M:f_opportunity.Open Land ARR`, `M:f_opportunity.Open Expand ARR`, `M:f_opportunity.Avg Deal Size Won`, `M:f_opportunity.Partner ARR`, `M:f_opportunity.Partner Pct`, `M:f_opportunity.Total Land Won Count` |
 | Stage | Forward % (count, Land + Expand) | Backward % (count, Land + Expand) | Avg days | Moves | 7d ARR moved (Land + Expand) | `tableEx` | `C:d_stage.stage_name`, `M:f_stage_transition.Core Stage Forward Pct (LE)`, `M:f_stage_transition.Core Stage Backward Pct (LE)`, `M:f_stage_transition.Core Avg Days In Prior Stage (LE)`, `M:f_stage_transition.Core Stage Transitions (LE)`, `M:f_stage_transition.Core Stage Moves ARR 7d` |
 - Cleanup: clear at current graph gates.
 
@@ -197,13 +197,13 @@ This graph connects the actual Power BI report artifact to the RW KPI contract, 
 
 | Visual | Type | Fields |
 | --- | --- | --- |
-| Stage | Open ARR (Land + Expand) | `clusteredBarChart` | `C:f_opportunity.stage_name`, `M:f_opportunity.Total Open Pipeline ARR` |
 | Closed won ARR (Land + Expand) | `card` | `M:f_opportunity.Total Closed Won ARR` |
-| New opp count 7d | `card` | `M:f_opportunity.New Opps Count 7d` |
+| Win rate (ARR-wtd) | `card` | `M:f_opportunity.Win Rate ARR` |
 | Region | Exception ARR (Land + Expand) | Opp count | At-risk ARR (Land + Expand) | Watch ARR (Land + Expand) | `tableEx` | `C:d_region.region`, `M:f_opportunity.Exception ARR`, `M:f_opportunity.Exception Opps Count`, `M:f_opportunity.At Risk Opps ARR`, `M:f_opportunity.Watch Opps ARR` |
 | Exception ARR (Land + Expand) | `card` | `M:f_opportunity.Exception ARR` |
-| Won count 7d | `card` | `M:f_opportunity.Closed Won Count 7d` |
-| Back move count | `card` | `M:f_stage_transition.Backward Moves Count 7d` |
+| Stage | Forward % (count, Land + Expand) | Backward % (count, Land + Expand) | Avg days | 7d ARR moved (Land + Expand) | `pivotTable` | `C:d_stage.stage_name`, `M:f_stage_transition.Core Stage Forward Pct (LE)`, `M:f_stage_transition.Core Stage Backward Pct (LE)`, `M:f_stage_transition.Core Avg Days In Prior Stage (LE)`, `M:f_stage_transition.Core Stage Moves ARR 7d` |
+| Retention % (ACV-wtd) | `card` | `M:f_opportunity.Renewal Retention Pct (Period)` |
+| New opp count 7d | `card` | `M:f_opportunity.New Opps Count 7d` |
 | Stage ARR 7d (Land + Expand) | `card` | `M:f_stage_transition.Stage Moves ARR 7d` |
 - Cleanup: clear at current graph gates.
 

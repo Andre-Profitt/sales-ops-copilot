@@ -1572,6 +1572,18 @@ Andre asked for a direct checklist of RW-expected KPIs versus what the current B
 
 ARR remains Land + Expand only, Renewal ACV remains Renewal only, and `Total Open Pipeline Value` remains the only explicitly labeled cross-motion value.
 
+## 2026-05-11 — Active dashboard finish queue
+
+Current visible defects and requested builds are tracked here so one fix does not displace another:
+
+- Durable queue: `docs/sales/RW_EXECUTIVE_READINESS_QUEUE.md`
+- `P0` Shared page chrome and KPI strips: prevent clipped banner/action/nav text and keep report content below the shared header band.
+- `P0` True heatmaps: replace the current table/data-bar substitutes where Desktop does not read as a real heatmap. Product Retention, Growth Mix, and Renewals need native matrix/heatmap surfaces that show product/region/segment/risk intensity clearly.
+- `P0` Churn / NRR experimental tab: build from historical or effective-dated asset/account/product rows, with starting active-base ARR, ending active-base ARR, retained ARR, churn/downsell ARR, expansion/cross-sell ARR, GRR %, and NRR %. Keep it explicitly experimental until tie-out tested.
+- `P1` Drill/action flow: connect scorecard exceptions to page-level ledgers and account/opportunity detail instead of leaving the pages as separate static tabs.
+
+Guardrails stay fixed: omitted pipeline is excluded from open/current pipeline numbers, ARR remains Land + Expand only, Renewal ACV remains Renewal only, and cross-motion values must be explicitly labeled.
+
 ## 2026-05-11 — Churn / NRR experiment pinned to long-running task list
 
 Andre's churn/NRR idea is now tracked as explicit long-running work, not a vague Product Retention footnote.
